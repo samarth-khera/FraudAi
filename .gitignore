@@ -37,3 +37,10 @@ env/
 .ipynb_checkpoints/
 .mypy_cache/
 .ruff_cache/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+fraudshield.db
+test*.db
