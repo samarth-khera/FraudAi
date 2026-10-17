@@ -11,11 +11,18 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.risk import router as risk_router
 from app.api.routes import router
+from app.db.seed import seed_demo_data
+from app.db.session import Base, SessionLocal, engine
 from app.services.risk_scoring import get_risk_service
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    # Initialize database tables and seed demo scenario idempotently
+    Base.metadata.create_all(bind=engine)
+    with SessionLocal() as db:
+        seed_demo_data(db)
+
     # Load the saved model once at startup. Never trains. A failure is cached and the
     # rest of the API (case tracing) keeps working; /api/risk/score then returns 503.
     get_risk_service().load()
@@ -28,11 +35,16 @@ def _error(status: int, code: str, message: str, details=None) -> JSONResponse:
 
 
 def create_app() -> FastAPI:
+    # Ensure database tables exist and seed demo data
+    Base.metadata.create_all(bind=engine)
+    with SessionLocal() as db:
+        seed_demo_data(db)
+
     app = FastAPI(
-        title="FraudShield AI - Phase 1 Backend",
-        description="Synthetic fund-tracing demo. Connection to a reported fraud is NOT a "
-                    "finding of guilt. All data is synthetic; not production-bank ready.",
-        version="0.2.0",
+        title="FraudShield AI - Backend",
+        description="Synthetic fund-tracing demo and ML risk scoring backend. Connection to a "
+                    "reported fraud is NOT a finding of guilt. All data is synthetic; not production-bank ready.",
+        version="0.3.0",
         lifespan=lifespan,
     )
     app.include_router(router)

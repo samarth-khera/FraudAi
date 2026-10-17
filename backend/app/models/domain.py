@@ -14,7 +14,7 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Annotated, Optional
+from typing import Annotated, Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, PlainSerializer
 
@@ -145,7 +145,21 @@ class AccountReviewStatus(BaseModel):
     review_state: ReviewState
     evidence_quality: EvidenceQuality = EvidenceQuality.NOT_ASSESSED
     notes: Optional[str] = None
+    reviewer_id: Optional[str] = None
     automated_action_taken: str = "none"
+
+
+class AuditEvent(BaseModel):
+    """Append-only record of an investigation action."""
+
+    event_id: Optional[int] = None
+    case_id: str
+    timestamp: datetime
+    action: str
+    performed_by: str
+    entity_type: str
+    entity_id: str
+    details: Optional[dict[str, Any]] = None
 
 
 class FraudCase(BaseModel):

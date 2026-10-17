@@ -173,6 +173,9 @@ class HealthResponse(BaseModel):
 
 class CaseListResponse(BaseModel):
     count: int
+    total: Optional[int] = None
+    skip: Optional[int] = None
+    limit: Optional[int] = None
     cases: list[FraudCase]
 
 
