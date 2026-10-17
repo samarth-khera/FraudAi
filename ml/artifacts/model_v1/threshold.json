@@ -1,0 +1,12 @@
+{
+  "threshold": 0.9982855916023254,
+  "strategy": "max_f1",
+  "min_precision": null,
+  "validation_precision": 0.9409368635437881,
+  "validation_recall": 0.8191489361702128,
+  "validation_f1": 0.8758293838862559,
+  "note": null,
+  "selected_model": "xgboost",
+  "fitted_on": "validation set (chronological)",
+  "feature_set": "pre_transaction"
+}
