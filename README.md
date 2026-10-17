@@ -18,6 +18,7 @@ When a reported fraud occurs, money frequently moves across multiple intermediar
 
 ## Project Structure
 
+- [`frontend/`](frontend/): React 19, TypeScript, Vite, Tailwind CSS v4, Recharts, and Cytoscape.js interactive dashboard.
 - [`backend/`](backend/): FastAPI application, SQLAlchemy database models, Alembic migrations, NetworkX fund-tracing engine, and REST APIs.
 - [`ml/`](ml/): PaySim model training pipeline, feature schema definitions, and model evaluation routines.
 - [`data/`](data/): Raw and synthetic dataset specifications.
@@ -26,7 +27,7 @@ When a reported fraud occurs, money frequently moves across multiple intermediar
 
 ## Quickstart
 
-### 1. Backend Setup & Tests
+### 1. Backend Setup & Run
 
 ```bash
 cd backend
@@ -39,14 +40,27 @@ alembic upgrade head
 uvicorn app.main:app --reload --port 8000
 ```
 
-### 2. Testing
+### 2. Frontend Setup & Run
 
 ```bash
-# Run backend test suite (78 tests)
-cd backend && .venv/bin/python -m pytest tests -v
-
-# Run ML test suite (29 tests)
-cd ml && ../backend/.venv/bin/python -m pytest tests -v
+cd frontend
+npm install
+npm run dev
+# Open http://localhost:5173
 ```
 
-See [`backend/README.md`](backend/README.md) and [`ml/README.md`](ml/README.md) for full endpoint specifications, database architecture, and training details.
+### 3. Testing Across the Stack
+
+```bash
+# Backend tests (78 tests)
+cd backend && .venv/bin/python -m pytest tests -v
+
+# ML pipeline tests (29 tests)
+cd ml && ../backend/.venv/bin/python -m pytest tests -v
+
+# Frontend tests (6 tests & typecheck)
+cd frontend && npm test && npm run build
+```
+
+See [`frontend/README.md`](frontend/README.md), [`backend/README.md`](backend/README.md), and [`ml/README.md`](ml/README.md) for full endpoint specifications, database architecture, and training details.
+
