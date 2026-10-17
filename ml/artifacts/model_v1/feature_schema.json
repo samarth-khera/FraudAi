@@ -1,0 +1,37 @@
+{
+  "feature_set": "pre_transaction",
+  "required_input_columns": [
+    "step",
+    "type",
+    "amount",
+    "oldbalanceOrg",
+    "oldbalanceDest"
+  ],
+  "engineered_model_features": [
+    "type",
+    "amount",
+    "oldbalanceOrg",
+    "oldbalanceDest",
+    "hour_of_day",
+    "amount_to_old_balance_orig",
+    "orig_balance_zero",
+    "dest_balance_zero"
+  ],
+  "categorical_features": [
+    "type"
+  ],
+  "known_transaction_types": [
+    "CASH_IN",
+    "CASH_OUT",
+    "DEBIT",
+    "PAYMENT",
+    "TRANSFER"
+  ],
+  "excluded_columns": {
+    "isFraud": "Target label.",
+    "isFlaggedFraud": "Output of the simulator's own rule-based flagging; it is derived from the fraud process and would leak the label.",
+    "nameOrig": "Raw account ID: high-cardinality identifier, memorises accounts rather than generalising; excluded from the initial tabular model.",
+    "nameDest": "Raw account ID: same reason as nameOrig."
+  },
+  "availability_note": "All inputs are plausibly available before the transaction settles (to be confirmed against the production payment flow)."
+}

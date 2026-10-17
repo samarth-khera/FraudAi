@@ -1,0 +1,57 @@
+{
+  "_notice": "SYNTHETIC DEMONSTRATION DATA. Not real bank customers or transactions. Lineage values are scenario assumptions, not proof of money ownership.",
+  "cases": [
+    {
+      "case_id": "FS-1042",
+      "reported_origin_transaction_id": "T001",
+      "reported_amount": 50000,
+      "currency": "INR",
+      "reported_at": "2026-01-12T10:35:00",
+      "investigation_status": "under_investigation",
+      "description": "Synthetic demo case: victim V001 reports a 50,000 INR UPI transfer to A100 as fraudulent. Downstream recipients are under review; connection to the funds does not imply wrongdoing."
+    }
+  ],
+  "accounts": [
+    {"account_id": "V001", "label": "Reporting victim (synthetic)", "role": "reporting_victim", "is_synthetic": true},
+    {"account_id": "A100", "label": "Reported initial receiver (synthetic)", "role": "reported_initial_receiver", "is_synthetic": true},
+    {"account_id": "B200", "label": "Intermediate recipient (synthetic)", "role": "intermediate_recipient", "is_synthetic": true},
+    {"account_id": "C300", "label": "Recipient under review (synthetic)", "role": "recipient", "is_synthetic": true},
+    {"account_id": "D400", "label": "Recipient under review (synthetic)", "role": "recipient", "is_synthetic": true},
+    {"account_id": "E500", "label": "Recipient under review (synthetic)", "role": "recipient", "is_synthetic": true},
+    {"account_id": "F600", "label": "Recipient under review (synthetic)", "role": "recipient", "is_synthetic": true},
+    {"account_id": "G700", "label": "Recipient under review (synthetic)", "role": "recipient", "is_synthetic": true}
+  ],
+  "account_review_statuses": [
+    {"account_id": "V001", "case_id": "FS-1042", "review_state": "reporting_victim", "evidence_quality": "not_assessed", "notes": "Reporting victim."},
+    {"account_id": "A100", "case_id": "FS-1042", "review_state": "under_investigation", "evidence_quality": "synthetic_assumption", "notes": "Reported initial receiver; no determination made."},
+    {"account_id": "B200", "case_id": "FS-1042", "review_state": "under_review", "evidence_quality": "synthetic_assumption", "notes": "Review pending; connection is not a finding."},
+    {"account_id": "C300", "case_id": "FS-1042", "review_state": "under_review", "evidence_quality": "synthetic_assumption", "notes": "Review pending; connection is not a finding."},
+    {"account_id": "D400", "case_id": "FS-1042", "review_state": "under_review", "evidence_quality": "synthetic_assumption", "notes": "Review pending; connection is not a finding."},
+    {"account_id": "E500", "case_id": "FS-1042", "review_state": "under_review", "evidence_quality": "synthetic_assumption", "notes": "Review pending; connection is not a finding."},
+    {"account_id": "F600", "case_id": "FS-1042", "review_state": "under_review", "evidence_quality": "synthetic_assumption", "notes": "Review pending; connection is not a finding."},
+    {"account_id": "G700", "case_id": "FS-1042", "review_state": "under_review", "evidence_quality": "synthetic_assumption", "notes": "Review pending; connection is not a finding."}
+  ],
+  "transactions": [
+    {"transaction_id": "T001", "timestamp": "2026-01-12T10:22:00", "sender_account_id": "V001", "receiver_account_id": "A100", "amount": 50000, "currency": "INR", "transaction_type": "UPI",
+     "case_linkage": {"case_id": "FS-1042", "linkage_type": "reported_origin"},
+     "synthetic_lineage_metadata": {"case_id": "FS-1042", "attributed_amount": 50000, "basis": "synthetic_scenario_assumption", "note": "Entire reported amount assumed case-derived."}},
+    {"transaction_id": "T002", "timestamp": "2026-01-12T10:24:00", "sender_account_id": "A100", "receiver_account_id": "B200", "amount": 50000, "currency": "INR", "transaction_type": "IMPS",
+     "case_linkage": null,
+     "synthetic_lineage_metadata": {"case_id": "FS-1042", "attributed_amount": 50000, "basis": "synthetic_scenario_assumption", "note": "Assumed to carry all 50,000 of case-derived funds."}},
+    {"transaction_id": "T003", "timestamp": "2026-01-12T10:30:00", "sender_account_id": "B200", "receiver_account_id": "C300", "amount": 30000, "currency": "INR", "transaction_type": "UPI",
+     "case_linkage": null,
+     "synthetic_lineage_metadata": {"case_id": "FS-1042", "attributed_amount": 30000, "basis": "synthetic_scenario_assumption", "note": "Assumed fully case-derived."}},
+    {"transaction_id": "T004", "timestamp": "2026-01-12T10:32:00", "sender_account_id": "B200", "receiver_account_id": "D400", "amount": 20000, "currency": "INR", "transaction_type": "NEFT",
+     "case_linkage": null,
+     "synthetic_lineage_metadata": {"case_id": "FS-1042", "attributed_amount": 20000, "basis": "synthetic_scenario_assumption", "note": "Assumed fully case-derived."}},
+    {"transaction_id": "T005", "timestamp": "2026-01-12T10:40:00", "sender_account_id": "C300", "receiver_account_id": "E500", "amount": 10000, "currency": "INR", "transaction_type": "UPI",
+     "case_linkage": null,
+     "synthetic_lineage_metadata": {"case_id": "FS-1042", "attributed_amount": 10000, "basis": "synthetic_scenario_assumption", "note": "Assumed fully case-derived."}},
+    {"transaction_id": "T006", "timestamp": "2026-01-12T10:45:00", "sender_account_id": "C300", "receiver_account_id": "F600", "amount": 5000, "currency": "INR", "transaction_type": "NEFT",
+     "case_linkage": null,
+     "synthetic_lineage_metadata": {"case_id": "FS-1042", "attributed_amount": 5000, "basis": "synthetic_scenario_assumption", "note": "Assumed fully case-derived."}},
+    {"transaction_id": "T007", "timestamp": "2026-01-12T10:50:00", "sender_account_id": "D400", "receiver_account_id": "G700", "amount": 10000, "currency": "INR", "transaction_type": "UPI",
+     "case_linkage": null,
+     "synthetic_lineage_metadata": {"case_id": "FS-1042", "attributed_amount": 10000, "basis": "synthetic_scenario_assumption", "note": "Assumed fully case-derived."}}
+  ]
+}
