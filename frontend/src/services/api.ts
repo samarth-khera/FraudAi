@@ -1,0 +1,158 @@
+import {
+  AuditTrailResponse,
+  CaseListResponse,
+  FraudCase,
+  GraphResponse,
+  RiskScoreRequest,
+  RiskScoreResponse,
+  TraceResult,
+  Transaction,
+  TransactionListResponse,
+  AccountReviewStatus,
+} from '../types/api';
+
+const BASE_URL = import.meta.env.VITE_API_URL || '';
+
+export class ApiError extends Error {
+  code: string;
+  details?: any;
+
+  constructor(message: string, code: string = 'api_error', details?: any) {
+    super(message);
+    this.name = 'ApiError';
+    this.code = code;
+    this.details = details;
+  }
+}
+
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const url = `${BASE_URL}${path}`;
+  const headers = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    ...(options.headers || {}),
+  };
+
+  try {
+    const res = await fetch(url, { ...options, headers });
+    if (!res.ok) {
+      let errorBody: any = null;
+      try {
+        errorBody = await res.json();
+      } catch {
+        // Non-JSON response
+      }
+
+      const code = errorBody?.error?.code || errorBody?.detail?.code || `HTTP_${res.status}`;
+      const message =
+        errorBody?.error?.message ||
+        (typeof errorBody?.detail === 'string' ? errorBody.detail : errorBody?.detail?.message) ||
+        `Request failed with status ${res.status}`;
+      const details = errorBody?.error?.details || errorBody?.detail?.details;
+
+      throw new ApiError(message, code, details);
+    }
+    return (await res.json()) as T;
+  } catch (err: any) {
+    if (err instanceof ApiError) {
+      throw err;
+    }
+    throw new ApiError(err?.message || 'Network request failed', 'network_error');
+  }
+}
+
+export const api = {
+  // Health
+  getHealth: () => request<{ status: string; service: string; phase: string }>('/health'),
+
+  // Cases
+  getCases: (skip: number = 0, limit: number = 50) =>
+    request<CaseListResponse>(`/api/cases?skip=${skip}&limit=${limit}`),
+
+  getCase: (caseId: string) => request<FraudCase>(`/api/cases/${encodeURIComponent(caseId)}`),
+
+  createCase: (payload: {
+    case_id: string;
+    reported_origin_transaction_id: string;
+    reported_amount: number;
+    currency?: string;
+    reported_at?: string;
+    investigation_status?: string;
+    description: string;
+    created_by?: string;
+  }) =>
+    request<FraudCase>('/api/cases', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  updateCase: (
+    caseId: string,
+    payload: {
+      investigation_status?: string;
+      description?: string;
+      updated_by?: string;
+    }
+  ) =>
+    request<FraudCase>(`/api/cases/${encodeURIComponent(caseId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+
+  // Transactions
+  getCaseTransactions: (caseId: string, maxDepth: number = 10) =>
+    request<TransactionListResponse>(
+      `/api/cases/${encodeURIComponent(caseId)}/transactions?max_depth=${maxDepth}`
+    ),
+
+  addCaseTransactions: (
+    caseId: string,
+    transactions: Transaction[],
+    addedBy: string = 'analyst_ui'
+  ) =>
+    request<Transaction[]>(`/api/cases/${encodeURIComponent(caseId)}/transactions`, {
+      method: 'POST',
+      body: JSON.stringify({ transactions, added_by: addedBy }),
+    }),
+
+  // Graph & Trace
+  getCaseGraph: (caseId: string, maxDepth: number = 10) =>
+    request<GraphResponse>(
+      `/api/cases/${encodeURIComponent(caseId)}/graph?max_depth=${maxDepth}`
+    ),
+
+  getCaseTrace: (caseId: string, maxDepth: number = 10) =>
+    request<TraceResult>(
+      `/api/cases/${encodeURIComponent(caseId)}/trace?max_depth=${maxDepth}`
+    ),
+
+  // Account Review
+  updateAccountReview: (
+    caseId: string,
+    accountId: string,
+    payload: {
+      review_state: string;
+      evidence_quality?: string;
+      notes?: string;
+      reviewer_id?: string;
+    }
+  ) =>
+    request<AccountReviewStatus>(
+      `/api/cases/${encodeURIComponent(caseId)}/accounts/${encodeURIComponent(accountId)}/review`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+      }
+    ),
+
+  // Audit Trail
+  getCaseAuditTrail: (caseId: string) =>
+    request<AuditTrailResponse>(`/api/cases/${encodeURIComponent(caseId)}/audit-trail`),
+
+  // Risk Scoring
+  scoreRisk: (payload: RiskScoreRequest) =>
+    request<RiskScoreResponse>('/api/risk/score', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+};
