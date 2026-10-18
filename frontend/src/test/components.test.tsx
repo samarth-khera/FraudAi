@@ -169,6 +169,11 @@ describe('Common & Investigation Components', () => {
     expect(screen.getByText(/No external KYC, invoice, or bank statement verified/i)).toBeInTheDocument();
     expect(screen.getByText(/Request commercial invoice/i)).toBeInTheDocument();
 
+    // Regression: deep link must target the real route (/app/transaction-check), not a non-existent one
+    expect(screen.getAllByRole('link', { name: /Explain TX/i })[0].getAttribute('href')).toMatch(
+      /^\/app\/transaction-check\?/
+    );
+
     // Submit a human review decision
     const notesInput = screen.getByPlaceholderText(/Document specific findings/i);
     fireEvent.change(notesInput, { target: { value: 'Verified merchant invoice #INV-301' } });
@@ -245,6 +250,39 @@ describe('Common & Investigation Components', () => {
     expect(screen.getByText(/\+11\.4200/)).toBeInTheDocument();
     expect(screen.getByText(/-0\.4500/)).toBeInTheDocument();
     expect(screen.getByText(/Statistical decision-support signal only/i)).toBeInTheDocument();
+  });
+
+  it('TransactionCheckPage resolves a short deep link (caseId + txId only) from case transactions', async () => {
+    vi.spyOn(api, 'getCaseTransactions').mockResolvedValue({
+      case_id: 'FS-1042',
+      count: 1,
+      transactions: [
+        {
+          transaction_id: 'T003',
+          timestamp: '2026-01-12T10:40:00Z',
+          sender_account_id: 'B200',
+          receiver_account_id: 'C300',
+          amount: 30000,
+          currency: 'INR',
+          transaction_type: 'UPI',
+          hop_count: 2,
+          attributed_amount: 30000,
+          is_cycle_closing: false,
+        },
+      ],
+      warnings: [],
+    } as any);
+
+    render(
+      <MemoryRouter initialEntries={['/app/transaction-check?caseId=FS-1042&txId=T003']}>
+        <TransactionCheckPage />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect((document.querySelector('#risk-amount-input') as HTMLInputElement).value).toBe('30000');
+    });
+    expect(screen.getByText(/Linked to/)).toBeInTheDocument();
   });
 });
 

@@ -402,7 +402,7 @@ export const FundFlowPage: React.FC = () => {
 
               <div className="pt-2 flex flex-col gap-2">
                 <Link
-                  to={`/app/risk-check?caseId=${encodeURIComponent(selectedCaseId)}&txId=${encodeURIComponent(selectedEdge.id)}`}
+                  to={`/app/transaction-check?caseId=${encodeURIComponent(selectedCaseId)}&txId=${encodeURIComponent(selectedEdge.id)}`}
                   className="w-full py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold text-center transition-colors flex items-center justify-center gap-1.5"
                 >
                   <ShieldCheck className="w-4 h-4" />
