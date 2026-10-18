@@ -91,6 +91,9 @@ export interface AccountReviewStatus {
   evidence_quality: EvidenceQuality;
   notes?: string | null;
   reviewer_id?: string | null;
+  decision_reasons?: string[];
+  supporting_transaction_ids?: string[];
+  additional_info_needed?: boolean;
   automated_action_taken: string;
 }
 
@@ -117,7 +120,7 @@ export interface GraphNode {
   role: AccountRole;
   is_synthetic: boolean;
   hop_count: number | null;
-  connection_type: string | null;
+  connection_type?: string | null;
   review_state: ReviewState | null;
   evidence_quality: EvidenceQuality | null;
   attributed_unforwarded_amount: number | null;
@@ -146,20 +149,28 @@ export interface GraphResponse {
     node_count: number;
     edge_count: number;
     cycles_detected: boolean;
+    origin_transaction_id?: string;
+    max_depth?: number;
+    truncated?: boolean;
+    amounts_note?: string;
   };
   disclaimer: string;
 }
 
 export interface TraceSummary {
   reported_amount: number;
+  currency?: string;
   traceable_amount: number;
   located_amount: number;
   unlocated_amount: number;
   gross_observed_transaction_value: number;
   linked_account_count: number;
+  traced_transaction_count?: number;
   path_count: number;
+  max_depth?: number;
   truncated: boolean;
   cycles_detected: boolean;
+  uncertain_account_ids?: string[];
 }
 
 export interface LinkedAccountExposure {
@@ -173,16 +184,24 @@ export interface LinkedAccountExposure {
 
 export interface LinkedAccount {
   account_id: string;
+  label?: string | null;
+  role?: AccountRole;
   connection_type: string;
   hop_count: number;
+  first_received_at?: string;
   inbound_transaction_ids: string[];
   outbound_transaction_ids: string[];
+  path_ids?: string[];
   exposure: LinkedAccountExposure;
   review?: {
     review_state: ReviewState;
     evidence_quality: EvidenceQuality;
     automated_action_taken: string;
     notes?: string | null;
+    reviewer_id?: string | null;
+    decision_reasons?: string[];
+    supporting_transaction_ids?: string[];
+    additional_info_needed?: boolean;
   } | null;
 }
 
@@ -200,12 +219,36 @@ export interface FundTracePath {
   attribution_status: string;
 }
 
+export interface TraceWarning {
+  code: string;
+  message: string;
+  transaction_id?: string | null;
+  account_id?: string | null;
+}
+
+export interface TracedTransaction {
+  transaction_id: string;
+  timestamp: string;
+  sender_account_id: string;
+  receiver_account_id: string;
+  amount: number;
+  currency: string;
+  transaction_type: string;
+  hop_count: number;
+  attributed_amount: number | null;
+  attribution_basis?: string | null;
+  attribution_note?: string | null;
+  is_cycle_closing: boolean;
+}
+
 export interface TraceResult {
   case_id: string;
+  origin_transaction_id?: string;
   summary: TraceSummary;
   linked_accounts: LinkedAccount[];
+  traced_transactions?: TracedTransaction[];
   paths: FundTracePath[];
-  warnings: string[];
+  warnings: (TraceWarning | string)[];
   disclaimer: string;
 }
 
@@ -228,8 +271,132 @@ export interface RiskScoreResponse {
   disclaimer: string;
 }
 
+export type ContributionDirection = 'increases_risk' | 'decreases_risk' | 'neutral';
+export type EncodingKind = 'one_hot_summed' | 'numeric';
+
+export interface FeatureContribution {
+  feature: string;
+  label: string;
+  value: number | string;
+  contribution: number;
+  direction: ContributionDirection;
+  encoding: EncodingKind;
+}
+
+export interface EncodedFeatureContribution {
+  feature: string;
+  encoded_value: number;
+  contribution: number;
+}
+
+export interface RiskExplainResponse extends RiskScoreResponse {
+  explanation_method: string;
+  prediction_scale: string;
+  base_value: number;
+  raw_margin: number;
+  feature_contributions: FeatureContribution[];
+  encoded_contributions: EncodedFeatureContribution[];
+  representation_notes: string;
+  limitations: string[];
+}
+
+export interface AccountGraphPosition {
+  account_id: string;
+  label: string;
+  role: AccountRole;
+  is_synthetic: boolean;
+  in_traced_network: boolean;
+  connection_type: string;
+  hop_count: number | null;
+  upstream_account_ids: string[];
+  downstream_account_ids: string[];
+  path_ids: string[];
+  first_received_at: string | null;
+  last_observed_activity_at: string | null;
+}
+
+export interface AccountObservedMovement {
+  observed_inbound_value: number;
+  observed_outbound_value: number;
+  traced_inbound_count: number;
+  traced_outbound_count: number;
+  traced_inbound_transactions: TracedTransaction[];
+  traced_outbound_transactions: TracedTransaction[];
+  other_observed_inbound_count: number;
+  other_observed_outbound_count: number;
+  movement_note: string;
+}
+
+export interface AccountTraceableExposure {
+  reported_case_amount: number;
+  case_traceable_amount: number;
+  gross_network_observed_value: number;
+  attributed_inbound_amount: number | null;
+  attributed_outbound_amount: number | null;
+  attributed_unforwarded_amount: number | null;
+  attribution_status: string;
+  attribution_basis: string | null;
+  attribution_assumptions: string[];
+  double_counting_safeguard: string;
+}
+
+export interface AccountSignal {
+  code: string;
+  title: string;
+  description: string;
+  related_transaction_ids: string[];
+  interpretation_note: string;
+}
+
+export interface AccountSupportingEvidence {
+  evidence_type: string;
+  summary: string;
+  related_transaction_ids: string[];
+}
+
+export interface AccountEvidenceAssessment {
+  evidence_sufficiency:
+    | 'insufficient_evidence'
+    | 'graph_connection_only'
+    | 'scenario_lineage_assumed'
+    | 'human_review_corroborated'
+    | string;
+  supporting_evidence: AccountSupportingEvidence[];
+  evidence_gaps: string[];
+  uncertainty_factors: string[];
+  verification_guidance: string[];
+  recommended_review_state: ReviewState;
+  recommendation_rationale: string;
+}
+
+export interface AccountAssessmentResponse {
+  case_id: string;
+  account_id: string;
+  graph_position: AccountGraphPosition;
+  observed_movement: AccountObservedMovement;
+  traceable_exposure: AccountTraceableExposure;
+  observed_signals: AccountSignal[];
+  paths_involving_account: FundTracePath[];
+  evidence_assessment: AccountEvidenceAssessment;
+  review_status: AccountReviewStatus;
+  audit_history: AuditEvent[];
+  warnings: TraceWarning[];
+  transaction_risk_separation_note: string;
+  automated_action_taken: string;
+  decision_support_only: boolean;
+  disclaimer: string;
+}
+
+export interface CaseAccountAssessmentsResponse {
+  case_id: string;
+  count: number;
+  assessments: AccountAssessmentResponse[];
+  disclaimer: string;
+}
+
 export interface ApiError {
   code: string;
   message: string;
   details?: any;
 }
+
