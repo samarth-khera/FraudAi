@@ -283,3 +283,73 @@ def test_model_trained_on_train_only(tiny_run):
     expected = (len(tr) - tr[TARGET].sum()) / tr[TARGET].sum()
     assert run["scale_pos_weight_train"] == pytest.approx(expected)
     assert run["split"]["train_rows"] == info.train_rows
+
+
+# ---------------- local explainability (TreeSHAP / log-odds) ----------------
+def test_explain_additivity_and_probability_consistency(tiny_run, tmp_path):
+    df, run = tiny_run
+    save_artifacts(run, {"path": "x", "sha256": "n/a", "rows": len(df), "fraud_rows": 1, "fraud_prevalence": 0.1},
+                   tmp_path / "a", tmp_path / "r")
+    model = FraudModel.load(tmp_path / "a")
+    sample = df.sample(10, random_state=42)
+    probs = model.predict_proba(sample)
+    explanations = model.explain(sample)
+    assert len(explanations) == len(sample)
+
+    for prob, exp in zip(probs, explanations):
+        assert exp["risk_score"] == pytest.approx(float(prob), abs=1e-12)
+        assert exp["review_recommended"] is bool(prob >= model.threshold)
+        assert exp["prediction_scale"] == "log_odds"
+        assert "TreeSHAP" in exp["explanation_method"] or "Log-Odds" in exp["explanation_method"]
+
+        feat_sum = sum(c["contribution"] for c in exp["feature_contributions"])
+        enc_sum = sum(c["contribution"] for c in exp["encoded_contributions"])
+        assert exp["base_value"] + feat_sum == pytest.approx(exp["raw_margin"], abs=1e-5)
+        assert exp["base_value"] + enc_sum == pytest.approx(exp["raw_margin"], abs=1e-5)
+
+        sigmoid_margin = 1.0 / (1.0 + np.exp(-exp["raw_margin"]))
+        assert sigmoid_margin == pytest.approx(exp["risk_score"], abs=1e-5)
+
+
+def test_explain_local_variation_and_feature_restrictions(tiny_run, tmp_path):
+    df, run = tiny_run
+    save_artifacts(run, {"path": "x", "sha256": "n/a", "rows": len(df), "fraud_rows": 1, "fraud_prevalence": 0.1},
+                   tmp_path / "a", tmp_path / "r")
+    model = FraudModel.load(tmp_path / "a")
+    rows = pd.DataFrame([
+        {"step": 12, "type": "TRANSFER", "amount": 250000.0, "oldbalanceOrg": 250000.0, "oldbalanceDest": 0.0},
+        {"step": 35, "type": "PAYMENT", "amount": 150.0, "oldbalanceOrg": 50000.0, "oldbalanceDest": 10000.0},
+    ])
+    exps = model.explain(rows)
+    c0 = {c["feature"]: c["contribution"] for c in exps[0]["feature_contributions"]}
+    c1 = {c["feature"]: c["contribution"] for c in exps[1]["feature_contributions"]}
+    # Local explanations must depend on the specific row rather than repeating static global importances
+    assert c0 != c1
+
+    forbidden = {"newbalanceOrig", "newbalanceDest", "error_balance_orig", "error_balance_dest",
+                 "isFraud", "isFlaggedFraud", "nameOrig", "nameDest"}
+    for exp in exps:
+        feat_names = {c["feature"] for c in exp["feature_contributions"]}
+        enc_names = {c["feature"] for c in exp["encoded_contributions"]}
+        assert feat_names == set(model_feature_names("pre_transaction"))
+        assert not (feat_names & forbidden)
+        assert not (enc_names & forbidden)
+        for c in exp["feature_contributions"]:
+            if c["contribution"] > 1e-9:
+                assert c["direction"] == "increases_risk"
+            elif c["contribution"] < -1e-9:
+                assert c["direction"] == "decreases_risk"
+            else:
+                assert c["direction"] == "neutral"
+
+
+def test_explain_input_validation(tiny_run, tmp_path):
+    df, run = tiny_run
+    save_artifacts(run, {"path": "x", "sha256": "n/a", "rows": 1, "fraud_rows": 1, "fraud_prevalence": 0.1},
+                   tmp_path / "a", tmp_path / "r")
+    model = FraudModel.load(tmp_path / "a")
+    with pytest.raises(ValueError, match="missing required"):
+        model.explain(df.drop(columns=["amount"]).head(2))
+    with pytest.raises(ValueError, match="Unknown transaction types"):
+        model.explain(df.head(2).assign(type="WIRE"))
+

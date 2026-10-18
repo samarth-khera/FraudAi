@@ -94,7 +94,7 @@ class RiskScoringService:
         self.load()
         return self._model is not None
 
-    # ---- scoring -------------------------------------------------------
+    # ---- scoring & explainability --------------------------------------
     def score(self, transaction: dict[str, Any]) -> dict[str, Any]:
         self.load()
         if self._model is None:
@@ -115,8 +115,40 @@ class RiskScoringService:
             "disclaimer": DISCLAIMER,
         }
 
+    def explain(self, transaction: dict[str, Any]) -> dict[str, Any]:
+        self.load()
+        if self._model is None:
+            raise ModelUnavailableError("model not loaded")
+        model = self._model
+        frame = pd.DataFrame([{k: transaction[k] for k in sorted(REQUEST_FIELDS)}])
+        explanation = model.explain(frame)[0]
+        score = float(explanation["risk_score"])
+        base_val = float(explanation["base_value"])
+        raw_margin = float(explanation["raw_margin"])
+        if not (math.isfinite(score) and math.isfinite(base_val) and math.isfinite(raw_margin)):
+            raise ModelUnavailableError("model produced non-finite explanation values")
+        return {
+            "risk_score": score,
+            "threshold": model.threshold,
+            "review_recommended": bool(score >= model.threshold),
+            "model_version": f"{self._dir.name}:{model.meta.get('selected_model', 'unknown')}",
+            "feature_set": model.schema["feature_set"],
+            "explanation_method": explanation["explanation_method"],
+            "prediction_scale": explanation["prediction_scale"],
+            "base_value": base_val,
+            "raw_margin": raw_margin,
+            "feature_contributions": explanation["feature_contributions"],
+            "encoded_contributions": explanation["encoded_contributions"],
+            "representation_notes": explanation["representation_notes"],
+            "limitations": explanation["limitations"],
+            "decision_support_only": True,
+            "automated_action_taken": "none",
+            "disclaimer": DISCLAIMER,
+        }
+
 
 @lru_cache(maxsize=1)
 def get_risk_service() -> RiskScoringService:
     """Process-wide singleton (overridable in tests via FastAPI dependency_overrides)."""
     return RiskScoringService()
+
