@@ -1,14 +1,17 @@
 import {
+  AccountAssessmentResponse,
+  AccountReviewStatus,
   AuditTrailResponse,
+  CaseAccountAssessmentsResponse,
   CaseListResponse,
   FraudCase,
   GraphResponse,
+  RiskExplainResponse,
   RiskScoreRequest,
   RiskScoreResponse,
   TraceResult,
   Transaction,
   TransactionListResponse,
-  AccountReviewStatus,
 } from '../types/api';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '';
@@ -126,7 +129,17 @@ export const api = {
       `/api/cases/${encodeURIComponent(caseId)}/trace?max_depth=${maxDepth}`
     ),
 
-  // Account Review
+  // Account Review & Evidence-Aware Assessment
+  getCaseAccountAssessments: (caseId: string, maxDepth: number = 10) =>
+    request<CaseAccountAssessmentsResponse>(
+      `/api/cases/${encodeURIComponent(caseId)}/accounts?max_depth=${maxDepth}`
+    ),
+
+  getAccountAssessment: (caseId: string, accountId: string, maxDepth: number = 10) =>
+    request<AccountAssessmentResponse>(
+      `/api/cases/${encodeURIComponent(caseId)}/accounts/${encodeURIComponent(accountId)}/assessment?max_depth=${maxDepth}`
+    ),
+
   updateAccountReview: (
     caseId: string,
     accountId: string,
@@ -135,6 +148,9 @@ export const api = {
       evidence_quality?: string;
       notes?: string;
       reviewer_id?: string;
+      decision_reasons?: string[];
+      supporting_transaction_ids?: string[];
+      additional_info_needed?: boolean;
     }
   ) =>
     request<AccountReviewStatus>(
@@ -149,10 +165,17 @@ export const api = {
   getCaseAuditTrail: (caseId: string) =>
     request<AuditTrailResponse>(`/api/cases/${encodeURIComponent(caseId)}/audit-trail`),
 
-  // Risk Scoring
+  // Risk Scoring & Explainable AI
   scoreRisk: (payload: RiskScoreRequest) =>
     request<RiskScoreResponse>('/api/risk/score', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+
+  explainRisk: (payload: RiskScoreRequest) =>
+    request<RiskExplainResponse>('/api/risk/explain', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
 };
+

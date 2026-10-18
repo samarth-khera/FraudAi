@@ -1,22 +1,16 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Network,
-  ListFilter,
-  Layers,
-  ArrowRight,
   ShieldCheck,
-  AlertTriangle,
-  Info,
-  Clock,
   User,
-  ArrowUpRight,
-  ExternalLink,
   RefreshCw,
 } from 'lucide-react';
 import { api } from '../services/api';
 import { FraudCase, GraphEdge, GraphNode, GraphResponse, TraceResult } from '../types/api';
 import { CytoscapeGraph } from '../components/network/CytoscapeGraph';
 import { Badge } from '../components/common/Badge';
+import { AccountProtectionPanel } from '../components/investigation/AccountProtectionPanel';
 
 export const FundFlowPage: React.FC = () => {
   const [cases, setCases] = useState<FraudCase[]>([]);
@@ -48,11 +42,14 @@ export const FundFlowPage: React.FC = () => {
   }, []);
 
   // Fetch graph & trace when selectedCaseId or maxDepth changes
-  const fetchGraphAndTrace = async (caseId: string, depth: number) => {
+  const fetchGraphAndTrace = async (caseId: string, depth: number, preserveSelection = false) => {
     setLoading(true);
     setError(null);
-    setSelectedNode(null);
-    setSelectedEdge(null);
+    const prevNodeId = preserveSelection ? selectedNode?.id : null;
+    if (!preserveSelection) {
+      setSelectedNode(null);
+      setSelectedEdge(null);
+    }
     try {
       const [graph, trace] = await Promise.all([
         api.getCaseGraph(caseId, depth),
@@ -60,6 +57,10 @@ export const FundFlowPage: React.FC = () => {
       ]);
       setGraphData(graph);
       setTraceData(trace);
+      if (prevNodeId) {
+        const refreshedNode = graph.nodes.find((n) => n.id === prevNodeId) || null;
+        setSelectedNode(refreshedNode);
+      }
     } catch (err: any) {
       setError(err?.message || 'Failed to load fund flow data.');
     } finally {
@@ -73,6 +74,15 @@ export const FundFlowPage: React.FC = () => {
     }
   }, [selectedCaseId, maxDepth]);
 
+  const selectAccountById = (accountId: string) => {
+    if (!graphData) return;
+    const node = graphData.nodes.find((n) => n.id === accountId);
+    if (node) {
+      setSelectedNode(node);
+      setSelectedEdge(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Header & Case Selector */}
@@ -85,7 +95,7 @@ export const FundFlowPage: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Explore directional money paths, intermediate recipient hops, and exposure balances.
+            Explore directional money paths, intermediate recipient hops, and evidence-aware account assessments.
           </p>
         </div>
 
@@ -144,7 +154,7 @@ export const FundFlowPage: React.FC = () => {
           </div>
 
           <button
-            onClick={() => fetchGraphAndTrace(selectedCaseId, maxDepth)}
+            onClick={() => fetchGraphAndTrace(selectedCaseId, maxDepth, true)}
             disabled={loading}
             className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 shadow-2xs transition-colors"
             title="Reload Graph"
@@ -169,19 +179,19 @@ export const FundFlowPage: React.FC = () => {
         <div className="glass-card rounded-2xl p-4 border border-slate-200/80 grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
           <div>
             <span className="text-slate-500 block text-[11px]">Reported Stolen</span>
-            <span className="text-base font-bold text-slate-900">
+            <span className="text-base font-bold text-slate-900 tabular-nums">
               ₹{traceData.summary.reported_amount.toLocaleString()}
             </span>
           </div>
           <div>
             <span className="text-slate-500 block text-[11px]">Traceable Amount</span>
-            <span className="text-base font-bold text-indigo-600">
+            <span className="text-base font-bold text-indigo-600 tabular-nums">
               ₹{traceData.summary.traceable_amount.toLocaleString()}
             </span>
           </div>
           <div>
             <span className="text-slate-500 block text-[11px]">Located in Network</span>
-            <span className="text-base font-bold text-emerald-600">
+            <span className="text-base font-bold text-emerald-600 tabular-nums">
               ₹{traceData.summary.located_amount.toLocaleString()}
             </span>
           </div>
@@ -200,8 +210,8 @@ export const FundFlowPage: React.FC = () => {
 
       {/* Main Workspace: Graph / List & Details Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Main Visualizer / List (8 columns) */}
-        <div className="lg:col-span-8 space-y-4">
+        {/* Main Visualizer / List (7 columns) */}
+        <div className="lg:col-span-7 space-y-4">
           {viewMode === 'graph' ? (
             graphData ? (
               <CytoscapeGraph
@@ -227,7 +237,10 @@ export const FundFlowPage: React.FC = () => {
           ) : (
             /* List View of All Traced Paths */
             <div className="glass-card rounded-2xl p-5 border border-slate-200/80 space-y-4">
-              <h2 className="text-sm font-bold text-slate-900">Downstream Attributed Fund Paths</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-bold text-slate-900">Downstream Attributed Fund Paths</h2>
+                <span className="text-[11px] text-slate-500">Click any account ID to open evidence assessment</span>
+              </div>
               <div className="space-y-3">
                 {traceData?.paths.map((p) => (
                   <div key={p.path_id} className="p-4 rounded-xl bg-slate-50 border border-slate-200/60 text-xs space-y-2">
@@ -238,13 +251,28 @@ export const FundFlowPage: React.FC = () => {
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2 text-slate-600 font-mono">
-                      <span>{p.account_ids.join(' ──► ')}</span>
+                    <div className="flex flex-wrap items-center gap-1.5 text-slate-600 font-mono">
+                      {p.account_ids.map((accId, i) => (
+                        <React.Fragment key={`${p.path_id}-${accId}-${i}`}>
+                          <button
+                            type="button"
+                            onClick={() => selectAccountById(accId)}
+                            className={`px-2 py-0.5 rounded border transition-colors ${
+                              selectedNode?.id === accId
+                                ? 'bg-indigo-600 text-white border-indigo-700 font-bold'
+                                : 'bg-white text-slate-800 border-slate-200 hover:border-indigo-300'
+                            }`}
+                          >
+                            {accId}
+                          </button>
+                          {i < p.account_ids.length - 1 && <span className="text-slate-400">──►</span>}
+                        </React.Fragment>
+                      ))}
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200/40 text-[11px] text-slate-500">
                       <div>Hops: {p.hop_count}</div>
-                      <div>Max Amount: ₹{p.max_attributable_amount?.toLocaleString() ?? 'N/A'}</div>
+                      <div className="tabular-nums">Max Amount: ₹{p.max_attributable_amount?.toLocaleString() ?? 'N/A'}</div>
                       <div>Terminal: {p.terminal_account_id}</div>
                     </div>
                   </div>
@@ -260,7 +288,7 @@ export const FundFlowPage: React.FC = () => {
                 <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
                   Traced Legs ({graphData.edges.length} Transactions)
                 </span>
-                <span className="text-[11px] text-slate-500">Click row to highlight edge</span>
+                <span className="text-[11px] text-slate-500">Click row to inspect transaction leg or explain in Risk Engine</span>
               </div>
               <div className="overflow-x-auto max-h-64">
                 <table className="w-full text-left text-xs">
@@ -289,7 +317,7 @@ export const FundFlowPage: React.FC = () => {
                         <td className="py-2 px-3 font-mono text-indigo-600">{e.id}</td>
                         <td className="py-2 px-3 font-mono">{e.source}</td>
                         <td className="py-2 px-3 font-mono">{e.target}</td>
-                        <td className="py-2 px-3 font-semibold text-slate-900">
+                        <td className="py-2 px-3 font-semibold text-slate-900 tabular-nums">
                           ₹{e.amount.toLocaleString()}
                         </td>
                         <td className="py-2 px-3">{e.transaction_type}</td>
@@ -303,59 +331,15 @@ export const FundFlowPage: React.FC = () => {
           )}
         </div>
 
-        {/* Account / Transaction Detail Sidebar (4 columns) */}
-        <div className="lg:col-span-4 space-y-4">
+        {/* Account / Transaction Detail Sidebar (5 columns) */}
+        <div className="lg:col-span-5 space-y-4">
           {selectedNode ? (
-            /* Account Detail Card */
-            <div className="glass-card rounded-2xl p-5 border border-slate-200/80 space-y-4 animate-in fade-in">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                    <User className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900 font-mono">{selectedNode.id}</h3>
-                    <span className="text-[10px] text-slate-500 block">{selectedNode.label}</span>
-                  </div>
-                </div>
-                <Badge variant="role" value={selectedNode.role} />
-              </div>
-
-              {/* Exposure metrics */}
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between py-1 border-b border-slate-100">
-                  <span className="text-slate-500">Structural Role:</span>
-                  <span className="font-semibold text-slate-900 capitalize">{selectedNode.role.replace('_', ' ')}</span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-100">
-                  <span className="text-slate-500">Hop Distance:</span>
-                  <span className="font-semibold text-slate-900">
-                    {selectedNode.hop_count !== null ? `Hop ${selectedNode.hop_count}` : 'Origin / Direct'}
-                  </span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-100">
-                  <span className="text-slate-500">Unforwarded Attributed:</span>
-                  <span className="font-bold text-indigo-700">
-                    ₹{selectedNode.attributed_unforwarded_amount?.toLocaleString() ?? '0'}
-                  </span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-100">
-                  <span className="text-slate-500">Review State:</span>
-                  <Badge variant="review" value={selectedNode.review_state || 'not_reviewed'} />
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-100">
-                  <span className="text-slate-500">Evidence Quality:</span>
-                  <span className="font-semibold text-slate-700 capitalize">
-                    {selectedNode.evidence_quality?.replace('_', ' ') || 'Not Assessed'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Innocent Protection Disclaimer */}
-              <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200/70 text-[11px] text-amber-900 leading-relaxed">
-                <strong>Fairness Protection:</strong> Merely receiving downstream funds does not imply complicity. Legitimate merchants or contractors may hold unforwarded amounts.
-              </div>
-            </div>
+            <AccountProtectionPanel
+              caseId={selectedCaseId}
+              accountId={selectedNode.id}
+              onReviewUpdated={() => fetchGraphAndTrace(selectedCaseId, maxDepth, true)}
+              onClose={() => setSelectedNode(null)}
+            />
           ) : selectedEdge ? (
             /* Transaction Detail Card */
             <div className="glass-card rounded-2xl p-5 border border-slate-200/80 space-y-4 animate-in fade-in">
@@ -370,24 +354,38 @@ export const FundFlowPage: React.FC = () => {
               </div>
 
               <div className="space-y-2 text-xs">
-                <div className="flex justify-between py-1 border-b border-slate-100">
+                <div className="flex justify-between items-center py-1 border-b border-slate-100">
                   <span className="text-slate-500">From Account:</span>
-                  <span className="font-mono font-bold text-slate-800">{selectedEdge.source}</span>
+                  <button
+                    type="button"
+                    onClick={() => selectAccountById(selectedEdge.source)}
+                    className="font-mono font-bold text-indigo-700 hover:underline"
+                  >
+                    {selectedEdge.source} →
+                  </button>
                 </div>
-                <div className="flex justify-between py-1 border-b border-slate-100">
+                <div className="flex justify-between items-center py-1 border-b border-slate-100">
                   <span className="text-slate-500">To Account:</span>
-                  <span className="font-mono font-bold text-slate-800">{selectedEdge.target}</span>
+                  <button
+                    type="button"
+                    onClick={() => selectAccountById(selectedEdge.target)}
+                    className="font-mono font-bold text-indigo-700 hover:underline"
+                  >
+                    {selectedEdge.target} →
+                  </button>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100">
-                  <span className="text-slate-500">Amount:</span>
-                  <span className="font-bold text-base text-slate-900">
+                  <span className="text-slate-500">Gross Leg Amount:</span>
+                  <span className="font-bold text-base text-slate-900 tabular-nums">
                     ₹{selectedEdge.amount.toLocaleString()} {selectedEdge.currency}
                   </span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100">
-                  <span className="text-slate-500">Attributed Amount:</span>
-                  <span className="font-semibold text-indigo-600">
-                    ₹{selectedEdge.attributed_amount?.toLocaleString() ?? 'Scenario Attribution'}
+                  <span className="text-slate-500">Scenario Attributed Amount:</span>
+                  <span className="font-semibold text-indigo-600 tabular-nums">
+                    {selectedEdge.attributed_amount !== null
+                      ? `₹${selectedEdge.attributed_amount.toLocaleString()}`
+                      : 'Not Attributed'}
                   </span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100">
@@ -401,23 +399,60 @@ export const FundFlowPage: React.FC = () => {
                   <span className="text-slate-600">{new Date(selectedEdge.timestamp).toLocaleString()}</span>
                 </div>
               </div>
+
+              <div className="pt-2 flex flex-col gap-2">
+                <Link
+                  to={`/app/risk-check?caseId=${encodeURIComponent(selectedCaseId)}&txId=${encodeURIComponent(selectedEdge.id)}`}
+                  className="w-full py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold text-center transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Score & Explain in Risk Engine</span>
+                </Link>
+              </div>
             </div>
           ) : (
-            /* Default Instruction Card */
-            <div className="glass-card rounded-2xl p-6 border border-slate-200/80 text-center text-slate-400 space-y-3">
-              <Network className="w-10 h-10 mx-auto text-slate-300" />
-              <div className="text-sm font-semibold text-slate-700">Network Element Inspector</div>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Click any account node in the graph to view exposure & review status, or click any connecting arrow to view transaction leg details.
-              </p>
+            /* Default Instruction Card + Quick Account Selector */
+            <div className="glass-card rounded-2xl p-6 border border-slate-200/80 space-y-4">
+              <div className="text-center text-slate-400 space-y-2">
+                <Network className="w-10 h-10 mx-auto text-slate-300" />
+                <div className="text-sm font-semibold text-slate-700">Evidence & Network Inspector</div>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Click any account node in the graph to inspect observed movement vs. traceable exposure, missing evidence gaps, and human review decisions.
+                </p>
+              </div>
+
+              {graphData && graphData.nodes.length > 0 && (
+                <div className="pt-3 border-t border-slate-100 space-y-2">
+                  <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
+                    Quick-Select Connected Account
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {graphData.nodes.map((n) => (
+                      <button
+                        key={n.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedNode(n);
+                          setSelectedEdge(null);
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 hover:border-indigo-200 text-[11px] font-mono font-semibold transition-colors flex items-center gap-1.5"
+                      >
+                        <User className="w-3 h-3 text-slate-400" />
+                        <span>{n.id}</span>
+                        <Badge variant="role" value={n.role} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           {/* Scenario Disclaimer Note */}
           <div className="p-4 rounded-2xl bg-slate-100/90 border border-slate-200 text-xs text-slate-600 space-y-1">
-            <span className="font-bold text-slate-800 block">Synthetic Scenario Note:</span>
+            <span className="font-bold text-slate-800 block">Anti-Double-Counting & Fairness Safeguard:</span>
             <p className="text-[11px] leading-relaxed">
-              Case FS-1042 contains demonstration transactions. Lineage metadata reflects scenario assumptions, not proof of money ownership.
+              Downstream hop amounts are never summed into a larger stolen-fund total. Case FS-1042 contains synthetic demonstration transactions where lineage metadata reflects scenario assumptions, not legal proof of money ownership.
             </p>
           </div>
         </div>

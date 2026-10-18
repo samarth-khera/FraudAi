@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
-  FolderGit2,
   ArrowLeft,
   RefreshCw,
   Network,
-  Clock,
   ShieldCheck,
   FileText,
   UserCheck,
@@ -15,17 +13,19 @@ import {
   CheckCircle2,
   Edit3,
 } from 'lucide-react';
-import { api, ApiError } from '../services/api';
+import { api } from '../services/api';
 import {
   AuditEvent,
   FraudCase,
+  GraphEdge,
+  GraphNode,
   GraphResponse,
-  LinkedAccount,
   TraceResult,
   Transaction,
 } from '../types/api';
 import { Badge } from '../components/common/Badge';
 import { CytoscapeGraph } from '../components/network/CytoscapeGraph';
+import { AccountProtectionPanel } from '../components/investigation/AccountProtectionPanel';
 
 export const CaseDetailPage: React.FC = () => {
   const { caseId } = useParams<{ caseId: string }>();
@@ -40,12 +40,9 @@ export const CaseDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Review Modal State
-  const [reviewAccountModal, setReviewAccountModal] = useState<string | null>(null);
-  const [reviewState, setReviewState] = useState('under_review');
-  const [evidenceQuality, setEvidenceQuality] = useState('not_assessed');
-  const [reviewNotes, setReviewNotes] = useState('');
-  const [reviewLoading, setReviewLoading] = useState(false);
+  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+  const [selectedEdge, setSelectedEdge] = useState<GraphEdge | null>(null);
+  const [selectedReviewAccountId, setSelectedReviewAccountId] = useState<string | null>(null);
   const [reviewSuccess, setReviewSuccess] = useState<string | null>(null);
 
   const fetchCaseDetails = async () => {
@@ -65,6 +62,13 @@ export const CaseDetailPage: React.FC = () => {
       setTraceData(trace);
       setTransactions(txs.transactions);
       setAuditEvents(audit.events);
+      if (!selectedReviewAccountId && trace.linked_accounts.length > 0) {
+        setSelectedReviewAccountId(trace.linked_accounts[0].account_id);
+      }
+      if (selectedNode) {
+        const refreshed = graph.nodes.find((n) => n.id === selectedNode.id) || null;
+        setSelectedNode(refreshed);
+      }
     } catch (err: any) {
       setError(err?.message || 'Failed to load case details.');
     } finally {
@@ -84,34 +88,10 @@ export const CaseDetailPage: React.FC = () => {
         updated_by: 'investigator_ui',
       });
       setCaseData(updated);
-      // Refresh audit trail
       const audit = await api.getCaseAuditTrail(caseId);
       setAuditEvents(audit.events);
     } catch (err: any) {
       alert(`Failed to update status: ${err.message}`);
-    }
-  };
-
-  const handleReviewSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!caseId || !reviewAccountModal) return;
-    setReviewLoading(true);
-    try {
-      await api.updateAccountReview(caseId, reviewAccountModal, {
-        review_state: reviewState,
-        evidence_quality: evidenceQuality,
-        notes: reviewNotes,
-        reviewer_id: 'investigator_ui',
-      });
-      setReviewSuccess(`Review recorded for account ${reviewAccountModal}`);
-      setReviewAccountModal(null);
-      setReviewNotes('');
-      // Refresh case details to update review badges
-      fetchCaseDetails();
-    } catch (err: any) {
-      alert(`Failed to update review: ${err.message}`);
-    } finally {
-      setReviewLoading(false);
     }
   };
 
@@ -211,15 +191,23 @@ export const CaseDetailPage: React.FC = () => {
       <div className="glass-card rounded-2xl p-4 border border-slate-200/80 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
         <div>
           <span className="text-slate-500 block text-[11px]">Reported Stolen</span>
-          <span className="text-base font-bold text-slate-900">
+          <span className="text-base font-bold text-slate-900 tabular-nums">
             ₹{caseData.reported_amount.toLocaleString()} {caseData.currency}
           </span>
         </div>
         <div>
           <span className="text-slate-500 block text-[11px]">Origin Transaction</span>
-          <span className="text-base font-bold font-mono text-indigo-700">
-            {caseData.reported_origin_transaction_id}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-base font-bold font-mono text-indigo-700">
+              {caseData.reported_origin_transaction_id}
+            </span>
+            <Link
+              to={`/app/risk-check?caseId=${encodeURIComponent(caseData.case_id)}&txId=${encodeURIComponent(caseData.reported_origin_transaction_id)}`}
+              className="text-[10px] px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200 hover:bg-indigo-100"
+            >
+              Explain Score
+            </Link>
+          </div>
         </div>
         <div>
           <span className="text-slate-500 block text-[11px]">Traced Legs</span>
@@ -281,17 +269,90 @@ export const CaseDetailPage: React.FC = () => {
 
       {/* Tab 1: Overview & Cytoscape Graph */}
       {activeTab === 'overview' && graphData && (
-        <div className="space-y-4">
-          <CytoscapeGraph nodes={graphData.nodes} edges={graphData.edges} height="520px" />
-          <div className="p-4 rounded-2xl bg-white border border-slate-200/80 text-xs text-slate-600 flex items-center justify-between">
-            <div>
-              <strong>Graph Insights:</strong> {graphData.nodes.length} nodes, {graphData.edges.length} edges.
-              {graphData.meta.cycles_detected ? ' Cycles detected (traversal halted to prevent infinite loops).' : ' Acyclic tree.'}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className={`${selectedNode || selectedEdge ? 'lg:col-span-7' : 'lg:col-span-12'} space-y-4`}>
+            <CytoscapeGraph
+              nodes={graphData.nodes}
+              edges={graphData.edges}
+              selectedNodeId={selectedNode?.id}
+              selectedEdgeId={selectedEdge?.id}
+              onSelectNode={(node) => {
+                setSelectedNode(node);
+                setSelectedEdge(null);
+              }}
+              onSelectEdge={(edge) => {
+                setSelectedEdge(edge);
+                setSelectedNode(null);
+              }}
+              height="520px"
+            />
+            <div className="p-4 rounded-2xl bg-white border border-slate-200/80 text-xs text-slate-600 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <strong>Graph Insights:</strong> {graphData.nodes.length} nodes, {graphData.edges.length} edges.
+                {graphData.meta.cycles_detected
+                  ? ' Cycles detected (traversal halted to prevent infinite loops).'
+                  : ' Acyclic tree.'}{' '}
+                <span className="text-slate-500">Click any node to open the evidence-aware account protection panel.</span>
+              </div>
+              <Link to="/app/fund-flow" className="text-indigo-600 font-semibold hover:underline">
+                Open Full Screen Explorer →
+              </Link>
             </div>
-            <Link to="/app/fund-flow" className="text-indigo-600 font-semibold hover:underline">
-              Open Full Screen Explorer →
-            </Link>
           </div>
+
+          {(selectedNode || selectedEdge) && (
+            <div className="lg:col-span-5 space-y-4">
+              {selectedNode ? (
+                <AccountProtectionPanel
+                  caseId={caseData.case_id}
+                  accountId={selectedNode.id}
+                  onReviewUpdated={() => {
+                    setReviewSuccess(`Updated evidence review for ${selectedNode.id}`);
+                    fetchCaseDetails();
+                  }}
+                  onClose={() => setSelectedNode(null)}
+                />
+              ) : selectedEdge ? (
+                <div className="glass-card rounded-2xl p-5 border border-slate-200/80 space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 font-mono">{selectedEdge.id}</h3>
+                      <span className="text-[10px] text-slate-500">Traced Payment Leg</span>
+                    </div>
+                    <button
+                      onClick={() => setSelectedEdge(null)}
+                      className="text-xs text-slate-500 hover:text-slate-800"
+                    >
+                      Close
+                    </button>
+                  </div>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between py-1 border-b border-slate-100">
+                      <span className="text-slate-500">From:</span>
+                      <span className="font-mono font-bold text-slate-800">{selectedEdge.source}</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-slate-100">
+                      <span className="text-slate-500">To:</span>
+                      <span className="font-mono font-bold text-slate-800">{selectedEdge.target}</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-slate-100">
+                      <span className="text-slate-500">Amount:</span>
+                      <span className="font-bold text-slate-900 tabular-nums">
+                        ₹{selectedEdge.amount.toLocaleString()} {selectedEdge.currency}
+                      </span>
+                    </div>
+                  </div>
+                  <Link
+                    to={`/app/risk-check?caseId=${encodeURIComponent(caseData.case_id)}&txId=${encodeURIComponent(selectedEdge.id)}`}
+                    className="w-full py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold text-center transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Score & Explain in Risk Engine</span>
+                  </Link>
+                </div>
+              ) : null}
+            </div>
+          )}
         </div>
       )}
 
@@ -321,6 +382,7 @@ export const CaseDetailPage: React.FC = () => {
                   <th className="py-2.5 px-4">Receiver Account</th>
                   <th className="py-2.5 px-4">Amount</th>
                   <th className="py-2.5 px-4">Rail</th>
+                  <th className="py-2.5 px-4 text-right">Explainable AI</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -328,12 +390,43 @@ export const CaseDetailPage: React.FC = () => {
                   <tr key={t.transaction_id} className="hover:bg-slate-50/60">
                     <td className="py-2.5 px-4 font-mono font-bold text-indigo-700">{t.transaction_id}</td>
                     <td className="py-2.5 px-4 text-slate-500">{new Date(t.timestamp).toLocaleString()}</td>
-                    <td className="py-2.5 px-4 font-mono">{t.sender_account_id}</td>
-                    <td className="py-2.5 px-4 font-mono">{t.receiver_account_id}</td>
-                    <td className="py-2.5 px-4 font-bold text-slate-900">
+                    <td className="py-2.5 px-4 font-mono">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedReviewAccountId(t.sender_account_id);
+                          setActiveTab('reviews');
+                        }}
+                        className="text-slate-800 hover:text-indigo-700 hover:underline font-semibold"
+                      >
+                        {t.sender_account_id}
+                      </button>
+                    </td>
+                    <td className="py-2.5 px-4 font-mono">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedReviewAccountId(t.receiver_account_id);
+                          setActiveTab('reviews');
+                        }}
+                        className="text-slate-800 hover:text-indigo-700 hover:underline font-semibold"
+                      >
+                        {t.receiver_account_id}
+                      </button>
+                    </td>
+                    <td className="py-2.5 px-4 font-bold text-slate-900 tabular-nums">
                       ₹{t.amount.toLocaleString()} {t.currency}
                     </td>
                     <td className="py-2.5 px-4 font-semibold">{t.transaction_type}</td>
+                    <td className="py-2.5 px-4 text-right">
+                      <Link
+                        to={`/app/risk-check?caseId=${encodeURIComponent(caseData.case_id)}&txId=${encodeURIComponent(t.transaction_id)}`}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold transition-colors"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>Score & Explain</span>
+                      </Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -344,66 +437,90 @@ export const CaseDetailPage: React.FC = () => {
 
       {/* Tab 3: Account Reviews & Adjudication */}
       {activeTab === 'reviews' && traceData && (
-        <div className="glass-card rounded-2xl overflow-hidden border border-slate-200/80">
-          <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-            <div>
-              <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                Downstream Accounts & Human Adjudication
-              </h2>
-              <p className="text-[11px] text-slate-500">
-                Record human evidence assessments with reviewer accountability. No automatic freezing.
-              </p>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-7 glass-card rounded-2xl overflow-hidden border border-slate-200/80 h-fit">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                  Downstream Accounts & Human Adjudication
+                </h2>
+                <p className="text-[11px] text-slate-500">
+                  Select any account to inspect observed movement vs. traceable exposure, missing evidence gaps, and record human review decisions.
+                </p>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200/60">
+                  <tr>
+                    <th className="py-2.5 px-4">Account ID</th>
+                    <th className="py-2.5 px-4">Distance</th>
+                    <th className="py-2.5 px-4">Observed In / Out</th>
+                    <th className="py-2.5 px-4">Unforwarded Exposure</th>
+                    <th className="py-2.5 px-4">Review State</th>
+                    <th className="py-2.5 px-4">Evidence Quality</th>
+                    <th className="py-2.5 px-4 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {traceData.linked_accounts.map((a) => (
+                    <tr
+                      key={a.account_id}
+                      onClick={() => setSelectedReviewAccountId(a.account_id)}
+                      className={`cursor-pointer transition-colors ${
+                        selectedReviewAccountId === a.account_id ? 'bg-indigo-50/70' : 'hover:bg-slate-50/60'
+                      }`}
+                    >
+                      <td className="py-2.5 px-4 font-mono font-bold text-slate-900">{a.account_id}</td>
+                      <td className="py-2.5 px-4 text-slate-600">Hop {a.hop_count}</td>
+                      <td className="py-2.5 px-4 text-slate-600 tabular-nums">
+                        ₹{a.exposure.observed_inbound_value.toLocaleString()} / ₹{a.exposure.observed_outbound_value.toLocaleString()}
+                      </td>
+                      <td className="py-2.5 px-4 font-bold text-indigo-700 tabular-nums">
+                        ₹{a.exposure.attributed_unforwarded_amount?.toLocaleString() ?? '0'}
+                      </td>
+                      <td className="py-2.5 px-4">
+                        <Badge variant="review" value={a.review?.review_state || 'not_reviewed'} />
+                      </td>
+                      <td className="py-2.5 px-4 capitalize text-slate-600">
+                        {a.review?.evidence_quality?.replace('_', ' ') || 'Not Assessed'}
+                      </td>
+                      <td className="py-2.5 px-4 text-right">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedReviewAccountId(a.account_id);
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold transition-colors flex items-center gap-1 ml-auto"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>Inspect & Adjudicate</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200/60">
-                <tr>
-                  <th className="py-2.5 px-4">Account ID</th>
-                  <th className="py-2.5 px-4">Distance</th>
-                  <th className="py-2.5 px-4">Observed In / Out</th>
-                  <th className="py-2.5 px-4">Unforwarded Exposure</th>
-                  <th className="py-2.5 px-4">Review State</th>
-                  <th className="py-2.5 px-4">Evidence Quality</th>
-                  <th className="py-2.5 px-4 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {traceData.linked_accounts.map((a) => (
-                  <tr key={a.account_id} className="hover:bg-slate-50/60">
-                    <td className="py-2.5 px-4 font-mono font-bold text-slate-900">{a.account_id}</td>
-                    <td className="py-2.5 px-4 text-slate-600">Hop {a.hop_count}</td>
-                    <td className="py-2.5 px-4 text-slate-600">
-                      ₹{a.exposure.observed_inbound_value.toLocaleString()} / ₹{a.exposure.observed_outbound_value.toLocaleString()}
-                    </td>
-                    <td className="py-2.5 px-4 font-bold text-indigo-700">
-                      ₹{a.exposure.attributed_unforwarded_amount?.toLocaleString() ?? '0'}
-                    </td>
-                    <td className="py-2.5 px-4">
-                      <Badge variant="review" value={a.review?.review_state || 'not_reviewed'} />
-                    </td>
-                    <td className="py-2.5 px-4 capitalize text-slate-600">
-                      {a.review?.evidence_quality?.replace('_', ' ') || 'Not Assessed'}
-                    </td>
-                    <td className="py-2.5 px-4 text-right">
-                      <button
-                        onClick={() => {
-                          setReviewAccountModal(a.account_id);
-                          setReviewState(a.review?.review_state || 'under_review');
-                          setEvidenceQuality(a.review?.evidence_quality || 'not_assessed');
-                          setReviewNotes(a.review?.notes || '');
-                        }}
-                        className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold transition-colors flex items-center gap-1 ml-auto"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                        <span>Adjudicate</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="lg:col-span-5">
+            {selectedReviewAccountId ? (
+              <AccountProtectionPanel
+                caseId={caseData.case_id}
+                accountId={selectedReviewAccountId}
+                onReviewUpdated={() => {
+                  setReviewSuccess(`Review recorded in audit trail for account ${selectedReviewAccountId}`);
+                  fetchCaseDetails();
+                }}
+              />
+            ) : (
+              <div className="glass-card rounded-2xl p-6 border border-slate-200/80 text-center text-xs text-slate-500">
+                Select an account from the table to inspect evidence and record a review decision.
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -448,75 +565,6 @@ export const CaseDetailPage: React.FC = () => {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      )}
-
-      {/* Adjudicate Review Modal */}
-      {reviewAccountModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="glass-card bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95">
-            <h2 className="text-base font-bold text-slate-900 pb-2 border-b border-slate-100">
-              Review Account: <span className="font-mono text-indigo-700">{reviewAccountModal}</span>
-            </h2>
-
-            <form onSubmit={handleReviewSubmit} className="space-y-4 mt-4 text-xs">
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Review State</label>
-                <select
-                  value={reviewState}
-                  onChange={(e) => setReviewState(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-none"
-                >
-                  <option value="under_review">Under Review</option>
-                  <option value="review_completed">Review Completed (Cleared / Verified)</option>
-                  <option value="under_investigation">Under Investigation</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Evidence Quality</label>
-                <select
-                  value={evidenceQuality}
-                  onChange={(e) => setEvidenceQuality(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-none"
-                >
-                  <option value="not_assessed">Not Assessed</option>
-                  <option value="graph_connection_only">Graph Connection Only (Indirect)</option>
-                  <option value="synthetic_assumption">Synthetic Assumption</option>
-                  <option value="corroborated">Corroborated (Bank statement / Invoice confirmed)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Compliance Notes</label>
-                <textarea
-                  rows={3}
-                  value={reviewNotes}
-                  onChange={(e) => setReviewNotes(e.target.value)}
-                  placeholder="Record verification rationale (e.g. KYC verified, merchant invoice checked)..."
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-none"
-                  required
-                />
-              </div>
-
-              <div className="pt-2 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setReviewAccountModal(null)}
-                  className="px-4 py-2 font-semibold text-slate-600 hover:text-slate-800"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={reviewLoading}
-                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-md shadow-indigo-500/20 disabled:opacity-50"
-                >
-                  {reviewLoading ? 'Saving...' : 'Record Decision in Audit'}
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}
