@@ -278,3 +278,93 @@ def test_account_assessment_404_on_unknown_case_or_account(isolated_db_client):
     r2 = isolated_db_client.get("/api/cases/FS-1042/accounts/NO_SUCH_ACCOUNT/assessment")
     assert r2.status_code == 404
     assert r2.json()["error"]["code"] == "account_not_found"
+
+
+def test_full_phase6_end_to_end_investigation_workflow(isolated_db_client):
+    """End-to-end verification of the 10-step Phase 6 investigation workflow."""
+    # 1. Open dashboard / list cases
+    cases_res = isolated_db_client.get("/api/cases")
+    assert cases_res.status_code == 200
+    assert any(c["case_id"] == "FS-1042" for c in cases_res.json()["cases"])
+
+    # 2. Select and open case FS-1042
+    case_res = isolated_db_client.get("/api/cases/FS-1042")
+    assert case_res.status_code == 200
+    case_data = case_res.json()
+    assert case_data["reported_amount"] == 50000.0
+
+    # 3. View transaction network, trace, and account assessments list
+    graph_res = isolated_db_client.get("/api/cases/FS-1042/graph")
+    trace_res = isolated_db_client.get("/api/cases/FS-1042/trace")
+    accounts_res = isolated_db_client.get("/api/cases/FS-1042/accounts")
+    assert graph_res.status_code == 200
+    assert trace_res.status_code == 200
+    assert accounts_res.status_code == 200
+    assert accounts_res.json()["count"] == 8
+
+    # 4. Inspect a transaction from the case
+    txs_res = isolated_db_client.get("/api/cases/FS-1042/transactions")
+    assert txs_res.status_code == 200
+    origin_tx = next(t for t in txs_res.json()["transactions"] if t["transaction_id"] == "T001")
+
+    # 5. Run risk scoring and TreeSHAP explanation on the transaction parameters
+    risk_payload = {
+        "step": 10,
+        "type": "TRANSFER",
+        "amount": origin_tx["amount"],
+        "oldbalanceOrg": origin_tx["amount"],
+        "oldbalanceDest": 0.0,
+    }
+    score_res = isolated_db_client.post("/api/risk/score", json=risk_payload)
+    explain_res = isolated_db_client.post("/api/risk/explain", json=risk_payload)
+    assert score_res.status_code == 200
+    assert explain_res.status_code == 200
+    score_body = score_res.json()
+    explain_body = explain_res.json()
+    assert abs(score_body["risk_score"] - explain_body["risk_score"]) < 1e-9
+    assert score_body["review_recommended"] == explain_body["review_recommended"]
+    assert len(explain_body["feature_contributions"]) == 8
+
+    # 6 & 7. Inspect downstream account C300: observed movement vs traceable exposure & evidence quality
+    c300_before = isolated_db_client.get("/api/cases/FS-1042/accounts/C300/assessment").json()
+    assert c300_before["observed_movement"]["observed_inbound_value"] == 30000.0
+    assert c300_before["traceable_exposure"]["attributed_inbound_amount"] == 30000.0
+    assert c300_before["traceable_exposure"]["attributed_unforwarded_amount"] == 15000.0
+    assert c300_before["traceable_exposure"]["case_traceable_amount"] == 50000.0
+
+    # 8. Record a human review decision
+    put_res = isolated_db_client.put(
+        "/api/cases/FS-1042/accounts/C300/review",
+        json={
+            "review_state": "under_investigation",
+            "evidence_quality": "synthetic_assumption",
+            "reviewer_id": "lead_investigator_raj",
+            "notes": "Pass-through leg T005/T006 observed; requested bank statement and KYC verification.",
+            "decision_reasons": [
+                "Rapid pass-through observed; awaiting bank statement & session verification"
+            ],
+            "supporting_transaction_ids": ["T003", "T005", "T006"],
+            "additional_info_needed": True,
+        },
+    )
+    assert put_res.status_code == 200
+    assert put_res.json()["automated_action_taken"] == "none"
+
+    # 9 & 10. Verify DB persistence, audit trail, and reload consistency across endpoints
+    audit_res = isolated_db_client.get("/api/cases/FS-1042/audit-trail")
+    assert audit_res.status_code == 200
+    assert any(
+        ev["entity_id"] == "FS-1042:C300" and ev["performed_by"] == "lead_investigator_raj"
+        for ev in audit_res.json()["events"]
+    )
+
+    c300_after = isolated_db_client.get("/api/cases/FS-1042/accounts/C300/assessment").json()
+    assert c300_after["review_status"]["review_state"] == "under_investigation"
+    assert c300_after["review_status"]["additional_info_needed"] is True
+    assert c300_after["review_status"]["supporting_transaction_ids"] == ["T003", "T005", "T006"]
+
+    graph_after = isolated_db_client.get("/api/cases/FS-1042/graph").json()
+    c300_node = next(n for n in graph_after["nodes"] if n["id"] == "C300")
+    assert c300_node["review_state"] == "under_investigation"
+    assert c300_node["evidence_quality"] == "synthetic_assumption"
+
