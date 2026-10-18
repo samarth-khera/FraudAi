@@ -18,9 +18,11 @@ from app.repositories.sql_case_repository import (
     SqlCaseRepository,
 )
 from app.schemas.case_management import (
+    AccountAssessmentResponse,
     AccountReviewUpdateRequest,
     AuditEventResponse,
     AuditTrailResponse,
+    CaseAccountAssessmentsResponse,
     CaseCreateRequest,
     CaseTransactionsAddRequest,
     CaseUpdateRequest,
@@ -32,6 +34,10 @@ from app.schemas.trace import (
     HealthResponse,
     TraceResult,
     TransactionListResponse,
+)
+from app.services.account_assessment import (
+    assess_all_case_accounts,
+    assess_case_account,
 )
 from app.services.graph import build_graph
 from app.services.tracer import DEFAULT_MAX_DEPTH, TraceError, trace_case
@@ -197,9 +203,69 @@ def record_account_review(
             evidence_quality=req.evidence_quality,
             notes=req.notes,
             reviewer_id=req.reviewer_id,
+            decision_reasons=req.decision_reasons,
+            supporting_transaction_ids=req.supporting_transaction_ids,
+            additional_info_needed=req.additional_info_needed,
         )
     except EntityNotFoundError as exc:
         raise HTTPException(status_code=404, detail={"code": exc.code, "message": exc.message})
+
+
+@router.get(
+    "/api/cases/{case_id}/accounts",
+    response_model=CaseAccountAssessmentsResponse,
+    responses=_ERRORS,
+    tags=["cases"],
+)
+def list_case_account_assessments(
+    case_id: str,
+    max_depth: int = MaxDepth,
+    repo: CaseRepository = Depends(get_repository),
+) -> CaseAccountAssessmentsResponse:
+    """Retrieve evidence-aware assessments for all accounts in the case's traced network."""
+    case = _require_case(repo, case_id)
+    try:
+        return assess_all_case_accounts(
+            case=case,
+            transactions=repo.get_transactions(case_id),
+            accounts=repo.get_accounts(),
+            review_statuses=repo.get_review_statuses(case_id),
+            audit_events=repo.get_audit_events(case_id),
+            max_depth=max_depth,
+        )
+    except TraceError as exc:
+        raise HTTPException(status_code=409, detail={"code": exc.code, "message": exc.message})
+
+
+@router.get(
+    "/api/cases/{case_id}/accounts/{account_id}/assessment",
+    response_model=AccountAssessmentResponse,
+    responses=_ERRORS,
+    tags=["cases"],
+)
+def get_account_assessment(
+    case_id: str,
+    account_id: str,
+    max_depth: int = MaxDepth,
+    repo: CaseRepository = Depends(get_repository),
+) -> AccountAssessmentResponse:
+    """Retrieve an evidence-aware downstream account assessment for a specific account."""
+    case = _require_case(repo, case_id)
+    try:
+        return assess_case_account(
+            case=case,
+            account_id=account_id,
+            transactions=repo.get_transactions(case_id),
+            accounts=repo.get_accounts(),
+            review_statuses=repo.get_review_statuses(case_id),
+            audit_events=repo.get_audit_events(case_id),
+            max_depth=max_depth,
+        )
+    except EntityNotFoundError as exc:
+        raise HTTPException(status_code=404, detail={"code": exc.code, "message": exc.message})
+    except TraceError as exc:
+        raise HTTPException(status_code=409, detail={"code": exc.code, "message": exc.message})
+
 
 
 @router.get(
