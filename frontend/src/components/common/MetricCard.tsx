@@ -17,49 +17,65 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   change,
   changeType = 'neutral',
   icon,
-  iconBg = 'bg-indigo-50 text-indigo-600',
+  iconBg = 'bg-[#F0FDFA] text-[#0F766E] border-[#CCFBF1]',
   subtitle,
   className = '',
 }) => {
   const getChangeColor = () => {
     switch (changeType) {
       case 'positive':
-        return 'text-emerald-600 bg-emerald-50 border-emerald-100';
+        return 'text-emerald-800 bg-emerald-50 border-emerald-200';
       case 'negative':
-        return 'text-rose-600 bg-rose-50 border-rose-100';
+        return 'text-red-800 bg-red-50 border-red-200';
       case 'warning':
-        return 'text-amber-600 bg-amber-50 border-amber-100';
+        return 'text-amber-900 bg-amber-50 border-amber-200';
       default:
-        return 'text-slate-600 bg-slate-100 border-slate-200';
+        return 'text-[#334155] bg-[#F5F4F0] border-[#D6D3CD]';
+    }
+  };
+
+  const getTopBarColor = () => {
+    switch (changeType) {
+      case 'positive':
+        return 'bg-emerald-600';
+      case 'negative':
+        return 'bg-red-600';
+      case 'warning':
+        return 'bg-amber-500';
+      default:
+        return 'bg-[#0D9488]';
     }
   };
 
   return (
     <div
-      className={`glass-card glass-card-hover rounded-2xl p-5 relative overflow-hidden transition-all ${className}`}
+      className={`forensic-panel relative overflow-hidden p-4 sm:p-5 transition-colors hover:border-[#0D9488]/60 ${className}`}
     >
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+      <div className={`absolute top-0 left-0 right-0 h-0.5 ${getTopBarColor()}`} />
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-[#64748B] mb-1">
             {title}
           </p>
-          <h3 className="text-2xl font-bold text-slate-900 tracking-tight">{value}</h3>
+          <h3 className="text-2xl font-bold text-[#0B1322] font-mono tracking-tight tabular-nums">
+            {value}
+          </h3>
         </div>
-        <div className={`p-3 rounded-xl border border-white/60 shadow-sm ${iconBg}`}>
+        <div className={`p-2 rounded-md border flex-shrink-0 ${iconBg}`}>
           {icon}
         </div>
       </div>
 
       {(change || subtitle) && (
-        <div className="mt-3 flex items-center gap-2 pt-2 border-t border-slate-100/80 text-xs">
+        <div className="mt-3 flex flex-wrap items-center gap-2 pt-2.5 border-t border-[#E2DFD7]/80 text-[11px]">
           {change && (
             <span
-              className={`inline-flex items-center px-1.5 py-0.5 rounded-md font-semibold border ${getChangeColor()}`}
+              className={`inline-flex items-center px-1.5 py-0.5 rounded font-mono font-semibold border ${getChangeColor()}`}
             >
               {change}
             </span>
           )}
-          {subtitle && <span className="text-slate-500 font-medium">{subtitle}</span>}
+          {subtitle && <span className="text-[#64748B] font-medium">{subtitle}</span>}
         </div>
       )}
     </div>
