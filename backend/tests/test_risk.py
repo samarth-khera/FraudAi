@@ -10,7 +10,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.services.risk_scoring as rs  # noqa: E402  (adds repo root to sys.path for `ml`)
-from app.api.risk import RiskScoreResponse
+from app.api.risk import RiskExplainResponse, RiskScoreResponse
 from app.main import create_app
 from app.services.risk_scoring import RiskScoringService, get_risk_service
 
@@ -239,3 +239,100 @@ def test_existing_endpoints_unchanged(risk_client):
     assert t["summary"]["traceable_amount"] == 50000 and len(t["paths"]) == 3
     assert len(risk_client.get("/api/cases/FS-1042/graph").json()["edges"]) == 7
     assert risk_client.get("/api/cases/NOPE").status_code == 404
+
+
+# ---------------- explainability API (POST /api/risk/explain) ----------------
+def test_explain_response_and_score_consistency(risk_client):
+    score_res = risk_client.post("/api/risk/score", json=VALID).json()
+    r = risk_client.post("/api/risk/explain", json=VALID)
+    assert r.status_code == 200
+    body = r.json()
+    RiskExplainResponse(**body)
+
+    assert body["risk_score"] == pytest.approx(score_res["risk_score"], abs=1e-12)
+    assert body["threshold"] == score_res["threshold"]
+    assert body["review_recommended"] == score_res["review_recommended"]
+    assert body["model_version"] == score_res["model_version"]
+    assert body["feature_set"] == "pre_transaction"
+    assert body["prediction_scale"] == "log_odds"
+    assert body["decision_support_only"] is True
+    assert body["automated_action_taken"] == "none"
+    assert "guilt" in body["disclaimer"].lower() and "frozen" in body["disclaimer"].lower()
+    assert len(body["feature_contributions"]) == 8
+    assert len(body["encoded_contributions"]) == 12
+    assert len(body["limitations"]) >= 2
+    assert "one-hot" in body["representation_notes"].lower()
+
+
+def test_explain_contributions_match_log_odds_and_differ_across_inputs(risk_client):
+    import math
+    b_valid = risk_client.post("/api/risk/explain", json=VALID).json()
+    b_safe = risk_client.post("/api/risk/explain", json=SAFE).json()
+
+    for b in (b_valid, b_safe):
+        feat_sum = sum(c["contribution"] for c in b["feature_contributions"])
+        enc_sum = sum(c["contribution"] for c in b["encoded_contributions"])
+        assert b["base_value"] + feat_sum == pytest.approx(b["raw_margin"], abs=1e-5)
+        assert b["base_value"] + enc_sum == pytest.approx(b["raw_margin"], abs=1e-5)
+        sig = 1.0 / (1.0 + math.exp(-b["raw_margin"]))
+        assert sig == pytest.approx(b["risk_score"], abs=1e-5)
+
+    map_valid = {c["feature"]: c["contribution"] for c in b_valid["feature_contributions"]}
+    map_safe = {c["feature"]: c["contribution"] for c in b_safe["feature_contributions"]}
+    assert map_valid != map_safe
+
+
+def test_explain_no_guilt_or_post_balance_fields(risk_client):
+    body = risk_client.post("/api/risk/explain", json=VALID).json()
+    assert not set(body) & {"is_fraud", "is_scammer", "guilty", "innocent", "freeze_account"}
+    feats = {c["feature"] for c in body["feature_contributions"]}
+    encs = {c["feature"] for c in body["encoded_contributions"]}
+    assert not (feats & rs.FORBIDDEN_FEATURES)
+    assert not (encs & rs.FORBIDDEN_FEATURES)
+
+
+@pytest.mark.parametrize("mutate", [
+    lambda p: p.pop("amount"),
+    lambda p: p.pop("type"),
+    lambda p: p.update(newbalanceOrig=0.0),
+    lambda p: p.update(nameOrig="C123"),
+    lambda p: p.update(isFlaggedFraud=0),
+    lambda p: p.update(type="WIRE"),
+    lambda p: p.update(amount="100"),
+    lambda p: p.update(amount=-1),
+    lambda p: p.update(oldbalanceOrg=-5),
+    lambda p: p.update(step=0),
+    lambda p: p.update(step=1.5),
+    lambda p: p.update(step=True),
+    lambda p: p.update(amount=None),
+])
+def test_explain_invalid_requests_rejected(risk_client, mutate):
+    payload = dict(VALID)
+    mutate(payload)
+    r = risk_client.post("/api/risk/explain", json=payload)
+    assert r.status_code == 422
+    assert r.json()["error"]["code"] == "validation_error"
+
+
+@pytest.mark.parametrize("literal", ["NaN", "Infinity", "-Infinity"])
+def test_explain_non_finite_values_rejected(risk_client, literal):
+    raw = ('{"step": 1, "type": "TRANSFER", "amount": %s, "oldbalanceOrg": 1.0, "oldbalanceDest": 0.0}' % literal)
+    r = risk_client.post("/api/risk/explain", content=raw, headers={"content-type": "application/json"})
+    assert r.status_code == 422
+
+
+def test_explain_missing_and_corrupt_artifacts_503(artifact_dir, tmp_path):
+    _assert_clean_503(make_client(RiskScoringService(tmp_path / "nothing")).post("/api/risk/explain", json=VALID))
+    d = copy_artifacts(artifact_dir, tmp_path / "bad_explain")
+    (d / "pipeline.joblib").write_bytes(b"corrupt")
+    _assert_clean_503(make_client(RiskScoringService(d)).post("/api/risk/explain", json=VALID))
+
+
+def test_score_and_explain_share_single_model_load(artifact_dir):
+    svc = RiskScoringService(artifact_dir)
+    c = make_client(svc)
+    assert c.post("/api/risk/score", json=VALID).status_code == 200
+    assert c.post("/api/risk/explain", json=VALID).status_code == 200
+    assert c.post("/api/risk/explain", json=SAFE).status_code == 200
+    assert svc.load_count == 1
+
