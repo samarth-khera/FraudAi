@@ -49,6 +49,9 @@ class CaseRepository(Protocol):
         evidence_quality: EvidenceQuality = EvidenceQuality.NOT_ASSESSED,
         notes: Optional[str] = None,
         reviewer_id: str = "analyst_placeholder",
+        decision_reasons: Optional[list[str]] = None,
+        supporting_transaction_ids: Optional[list[str]] = None,
+        additional_info_needed: bool = False,
     ) -> AccountReviewStatus: ...
     def add_transactions(
         self,
@@ -166,10 +169,17 @@ class InMemoryCaseRepository:
         evidence_quality: EvidenceQuality = EvidenceQuality.NOT_ASSESSED,
         notes: Optional[str] = None,
         reviewer_id: str = "analyst_placeholder",
+        decision_reasons: Optional[list[str]] = None,
+        supporting_transaction_ids: Optional[list[str]] = None,
+        additional_info_needed: bool = False,
     ) -> AccountReviewStatus:
         from app.repositories.sql_case_repository import EntityNotFoundError
         if case_id not in self._cases:
             raise EntityNotFoundError("case_not_found", f"Case '{case_id}' not found.")
+        prev = self._reviews.get((case_id, account_id))
+        old_state = prev.review_state.value if prev else None
+        reasons = [r.strip() for r in (decision_reasons or []) if r and r.strip()]
+        tx_ids = [t.strip() for t in (supporting_transaction_ids or []) if t and t.strip()]
         rev = AccountReviewStatus(
             case_id=case_id,
             account_id=account_id,
@@ -177,6 +187,9 @@ class InMemoryCaseRepository:
             evidence_quality=evidence_quality,
             notes=notes,
             reviewer_id=reviewer_id,
+            decision_reasons=reasons,
+            supporting_transaction_ids=tx_ids,
+            additional_info_needed=bool(additional_info_needed),
             automated_action_taken="none",
         )
         self._reviews[(case_id, account_id)] = rev
@@ -188,12 +201,18 @@ class InMemoryCaseRepository:
             entity_id=f"{case_id}:{account_id}",
             details={
                 "account_id": account_id,
+                "old_review_state": old_state,
                 "new_review_state": review_state.value,
                 "evidence_quality": evidence_quality.value,
                 "notes": notes,
+                "decision_reasons": reasons,
+                "supporting_transaction_ids": tx_ids,
+                "additional_info_needed": bool(additional_info_needed),
+                "automated_action_taken": "none",
             },
         )
         return rev
+
 
     def add_transactions(
         self,

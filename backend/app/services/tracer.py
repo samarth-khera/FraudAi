@@ -291,8 +291,13 @@ def trace_case(
                 review_state=rev.review_state if rev else ReviewState.NOT_REVIEWED,
                 evidence_quality=rev.evidence_quality if rev else EvidenceQuality.GRAPH_CONNECTION_ONLY,
                 notes=rev.notes if rev else None,
+                reviewer_id=rev.reviewer_id if rev else None,
+                decision_reasons=list(rev.decision_reasons) if rev else [],
+                supporting_transaction_ids=list(rev.supporting_transaction_ids) if rev else [],
+                additional_info_needed=bool(rev.additional_info_needed) if rev else False,
                 automated_action_taken="none"),
             is_synthetic=acct.is_synthetic if acct else True))
+
 
     origin_attr = attr(origin)
     traceable = min(origin_attr, case.reported_amount) if origin_attr is not None else ZERO

@@ -76,7 +76,12 @@ class ReviewInfo(BaseModel):
     review_state: ReviewState
     evidence_quality: EvidenceQuality
     notes: Optional[str] = None
+    reviewer_id: Optional[str] = None
+    decision_reasons: list[str] = Field(default_factory=list)
+    supporting_transaction_ids: list[str] = Field(default_factory=list)
+    additional_info_needed: bool = False
     automated_action_taken: str = "none"
+
 
 
 class AccountTraceInfo(BaseModel):

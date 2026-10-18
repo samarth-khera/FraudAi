@@ -106,7 +106,11 @@ def _model_to_transaction(m: TransactionModel) -> Transaction:
     )
 
 
-def _model_to_review(m: AccountReviewStatusModel) -> AccountReviewStatus:
+def _model_to_review(
+    m: AccountReviewStatusModel,
+    extra: Optional[dict[str, Any]] = None,
+) -> AccountReviewStatus:
+    ext = extra or {}
     return AccountReviewStatus(
         account_id=m.account_id,
         case_id=m.case_id,
@@ -114,6 +118,9 @@ def _model_to_review(m: AccountReviewStatusModel) -> AccountReviewStatus:
         evidence_quality=EvidenceQuality(m.evidence_quality),
         notes=m.notes,
         reviewer_id=m.reviewer_id,
+        decision_reasons=list(ext.get("decision_reasons") or []),
+        supporting_transaction_ids=list(ext.get("supporting_transaction_ids") or []),
+        additional_info_needed=bool(ext.get("additional_info_needed", False)),
         automated_action_taken=m.automated_action_taken,
     )
 
@@ -335,7 +342,18 @@ class SqlCaseRepository:
     # ---------------- Review Status ----------------
     def get_review_statuses(self, case_id: str) -> list[AccountReviewStatus]:
         rows = self.db.query(AccountReviewStatusModel).filter_by(case_id=case_id).all()
-        return [_model_to_review(r) for r in rows]
+        review_events = (
+            self.db.query(AuditEventModel)
+            .filter_by(case_id=case_id, action="account_review_recorded")
+            .order_by(AuditEventModel.timestamp.asc(), AuditEventModel.event_id.asc())
+            .all()
+        )
+        latest_extra_by_acct: dict[str, dict[str, Any]] = {}
+        for ev in review_events:
+            d = ev.details
+            if isinstance(d, dict) and d.get("account_id"):
+                latest_extra_by_acct[str(d["account_id"])] = d
+        return [_model_to_review(r, latest_extra_by_acct.get(r.account_id)) for r in rows]
 
     def update_account_review(
         self,
@@ -345,6 +363,9 @@ class SqlCaseRepository:
         evidence_quality: EvidenceQuality = EvidenceQuality.NOT_ASSESSED,
         notes: Optional[str] = None,
         reviewer_id: str = "analyst_placeholder",
+        decision_reasons: Optional[list[str]] = None,
+        supporting_transaction_ids: Optional[list[str]] = None,
+        additional_info_needed: bool = False,
     ) -> AccountReviewStatus:
         case = self.db.query(FraudCaseModel).filter_by(case_id=case_id).first()
         if not case:
@@ -381,6 +402,9 @@ class SqlCaseRepository:
 
         self.db.flush()
 
+        reasons = [r.strip() for r in (decision_reasons or []) if r and r.strip()]
+        tx_ids = [t.strip() for t in (supporting_transaction_ids or []) if t and t.strip()]
+
         # Audit event (append-only)
         audit = AuditEventModel(
             case_id=case_id,
@@ -390,17 +414,23 @@ class SqlCaseRepository:
             entity_id=f"{case_id}:{account_id}",
             timestamp=utc_now(),
         )
-        audit.details = {
+        extra_details = {
             "account_id": account_id,
             "old_review_state": old_state,
             "new_review_state": review_state.value,
             "evidence_quality": evidence_quality.value,
             "notes": notes,
+            "decision_reasons": reasons,
+            "supporting_transaction_ids": tx_ids,
+            "additional_info_needed": bool(additional_info_needed),
+            "automated_action_taken": "none",
         }
+        audit.details = extra_details
         self.db.add(audit)
         self.db.commit()
         self.db.refresh(rev)
-        return _model_to_review(rev)
+        return _model_to_review(rev, extra_details)
+
 
     # ---------------- Audit Trail ----------------
     def get_audit_events(self, case_id: str) -> list[AuditEvent]:
