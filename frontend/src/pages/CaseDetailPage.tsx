@@ -202,7 +202,7 @@ export const CaseDetailPage: React.FC = () => {
               {caseData.reported_origin_transaction_id}
             </span>
             <Link
-              to={`/app/risk-check?caseId=${encodeURIComponent(caseData.case_id)}&txId=${encodeURIComponent(caseData.reported_origin_transaction_id)}`}
+              to={`/app/transaction-check?caseId=${encodeURIComponent(caseData.case_id)}&txId=${encodeURIComponent(caseData.reported_origin_transaction_id)}`}
               className="text-[10px] px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200 hover:bg-indigo-100"
             >
               Explain Score
@@ -343,7 +343,7 @@ export const CaseDetailPage: React.FC = () => {
                     </div>
                   </div>
                   <Link
-                    to={`/app/risk-check?caseId=${encodeURIComponent(caseData.case_id)}&txId=${encodeURIComponent(selectedEdge.id)}`}
+                    to={`/app/transaction-check?caseId=${encodeURIComponent(caseData.case_id)}&txId=${encodeURIComponent(selectedEdge.id)}`}
                     className="w-full py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold text-center transition-colors flex items-center justify-center gap-1.5"
                   >
                     <ShieldCheck className="w-4 h-4" />
@@ -420,7 +420,7 @@ export const CaseDetailPage: React.FC = () => {
                     <td className="py-2.5 px-4 font-semibold">{t.transaction_type}</td>
                     <td className="py-2.5 px-4 text-right">
                       <Link
-                        to={`/app/risk-check?caseId=${encodeURIComponent(caseData.case_id)}&txId=${encodeURIComponent(t.transaction_id)}`}
+                        to={`/app/transaction-check?caseId=${encodeURIComponent(caseData.case_id)}&txId=${encodeURIComponent(t.transaction_id)}`}
                         className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold transition-colors"
                       >
                         <ShieldCheck className="w-3.5 h-3.5" />

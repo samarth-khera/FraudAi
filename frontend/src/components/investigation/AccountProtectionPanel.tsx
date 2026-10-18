@@ -410,7 +410,7 @@ export const AccountProtectionPanel: React.FC<AccountProtectionPanelProps> = ({
               {allAccountTxs.map((t) => {
                 const isInbound = t.receiver_account_id === pos.account_id;
                 const stepVal = new Date(t.timestamp).getUTCHours() + 1 || 11;
-                const explainUrl = `/app/risk-check?txId=${encodeURIComponent(
+                const explainUrl = `/app/transaction-check?txId=${encodeURIComponent(
                   t.transaction_id
                 )}&caseId=${encodeURIComponent(caseId)}&amount=${t.amount}&type=${encodeURIComponent(
                   t.transaction_type

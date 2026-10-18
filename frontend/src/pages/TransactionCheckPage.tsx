@@ -148,8 +148,27 @@ export const TransactionCheckPage: React.FC = () => {
           originalRail: typeParam || undefined,
         });
       }
+    } else if (txId && !amountParam) {
+      // Short deep link (caseId + txId only): resolve from the case's traced transactions
+      const found = caseTransactions.find((t) => t.transaction_id === txId);
+      if (found) {
+        setFormData({
+          step: deriveStepFromTimestamp(found.timestamp),
+          type: mapRailToPaySimType(found.transaction_type),
+          amount: found.amount,
+          oldbalanceOrg: found.amount,
+          oldbalanceDest: 0,
+        });
+        setLinkedTx({
+          transactionId: found.transaction_id,
+          caseId,
+          sender: found.sender_account_id,
+          receiver: found.receiver_account_id,
+          originalRail: found.transaction_type,
+        });
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, caseTransactions]);
 
   const handleSelectCaseTx = (tx: TracedTransaction) => {
     const mappedType = mapRailToPaySimType(tx.transaction_type);
