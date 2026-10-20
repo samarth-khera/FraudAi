@@ -107,6 +107,15 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileMenu }) => {
 
       {/* Right System Telemetry & Analyst Identity */}
       <div className="flex items-center gap-3">
+        <Link
+          to="/v2"
+          className="flex items-center gap-1 px-2.5 py-1 rounded bg-[#0D9488] text-white text-[11px] font-medium hover:bg-[#0F766E] transition-colors shadow-2xs"
+          title="Open FraudShield AI V2 Forensic Suite"
+        >
+          <span className="font-bold">V2 Suite</span>
+          <ArrowUpRight className="w-3.5 h-3.5" />
+        </Link>
+
         <div
           className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-mono font-semibold border ${
             backendStatus === 'online'

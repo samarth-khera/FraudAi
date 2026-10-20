@@ -8,6 +8,8 @@ import { FundFlowPage } from './pages/FundFlowPage';
 import { CasesPage } from './pages/CasesPage';
 import { CaseDetailPage } from './pages/CaseDetailPage';
 import { ModelInsightsPage } from './pages/ModelInsightsPage';
+import { V2SearchPage } from './pages/v2/V2SearchPage';
+import { V2AccountDetailPage } from './pages/v2/V2AccountDetailPage';
 
 export const App: React.FC = () => {
   return (
@@ -16,7 +18,11 @@ export const App: React.FC = () => {
         {/* Marketing Landing Page */}
         <Route path="/" element={<LandingPage />} />
 
-        {/* Investigation Application Workspace */}
+        {/* V2 Forensic Investigation Workspace */}
+        <Route path="/v2" element={<V2SearchPage />} />
+        <Route path="/v2/accounts/:accountId" element={<V2AccountDetailPage />} />
+
+        {/* Investigation Application Workspace (V1) */}
         <Route path="/app" element={<AppLayout />}>
           <Route index element={<Navigate to="/app/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
