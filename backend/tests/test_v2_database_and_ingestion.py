@@ -11,17 +11,30 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from backend.app.db.v2.ingestion import (
-    DataIngestionError,
-    IngestionResult,
-    ingest_v2_dataset,
-)
-from backend.app.db.v2.models import AccountModel, TransactionModel
-from backend.app.db.v2.session import (
-    get_v2_engine,
-    init_v2_db,
-    validate_not_v1_database,
-)
+try:
+    from app.db.v2.ingestion import (
+        DataIngestionError,
+        IngestionResult,
+        ingest_v2_dataset,
+    )
+    from app.db.v2.models import AccountModel, TransactionModel
+    from app.db.v2.session import (
+        get_v2_engine,
+        init_v2_db,
+        validate_not_v1_database,
+    )
+except ModuleNotFoundError:
+    from backend.app.db.v2.ingestion import (
+        DataIngestionError,
+        IngestionResult,
+        ingest_v2_dataset,
+    )
+    from backend.app.db.v2.models import AccountModel, TransactionModel
+    from backend.app.db.v2.session import (
+        get_v2_engine,
+        init_v2_db,
+        validate_not_v1_database,
+    )
 
 
 @pytest.fixture
