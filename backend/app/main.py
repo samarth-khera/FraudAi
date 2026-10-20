@@ -17,6 +17,11 @@ from app.db.seed import seed_demo_data
 from app.db.session import Base, SessionLocal, engine
 from app.services.risk_scoring import get_risk_service
 
+try:
+    from app.api.v2.routes import router as v2_router
+except ModuleNotFoundError:
+    from backend.app.api.v2.routes import router as v2_router
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -68,6 +73,7 @@ def create_app() -> FastAPI:
 
     app.include_router(router)
     app.include_router(risk_router)
+    app.include_router(v2_router, prefix="/api/v2", tags=["v2-investigations"])
 
     @app.exception_handler(StarletteHTTPException)
     async def http_exc(_: Request, exc: StarletteHTTPException) -> JSONResponse:

@@ -21,7 +21,10 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-from backend.app.db.v2.session import Base
+try:
+    from app.db.v2.session import Base
+except ModuleNotFoundError:
+    from backend.app.db.v2.session import Base
 
 
 class AccountModel(Base):
@@ -72,6 +75,7 @@ class AccountModel(Base):
     __table_args__ = (
         CheckConstraint("initial_balance >= 0", name="chk_acc_initial_balance_non_neg"),
         CheckConstraint("current_balance >= 0", name="chk_acc_current_balance_non_neg"),
+        {"extend_existing": True},
     )
 
     def __repr__(self) -> str:
@@ -164,6 +168,7 @@ class TransactionModel(Base):
         Index("idx_txn_origin_timestamp", "origin_account_id", "timestamp"),
         Index("idx_txn_dest_timestamp", "destination_account_id", "timestamp"),
         Index("idx_txn_scenario", "scenario_id", "is_suspicious_scenario"),
+        {"extend_existing": True},
     )
 
     def __repr__(self) -> str:

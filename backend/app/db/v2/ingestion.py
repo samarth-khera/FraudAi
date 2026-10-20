@@ -12,8 +12,12 @@ from typing import Any, Optional
 from sqlalchemy import Engine, delete, func, insert, select
 from sqlalchemy.orm import Session
 
-from backend.app.db.v2.models import AccountModel, TransactionModel
-from backend.app.db.v2.session import init_v2_db, validate_not_v1_database
+try:
+    from app.db.v2.models import AccountModel, TransactionModel
+    from app.db.v2.session import init_v2_db, validate_not_v1_database
+except ModuleNotFoundError:
+    from backend.app.db.v2.models import AccountModel, TransactionModel
+    from backend.app.db.v2.session import init_v2_db, validate_not_v1_database
 
 
 @dataclass

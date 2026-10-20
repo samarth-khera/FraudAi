@@ -6,15 +6,26 @@ from datetime import datetime, timezone
 
 import pytest
 
-from backend.app.data.v2.generator import SyntheticBankGenerator
-from backend.app.data.v2.models import (
-    AccountLabel,
-    AccountStatus,
-    AccountType,
-    GenerationConfig,
-    KycTier,
-)
-from backend.app.data.v2.validator import SyntheticDataValidator
+try:
+    from app.data.v2.generator import SyntheticBankGenerator
+    from app.data.v2.models import (
+        AccountLabel,
+        AccountStatus,
+        AccountType,
+        GenerationConfig,
+        KycTier,
+    )
+    from app.data.v2.validator import SyntheticDataValidator
+except ModuleNotFoundError:
+    from backend.app.data.v2.generator import SyntheticBankGenerator
+    from backend.app.data.v2.models import (
+        AccountLabel,
+        AccountStatus,
+        AccountType,
+        GenerationConfig,
+        KycTier,
+    )
+    from backend.app.data.v2.validator import SyntheticDataValidator
 
 
 @pytest.fixture

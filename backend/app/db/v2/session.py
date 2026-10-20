@@ -90,9 +90,9 @@ def init_v2_db(engine: Engine | None = None) -> None:
     Base.metadata.create_all(bind=active_engine)
 
 
-def get_v2_db(engine: Engine | None = None) -> Generator[Session, None, None]:
-    """Dependency / context provider yielding a V2 database session."""
-    session_factory = get_v2_sessionmaker(engine)
+def get_v2_db() -> Generator[Session, None, None]:
+    """FastAPI dependency yielding a V2 database session."""
+    session_factory = get_v2_sessionmaker()
     session = session_factory()
     try:
         yield session
