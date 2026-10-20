@@ -10,24 +10,30 @@ from sqlalchemy.orm import Session
 try:
     from app.api.v2.schemas import (
         AccountAssessmentResponse,
+        AccountMLAssessmentResponse,
         AccountProfileResponse,
         AccountTransactionsResponse,
+        ModelStatusResponse,
         TraceGraphResponse,
     )
     from app.db.v2.session import get_v2_db
     from app.services.v2.account_service import AccountService
     from app.services.v2.graph_tracer import ForensicGraphTracer
+    from app.services.v2.ml_service import ModelUnavailableException, V2MLInferenceService
     from app.services.v2.risk_assessment import AccountRiskAssessor
 except ModuleNotFoundError:
     from backend.app.api.v2.schemas import (
         AccountAssessmentResponse,
+        AccountMLAssessmentResponse,
         AccountProfileResponse,
         AccountTransactionsResponse,
+        ModelStatusResponse,
         TraceGraphResponse,
     )
     from backend.app.db.v2.session import get_v2_db
     from backend.app.services.v2.account_service import AccountService
     from backend.app.services.v2.graph_tracer import ForensicGraphTracer
+    from backend.app.services.v2.ml_service import ModelUnavailableException, V2MLInferenceService
     from backend.app.services.v2.risk_assessment import AccountRiskAssessor
 
 router = APIRouter()
@@ -145,3 +151,45 @@ def trace_funds(
             },
         )
     return graph
+
+
+@router.get(
+    "/models/status",
+    response_model=ModelStatusResponse,
+    summary="V2 Machine Learning Models Status",
+    description="Returns availability, versions, feature dimensions, and evaluation metrics for V2 models.",
+)
+def get_models_status() -> ModelStatusResponse:
+    return V2MLInferenceService.get_model_status()
+
+
+@router.get(
+    "/accounts/{account_id}/ml-assessment",
+    response_model=AccountMLAssessmentResponse,
+    summary="Machine Learning Account Risk Assessment",
+    description="Evaluates account using the V2 tabular gradient boosting model with local TreeSHAP attribution.",
+)
+def get_account_ml_assessment(
+    account_id: str,
+    db: Session = Depends(get_v2_db),
+) -> AccountMLAssessmentResponse:
+    try:
+        assessment = V2MLInferenceService.assess_account(db, account_id)
+    except ModelUnavailableException as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "code": "model_unavailable",
+                "message": str(e),
+            },
+        )
+
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "account_not_found",
+                "message": f"Account '{account_id}' was not found in the V2 ledger.",
+            },
+        )
+    return assessment
