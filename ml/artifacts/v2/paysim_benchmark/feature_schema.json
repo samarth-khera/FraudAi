@@ -1,0 +1,18 @@
+{
+  "features": [
+    "step",
+    "amount",
+    "oldbalanceOrg",
+    "oldbalanceDest",
+    "amount_to_oldbalanceOrg_ratio",
+    "is_origin_zero_balance",
+    "is_dest_zero_balance",
+    "step_hour",
+    "step_day",
+    "type_CASH_IN",
+    "type_CASH_OUT",
+    "type_DEBIT",
+    "type_PAYMENT",
+    "type_TRANSFER"
+  ]
+}

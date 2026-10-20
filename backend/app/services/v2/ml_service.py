@@ -1,0 +1,219 @@
+"""Inference service for FraudShield AI V2 Machine Learning models.
+
+Loads trained XGBoost artifacts, manages model status, extracts runtime features,
+and computes calibrated risk probabilities with native TreeSHAP local explanations.
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import joblib
+import numpy as np
+import pandas as pd
+from sqlalchemy.orm import Session
+import xgboost as xgb
+
+try:
+    from app.api.v2.schemas import (
+        AccountMLAssessmentResponse,
+        FeatureContribution,
+        ModelStatusResponse,
+        SingleModelInfo,
+    )
+    from app.services.v2.feature_builder import AccountFeatureBuilder, FEATURE_NAMES
+except ModuleNotFoundError:
+    from backend.app.api.v2.schemas import (
+        AccountMLAssessmentResponse,
+        FeatureContribution,
+        ModelStatusResponse,
+        SingleModelInfo,
+    )
+    from backend.app.services.v2.feature_builder import AccountFeatureBuilder, FEATURE_NAMES
+
+
+class ModelUnavailableException(Exception):
+    """Raised when the requested V2 ML model artifact is missing or unreadable."""
+    pass
+
+
+_REPO_ROOT = Path(__file__).resolve().parents[4]
+
+
+class V2MLInferenceService:
+    """Manages V2 model lifecycle, status checks, and local explainability."""
+
+    _account_model: Optional[Any] = None
+    _account_metadata: Optional[Dict[str, Any]] = None
+    _paysim_metadata: Optional[Dict[str, Any]] = None
+
+    ACCOUNT_ARTIFACTS_DIR = _REPO_ROOT / "ml/artifacts/v2/account_model"
+    PAYSIM_ARTIFACTS_DIR = _REPO_ROOT / "ml/artifacts/v2/paysim_benchmark"
+
+    @classmethod
+    def load_account_model(cls) -> Any:
+        """Loads and caches the V2 account model artifact."""
+        if cls._account_model is not None:
+            return cls._account_model
+
+        model_path = cls.ACCOUNT_ARTIFACTS_DIR / "model.joblib"
+        if not model_path.exists():
+            raise ModelUnavailableException(
+                f"V2 Account ML model binary not found at {model_path}. Run training pipeline first."
+            )
+
+        try:
+            cls._account_model = joblib.load(model_path)
+            meta_path = cls.ACCOUNT_ARTIFACTS_DIR / "metadata.json"
+            if meta_path.exists():
+                with open(meta_path, "r") as f:
+                    cls._account_metadata = json.load(f)
+            return cls._account_model
+        except Exception as e:
+            raise ModelUnavailableException(f"Failed to load V2 Account ML model: {e}")
+
+    @classmethod
+    def get_model_status(cls) -> ModelStatusResponse:
+        """Inspects artifact directories and returns the health and version status of both V2 models."""
+        # 1. Account model status
+        acc_model_path = cls.ACCOUNT_ARTIFACTS_DIR / "model.joblib"
+        acc_meta_path = cls.ACCOUNT_ARTIFACTS_DIR / "metadata.json"
+        acc_available = acc_model_path.exists()
+        acc_meta: Dict[str, Any] = {}
+        if acc_meta_path.exists():
+            try:
+                with open(acc_meta_path, "r") as f:
+                    acc_meta = json.load(f)
+            except Exception:
+                pass
+
+        account_info = SingleModelInfo(
+            available=acc_available,
+            version=acc_meta.get("model_version", "v2-account-1.0.0" if acc_available else None),
+            model_type=acc_meta.get("model_type", "XGBClassifier (Gradient Boosting)" if acc_available else None),
+            features_count=len(acc_meta.get("features", [])) if acc_meta else (len(FEATURE_NAMES) if acc_available else None),
+            trained_at=acc_meta.get("trained_at"),
+            test_metrics=acc_meta.get("ml_evaluation_metrics"),
+            limitations=(
+                "Trained on synthetic banking network scenarios. Provides advisory decision-support only. "
+                "Downstream attribution must be verified by a human analyst."
+            ),
+        )
+
+        # 2. PaySim benchmark status
+        paysim_model_path = cls.PAYSIM_ARTIFACTS_DIR / "model.joblib"
+        paysim_meta_path = cls.PAYSIM_ARTIFACTS_DIR / "metadata.json"
+        paysim_available = paysim_model_path.exists()
+        paysim_meta: Dict[str, Any] = {}
+        if paysim_meta_path.exists():
+            try:
+                with open(paysim_meta_path, "r") as f:
+                    paysim_meta = json.load(f)
+            except Exception:
+                pass
+
+        paysim_info = SingleModelInfo(
+            available=paysim_available,
+            version=paysim_meta.get("model_version", "v2-benchmark-1.0.0" if paysim_available else None),
+            model_type=paysim_meta.get("benchmark_name", "PaySim Transaction Benchmark (XGBoost)" if paysim_available else None),
+            features_count=len(paysim_meta.get("features", [])) if paysim_meta else None,
+            trained_at=paysim_meta.get("trained_at"),
+            test_metrics=paysim_meta.get("held_out_test_metrics"),
+            limitations=paysim_meta.get("domain_constraints"),
+        )
+
+        overall = "healthy" if acc_available else "degraded_missing_account_model"
+
+        return ModelStatusResponse(
+            account_model=account_info,
+            paysim_benchmark=paysim_info,
+            overall_status=overall,
+            inference_ready=acc_available,
+            disclaimer=(
+                "Models serve strictly as decision support. Performance metrics reflect synthetic held-out evaluation "
+                "and do not guarantee real-world banking accuracy. Automated freezing or punitive actions are strictly prohibited."
+            ),
+        )
+
+    @classmethod
+    def assess_account(cls, db: Session, account_id: str) -> Optional[AccountMLAssessmentResponse]:
+        """Calculates ML model risk assessment with local TreeSHAP explanations."""
+        # 1. Extract observable features
+        features = AccountFeatureBuilder.extract_features(db, account_id)
+        if features is None:
+            return None
+
+        # 2. Ensure model is loaded
+        model = cls.load_account_model()
+
+        # 3. Predict probability
+        df_row = AccountFeatureBuilder.to_dataframe(features)
+        probs = model.predict_proba(df_row)[0]
+        prob_suspicious = float(probs[1])
+
+        risk_score = round(prob_suspicious * 100.0, 1)
+
+        if risk_score < 30.0:
+            risk_level = "low"
+        elif risk_score < 70.0:
+            risk_level = "elevated"
+        elif risk_score < 90.0:
+            risk_level = "high"
+        else:
+            risk_level = "critical"
+
+        predicted_class = "suspicious" if prob_suspicious >= 0.50 else "legitimate"
+
+        # 4. Compute genuine TreeSHAP local contributions
+        top_contributions: List[FeatureContribution] = []
+        try:
+            booster = model.get_booster()
+            dmat = xgb.DMatrix(df_row)
+            # pred_contribs returns [SHAP_f0, SHAP_f1, ..., bias]
+            contribs = booster.predict(dmat, pred_contribs=True)[0]
+            feature_contribs = contribs[:-1]  # Exclude bias term
+
+            # Rank by absolute impact
+            ranked_indices = np.argsort(np.abs(feature_contribs))[::-1]
+
+            for idx in ranked_indices[:6]:
+                f_name = FEATURE_NAMES[idx]
+                f_val = float(features[f_name])
+                c_val = float(feature_contribs[idx])
+                if abs(c_val) < 1e-4:
+                    continue
+                impact = "increases_risk" if c_val > 0 else "decreases_risk"
+                top_contributions.append(
+                    FeatureContribution(
+                        feature_name=f_name,
+                        feature_value=f_val,
+                        contribution_score=round(c_val, 4),
+                        impact_direction=impact,
+                    )
+                )
+        except Exception:
+            # Fallback if booster contribs not available
+            top_contributions = []
+
+        version = "v2-account-1.0.0"
+        if cls._account_metadata and "model_version" in cls._account_metadata:
+            version = cls._account_metadata["model_version"]
+
+        return AccountMLAssessmentResponse(
+            account_id=account_id,
+            risk_score=risk_score,
+            risk_level=risk_level,
+            predicted_probability=round(prob_suspicious, 4),
+            predicted_class=predicted_class,
+            model_version=version,
+            model_type="XGBClassifier",
+            top_contributions=top_contributions,
+            observable_features=features,
+            disclaimer=(
+                "Decision support only. Model trained exclusively on synthetic financial network scenarios. "
+                "High model risk scores do NOT constitute legal proof of guilt or real-world fraud accuracy. "
+                "Automated account freezing, denial of service, or punitive action is strictly prohibited."
+            ),
+        )

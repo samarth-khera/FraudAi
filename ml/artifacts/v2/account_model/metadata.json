@@ -1,0 +1,125 @@
+{
+  "model_name": "FraudShield V2 Account-Behaviour Classifier",
+  "model_type": "XGBClassifier (Tabular Gradient Boosting)",
+  "model_version": "v2-account-1.0.0",
+  "trained_at": "2026-10-20T14:56:12Z",
+  "dataset_source": "V2 Synthetic Banking Ledger (SQLite)",
+  "scenario_split_strategy": {
+    "strategy": "Group-Aware Scenario Separation",
+    "held_out_test_scenarios": [
+      "SCENARIO-APP-001",
+      "SCENARIO-DORMANT-005"
+    ],
+    "train_accounts_count": 8000,
+    "test_accounts_count": 2000,
+    "train_suspicious_count": 26,
+    "test_suspicious_count": 6,
+    "test_normal_count": 1994
+  },
+  "ml_evaluation_metrics": {
+    "threshold": 0.5,
+    "precision": 0.5,
+    "recall": 0.3333,
+    "f1_score": 0.4,
+    "roc_auc": 0.9945,
+    "pr_auc": 0.4642,
+    "confusion_matrix": [
+      [
+        1992,
+        2
+      ],
+      [
+        4,
+        2
+      ]
+    ],
+    "true_negatives": 1992,
+    "false_positives": 2,
+    "false_negatives": 4,
+    "true_positives": 2
+  },
+  "baseline_comparison": {
+    "baseline_name": "Phase 3 Deterministic Rule Assessor",
+    "threshold": 50.0,
+    "precision": 0.0325,
+    "recall": 0.8333,
+    "f1_score": 0.0625,
+    "confusion_matrix": [
+      [
+        1845,
+        149
+      ],
+      [
+        1,
+        5
+      ]
+    ],
+    "comparison_notes": "The ML model provides continuous calibrated risk probabilities, while the baseline rules provide transparent heuristic scoring. Both are surfaced distinctly in the API."
+  },
+  "victim_and_innocent_analysis": {
+    "held_out_victim_cases": [
+      {
+        "account_id": "ACC-000001",
+        "ground_truth_label": "compromised_victim",
+        "scenario_id": "SCENARIO-APP-001",
+        "ml_predicted_probability": 0.7648,
+        "ml_classified_suspicious": true,
+        "baseline_rule_score": 25.0,
+        "notes": "Victim drained during APP scam. Evaluating false-positive risk."
+      }
+    ],
+    "normal_accounts_false_positive_rate": 0.001,
+    "innocent_protection_notes": "Compromised victims and legitimate accounts connected to suspicious flows require dual review. Statistical models can conflate high victim drainage with perpetrator volume."
+  },
+  "top_feature_importances": {
+    "velocity_30d_count": 0.2192,
+    "customer_type_student": 0.1121,
+    "max_amount": 0.1099,
+    "initial_balance": 0.1011,
+    "rapid_pass_through": 0.0644,
+    "amount_spike_ratio": 0.0521,
+    "avg_amount": 0.0508,
+    "total_transactions": 0.0431,
+    "flow_through_ratio": 0.0415,
+    "kyc_tier_level": 0.0319
+  },
+  "features": [
+    "customer_type_retail",
+    "customer_type_student",
+    "customer_type_sme",
+    "customer_type_corporate",
+    "kyc_tier_level",
+    "initial_balance",
+    "current_balance",
+    "balance_ratio",
+    "total_transactions",
+    "velocity_24h_count",
+    "velocity_7d_count",
+    "velocity_30d_count",
+    "flow_through_ratio",
+    "rapid_pass_through",
+    "median_dwell_minutes",
+    "has_dwell_time",
+    "max_amount",
+    "avg_amount",
+    "amount_spike_ratio",
+    "unique_counterparties",
+    "counterparty_diversity_ratio",
+    "fan_in_ratio",
+    "fan_out_ratio",
+    "dormancy_gap_days",
+    "dormant_awakening_detected",
+    "cycle_detected"
+  ],
+  "leakage_protections": [
+    "ground_truth_label strictly excluded from model inputs.",
+    "scenario_id strictly excluded from model inputs.",
+    "scenario_tag strictly excluded from model inputs.",
+    "is_suspicious_scenario strictly excluded from model inputs.",
+    "PII (names, phone, email, upi_id, tax_id) strictly excluded from model inputs.",
+    "Group-aware train/test separation prevents topological cross-contamination."
+  ],
+  "training_time_seconds": 0.09,
+  "total_elapsed_seconds": 34.47,
+  "disclaimer": "Decision support only. Model trained exclusively on synthetic financial network scenarios. High model risk scores do NOT constitute legal proof of guilt or real-world fraud accuracy. Automated account freezing, denial of service, or punitive action is strictly prohibited."
+}
