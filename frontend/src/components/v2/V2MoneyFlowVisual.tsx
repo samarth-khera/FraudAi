@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { gsap } from 'gsap';
-import { GitFork, ArrowRight, ShieldCheck, Activity, RefreshCw } from 'lucide-react';
+import { GitFork, ArrowRight, Activity, ShieldCheck, Info } from 'lucide-react';
 import { v2Api } from '../../services/v2Api';
 import { V2TraceGraphResponse, V2GraphNode, V2GraphEdge } from '../../types/v2';
 
@@ -93,6 +93,7 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const particleRef = useRef<SVGCircleElement>(null);
   const pathRefs = useRef<{ [key: string]: SVGPathElement | null }>({});
+  const tweenRef = useRef<gsap.core.Tween | null>(null);
 
   const [rootAccountId, setRootAccountId] = useState<'ACC-000001' | 'ACC-000002'>('ACC-000001');
   const [nodes, setNodes] = useState<V2GraphNode[]>(INITIAL_NODES);
@@ -100,6 +101,7 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
   const [selectedDestId, setSelectedDestId] = useState<string>('ACC-000414');
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isRevealed, setIsRevealed] = useState(false);
 
   // Fetch real forensic trace data for selected root demo account
   useEffect(() => {
@@ -151,8 +153,6 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
   }, [rootAccountId]);
 
   // Coordinates mapping on an SVG viewBox of 480 x 240
-  // Origin node sits at (80, 120)
-  // Up to 3 downstream nodes sit at (380, 50), (380, 120), (380, 190)
   const rootNode = nodes.find((n) => n.is_root) || nodes[0] || INITIAL_NODES[0];
   const downstreamNodes = nodes.filter((n) => n.account_id !== rootNode.account_id).slice(0, 3);
 
@@ -170,30 +170,69 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
   );
   const activeDestNode = downstreamNodes.find((n) => n.account_id === activeDestId);
 
-  // GSAP Particle Flow along active path
+  // Progressive Path Line Reveal & Particle Flow with Scroll Settle
   useEffect(() => {
     const prefersReducedMotion =
       typeof window !== 'undefined' &&
       typeof window.matchMedia === 'function' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    if (prefersReducedMotion || !containerRef.current) return;
+    if (!containerRef.current) return;
+
+    // Intersection Observer to settle animations when scrolled away
+    let observer: IntersectionObserver | null = null;
+    if (typeof IntersectionObserver !== 'undefined') {
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              setIsRevealed(true);
+              if (tweenRef.current) tweenRef.current.play();
+            } else {
+              if (tweenRef.current) tweenRef.current.pause();
+            }
+          });
+        },
+        { threshold: 0.15 }
+      );
+      observer.observe(containerRef.current);
+    } else {
+      setIsRevealed(true);
+    }
+
+    if (prefersReducedMotion) {
+      setIsRevealed(true);
+      return () => {
+        if (observer) observer.disconnect();
+      };
+    }
 
     const activePathEl = pathRefs.current[activeDestId];
-    if (!activePathEl || !particleRef.current) return;
+    if (!activePathEl || !particleRef.current) {
+      return () => {
+        if (observer) observer.disconnect();
+      };
+    }
 
     let pathLength = 0;
     try {
       pathLength = activePathEl.getTotalLength();
     } catch {
-      return;
+      return () => {
+        if (observer) observer.disconnect();
+      };
     }
 
-    if (pathLength <= 0) return;
+    if (pathLength <= 0) {
+      return () => {
+        if (observer) observer.disconnect();
+      };
+    }
 
     const progressObj = { t: 0 };
     const ctx = gsap.context(() => {
-      gsap.to(progressObj, {
+      // Animate particle along path
+      tweenRef.current = gsap.to(progressObj, {
         t: 1,
         duration: 2.2,
         repeat: -1,
@@ -212,6 +251,8 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
     }, containerRef);
 
     return () => {
+      if (observer) observer.disconnect();
+      if (tweenRef.current) tweenRef.current.kill();
       ctx.revert();
     };
   }, [activeDestId, nodes, edges]);
@@ -238,7 +279,7 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
               </span>
             </div>
             <p className="text-[11px] text-[#78716C]">
-              Forensic Multi-Hop Transaction Path
+              Stage 3 · Directional Hop Traversal
             </p>
           </div>
         </div>
@@ -273,7 +314,7 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
       </div>
 
       {/* SVG Flow Canvas */}
-      <div className="relative w-full aspect-[2/1] min-h-[200px] sm:min-h-[220px] bg-[#FAF7F2]/60 rounded-2xl border border-[#EAE3D6]/70 p-2 select-none">
+      <div className="relative w-full aspect-[2/1] min-h-[210px] sm:min-h-[230px] bg-[#FAF7F2]/60 rounded-2xl border border-[#EAE3D6]/70 p-2 select-none">
         <svg
           viewBox="0 0 480 240"
           className="w-full h-full overflow-visible"
@@ -295,6 +336,18 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
+            {/* Directional Arrow Marker */}
+            <marker
+              id="flowArrow"
+              viewBox="0 0 10 10"
+              refX="6"
+              refY="5"
+              markerWidth="4"
+              markerHeight="4"
+              orient="auto-start-reverse"
+            >
+              <path d="M 0 2 L 7 5 L 0 8 z" fill="#EA8500" />
+            </marker>
           </defs>
 
           {/* Connection Curves */}
@@ -306,16 +359,17 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
 
             return (
               <g key={`edge-${destNode.account_id}`}>
-                {/* Background path line */}
+                {/* Visual Path Line */}
                 <path
                   d={d}
                   fill="none"
                   stroke={isSelected ? 'url(#activeFlowGradient)' : 'url(#inactiveFlowGradient)'}
                   strokeWidth={isSelected ? '3' : '1.5'}
                   strokeDasharray={isSelected ? 'none' : '4 4'}
+                  markerEnd={isSelected ? 'url(#flowArrow)' : undefined}
                   className="transition-all duration-300"
                 />
-                {/* Hidden reference path for GSAP particle tracking */}
+                {/* Hidden tracking path for particle motion */}
                 <path
                   ref={(el) => {
                     pathRefs.current[destNode.account_id] = el;
@@ -435,33 +489,47 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
         </div>
       </div>
 
-      {/* Real Telemetry Strip for Selected Node */}
-      <div className="mt-3 pt-3 border-t border-[#F2ECE2] flex flex-wrap items-center justify-between gap-2 text-xs">
-        <div className="flex items-center gap-2">
-          <Activity className="w-3.5 h-3.5 text-[#EA8500]" />
-          <span className="text-[#1C1917] font-semibold text-[11px] sm:text-xs">
-            Path: {rootNode.customer_name.split(' ')[0]} ➔{' '}
-            <span className="text-[#EA8500] font-bold">
-              {activeDestNode ? activeDestNode.customer_name : 'Counterparty'}
+      {/* Real Telemetry Strip for Selected Node with Smooth Framer Motion Transition */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeDestId}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.2 }}
+          className="mt-3 pt-3 border-t border-[#F2ECE2] flex flex-wrap items-center justify-between gap-2 text-xs"
+        >
+          <div className="flex items-center gap-2">
+            <Activity className="w-3.5 h-3.5 text-[#EA8500]" />
+            <span className="text-[#1C1917] font-semibold text-[11px] sm:text-xs">
+              Path: {rootNode.customer_name.split(' ')[0]} ➔{' '}
+              <span className="text-[#EA8500] font-bold">
+                {activeDestNode ? activeDestNode.customer_name : 'Counterparty'}
+              </span>
             </span>
-          </span>
-          {activeEdge && (
-            <span className="font-mono text-[11px] text-[#78716C] bg-[#FAF7F2] px-2 py-0.5 rounded-md border border-[#EAE3D6]">
-              ₹{activeEdge.amount.toLocaleString('en-IN')} ({activeEdge.channel})
-            </span>
-          )}
-        </div>
+            {activeEdge && (
+              <span className="font-mono text-[11px] text-[#78716C] bg-[#FAF7F2] px-2 py-0.5 rounded-md border border-[#EAE3D6]">
+                ₹{activeEdge.amount.toLocaleString('en-IN')} ({activeEdge.channel})
+              </span>
+            )}
+          </div>
 
-        {activeDestNode && (
-          <button
-            type="button"
-            onClick={() => onSelectAccount && onSelectAccount(activeDestNode.account_id)}
-            className="text-[11px] font-bold text-[#EA8500] hover:text-[#D27400] flex items-center gap-1 cursor-pointer transition-colors"
-          >
-            <span>Open {activeDestNode.account_id}</span>
-            <ArrowRight className="w-3 h-3" />
-          </button>
-        )}
+          {activeDestNode && (
+            <button
+              type="button"
+              onClick={() => onSelectAccount && onSelectAccount(activeDestNode.account_id)}
+              className="text-[11px] font-bold text-[#EA8500] hover:text-[#D27400] flex items-center gap-1 cursor-pointer transition-colors"
+            >
+              <span>Open {activeDestNode.account_id}</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
+          )}
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Attribution Safeguard Notice */}
+      <div className="mt-2.5 text-[10px] text-[#A8A29E] leading-tight font-sans">
+        * Illustrative trace simulation from synthetic ledger data. Hop amounts reflect single transfers and are not aggregated into unverified totals.
       </div>
     </div>
   );
