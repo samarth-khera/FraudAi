@@ -83,16 +83,16 @@ export const V2Header: React.FC = () => {
         {/* Status & Navigation Switcher */}
         <div className="flex items-center gap-3">
           {/* Live ML Status Pill */}
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F7F2E8] border border-[#E8E0D4] text-xs">
+          <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#F7F2E8] border border-[#E8E0D4] text-xs shadow-2xs">
             <Cpu className="w-3.5 h-3.5 text-[#737373]" />
-            <span className="text-[#737373]">AI Engine:</span>
+            <span className="text-[#737373] font-medium">AI Engine:</span>
             {isModelReady ? (
-              <span className="flex items-center gap-1.5 text-[#166534] font-medium font-mono text-[11px]">
+              <span className="inline-flex items-center gap-1.5 text-[#166534] font-semibold font-mono text-[11px]">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]"></span>
                 v2-active
               </span>
             ) : (
-              <span className="flex items-center gap-1 text-amber-700 font-medium text-[11px]">
+              <span className="inline-flex items-center gap-1 text-amber-700 font-semibold text-[11px]">
                 <AlertTriangle className="w-3 h-3" />
                 Degraded
               </span>
@@ -102,11 +102,11 @@ export const V2Header: React.FC = () => {
           {/* V1 Switcher Button */}
           <Link
             to="/app/dashboard"
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#E8E0D4] text-xs font-medium text-[#737373] hover:text-[#242424] hover:border-[#D1C7B7] hover:bg-[#F7F2E8] transition-colors"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-[#E8E0D4] bg-[#FFFEFA] text-xs font-semibold text-[#555555] hover:text-[#242424] hover:border-[#D1C7B7] hover:bg-[#F7F2E8] shadow-2xs transition-all active:scale-[0.98]"
             title="Switch to V1 Classic Case Management"
           >
             <span className="hidden sm:inline">V1 Classic</span>
-            <ExternalLink className="w-3.5 h-3.5" />
+            <ExternalLink className="w-3.5 h-3.5 text-[#8C8C8C]" />
           </Link>
         </div>
       </div>
