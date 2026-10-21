@@ -158,9 +158,9 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
 
   const originCoords = { x: 74, y: 120 };
   const destCoordsList = [
-    { x: 396, y: 48 },
-    { x: 396, y: 120 },
-    { x: 396, y: 192 },
+    { x: 348, y: 48 },
+    { x: 348, y: 120 },
+    { x: 348, y: 192 },
   ];
 
   // Active path selection
@@ -258,39 +258,39 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`bg-[#131A23] border border-[#293543] rounded-3xl p-6 sm:p-7 relative overflow-hidden flex flex-col justify-between shadow-[0_8px_32px_rgba(0,0,0,0.6)] ${className}`}
+      className={`bg-[#FFFFFF] border border-[#E1E7E3] rounded-3xl p-6 sm:p-7 relative overflow-hidden flex flex-col justify-between shadow-[0_4px_20px_-2px_rgba(24,124,112,0.06),0_2px_6px_-1px_rgba(0,0,0,0.03)] ${className}`}
     >
       {/* Visual Header */}
-      <div className="flex items-center justify-between pb-3.5 mb-2 border-b border-[#293543]">
+      <div className="flex items-center justify-between pb-3.5 mb-2 border-b border-[#E1E7E3]">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-xl bg-[#19232F] border border-[#293543] flex items-center justify-center text-[#47E0C1]">
+          <div className="w-7 h-7 rounded-xl bg-[#E2F4ED] border border-[#C8E7DC] flex items-center justify-center text-[#187C70]">
             <GitFork className="w-3.5 h-3.5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-xs sm:text-sm text-[#F3F6F8]">
+              <span className="font-bold text-xs sm:text-sm text-[#18221F]">
                 Live Flow Tracer
               </span>
               <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#47E0C1] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#47E0C1]"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#187C70] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#187C70]"></span>
               </span>
             </div>
-            <p className="text-[11px] text-[#9CAAB6]">
+            <p className="text-[11px] text-[#66736D]">
               Stage 3 · Directional Hop Traversal
             </p>
           </div>
         </div>
 
         {/* Demo Root Switcher */}
-        <div className="flex items-center bg-[#19232F] p-0.5 rounded-full border border-[#293543] text-[11px] font-mono">
+        <div className="flex items-center bg-[#F0F4F2] p-0.5 rounded-full border border-[#E1E7E3] text-[11px] font-mono">
           <button
             type="button"
             onClick={() => setRootAccountId('ACC-000001')}
             className={`px-2.5 py-1 rounded-full transition-all cursor-pointer ${
               rootAccountId === 'ACC-000001'
-                ? 'bg-[#C8F169] text-[#0B0F14] font-bold shadow-xs'
-                : 'text-[#9CAAB6] hover:text-[#F3F6F8]'
+                ? 'bg-[#FFFFFF] text-[#187C70] font-bold shadow-xs border border-[#C8E7DC]'
+                : 'text-[#66736D] hover:text-[#18221F]'
             }`}
             title="Inspect Scam Victim Demo Flow"
           >
@@ -301,8 +301,8 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
             onClick={() => setRootAccountId('ACC-000002')}
             className={`px-2.5 py-1 rounded-full transition-all cursor-pointer ${
               rootAccountId === 'ACC-000002'
-                ? 'bg-[#C8F169] text-[#0B0F14] font-bold shadow-xs'
-                : 'text-[#9CAAB6] hover:text-[#F3F6F8]'
+                ? 'bg-[#FFFFFF] text-[#187C70] font-bold shadow-xs border border-[#C8E7DC]'
+                : 'text-[#66736D] hover:text-[#18221F]'
             }`}
             title="Inspect Money Mule Demo Flow"
           >
@@ -312,7 +312,7 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
       </div>
 
       {/* SVG Flow Canvas */}
-      <div className="relative w-full aspect-[2/1] min-h-[210px] sm:min-h-[230px] bg-[#0B0F14]/70 rounded-2xl border border-[#293543] p-2 select-none overflow-hidden">
+      <div className="relative w-full aspect-[2/1] min-h-[210px] sm:min-h-[230px] bg-[#F0F4F2]/70 rounded-2xl border border-[#E1E7E3] p-2 select-none overflow-hidden blueprint-grid-light">
         <svg
           viewBox="0 0 480 240"
           className="w-full h-full overflow-visible"
@@ -320,19 +320,15 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
         >
           <defs>
             <linearGradient id="activeFlowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#47E0C1" stopOpacity="0.7" />
-              <stop offset="100%" stopColor="#C8F169" stopOpacity="1" />
+              <stop offset="0%" stopColor="#187C70" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#2DD4BF" stopOpacity="1" />
             </linearGradient>
             <linearGradient id="inactiveFlowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#293543" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#293543" stopOpacity="0.8" />
+              <stop offset="0%" stopColor="#D1D8D4" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#D1D8D4" stopOpacity="0.9" />
             </linearGradient>
             <filter id="particleGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3.5" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
+              <feDropShadow dx="0" dy="1" stdDeviation="2" floodColor="#187C70" floodOpacity="0.35" />
             </filter>
             {/* Directional Arrow Marker */}
             <marker
@@ -344,15 +340,15 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
               markerHeight="4"
               orient="auto-start-reverse"
             >
-              <path d="M 0 2 L 7 5 L 0 8 z" fill="#47E0C1" />
+              <path d="M 0 2 L 7 5 L 0 8 z" fill="#187C70" />
             </marker>
           </defs>
 
           {/* Connection Curves */}
           {downstreamNodes.map((destNode, idx) => {
-            const destCoord = destCoordsList[idx] || { x: 396, y: 120 };
+            const destCoord = destCoordsList[idx] || { x: 348, y: 120 };
             const isSelected = destNode.account_id === activeDestId;
-            const controlOffset = 160;
+            const controlOffset = 135;
             const d = `M ${originCoords.x} ${originCoords.y} C ${originCoords.x + controlOffset} ${originCoords.y}, ${destCoord.x - controlOffset} ${destCoord.y}, ${destCoord.x} ${destCoord.y}`;
 
             return (
@@ -381,13 +377,13 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
             );
           })}
 
-          {/* Animated Mint Particle traveling along selected path */}
+          {/* Animated Teal Particle traveling along selected path */}
           <circle
             ref={particleRef}
             cx={originCoords.x}
             cy={originCoords.y}
             r="4.5"
-            fill="#47E0C1"
+            fill="#187C70"
             filter="url(#particleGlow)"
             className="transition-opacity duration-200"
           />
@@ -399,20 +395,20 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
             onClick={() => onSelectAccount && onSelectAccount(rootNode.account_id)}
           >
             {/* Pulsing radar aura */}
-            <circle r="22" fill="#C8F169" fillOpacity="0.12" className="animate-pulse" />
-            <circle r="16" fill="#19232F" stroke="#C8F169" strokeWidth="2" />
-            <circle r="5" fill="#C8F169" />
+            <circle r="22" fill="#187C70" fillOpacity="0.12" className="animate-pulse" />
+            <circle r="16" fill="#FFFFFF" stroke="#187C70" strokeWidth="2.5" />
+            <circle r="5" fill="#187C70" />
             <text
               y="-24"
               textAnchor="middle"
-              className="text-[10px] font-mono font-bold fill-[#F3F6F8]"
+              className="text-[10px] font-mono font-bold fill-[#18221F]"
             >
               Origin: {rootNode.account_id}
             </text>
             <text
               y="30"
               textAnchor="middle"
-              className="text-[10px] font-sans fill-[#9CAAB6] font-medium"
+              className="text-[10px] font-sans fill-[#66736D] font-medium"
             >
               {rootNode.customer_name.split(' ')[0]} (Source)
             </text>
@@ -420,7 +416,7 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
 
           {/* Downstream Nodes */}
           {downstreamNodes.map((destNode, idx) => {
-            const destCoord = destCoordsList[idx] || { x: 396, y: 120 };
+            const destCoord = destCoordsList[idx] || { x: 348, y: 120 };
             const isSelected = destNode.account_id === activeDestId;
             const matchingEdge = edges.find((e) => e.destination_account_id === destNode.account_id);
 
@@ -439,20 +435,20 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
                 {/* Node Target Halo */}
                 <circle
                   r={isSelected ? '20' : '15'}
-                  fill={isSelected ? '#47E0C1' : '#19232F'}
-                  fillOpacity={isSelected ? '0.15' : '0.6'}
+                  fill={isSelected ? '#187C70' : '#E2F4ED'}
+                  fillOpacity={isSelected ? '0.15' : '0.5'}
                   className="transition-all duration-200"
                 />
                 <circle
                   r="13"
-                  fill="#131A23"
-                  stroke={isSelected ? '#47E0C1' : '#293543'}
-                  strokeWidth={isSelected ? '2' : '1.5'}
-                  className="transition-all duration-200 group-hover:stroke-[#47E0C1]"
+                  fill="#FFFFFF"
+                  stroke={isSelected ? '#187C70' : '#E1E7E3'}
+                  strokeWidth={isSelected ? '2.5' : '1.5'}
+                  className="transition-all duration-200 group-hover:stroke-[#187C70]"
                 />
                 <circle
                   r="4"
-                  fill={isSelected ? '#47E0C1' : '#627181'}
+                  fill={isSelected ? '#187C70' : '#8E9B95'}
                   className="transition-all duration-200"
                 />
 
@@ -461,7 +457,7 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
                   x="20"
                   y="-4"
                   className={`text-[10px] font-mono font-bold transition-all ${
-                    isSelected ? 'fill-[#47E0C1]' : 'fill-[#F3F6F8]'
+                    isSelected ? 'fill-[#187C70]' : 'fill-[#18221F]'
                   }`}
                 >
                   ID: {destNode.account_id}
@@ -471,7 +467,7 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
                 <text
                   x="20"
                   y="10"
-                  className="text-[9.5px] font-sans fill-[#9CAAB6] font-normal"
+                  className="text-[9.5px] font-sans fill-[#66736D] font-normal"
                 >
                   {destNode.customer_name}
                   {matchingEdge ? ` · ₹${matchingEdge.amount.toLocaleString('en-IN')}` : ''}
@@ -482,7 +478,7 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
         </svg>
 
         {/* Floating Instruction Overlay Badge */}
-        <div className="absolute top-2.5 left-3 bg-[#19232F]/90 backdrop-blur-xs border border-[#293543] px-2.5 py-0.5 rounded-full text-[10px] text-[#9CAAB6] font-mono shadow-xs">
+        <div className="absolute top-2.5 left-3 bg-[#FFFFFF]/90 backdrop-blur-xs border border-[#E1E7E3] px-2.5 py-0.5 rounded-full text-[10px] text-[#66736D] font-mono shadow-2xs">
           Hover node to trace · Click to inspect
         </div>
       </div>
@@ -495,18 +491,18 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.2 }}
-          className="mt-3 pt-3 border-t border-[#293543] flex flex-wrap items-center justify-between gap-2 text-xs"
+          className="mt-3 pt-3 border-t border-[#E1E7E3] flex flex-wrap items-center justify-between gap-2 text-xs"
         >
           <div className="flex items-center gap-2">
-            <Activity className="w-3.5 h-3.5 text-[#47E0C1]" />
-            <span className="text-[#F3F6F8] font-semibold text-[11px] sm:text-xs">
+            <Activity className="w-3.5 h-3.5 text-[#187C70]" />
+            <span className="text-[#18221F] font-semibold text-[11px] sm:text-xs">
               Path: {rootNode.customer_name.split(' ')[0]} ➔{' '}
-              <span className="text-[#47E0C1] font-bold">
+              <span className="text-[#187C70] font-bold">
                 {activeDestNode ? activeDestNode.customer_name : 'Counterparty'}
               </span>
             </span>
             {activeEdge && (
-              <span className="font-mono text-[11px] text-[#C8F169] bg-[#19232F] px-2 py-0.5 rounded-md border border-[#293543]">
+              <span className="font-mono text-[11px] text-[#187C70] bg-[#E2F4ED] px-2.5 py-0.5 rounded-md border border-[#C8E7DC]">
                 ₹{activeEdge.amount.toLocaleString('en-IN')} ({activeEdge.channel})
               </span>
             )}
@@ -516,7 +512,7 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
             <button
               type="button"
               onClick={() => onSelectAccount && onSelectAccount(activeDestNode.account_id)}
-              className="text-[11px] font-bold text-[#C8F169] hover:text-[#D7F68B] flex items-center gap-1 cursor-pointer transition-colors"
+              className="text-[11px] font-bold text-[#187C70] hover:text-[#12675D] flex items-center gap-1 cursor-pointer transition-colors"
             >
               <span>Open {activeDestNode.account_id}</span>
               <ArrowRight className="w-3 h-3" />
@@ -526,7 +522,7 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
       </AnimatePresence>
 
       {/* Attribution Safeguard Notice */}
-      <div className="mt-2.5 text-[10px] text-[#627181] leading-tight font-sans">
+      <div className="mt-2.5 text-[10px] text-[#8E9B95] leading-tight font-sans">
         * Illustrative trace simulation from synthetic ledger data. Hop amounts reflect single transfers and are not aggregated into unverified totals.
       </div>
     </div>
