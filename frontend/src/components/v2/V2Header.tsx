@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Shield, Search, Cpu, ExternalLink, ArrowRight, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Shield, Search, Cpu, ExternalLink, AlertTriangle } from 'lucide-react';
 import { v2Api } from '../../services/v2Api';
 import { V2ModelStatusResponse } from '../../types/v2';
 import { normalizeAccountId } from '../../pages/v2/V2SearchPage';
 
 export const V2Header: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchId, setSearchId] = useState('');
   const [modelStatus, setModelStatus] = useState<V2ModelStatusResponse | null>(null);
+
+  const isSearchWorkspace = !location.pathname.includes('/accounts/');
 
   useEffect(() => {
     v2Api.getModelsStatus()
@@ -47,27 +50,35 @@ export const V2Header: React.FC = () => {
           </Link>
         </div>
 
-        {/* Global Quick Search */}
-        <form onSubmit={handleSearch} className="flex-1 max-w-md hidden md:block">
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={searchId}
-              onChange={(e) => setSearchId(e.target.value)}
-              placeholder="Quick search account ID (e.g. ACC-000001)..."
-              className="w-full bg-[#111C30] border border-[#1C2B45] rounded-md pl-9 pr-12 py-1.5 text-xs text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-[#0D9488] focus:ring-1 focus:ring-[#0D9488] font-mono transition-colors"
-            />
-            {searchId && (
-              <button
-                type="submit"
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded text-[10px] font-medium bg-[#0D9488] text-white hover:bg-[#0F766E] transition-colors cursor-pointer"
-              >
-                Go
-              </button>
-            )}
+        {/* Global Quick Search - Only rendered on detail pages to avoid duplicate search on /v2 */}
+        {!isSearchWorkspace ? (
+          <form onSubmit={handleSearch} className="flex-1 max-w-md hidden md:block">
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={searchId}
+                onChange={(e) => setSearchId(e.target.value)}
+                placeholder="Jump to account ID (e.g. ACC-000001)..."
+                className="w-full bg-[#111C30] border border-[#1C2B45] rounded-md pl-9 pr-12 py-1.5 text-xs text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-[#0D9488] focus:ring-1 focus:ring-[#0D9488] font-mono transition-colors"
+                aria-label="Account Jump Search"
+              />
+              {searchId && (
+                <button
+                  type="submit"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded text-[10px] font-medium bg-[#0D9488] text-white hover:bg-[#0F766E] transition-colors cursor-pointer"
+                >
+                  Go
+                </button>
+              )}
+            </div>
+          </form>
+        ) : (
+          <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-[#111C30]/80 border border-[#1C2B45] text-xs font-mono text-slate-300">
+            <span className="w-2 h-2 rounded-full bg-[#2DD4BF] animate-pulse"></span>
+            <span>Forensic Search & Case Intelligence</span>
           </div>
-        </form>
+        )}
 
         {/* Status & Navigation Switcher */}
         <div className="flex items-center gap-3">
