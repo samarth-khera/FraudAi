@@ -7,37 +7,36 @@
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
     /* Core Forensic Art Direction Tokens */
-    --bg-canvas: #F5F4F0;
+    --bg-canvas: #F3F5FC;
     --bg-surface: #FFFFFF;
-    --bg-recessed: #FAF9F6;
-    --bg-muted: #EFECE6;
-    --border-subtle: #E2DFD7;
-    --border-strong: #CFCBC0;
+    --bg-recessed: #F7F8FD;
+    --bg-muted: #EDF2FF;
+    --border-subtle: #E5E8F2;
+    --border-strong: #D5D9E8;
 
-    /* V2 Luminous Fintech Design System Tokens */
-    --v2-fintech-canvas: #F5F7F6;
-    --v2-fintech-surface: #FFFFFF;
-    --v2-fintech-recessed: #F0F4F2;
-    --v2-fintech-border: #E1E7E3;
-    --v2-fintech-border-subtle: #EDF1EE;
-    --v2-fintech-text: #18221F;
-    --v2-fintech-muted: #66736D;
-    --v2-fintech-subtle: #8E9B95;
-    --v2-fintech-teal: #187C70;
-    --v2-fintech-teal-hover: #12675D;
-    --v2-fintech-teal-light: #E2F4ED;
-    --v2-fintech-teal-border: #C8E7DC;
-    --v2-fintech-blue: #E7F0FC;
-    --v2-fintech-blue-border: #CFE0F8;
-    --v2-fintech-lavender: #F0EAFE;
-    --v2-fintech-lavender-border: #DDD6FE;
-    --v2-fintech-peach: #FFF0E3;
-    --v2-fintech-amber-bg: #FEF3C7;
-    --v2-fintech-amber-text: #B45309;
-    --v2-fintech-amber-border: #FDE68A;
-    --v2-fintech-red-bg: #FEE2E2;
-    --v2-fintech-red-text: #DC2626;
-    --v2-fintech-red-border: #FECACA;
+    /* V2 Luminous Purple & Ice Blue Design System Tokens */
+    --v2-purple-canvas: #F3F5FC;
+    --v2-purple-soft-blue: #EDF2FF;
+    --v2-purple-soft-lavender: #F2EEFF;
+    --v2-purple-surface: #FFFFFF;
+    --v2-purple-recessed: #F7F8FD;
+    --v2-purple-text: #191A24;
+    --v2-purple-muted: #73798B;
+    --v2-purple-subtle: #9CA3AF;
+    --v2-purple-border: #E5E8F2;
+    --v2-purple-primary: #7028F5;
+    --v2-purple-deep: #5620D8;
+    --v2-purple-blue: #4F86FF;
+    --v2-purple-violet-hl: #EDE4FF;
+    --v2-purple-blue-hl: #E4EDFF;
+    --v2-purple-mint: #E2F5EB;
+    --v2-purple-mint-text: #059669;
+    --v2-purple-amber-bg: #FEF3C7;
+    --v2-purple-amber-text: #B45309;
+    --v2-purple-amber-border: #FDE68A;
+    --v2-purple-red-bg: #FFF1F2;
+    --v2-purple-red-text: #E11D48;
+    --v2-purple-red-border: #FFE4E6;
 
     --navy-950: #070C16;
     --navy-900: #0B1322;
@@ -58,8 +57,8 @@
 
   body {
     font-family: var(--font-sans);
-    background-color: var(--v2-fintech-canvas);
-    color: var(--v2-fintech-text);
+    background-color: var(--v2-purple-canvas);
+    color: var(--v2-purple-text);
     min-height: 100vh;
     margin: 0;
     overflow-x: hidden;
@@ -131,10 +130,10 @@
 }
 
 .blueprint-grid-light {
-  background-color: #F0F4F2;
+  background-color: #F7F8FD;
   background-image:
-    linear-gradient(to right, rgba(225, 231, 227, 0.8) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(225, 231, 227, 0.8) 1px, transparent 1px);
+    linear-gradient(to right, rgba(229, 232, 242, 0.7) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(229, 232, 242, 0.7) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
@@ -145,49 +144,49 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #F5F7F6;
+  background: #F3F5FC;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #D1D8D4;
+  background: #D5D9E8;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #B0BCB6;
+  background: #B5BDD6;
 }
 
-/* Keyboard accessibility & focus ring in primary teal (#187C70) */
+/* Keyboard accessibility & focus ring in primary purple (#7028F5) */
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid #187C70;
+  outline: 2px solid #7028F5;
   outline-offset: 2px;
 }
 
-/* V2 Luminous Fintech Surfaces */
+/* V2 Luminous Purple Surfaces */
 .v2-card,
 .fintech-card {
   background-color: #FFFFFF;
-  border: 1px solid #E1E7E3;
+  border: 1px solid #E5E8F2;
   border-radius: 1.5rem;
-  box-shadow: 0 1px 3px rgba(24, 124, 112, 0.03), 0 4px 12px -2px rgba(24, 34, 31, 0.04);
+  box-shadow: 0 10px 30px -10px rgba(112, 40, 245, 0.06), 0 2px 8px -2px rgba(25, 26, 36, 0.04);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .v2-card-interactive:hover,
 .fintech-card-interactive:hover {
-  border-color: #187C70;
-  box-shadow: 0 10px 28px -4px rgba(24, 124, 112, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+  border-color: rgba(112, 40, 245, 0.35);
+  box-shadow: 0 20px 40px -12px rgba(112, 40, 245, 0.12), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
   transform: translateY(-2px);
 }
 
 .v2-panel-recessed,
 .fintech-panel-recessed {
-  background-color: #F0F4F2;
-  border: 1px solid #E1E7E3;
+  background-color: #F7F8FD;
+  border: 1px solid #E5E8F2;
   border-radius: 1rem;
 }
 
