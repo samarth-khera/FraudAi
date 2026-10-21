@@ -326,4 +326,32 @@ describe('V2AccountDetailPage Component', () => {
     expect(screen.getByText(/Human Compliance Adjudication/i)).toBeInTheDocument();
     expect(screen.getByText(/Record Finding/i)).toBeInTheDocument();
   });
+
+  it('records human adjudication finding and renders audit trail entry', async () => {
+    render(
+      <MemoryRouter initialEntries={['/v2/accounts/ACC-000001']}>
+        <Routes>
+          <Route path="/v2/accounts/:accountId" element={<V2AccountDetailPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Aditi Joshi')).toBeInTheDocument();
+    });
+
+    // Enter notes in textarea
+    const notesInput = screen.getByPlaceholderText(/Document factual findings/i);
+    fireEvent.change(notesInput, { target: { value: 'Verified legitimate customer victim of APP scam.' } });
+
+    // Click Record Finding
+    const recordBtn = screen.getByRole('button', { name: /Record Finding/i });
+    fireEvent.click(recordBtn);
+
+    // Verify Audit Trail is rendered
+    await waitFor(() => {
+      expect(screen.getByText(/Logged Adjudication Audit Trail/i)).toBeInTheDocument();
+      expect(screen.getByText(/"Verified legitimate customer victim of APP scam."/i)).toBeInTheDocument();
+    });
+  });
 });
