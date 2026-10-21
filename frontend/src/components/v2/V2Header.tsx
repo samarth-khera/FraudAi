@@ -32,7 +32,7 @@ export const V2Header: React.FC = () => {
   const isModelReady = modelStatus?.inference_ready ?? false;
 
   return (
-    <header className="bg-[#0B0F14]/90 backdrop-blur-md border-b border-[#293543] text-[#F3F6F8] sticky top-0 z-40 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+    <header className="bg-[#FFFFFF]/95 backdrop-blur-md border-b border-[#E1E7E3] text-[#18221F] sticky top-0 z-40 shadow-[0_1px_4px_rgba(24,34,31,0.04)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Brand */}
         <div className="flex items-center gap-3">
@@ -40,20 +40,20 @@ export const V2Header: React.FC = () => {
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="w-9 h-9 rounded-xl bg-[#19232F] border border-[#293543] flex items-center justify-center text-[#C8F169] shadow-xs transition-colors group-hover:border-[#C8F169]/50 group-hover:bg-[#1F2E0F]/40"
+              className="w-9 h-9 rounded-xl bg-[#E2F4ED] border border-[#C8E7DC] flex items-center justify-center text-[#187C70] shadow-2xs transition-colors group-hover:bg-[#187C70] group-hover:text-[#FFFFFF]"
             >
-              <Shield className="w-5 h-5 text-[#C8F169]" />
+              <Shield className="w-5 h-5 transition-colors" />
             </motion.div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-base tracking-tight text-[#F3F6F8]">
+                <span className="font-bold text-base tracking-tight text-[#18221F]">
                   FraudShield AI
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#19232F] text-[#C8F169] border border-[#293543]">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#E2F4ED] text-[#187C70] border border-[#C8E7DC]">
                   V2
                 </span>
               </div>
-              <p className="text-[11px] text-[#9CAAB6] font-normal">
+              <p className="text-[11px] text-[#66736D] font-normal">
                 Account Search & Money Flow
               </p>
             </div>
@@ -64,19 +64,19 @@ export const V2Header: React.FC = () => {
         {!isSearchWorkspace ? (
           <form onSubmit={handleSearch} className="flex-1 max-w-md hidden md:block">
             <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#9CAAB6]" />
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8E9B95]" />
               <input
                 type="text"
                 value={searchId}
                 onChange={(e) => setSearchId(e.target.value)}
                 placeholder="Jump to account ID (e.g. ACC-000001)..."
-                className="w-full bg-[#131A23] border border-[#293543] rounded-xl pl-9 pr-12 py-1.5 text-xs text-[#F3F6F8] placeholder:text-[#627181] focus:outline-none focus:bg-[#19232F] focus:border-[#C8F169] focus:ring-2 focus:ring-[#C8F169]/20 font-mono transition-all"
+                className="w-full bg-[#F0F4F2] border border-[#E1E7E3] rounded-xl pl-9 pr-12 py-1.5 text-xs text-[#18221F] placeholder:text-[#8E9B95] focus:outline-none focus:bg-[#FFFFFF] focus:border-[#187C70] focus:ring-2 focus:ring-[#187C70]/15 font-mono transition-all"
                 aria-label="Account Jump Search"
               />
               {searchId && (
                 <button
                   type="submit"
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded text-[10px] font-bold bg-[#C8F169] text-[#0B0F14] hover:bg-[#D7F68B] transition-colors cursor-pointer"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded text-[10px] font-bold bg-[#187C70] text-[#FFFFFF] hover:bg-[#12675D] transition-colors cursor-pointer"
                 >
                   Go
                 </button>
@@ -84,25 +84,25 @@ export const V2Header: React.FC = () => {
             </div>
           </form>
         ) : (
-          <div className="hidden md:flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#131A23] border border-[#293543] text-xs font-mono text-[#9CAAB6] shadow-2xs">
-            <span className="w-2 h-2 rounded-full bg-[#C8F169] animate-pulse"></span>
-            <span className="font-semibold text-[11px]">Forensic Search Workspace</span>
+          <div className="hidden md:flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#F0F4F2] border border-[#E1E7E3] text-xs font-mono text-[#66736D] shadow-2xs">
+            <span className="w-2 h-2 rounded-full bg-[#187C70] animate-pulse"></span>
+            <span className="font-semibold text-[11px] text-[#18221F]">Forensic Search Workspace</span>
           </div>
         )}
 
         {/* Status & Navigation Switcher */}
         <div className="flex items-center gap-3">
           {/* Live ML Status Pill */}
-          <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#131A23] border border-[#293543] text-xs shadow-xs">
-            <Cpu className="w-3.5 h-3.5 text-[#9CAAB6]" />
-            <span className="text-[#9CAAB6] font-semibold text-[11px]">AI Engine:</span>
+          <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#F0F4F2] border border-[#E1E7E3] text-xs shadow-2xs">
+            <Cpu className="w-3.5 h-3.5 text-[#66736D]" />
+            <span className="text-[#66736D] font-medium text-[11px]">AI Engine:</span>
             {isModelReady ? (
-              <span className="inline-flex items-center gap-1.5 text-[#C8F169] font-bold font-mono text-[11px]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#C8F169]"></span>
+              <span className="inline-flex items-center gap-1.5 text-[#187C70] font-bold font-mono text-[11px]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#187C70]"></span>
                 v2-active
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 text-[#FF6B77] font-bold text-[11px]">
+              <span className="inline-flex items-center gap-1 text-[#DC2626] font-bold text-[11px]">
                 <AlertTriangle className="w-3 h-3" />
                 Degraded
               </span>
@@ -112,11 +112,11 @@ export const V2Header: React.FC = () => {
           {/* V1 Switcher Button */}
           <Link
             to="/app/dashboard"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-[#293543] bg-[#131A23] text-xs font-bold text-[#9CAAB6] hover:text-[#F3F6F8] hover:border-[#C8F169]/40 hover:bg-[#19232F] shadow-xs transition-all active:scale-[0.98]"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-[#E1E7E3] bg-[#FFFFFF] text-xs font-bold text-[#66736D] hover:text-[#187C70] hover:border-[#187C70] hover:bg-[#F0F4F2] shadow-2xs transition-all active:scale-[0.98]"
             title="Switch to V1 Classic Case Management"
           >
             <span className="hidden sm:inline">V1 Classic</span>
-            <ExternalLink className="w-3.5 h-3.5 text-[#9CAAB6]" />
+            <ExternalLink className="w-3.5 h-3.5 text-[#8E9B95]" />
           </Link>
         </div>
       </div>

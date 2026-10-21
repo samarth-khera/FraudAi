@@ -14,21 +14,30 @@
     --border-subtle: #E2DFD7;
     --border-strong: #CFCBC0;
 
-    /* V2 Signal Noir Design System Tokens */
-    --v2-noir-canvas: #0B0F14;
-    --v2-noir-card: #131A23;
-    --v2-noir-raised: #19232F;
-    --v2-noir-border: #293543;
-    --v2-noir-border-light: #3A495B;
-    --v2-noir-text: #F3F6F8;
-    --v2-noir-muted: #9CAAB6;
-    --v2-noir-subtle: #627181;
-    --v2-noir-lime: #C8F169;
-    --v2-noir-lime-hover: #D7F68B;
-    --v2-noir-lime-dark: #1D2A0E;
-    --v2-noir-mint: #47E0C1;
-    --v2-noir-coral: #FF6B77;
-    --v2-noir-violet: #B8A5FF;
+    /* V2 Luminous Fintech Design System Tokens */
+    --v2-fintech-canvas: #F5F7F6;
+    --v2-fintech-surface: #FFFFFF;
+    --v2-fintech-recessed: #F0F4F2;
+    --v2-fintech-border: #E1E7E3;
+    --v2-fintech-border-subtle: #EDF1EE;
+    --v2-fintech-text: #18221F;
+    --v2-fintech-muted: #66736D;
+    --v2-fintech-subtle: #8E9B95;
+    --v2-fintech-teal: #187C70;
+    --v2-fintech-teal-hover: #12675D;
+    --v2-fintech-teal-light: #E2F4ED;
+    --v2-fintech-teal-border: #C8E7DC;
+    --v2-fintech-blue: #E7F0FC;
+    --v2-fintech-blue-border: #CFE0F8;
+    --v2-fintech-lavender: #F0EAFE;
+    --v2-fintech-lavender-border: #DDD6FE;
+    --v2-fintech-peach: #FFF0E3;
+    --v2-fintech-amber-bg: #FEF3C7;
+    --v2-fintech-amber-text: #B45309;
+    --v2-fintech-amber-border: #FDE68A;
+    --v2-fintech-red-bg: #FEE2E2;
+    --v2-fintech-red-text: #DC2626;
+    --v2-fintech-red-border: #FECACA;
 
     --navy-950: #070C16;
     --navy-900: #0B1322;
@@ -49,8 +58,8 @@
 
   body {
     font-family: var(--font-sans);
-    background-color: var(--bg-canvas);
-    color: var(--navy-900);
+    background-color: var(--v2-fintech-canvas);
+    color: var(--v2-fintech-text);
     min-height: 100vh;
     margin: 0;
     overflow-x: hidden;
@@ -121,64 +130,64 @@
   background-size: 20px 20px;
 }
 
-.blueprint-grid-dark {
-  background-color: #0B0F14;
+.blueprint-grid-light {
+  background-color: #F0F4F2;
   background-image:
-    linear-gradient(to right, rgba(41, 53, 67, 0.35) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(41, 53, 67, 0.35) 1px, transparent 1px);
-  background-size: 32px 32px;
+    linear-gradient(to right, rgba(225, 231, 227, 0.8) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(225, 231, 227, 0.8) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
-/* Custom dark scrollbar */
+/* Custom light scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0B0F14;
+  background: #F5F7F6;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #293543;
+  background: #D1D8D4;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3A495B;
+  background: #B0BCB6;
 }
 
-/* Keyboard accessibility & focus ring in electric lime (#C8F169) */
+/* Keyboard accessibility & focus ring in primary teal (#187C70) */
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid #C8F169;
+  outline: 2px solid #187C70;
   outline-offset: 2px;
 }
 
-/* V2 Signal Noir Surfaces */
+/* V2 Luminous Fintech Surfaces */
 .v2-card,
-.noir-card {
-  background-color: #131A23;
-  border: 1px solid #293543;
+.fintech-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E1E7E3;
   border-radius: 1.5rem;
-  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.5), 0 2px 6px -1px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 3px rgba(24, 124, 112, 0.03), 0 4px 12px -2px rgba(24, 34, 31, 0.04);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .v2-card-interactive:hover,
-.noir-card-interactive:hover {
-  border-color: rgba(200, 241, 105, 0.45);
-  box-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.7), 0 0 24px -2px rgba(200, 241, 105, 0.12);
+.fintech-card-interactive:hover {
+  border-color: #187C70;
+  box-shadow: 0 10px 28px -4px rgba(24, 124, 112, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
   transform: translateY(-2px);
 }
 
 .v2-panel-recessed,
-.noir-panel-raised {
-  background-color: #19232F;
-  border: 1px solid #293543;
+.fintech-panel-recessed {
+  background-color: #F0F4F2;
+  border: 1px solid #E1E7E3;
   border-radius: 1rem;
 }
 
