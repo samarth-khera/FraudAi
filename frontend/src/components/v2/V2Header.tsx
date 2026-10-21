@@ -30,22 +30,22 @@ export const V2Header: React.FC = () => {
   const isModelReady = modelStatus?.inference_ready ?? false;
 
   return (
-    <header className="bg-white border-b border-[#E8EAED] text-[#202124] sticky top-0 z-40 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+    <header className="bg-[#FFFEFA] border-b border-[#E8E0D4] text-[#242424] sticky top-0 z-40 shadow-[0_2px_8px_rgba(180,150,120,0.04)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Brand */}
         <div className="flex items-center gap-3">
           <Link to="/v2" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-teal-50 border border-teal-200/60 flex items-center justify-center text-teal-700 shadow-2xs transition-transform group-hover:scale-105">
-              <Shield className="w-5 h-5 text-teal-700" />
+            <div className="w-9 h-9 rounded-xl bg-[#FFF4E6] border border-[#FCD5B5] flex items-center justify-center text-[#EA8500] shadow-2xs transition-transform group-hover:scale-105">
+              <Shield className="w-5 h-5 text-[#EA8500]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-base tracking-tight text-[#202124]">FraudShield AI</span>
-                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                <span className="font-semibold text-base tracking-tight text-[#242424]">FraudShield AI</span>
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-[#FFF4E6] text-[#EA8500] border border-[#FCD5B5]">
                   V2
                 </span>
               </div>
-              <p className="text-[11px] text-[#727780] font-normal">Account Search & Money Flow</p>
+              <p className="text-[11px] text-[#737373] font-normal">Account Search & Money Flow</p>
             </div>
           </Link>
         </div>
@@ -54,19 +54,19 @@ export const V2Header: React.FC = () => {
         {!isSearchWorkspace ? (
           <form onSubmit={handleSearch} className="flex-1 max-w-md hidden md:block">
             <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8C8C8C]" />
               <input
                 type="text"
                 value={searchId}
                 onChange={(e) => setSearchId(e.target.value)}
                 placeholder="Jump to account ID (e.g. ACC-000001)..."
-                className="w-full bg-[#F8F9FA] border border-[#E5E7EB] rounded-lg pl-9 pr-12 py-1.5 text-xs text-[#202124] placeholder:text-[#727780] focus:outline-none focus:bg-white focus:border-teal-700 focus:ring-1 focus:ring-teal-700 font-mono transition-colors"
+                className="w-full bg-[#F7F2E8] border border-[#E8E0D4] rounded-lg pl-9 pr-12 py-1.5 text-xs text-[#242424] placeholder:text-[#8C8C8C] focus:outline-none focus:bg-[#FFFEFA] focus:border-[#EA8500] focus:ring-1 focus:ring-[#EA8500] font-mono transition-colors"
                 aria-label="Account Jump Search"
               />
               {searchId && (
                 <button
                   type="submit"
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded text-[10px] font-medium bg-teal-700 text-white hover:bg-teal-800 transition-colors cursor-pointer"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded text-[10px] font-medium bg-[#EA8500] text-white hover:bg-[#D96D00] transition-colors cursor-pointer"
                 >
                   Go
                 </button>
@@ -74,8 +74,8 @@ export const V2Header: React.FC = () => {
             </div>
           </form>
         ) : (
-          <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-[#F8F9FA] border border-[#E5E7EB] text-xs font-mono text-[#5F6368]">
-            <span className="w-2 h-2 rounded-full bg-teal-600"></span>
+          <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-[#F7F2E8] border border-[#E8E0D4] text-xs font-mono text-[#737373]">
+            <span className="w-2 h-2 rounded-full bg-[#EA8500]"></span>
             <span>Forensic Search Workspace</span>
           </div>
         )}
@@ -83,12 +83,12 @@ export const V2Header: React.FC = () => {
         {/* Status & Navigation Switcher */}
         <div className="flex items-center gap-3">
           {/* Live ML Status Pill */}
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F8F9FA] border border-[#E5E7EB] text-xs">
-            <Cpu className="w-3.5 h-3.5 text-slate-500" />
-            <span className="text-[#727780]">AI Engine:</span>
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F7F2E8] border border-[#E8E0D4] text-xs">
+            <Cpu className="w-3.5 h-3.5 text-[#737373]" />
+            <span className="text-[#737373]">AI Engine:</span>
             {isModelReady ? (
-              <span className="flex items-center gap-1.5 text-emerald-700 font-medium font-mono text-[11px]">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              <span className="flex items-center gap-1.5 text-[#166534] font-medium font-mono text-[11px]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]"></span>
                 v2-active
               </span>
             ) : (
@@ -102,7 +102,7 @@ export const V2Header: React.FC = () => {
           {/* V1 Switcher Button */}
           <Link
             to="/app/dashboard"
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#E5E7EB] text-xs font-medium text-[#5F6368] hover:text-[#202124] hover:border-slate-300 hover:bg-[#F8F9FA] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#E8E0D4] text-xs font-medium text-[#737373] hover:text-[#242424] hover:border-[#D1C7B7] hover:bg-[#F7F2E8] transition-colors"
             title="Switch to V1 Classic Case Management"
           >
             <span className="hidden sm:inline">V1 Classic</span>
