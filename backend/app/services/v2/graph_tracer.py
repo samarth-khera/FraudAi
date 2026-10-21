@@ -118,7 +118,6 @@ class ForensicGraphTracer:
                         hop=curr_hop + 1,
                         is_cycle=is_cycle,
                     )
-                    edges_list.append(edge)
 
                     # Expand node if not already added
                     if dest_id not in nodes_map:
@@ -136,12 +135,15 @@ class ForensicGraphTracer:
                                     hop_distance=curr_hop + 1,
                                     is_root=False,
                                 )
+                                edges_list.append(edge)
                                 # Continue BFS if not cycle
                                 if not is_cycle and curr_hop + 1 <= max_depth:
                                     queue.append((dest_id, curr_hop + 1, txn.timestamp))
                         else:
                             is_truncated = True
                             truncation_reason = f"Configured max_nodes limit of {max_nodes} accounts reached."
+                    else:
+                        edges_list.append(edge)
 
             # ------------------------------------------------------------------
             # Incoming Funding Traversal
@@ -182,7 +184,6 @@ class ForensicGraphTracer:
                         hop=curr_hop + 1,
                         is_cycle=is_cycle,
                     )
-                    edges_list.append(edge)
 
                     if orig_id not in nodes_map:
                         if len(nodes_map) < max_nodes:
@@ -199,11 +200,14 @@ class ForensicGraphTracer:
                                     hop_distance=curr_hop + 1,
                                     is_root=False,
                                 )
+                                edges_list.append(edge)
                                 if not is_cycle and curr_hop + 1 <= max_depth:
                                     queue.append((orig_id, curr_hop + 1, txn.timestamp))
                         else:
                             is_truncated = True
                             truncation_reason = f"Configured max_nodes limit of {max_nodes} accounts reached."
+                    else:
+                        edges_list.append(edge)
 
         # If traversal ended naturally
         if not is_truncated:

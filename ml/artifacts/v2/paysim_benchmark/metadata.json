@@ -1,0 +1,73 @@
+{
+  "benchmark_name": "PaySim Transaction Benchmark (XGBoost)",
+  "model_version": "v2-benchmark-1.0.0",
+  "trained_at": "2026-10-20T14:54:45Z",
+  "dataset_path": "data/raw/PS_20174392719_1491204439457_log.csv",
+  "chronological_split": {
+    "train_steps": "1..500",
+    "val_steps": "501..620",
+    "test_steps": "621..743",
+    "train_rows_evaluated": 105561,
+    "val_rows_evaluated": 209984,
+    "test_rows_evaluated": 90829
+  },
+  "class_distribution": {
+    "train_fraud_count": 5561,
+    "train_total_count": 6061807,
+    "val_fraud_count": 1286,
+    "val_total_count": 209984,
+    "test_fraud_count": 1366,
+    "test_total_count": 90829
+  },
+  "selected_threshold": 0.65,
+  "validation_metrics": {
+    "f1_score": 0.9980597594101669
+  },
+  "held_out_test_metrics": {
+    "precision": 0.9978,
+    "recall": 0.9993,
+    "f1_score": 0.9985,
+    "roc_auc": 1.0,
+    "pr_auc": 0.9999,
+    "confusion_matrix": [
+      [
+        89460,
+        3
+      ],
+      [
+        1,
+        1365
+      ]
+    ],
+    "true_negatives": 89460,
+    "false_positives": 3,
+    "false_negatives": 1,
+    "true_positives": 1365
+  },
+  "training_time_seconds": 0.18,
+  "total_elapsed_seconds": 4.93,
+  "features": [
+    "step",
+    "amount",
+    "oldbalanceOrg",
+    "oldbalanceDest",
+    "amount_to_oldbalanceOrg_ratio",
+    "is_origin_zero_balance",
+    "is_dest_zero_balance",
+    "step_hour",
+    "step_day",
+    "type_CASH_IN",
+    "type_CASH_OUT",
+    "type_DEBIT",
+    "type_PAYMENT",
+    "type_TRANSFER"
+  ],
+  "excluded_features": [
+    "nameOrig (identifier)",
+    "nameDest (identifier)",
+    "newbalanceOrig (post-transaction balance leakage)",
+    "newbalanceDest (post-transaction balance leakage)",
+    "isFlaggedFraud (rule outcome flag)"
+  ],
+  "domain_constraints": "PaySim dataset benchmark only. This model is trained on synthetic mobile money logs from 2017 and must NOT be applied to V2 synthetic banking transactions without feature adapters."
+}

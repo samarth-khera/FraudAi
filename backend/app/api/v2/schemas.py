@@ -145,3 +145,45 @@ class TraceGraphResponse(BaseModel):
     attributed_exposure_upper_bound: float
     attribution_status: str
     attribution_disclaimer: str
+
+
+# ------------------------------------------------------------------------------
+# 5. ML Models Schemas
+# ------------------------------------------------------------------------------
+
+class FeatureContribution(BaseModel):
+    feature_name: str
+    feature_value: float
+    contribution_score: float = Field(..., description="TreeSHAP local attribution contribution")
+    impact_direction: str = Field(..., description="'increases_risk' or 'decreases_risk'")
+
+
+class AccountMLAssessmentResponse(BaseModel):
+    account_id: str
+    risk_score: float = Field(..., ge=0.0, le=100.0, description="Calibrated ML risk score (0-100)")
+    risk_level: str = Field(..., description="'low', 'elevated', 'high', or 'critical'")
+    predicted_probability: float = Field(..., ge=0.0, le=1.0, description="Model output probability of suspicious role")
+    predicted_class: str = Field(..., description="'suspicious' or 'legitimate'")
+    model_version: str
+    model_type: str
+    top_contributions: list[FeatureContribution] = Field(..., description="Top genuine TreeSHAP feature contributors")
+    observable_features: dict[str, float] = Field(..., description="Raw observable feature values used for inference")
+    disclaimer: str = Field(..., description="Mandatory synthetic evaluation disclaimer and non-punitive guardrail")
+
+
+class SingleModelInfo(BaseModel):
+    available: bool
+    version: Optional[str] = None
+    model_type: Optional[str] = None
+    features_count: Optional[int] = None
+    trained_at: Optional[str] = None
+    test_metrics: Optional[dict[str, Any]] = None
+    limitations: Optional[str] = None
+
+
+class ModelStatusResponse(BaseModel):
+    account_model: SingleModelInfo
+    paysim_benchmark: SingleModelInfo
+    overall_status: str
+    inference_ready: bool
+    disclaimer: str
