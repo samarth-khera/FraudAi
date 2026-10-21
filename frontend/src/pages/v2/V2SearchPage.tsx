@@ -22,6 +22,7 @@ import { v2Api } from '../../services/v2Api';
 import { V2ModelStatusResponse } from '../../types/v2';
 import { V2Header } from '../../components/v2/V2Header';
 import { V2Footer } from '../../components/v2/V2Footer';
+import { V2MoneyFlowVisual } from '../../components/v2/V2MoneyFlowVisual';
 
 interface SampleCase {
   id: string;
@@ -109,6 +110,7 @@ export const V2SearchPage: React.FC = () => {
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'victim' | 'mule' | 'counterparty' | 'baseline'>('all');
   const [searchError, setSearchError] = useState('');
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
   // 1. Fetch live ML model engine telemetry and saved recents
   useEffect(() => {
@@ -134,7 +136,7 @@ export const V2SearchPage: React.FC = () => {
     }
   }, []);
 
-  // 2. GSAP Orchestrated Entrance Sequence with clean context cleanup
+  // 2. Coordinated GSAP First-Load Entrance Choreography
   useEffect(() => {
     const prefersReducedMotion =
       typeof window !== 'undefined' &&
@@ -146,34 +148,60 @@ export const V2SearchPage: React.FC = () => {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
+      // Step 1: Badge reveal
       tl.fromTo(
         '.gsap-hero-badge',
-        { opacity: 0, y: -12 },
-        { opacity: 1, y: 0, duration: 0.45 }
+        { opacity: 0, y: -8, scale: 0.95 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.4 }
       )
+        // Step 2: Headline upward masked reveal
         .fromTo(
           '.gsap-hero-title',
-          { opacity: 0, y: 16 },
-          { opacity: 1, y: 0, duration: 0.55 },
-          '-=0.25'
+          { yPercent: 100, opacity: 0 },
+          { yPercent: 0, opacity: 1, duration: 0.55, ease: 'power3.out' },
+          '-=0.15'
         )
+        // Step 3: Subtitle reveal
         .fromTo(
           '.gsap-hero-desc',
-          { opacity: 0, y: 14 },
+          { opacity: 0, y: 10 },
           { opacity: 1, y: 0, duration: 0.45 },
-          '-=0.35'
+          '-=0.3'
         )
+        // Step 4: Search container soft upward movement + scale
         .fromTo(
           '.gsap-search-card',
-          { opacity: 0, y: 22, scale: 0.985 },
-          { opacity: 1, y: 0, scale: 1, duration: 0.65, ease: 'back.out(1.15)' },
+          { opacity: 0, y: 18, scale: 0.985 },
+          { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: 'back.out(1.12)' },
           '-=0.25'
         )
+        // Step 5: Signature money flow visual card parallel entrance
+        .fromTo(
+          '.gsap-flow-card',
+          { opacity: 0, x: 20, scale: 0.98 },
+          { opacity: 1, x: 0, scale: 1, duration: 0.65, ease: 'power3.out' },
+          '-=0.45'
+        )
+        // Step 6: Search shortcut chips staggered pop
+        .fromTo(
+          '.gsap-shortcut-chip',
+          { opacity: 0, scale: 0.92, y: 6 },
+          { opacity: 1, scale: 1, y: 0, duration: 0.35, stagger: 0.04, ease: 'back.out(1.2)' },
+          '-=0.3'
+        )
+        // Step 7: Workflow section reveal
         .fromTo(
           '.gsap-workflow-section',
-          { opacity: 0, y: 18 },
+          { opacity: 0, y: 20 },
           { opacity: 1, y: 0, duration: 0.5 },
-          '-=0.25'
+          '-=0.2'
+        )
+        // Step 8: Example cases section reveal
+        .fromTo(
+          '.gsap-examples-section',
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.5 },
+          '-=0.3'
         );
     }, containerRef);
 
@@ -223,193 +251,237 @@ export const V2SearchPage: React.FC = () => {
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-12 sm:space-y-16">
         {/* ========================================================================= */}
-        {/* HERO & SEARCH CONSOLE (Inspired by Luxury Finance Reference)            */}
+        {/* HERO & SEARCH CONSOLE WITH SIGNATURE MONEY FLOW VISUAL                   */}
         {/* ========================================================================= */}
-        <section aria-labelledby="search-heading" className="space-y-5 text-center">
-          {/* Subtle System Status Pill */}
-          <div className="gsap-hero-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FFFFFF] border border-[#EAE3D6] text-[#78716C] text-xs font-semibold shadow-xs">
-            <Shield className="w-3.5 h-3.5 text-[#EA8500]" />
-            <span>FraudShield AI · Forensic Financial Intelligence</span>
-          </div>
-
-          {/* Main Headline */}
-          <h1
-            id="search-heading"
-            className="gsap-hero-title text-3xl sm:text-4xl lg:text-[44px] font-black tracking-tight text-[#1C1917] font-display"
-          >
-            Look up an account
-          </h1>
-
-          {/* Plain English Subtitle */}
-          <p className="gsap-hero-desc text-[#78716C] text-sm sm:text-base leading-relaxed max-w-2xl mx-auto font-normal">
-            Enter a demo account ID to see its transactions, connected accounts, unusual activity, and the AI's assessment.
-          </p>
-
-          {/* Search Card Console (Inspired by Reference 1 Balance Widget) */}
-          <div className="gsap-search-card bg-[#FFFFFF] border border-[#EAE3D6] rounded-3xl p-6 sm:p-9 shadow-[0_4px_24px_rgba(180,150,120,0.06)] hover:shadow-[0_8px_32px_rgba(180,150,120,0.09)] transition-shadow text-left mt-6 max-w-3xl mx-auto relative overflow-hidden">
-            {/* Top Bar inside Card */}
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-[#F2ECE2] text-xs">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#EA8500] animate-pulse"></span>
-                <span className="font-mono font-bold tracking-wider uppercase text-[#78716C] text-[11px]">
-                  Account Repository Lookup
-                </span>
+        <section aria-labelledby="search-heading" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 lg:gap-8 items-start">
+            {/* Left Column: Headline & Elevated Search Console */}
+            <div className="lg:col-span-7 space-y-5">
+              {/* Subtle System Status Pill */}
+              <div className="gsap-hero-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FFFFFF] border border-[#EAE3D6] text-[#78716C] text-xs font-semibold shadow-xs">
+                <Shield className="w-3.5 h-3.5 text-[#EA8500]" />
+                <span>FraudShield AI · Forensic Financial Intelligence</span>
               </div>
-              <div className="flex items-center gap-2 font-mono text-[11px] text-[#78716C] bg-[#FAF7F2] border border-[#EBE4D8] px-3 py-1 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]"></span>
-                <span>Core Ledger: Live</span>
+
+              {/* Masked Headline for Upward Reveal */}
+              <div className="overflow-hidden py-1">
+                <h1
+                  id="search-heading"
+                  className="gsap-hero-title text-3xl sm:text-4xl lg:text-[42px] font-black tracking-tight text-[#1C1917] font-display leading-[1.15]"
+                >
+                  Look up an account
+                </h1>
+              </div>
+
+              {/* Plain English Subtitle */}
+              <p className="gsap-hero-desc text-[#78716C] text-sm sm:text-base leading-relaxed max-w-xl font-normal">
+                Enter a demo account ID to see its transactions, connected accounts, unusual activity, and the AI's assessment.
+              </p>
+
+              {/* Search Card Console */}
+              <div className="gsap-search-card bg-[#FFFFFF] border border-[#EAE3D6] rounded-3xl p-6 sm:p-8 shadow-[0_4px_24px_rgba(180,150,120,0.06)] hover:shadow-[0_8px_32px_rgba(180,150,120,0.09)] transition-shadow text-left relative overflow-hidden">
+                {/* Top Bar inside Card */}
+                <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-[#F2ECE2] text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#EA8500] animate-pulse"></span>
+                    <span className="font-mono font-bold tracking-wider uppercase text-[#78716C] text-[11px]">
+                      Account Repository Lookup
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 font-mono text-[11px] text-[#78716C] bg-[#FAF7F2] border border-[#EBE4D8] px-3 py-1 rounded-full">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]"></span>
+                    <span>Core Ledger: Live</span>
+                  </div>
+                </div>
+
+                <form onSubmit={handleSearch} className="space-y-4">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <div
+                      className={`relative flex-1 flex items-center rounded-2xl transition-all ${
+                        isInputFocused
+                          ? 'ring-4 ring-[#EA8500]/15 border-[#EA8500] bg-[#FFFFFF]'
+                          : 'border-[#EAE3D6] bg-[#FAF7F2]'
+                      } border`}
+                    >
+                      <Search
+                        className={`w-5 h-5 absolute left-4 pointer-events-none transition-colors ${
+                          isInputFocused ? 'text-[#EA8500]' : 'text-[#A8A29E]'
+                        }`}
+                      />
+                      <input
+                        id="account-search-input"
+                        type="text"
+                        value={query}
+                        onFocus={() => setIsInputFocused(true)}
+                        onBlur={() => setIsInputFocused(false)}
+                        onChange={(e) => {
+                          setQuery(e.target.value);
+                          if (searchError) setSearchError('');
+                        }}
+                        placeholder="Enter synthetic account ID, e.g. ACC-000001"
+                        className="w-full h-14 bg-transparent rounded-2xl pl-12 pr-12 text-sm sm:text-base text-[#1C1917] placeholder:text-[#A8A29E] focus:outline-none font-mono transition-all"
+                        autoFocus
+                        aria-label="Account Identifier Search"
+                      />
+                      <AnimatePresence>
+                        {query && (
+                          <motion.button
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            type="button"
+                            onClick={() => setQuery('')}
+                            className="absolute right-4 p-1 text-[#A8A29E] hover:text-[#1C1917] transition-colors cursor-pointer rounded-lg hover:bg-[#EAE3D6]/50"
+                            title="Clear input"
+                            aria-label="Clear input text"
+                          >
+                            <X className="w-4 h-4" />
+                          </motion.button>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    <motion.button
+                      type="submit"
+                      whileHover={{ y: -2, scale: 1.01 }}
+                      whileTap={{ scale: 0.98 }}
+                      transition={{ type: 'spring', stiffness: 450, damping: 25 }}
+                      className="group h-14 px-8 rounded-2xl bg-[#EA8500] hover:bg-[#D96D00] text-white font-bold text-sm tracking-wide shadow-[0_6px_20px_rgba(234,133,0,0.32)] hover:shadow-[0_8px_25px_rgba(234,133,0,0.42)] flex items-center justify-center gap-2.5 cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EA8500] focus-visible:ring-offset-2 transition-all"
+                      title="Open account investigation"
+                    >
+                      <span>View account</span>
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
+                    </motion.button>
+                  </div>
+
+                  <AnimatePresence>
+                    {searchError && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0, y: -4 }}
+                        animate={{ opacity: 1, height: 'auto', y: 0 }}
+                        exit={{ opacity: 0, height: 0, y: -4 }}
+                        className="overflow-hidden"
+                      >
+                        <p className="text-xs text-rose-600 flex items-center gap-1.5 pt-1 font-semibold">
+                          <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                          <span>{searchError}</span>
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Guidance Row */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#78716C] pt-3 border-t border-[#F2ECE2]">
+                    <span className="flex items-center gap-1.5">
+                      <Info className="w-3.5 h-3.5 text-[#EA8500] shrink-0" />
+                      <span>Tip: Type an account ID like ACC-000001, or just 1.</span>
+                    </span>
+                    <span className="text-[#A8A29E] text-[11px] font-semibold">
+                      Instant transaction review & AI checks
+                    </span>
+                  </div>
+                </form>
+
+                {/* Quick Demo Shortcuts */}
+                <div className="mt-4 pt-3.5 border-t border-[#F2ECE2] space-y-2.5">
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <span className="font-bold text-[#78716C] text-xs">Quick examples:</span>
+
+                    <motion.button
+                      type="button"
+                      whileHover={{ scale: 1.03, y: -1 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => handleSelectAccount('ACC-000001')}
+                      className="gsap-shortcut-chip h-7 sm:h-8 px-3 rounded-full bg-[#FFF4E6] hover:bg-[#FFE8CC] text-[#C05621] border border-[#FCD5B5] font-mono text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      title="Demo: Scam victim account"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#EA8500]"></span>
+                      <span>ACC-000001 (Victim)</span>
+                    </motion.button>
+
+                    <motion.button
+                      type="button"
+                      whileHover={{ scale: 1.03, y: -1 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => handleSelectAccount('ACC-000002')}
+                      className="gsap-shortcut-chip h-7 sm:h-8 px-3 rounded-full bg-[#FFF0F2] hover:bg-[#FFE4E6] text-[#BE123C] border border-[#FECDD3] font-mono text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      title="Demo: Pass-through money mule"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#E11D48]"></span>
+                      <span>ACC-000002 (Mule)</span>
+                    </motion.button>
+
+                    <motion.button
+                      type="button"
+                      whileHover={{ scale: 1.03, y: -1 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => handleSelectAccount('ACC-000003')}
+                      className="gsap-shortcut-chip h-7 sm:h-8 px-3 rounded-full bg-[#EBF5FF] hover:bg-[#DBEAFE] text-[#1E40AF] border border-[#BFDBFE] font-mono text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      title="Demo: Connected downstream recipient"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6]"></span>
+                      <span>ACC-000003 (Hop 2)</span>
+                    </motion.button>
+
+                    <motion.button
+                      type="button"
+                      whileHover={{ scale: 1.03, y: -1 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => handleSelectAccount('ACC-000010')}
+                      className="gsap-shortcut-chip h-7 sm:h-8 px-3 rounded-full bg-[#EAF7EE] hover:bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0] font-mono text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      title="Demo: Normal everyday customer"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]"></span>
+                      <span>ACC-000010 (Normal)</span>
+                    </motion.button>
+                  </div>
+
+                  {/* Recent Searches */}
+                  {recentSearches.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-[#78716C] pt-1">
+                      <div className="flex items-center gap-1.5 text-[#A8A29E] font-semibold">
+                        <History className="w-3.5 h-3.5" />
+                        <span>Recent:</span>
+                      </div>
+                      {recentSearches.map((rec) => (
+                        <motion.button
+                          key={rec}
+                          type="button"
+                          whileHover={{ scale: 1.04 }}
+                          whileTap={{ scale: 0.96 }}
+                          onClick={() => handleSelectAccount(rec)}
+                          className="h-6 px-3 rounded-full bg-[#FAF7F2] hover:bg-[#EAE3D6] text-[#44403C] border border-[#EAE3D6] font-mono text-xs font-semibold transition-all cursor-pointer shadow-xs"
+                        >
+                          {rec}
+                        </motion.button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={clearRecentSearches}
+                        className="p-1 text-[#A8A29E] hover:text-[#1C1917] transition-colors ml-1 cursor-pointer rounded-md hover:bg-[#FAF7F2]"
+                        title="Clear recent searches"
+                        aria-label="Clear recent searches"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
-            <form onSubmit={handleSearch} className="space-y-4">
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                <div className="relative flex-1 flex items-center">
-                  <Search className="w-5 h-5 absolute left-4 text-[#A8A29E] pointer-events-none" />
-                  <input
-                    id="account-search-input"
-                    type="text"
-                    value={query}
-                    onChange={(e) => {
-                      setQuery(e.target.value);
-                      if (searchError) setSearchError('');
-                    }}
-                    placeholder="Enter synthetic account ID, e.g. ACC-000001"
-                    className="w-full h-14 bg-[#FAF7F2] border border-[#EAE3D6] rounded-2xl pl-12 pr-12 text-sm sm:text-base text-[#1C1917] placeholder:text-[#A8A29E] focus:outline-none focus:bg-[#FFFFFF] focus:border-[#EA8500] focus:ring-4 focus:ring-[#EA8500]/10 font-mono transition-all shadow-inner"
-                    autoFocus
-                    aria-label="Account Identifier Search"
-                  />
-                  {query && (
-                    <button
-                      type="button"
-                      onClick={() => setQuery('')}
-                      className="absolute right-4 p-1 text-[#A8A29E] hover:text-[#1C1917] transition-colors cursor-pointer rounded-lg hover:bg-[#EAE3D6]/50"
-                      title="Clear"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-
-                <motion.button
-                  type="submit"
-                  whileHover={{ scale: 1.015 }}
-                  whileTap={{ scale: 0.985 }}
-                  transition={{ type: 'spring', stiffness: 450, damping: 25 }}
-                  className="h-14 px-8 rounded-2xl bg-[#EA8500] hover:bg-[#D96D00] text-white font-bold text-sm tracking-wide shadow-[0_6px_20px_rgba(234,133,0,0.32)] hover:shadow-[0_8px_25px_rgba(234,133,0,0.4)] flex items-center justify-center gap-2.5 cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EA8500] focus-visible:ring-offset-2"
-                  title="Open account investigation"
-                >
-                  <span>View account</span>
-                  <ArrowRight className="w-4 h-4" />
-                </motion.button>
-              </div>
-
-              {searchError && (
-                <p className="text-xs text-rose-600 flex items-center gap-1.5 pt-1 font-semibold">
-                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                  <span>{searchError}</span>
-                </p>
-              )}
-
-              {/* Guidance Row */}
-              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#78716C] pt-3 border-t border-[#F2ECE2]">
-                <span className="flex items-center gap-1.5">
-                  <Info className="w-3.5 h-3.5 text-[#EA8500] shrink-0" />
-                  <span>Tip: Type an account ID like ACC-000001, or just the number 1. You can also pick a demo example below.</span>
-                </span>
-                <span className="text-[#A8A29E] text-[11px] font-semibold">Instant transaction review & AI checks</span>
-              </div>
-            </form>
-
-            {/* Quick Demo Shortcuts (Styled like Ref 1 Currency Switcher) */}
-            <div className="mt-5 pt-4 border-t border-[#F2ECE2] space-y-3">
-              <div className="flex flex-wrap items-center gap-2.5 text-xs">
-                <span className="font-bold text-[#78716C] text-xs">Quick examples:</span>
-
-                <motion.button
-                  type="button"
-                  whileHover={{ scale: 1.03, y: -1 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => handleSelectAccount('ACC-000001')}
-                  className="h-8 px-3.5 rounded-full bg-[#FFF4E6] hover:bg-[#FFE8CC] text-[#C05621] border border-[#FCD5B5] font-mono text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                  title="Demo: Scam victim account"
-                >
-                  <span className="w-2 h-2 rounded-full bg-[#EA8500]"></span>
-                  <span>ACC-000001 (Victim)</span>
-                </motion.button>
-
-                <motion.button
-                  type="button"
-                  whileHover={{ scale: 1.03, y: -1 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => handleSelectAccount('ACC-000002')}
-                  className="h-8 px-3.5 rounded-full bg-[#FFF0F2] hover:bg-[#FFE4E6] text-[#BE123C] border border-[#FECDD3] font-mono text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                  title="Demo: Pass-through money mule"
-                >
-                  <span className="w-2 h-2 rounded-full bg-[#E11D48]"></span>
-                  <span>ACC-000002 (Mule)</span>
-                </motion.button>
-
-                <motion.button
-                  type="button"
-                  whileHover={{ scale: 1.03, y: -1 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => handleSelectAccount('ACC-000003')}
-                  className="h-8 px-3.5 rounded-full bg-[#EBF5FF] hover:bg-[#DBEAFE] text-[#1E40AF] border border-[#BFDBFE] font-mono text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                  title="Demo: Connected downstream recipient"
-                >
-                  <span className="w-2 h-2 rounded-full bg-[#3B82F6]"></span>
-                  <span>ACC-000003 (Hop 2)</span>
-                </motion.button>
-
-                <motion.button
-                  type="button"
-                  whileHover={{ scale: 1.03, y: -1 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => handleSelectAccount('ACC-000010')}
-                  className="h-8 px-3.5 rounded-full bg-[#EAF7EE] hover:bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0] font-mono text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                  title="Demo: Normal everyday customer"
-                >
-                  <span className="w-2 h-2 rounded-full bg-[#22C55E]"></span>
-                  <span>ACC-000010 (Normal)</span>
-                </motion.button>
-              </div>
-
-              {/* Recent Searches */}
-              {recentSearches.length > 0 && (
-                <div className="flex flex-wrap items-center gap-2 text-xs text-[#78716C] pt-1">
-                  <div className="flex items-center gap-1.5 text-[#A8A29E] font-semibold">
-                    <History className="w-3.5 h-3.5" />
-                    <span>Recent:</span>
-                  </div>
-                  {recentSearches.map((rec) => (
-                    <motion.button
-                      key={rec}
-                      type="button"
-                      whileHover={{ scale: 1.04 }}
-                      whileTap={{ scale: 0.96 }}
-                      onClick={() => handleSelectAccount(rec)}
-                      className="h-6 px-3 rounded-full bg-[#FAF7F2] hover:bg-[#EAE3D6] text-[#44403C] border border-[#EAE3D6] font-mono text-xs font-semibold transition-all cursor-pointer shadow-xs"
-                    >
-                      {rec}
-                    </motion.button>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={clearRecentSearches}
-                    className="p-1 text-[#A8A29E] hover:text-[#1C1917] transition-colors ml-1 cursor-pointer rounded-md hover:bg-[#FAF7F2]"
-                    title="Clear recent searches"
-                    aria-label="Clear recent searches"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              )}
+            {/* Right Column: Signature Animated Money-Flow Visual */}
+            <div className="lg:col-span-5 gsap-flow-card flex flex-col justify-stretch">
+              <V2MoneyFlowVisual
+                onSelectAccount={handleSelectAccount}
+                className="shadow-[0_4px_24px_rgba(180,150,120,0.06)] hover:shadow-[0_8px_32px_rgba(180,150,120,0.09)] transition-shadow"
+              />
             </div>
           </div>
         </section>
 
         {/* ========================================================================= */}
-        {/* HOW IT WORKS (3 Balanced Columns matching Reference 1 cards)             */}
+        {/* HOW IT WORKS (3 Balanced Columns with Progress Flow Line)                 */}
         {/* ========================================================================= */}
         <section aria-label="How it works" className="gsap-workflow-section space-y-4">
           <div className="flex items-center justify-between pb-1">
@@ -421,7 +493,11 @@ export const V2SearchPage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
             {/* Step 1 */}
-            <div className="bg-[#FFFFFF] border border-[#EAE3D6] rounded-3xl p-7 space-y-4 shadow-[0_4px_20px_rgba(180,150,120,0.06)] hover:shadow-[0_8px_28px_rgba(180,150,120,0.1)] hover:border-[#EA8500]/40 transition-all flex flex-col justify-between group">
+            <motion.div
+              whileHover={{ y: -4 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              className="bg-[#FFFFFF] border border-[#EAE3D6] rounded-3xl p-7 space-y-4 shadow-[0_4px_20px_rgba(180,150,120,0.06)] hover:shadow-[0_8px_28px_rgba(180,150,120,0.1)] hover:border-[#EA8500]/40 transition-all flex flex-col justify-between group"
+            >
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="w-11 h-11 rounded-2xl bg-[#EBF5FF] text-[#1E40AF] border border-[#BFDBFE] flex items-center justify-center font-black text-sm shadow-xs">
@@ -443,10 +519,14 @@ export const V2SearchPage: React.FC = () => {
                 <span className="font-mono font-semibold text-[#1C1917]">Search Account ID</span>
                 <span className="text-[#A8A29E]">· Instant Lookup</span>
               </div>
-            </div>
+            </motion.div>
 
             {/* Step 2 */}
-            <div className="bg-[#FFFFFF] border border-[#EAE3D6] rounded-3xl p-7 space-y-4 shadow-[0_4px_20px_rgba(180,150,120,0.06)] hover:shadow-[0_8px_28px_rgba(180,150,120,0.1)] hover:border-[#EA8500]/40 transition-all flex flex-col justify-between group">
+            <motion.div
+              whileHover={{ y: -4 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              className="bg-[#FFFFFF] border border-[#EAE3D6] rounded-3xl p-7 space-y-4 shadow-[0_4px_20px_rgba(180,150,120,0.06)] hover:shadow-[0_8px_28px_rgba(180,150,120,0.1)] hover:border-[#EA8500]/40 transition-all flex flex-col justify-between group"
+            >
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="w-11 h-11 rounded-2xl bg-[#F4EFFE] text-[#6B46C1] border border-[#E4D7FC] flex items-center justify-center font-black text-sm shadow-xs">
@@ -468,10 +548,14 @@ export const V2SearchPage: React.FC = () => {
                 <span className="font-semibold text-[#1C1917]">56 transfers</span>
                 <span className="text-[#A8A29E]">· Anomaly checks</span>
               </div>
-            </div>
+            </motion.div>
 
             {/* Step 3 */}
-            <div className="bg-[#FFFFFF] border border-[#EAE3D6] rounded-3xl p-7 space-y-4 shadow-[0_4px_20px_rgba(180,150,120,0.06)] hover:shadow-[0_8px_28px_rgba(180,150,120,0.1)] hover:border-[#EA8500]/40 transition-all flex flex-col justify-between group">
+            <motion.div
+              whileHover={{ y: -4 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              className="bg-[#FFFFFF] border border-[#EAE3D6] rounded-3xl p-7 space-y-4 shadow-[0_4px_20px_rgba(180,150,120,0.06)] hover:shadow-[0_8px_28px_rgba(180,150,120,0.1)] hover:border-[#EA8500]/40 transition-all flex flex-col justify-between group"
+            >
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="w-11 h-11 rounded-2xl bg-[#FFF4E6] text-[#EA8500] border border-[#FCD5B5] flex items-center justify-center font-black text-sm shadow-xs">
@@ -493,14 +577,14 @@ export const V2SearchPage: React.FC = () => {
                 <span className="font-semibold text-[#1C1917]">Multi-hop traversal</span>
                 <span className="text-[#A8A29E]">· Stolen fund path</span>
               </div>
-            </div>
+            </motion.div>
           </div>
         </section>
 
         {/* ========================================================================= */}
         {/* TRY AN EXAMPLE ACCOUNT (2-Column Grid with Framer Motion Filter Pill)      */}
         {/* ========================================================================= */}
-        <section aria-labelledby="examples-heading" className="space-y-6">
+        <section aria-labelledby="examples-heading" className="gsap-examples-section space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#EAE3D6] pb-5">
             <div>
               <h2 id="examples-heading" className="text-xl sm:text-2xl font-black text-[#1C1917] font-display">
@@ -566,6 +650,7 @@ export const V2SearchPage: React.FC = () => {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.96, y: -10 }}
                   transition={{ duration: 0.25, ease: 'easeOut' }}
+                  whileHover={{ y: -4 }}
                   role="button"
                   tabIndex={0}
                   onClick={() => handleSelectAccount(acc.id)}
@@ -592,12 +677,13 @@ export const V2SearchPage: React.FC = () => {
                         </h3>
                       </div>
 
-                      <span
+                      <motion.span
+                        whileHover={{ scale: 1.04 }}
                         className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 shrink-0 ${acc.tagColor}`}
                       >
                         <span className={`w-2 h-2 rounded-full ${acc.badgeDot}`}></span>
                         <span>{acc.roleTag}</span>
-                      </span>
+                      </motion.span>
                     </div>
 
                     {/* Summary Description */}
@@ -633,7 +719,7 @@ export const V2SearchPage: React.FC = () => {
                       className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-[#EA8500] bg-[#FFF4E6] border border-[#FCD5B5] group-hover:bg-[#EA8500] group-hover:text-white transition-all shadow-xs"
                     >
                       <span>View account</span>
-                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                     </motion.span>
                   </div>
                 </motion.div>
@@ -663,7 +749,11 @@ export const V2SearchPage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
             {/* Card 1: Money Flow Chain */}
-            <div className="bg-[#FFFFFF] border border-[#EAE3D6] rounded-3xl p-7 space-y-3.5 shadow-[0_4px_20px_rgba(180,150,120,0.06)] hover:shadow-[0_8px_28px_rgba(180,150,120,0.1)] transition-all">
+            <motion.div
+              whileHover={{ y: -4 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              className="bg-[#FFFFFF] border border-[#EAE3D6] rounded-3xl p-7 space-y-3.5 shadow-[0_4px_20px_rgba(180,150,120,0.06)] hover:shadow-[0_8px_28px_rgba(180,150,120,0.1)] transition-all"
+            >
               <div className="w-11 h-11 rounded-2xl bg-[#FFF4E6] border border-[#FCD5B5] flex items-center justify-center text-[#EA8500] shadow-xs">
                 <GitFork className="w-5 h-5" />
               </div>
@@ -671,10 +761,14 @@ export const V2SearchPage: React.FC = () => {
               <p className="text-xs sm:text-sm text-[#78716C] leading-relaxed font-normal">
                 See how funds move between accounts step-by-step, helping you trace stolen money without losing track of the transfer path.
               </p>
-            </div>
+            </motion.div>
 
             {/* Card 2: Double-Check Every Alert */}
-            <div className="bg-[#FFFFFF] border border-[#EAE3D6] rounded-3xl p-7 space-y-3.5 shadow-[0_4px_20px_rgba(180,150,120,0.06)] hover:shadow-[0_8px_28px_rgba(180,150,120,0.1)] transition-all">
+            <motion.div
+              whileHover={{ y: -4 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              className="bg-[#FFFFFF] border border-[#EAE3D6] rounded-3xl p-7 space-y-3.5 shadow-[0_4px_20px_rgba(180,150,120,0.06)] hover:shadow-[0_8px_28px_rgba(180,150,120,0.1)] transition-all"
+            >
               <div className="w-11 h-11 rounded-2xl bg-[#EBF5FF] border border-[#BFDBFE] flex items-center justify-center text-[#2563EB] shadow-xs">
                 <Layers className="w-5 h-5" />
               </div>
@@ -682,10 +776,14 @@ export const V2SearchPage: React.FC = () => {
               <p className="text-xs sm:text-sm text-[#78716C] leading-relaxed font-normal">
                 Combines standard banking rules with AI pattern detection so you can spot both obvious rule breaks and subtle fraud signals.
               </p>
-            </div>
+            </motion.div>
 
             {/* Card 3: AI Engine Status */}
-            <div className="bg-[#FFFFFF] border border-[#EAE3D6] rounded-3xl p-7 space-y-3.5 shadow-[0_4px_20px_rgba(180,150,120,0.06)] hover:shadow-[0_8px_28px_rgba(180,150,120,0.1)] transition-all flex flex-col justify-between">
+            <motion.div
+              whileHover={{ y: -4 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              className="bg-[#FFFFFF] border border-[#EAE3D6] rounded-3xl p-7 space-y-3.5 shadow-[0_4px_20px_rgba(180,150,120,0.06)] hover:shadow-[0_8px_28px_rgba(180,150,120,0.1)] transition-all flex flex-col justify-between"
+            >
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <div className="w-11 h-11 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] flex items-center justify-center text-[#78716C] shadow-xs">
@@ -724,7 +822,7 @@ export const V2SearchPage: React.FC = () => {
                   </span>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </section>
       </main>
