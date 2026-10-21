@@ -1,0 +1,30 @@
+{
+  "features": [
+    "customer_type_retail",
+    "customer_type_student",
+    "customer_type_sme",
+    "customer_type_corporate",
+    "kyc_tier_level",
+    "initial_balance",
+    "current_balance",
+    "balance_ratio",
+    "total_transactions",
+    "velocity_24h_count",
+    "velocity_7d_count",
+    "velocity_30d_count",
+    "flow_through_ratio",
+    "rapid_pass_through",
+    "median_dwell_minutes",
+    "has_dwell_time",
+    "max_amount",
+    "avg_amount",
+    "amount_spike_ratio",
+    "unique_counterparties",
+    "counterparty_diversity_ratio",
+    "fan_in_ratio",
+    "fan_out_ratio",
+    "dormancy_gap_days",
+    "dormant_awakening_detected",
+    "cycle_detected"
+  ]
+}
