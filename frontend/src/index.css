@@ -14,18 +14,21 @@
     --border-subtle: #E2DFD7;
     --border-strong: #CFCBC0;
 
-    /* V2 Reference-Derived Luxury Finance Tokens */
-    --v2-canvas: #F8F6F0;
-    --v2-surface: #FFFFFF;
-    --v2-surface-warm: #FFFEFA;
-    --v2-recessed: #FAF7F2;
-    --v2-border: #EAE3D6;
-    --v2-border-strong: #DDD4C4;
-    --v2-orange: #EA8500;
-    --v2-orange-hover: #D96D00;
-    --v2-orange-light: #FFF4E6;
-    --v2-charcoal: #1C1917;
-    --v2-muted: #78716C;
+    /* V2 Signal Noir Design System Tokens */
+    --v2-noir-canvas: #0B0F14;
+    --v2-noir-card: #131A23;
+    --v2-noir-raised: #19232F;
+    --v2-noir-border: #293543;
+    --v2-noir-border-light: #3A495B;
+    --v2-noir-text: #F3F6F8;
+    --v2-noir-muted: #9CAAB6;
+    --v2-noir-subtle: #627181;
+    --v2-noir-lime: #C8F169;
+    --v2-noir-lime-hover: #D7F68B;
+    --v2-noir-lime-dark: #1D2A0E;
+    --v2-noir-mint: #47E0C1;
+    --v2-noir-coral: #FF6B77;
+    --v2-noir-violet: #B8A5FF;
 
     --navy-950: #070C16;
     --navy-900: #0B1322;
@@ -70,7 +73,7 @@
   }
 }
 
-/* Forensic Workspace Surfaces (replaces generic glassmorphism) */
+/* Forensic Workspace Surfaces */
 .forensic-panel {
   background-color: #FFFFFF;
   border: 1px solid #E2DFD7;
@@ -91,7 +94,6 @@
   color: #F8FAFC;
 }
 
-/* Backwards-compatible alias kept clean & architectural */
 .glass-card {
   background-color: #FFFFFF;
   border: 1px solid #E2DFD7;
@@ -120,60 +122,63 @@
 }
 
 .blueprint-grid-dark {
-  background-color: #070C16;
+  background-color: #0B0F14;
   background-image:
-    linear-gradient(to right, rgba(28, 43, 69, 0.35) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(28, 43, 69, 0.35) 1px, transparent 1px);
+    linear-gradient(to right, rgba(41, 53, 67, 0.35) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(41, 53, 67, 0.35) 1px, transparent 1px);
   background-size: 32px 32px;
 }
 
-/* Custom scrollbar */
+/* Custom dark scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #F5F4F0;
+  background: #0B0F14;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #C7C2B6;
+  background: #293543;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #9E988B;
+  background: #3A495B;
 }
 
-/* Keyboard accessibility & focus ring in electric teal (V1) and warm orange (V2) */
+/* Keyboard accessibility & focus ring in electric lime (#C8F169) */
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid #EA8500;
+  outline: 2px solid #C8F169;
   outline-offset: 2px;
 }
 
-/* V2 Reference-Led Luxury Financial Surfaces */
-.v2-card {
-  background-color: #FFFFFF;
-  border: 1px solid #EAE3D6;
+/* V2 Signal Noir Surfaces */
+.v2-card,
+.noir-card {
+  background-color: #131A23;
+  border: 1px solid #293543;
   border-radius: 1.5rem;
-  box-shadow: 0 4px 20px -2px rgba(180, 150, 120, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.5), 0 2px 6px -1px rgba(0, 0, 0, 0.3);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.v2-card-interactive:hover {
-  border-color: rgba(234, 133, 0, 0.45);
-  box-shadow: 0 12px 36px -4px rgba(180, 150, 120, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
+.v2-card-interactive:hover,
+.noir-card-interactive:hover {
+  border-color: rgba(200, 241, 105, 0.45);
+  box-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.7), 0 0 24px -2px rgba(200, 241, 105, 0.12);
   transform: translateY(-2px);
 }
 
-.v2-panel-recessed {
-  background-color: #FAF7F2;
-  border: 1px solid #EBE4D8;
+.v2-panel-recessed,
+.noir-panel-raised {
+  background-color: #19232F;
+  border: 1px solid #293543;
   border-radius: 1rem;
 }
 
