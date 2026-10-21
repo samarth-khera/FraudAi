@@ -6,14 +6,11 @@ import {
   GitFork,
   Cpu,
   Layers,
-  CheckCircle2,
   AlertTriangle,
   History,
   X,
   Info,
-  ShieldCheck,
-  Activity,
-  Check,
+  Shield,
 } from 'lucide-react';
 import { v2Api } from '../../services/v2Api';
 import { V2ModelStatusResponse } from '../../types/v2';
@@ -39,8 +36,8 @@ const SAMPLE_ACCOUNTS: SampleCase[] = [
     name: 'Aditi Joshi',
     category: 'victim',
     roleTag: 'Scam Victim Demo',
-    tagColor: 'bg-amber-50 text-amber-900 border-amber-200',
-    badgeDot: 'bg-amber-500',
+    tagColor: 'bg-[#FFF7ED] text-[#9A3412] border-[#FED7AA]',
+    badgeDot: 'bg-[#EA580C]',
     summary: 'A customer tricked into sending money in a payment scam. Their savings were drained, but regular banking rules did not catch it — showing why AI protection matters.',
     activityCount: '56 transfers',
     patternLabel: 'Savings drained (₹250k)',
@@ -51,8 +48,8 @@ const SAMPLE_ACCOUNTS: SampleCase[] = [
     name: 'Sara Bhat',
     category: 'mule',
     roleTag: 'Money Mule Demo',
-    tagColor: 'bg-rose-50 text-rose-900 border-rose-200',
-    badgeDot: 'bg-rose-500',
+    tagColor: 'bg-[#FFF1F2] text-[#9F1239] border-[#FECDD3]',
+    badgeDot: 'bg-[#E11D48]',
     summary: 'A pass-through account used to move stolen money quickly (<12 minutes) before the funds can be frozen or recalled.',
     activityCount: '33 transfers',
     patternLabel: 'Rapid pass-through under 12 min',
@@ -63,8 +60,8 @@ const SAMPLE_ACCOUNTS: SampleCase[] = [
     name: 'Ishan Reddy',
     category: 'counterparty',
     roleTag: 'Connected Account Demo',
-    tagColor: 'bg-teal-50 text-teal-900 border-teal-200',
-    badgeDot: 'bg-teal-500',
+    tagColor: 'bg-[#F0FDF4] text-[#166534] border-[#BBF7D0]',
+    badgeDot: 'bg-[#16A34A]',
     summary: 'A recipient account 2 transfers down the payment chain. Shows how far the money trail goes and where investigation bounds stop.',
     activityCount: '48 transfers',
     patternLabel: '2 steps away from source',
@@ -75,8 +72,8 @@ const SAMPLE_ACCOUNTS: SampleCase[] = [
     name: 'Arjun Sengupta',
     category: 'baseline',
     roleTag: 'Normal Account Demo',
-    tagColor: 'bg-emerald-50 text-emerald-900 border-emerald-200',
-    badgeDot: 'bg-emerald-500',
+    tagColor: 'bg-[#F8FAFC] text-[#334155] border-[#E2E8F0]',
+    badgeDot: 'bg-[#64748B]',
     summary: 'A regular customer with everyday shopping and salary transfers. Confirms genuine customer accounts are never wrongly flagged.',
     activityCount: '50 transfers',
     patternLabel: 'Steady everyday transfers',
@@ -162,35 +159,35 @@ export const V2SearchPage: React.FC = () => {
     : SAMPLE_ACCOUNTS.filter((c) => c.category === selectedFilter);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F7F8FA] text-slate-900 font-sans">
+    <div className="min-h-screen flex flex-col bg-[#F5F6F5] text-[#202124] font-sans">
       <V2Header />
 
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
-        {/* Hero & Search Card (Inspired by Reference 2 clean financial dashboard) */}
+        {/* Hero & Search Card (Clean financial dashboard style inspired by Reference 2) */}
         <section aria-labelledby="search-heading" className="space-y-4 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 text-teal-400 text-xs font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#E5E7EB] text-[#4A4F56] text-xs font-medium shadow-2xs">
+            <Shield className="w-3.5 h-3.5 text-teal-700" />
             <span>FraudShield AI · Account Investigation</span>
           </div>
 
-          <h1 id="search-heading" className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 font-display">
+          <h1 id="search-heading" className="text-3xl sm:text-4xl font-bold tracking-tight text-[#202124] font-display">
             Look up an account
           </h1>
 
-          <p className="text-slate-600 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
+          <p className="text-[#727780] text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
             Enter a demo account ID to see its transaction history, connected accounts, unusual activity, and the AI's assessment.
           </p>
 
           {/* Search Card Container */}
-          <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-6 shadow-xs text-left mt-6 max-w-3xl mx-auto">
+          <div className="bg-white border border-[#E5E7EB] rounded-2xl p-5 sm:p-7 shadow-[0_2px_12px_rgba(0,0,0,0.03)] text-left mt-6 max-w-3xl mx-auto">
             <form onSubmit={handleSearch} className="space-y-3">
-              <label htmlFor="account-search-input" className="block text-xs font-semibold text-slate-700">
+              <label htmlFor="account-search-input" className="block text-xs font-semibold text-[#202124]">
                 Search account
               </label>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <div className="relative flex-1 flex items-center">
-                  <Search className="w-4 h-4 absolute left-3.5 text-slate-400" />
+                  <Search className="w-4 h-4 absolute left-3.5 text-[#727780]" />
                   <input
                     id="account-search-input"
                     type="text"
@@ -200,7 +197,7 @@ export const V2SearchPage: React.FC = () => {
                       if (searchError) setSearchError('');
                     }}
                     placeholder="Enter synthetic account ID, e.g. ACC-000001"
-                    className="w-full bg-slate-50/70 border border-slate-200 rounded-xl pl-10 pr-9 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-600/15 font-mono transition-all"
+                    className="w-full bg-[#F8F9FA] border border-[#E5E7EB] rounded-xl pl-10 pr-9 py-3 text-sm text-[#202124] placeholder:text-[#727780] focus:outline-none focus:bg-white focus:border-teal-700 focus:ring-2 focus:ring-teal-700/10 font-mono transition-all"
                     autoFocus
                     aria-label="Account Identifier Search"
                   />
@@ -208,7 +205,7 @@ export const V2SearchPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setQuery('')}
-                      className="absolute right-3 p-1 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                      className="absolute right-3 p-1 text-[#727780] hover:text-[#202124] transition-colors cursor-pointer"
                       title="Clear"
                     >
                       <X className="w-4 h-4" />
@@ -218,7 +215,7 @@ export const V2SearchPage: React.FC = () => {
 
                 <button
                   type="submit"
-                  className="px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium text-sm flex items-center justify-center gap-2 transition-colors shadow-xs cursor-pointer shrink-0"
+                  className="px-6 py-3 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-medium text-sm flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer shrink-0"
                   title="Open account investigation"
                 >
                   <span>View account</span>
@@ -233,63 +230,63 @@ export const V2SearchPage: React.FC = () => {
                 </p>
               )}
 
-              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 pt-2 border-t border-slate-100">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#727780] pt-2 border-t border-[#F1F3F5]">
                 <span className="flex items-center gap-1">
-                  <Info className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                  <Info className="w-3.5 h-3.5 text-teal-700 shrink-0" />
                   <span>Tip: Type an account ID like ACC-000001, or just the number 1. You can also pick a demo example below.</span>
                 </span>
-                <span className="text-slate-400 text-[11px]">Instant transaction review & AI checks</span>
+                <span className="text-[#868E96] text-[11px]">Instant transaction review & AI checks</span>
               </div>
             </form>
 
             {/* Quick Example Chips & History */}
-            <div className="mt-4 pt-3 border-t border-slate-100 space-y-2">
+            <div className="mt-4 pt-3 border-t border-[#F1F3F5] space-y-2">
               <div className="flex flex-wrap items-center gap-2 text-xs">
-                <span className="font-medium text-slate-500 text-xs">Quick examples:</span>
+                <span className="font-medium text-[#727780] text-xs">Quick examples:</span>
                 <button
                   type="button"
                   onClick={() => handleSelectAccount('ACC-000001')}
-                  className="px-3 py-1 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-mono text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                  className="px-3 py-1 rounded-full bg-[#FFF7ED] hover:bg-[#FFEDD5] text-[#9A3412] border border-[#FED7AA] font-mono text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
                   title="Demo: Scam victim account"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#EA580C]"></span>
                   <span>ACC-000001 (Victim)</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleSelectAccount('ACC-000002')}
-                  className="px-3 py-1 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-900 border border-rose-200 font-mono text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                  className="px-3 py-1 rounded-full bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#9F1239] border border-[#FECDD3] font-mono text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
                   title="Demo: Pass-through money mule"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#E11D48]"></span>
                   <span>ACC-000002 (Mule)</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleSelectAccount('ACC-000003')}
-                  className="px-3 py-1 rounded-full bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-200 font-mono text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                  className="px-3 py-1 rounded-full bg-[#F0FDF4] hover:bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0] font-mono text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
                   title="Demo: Connected downstream recipient"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A]"></span>
                   <span>ACC-000003 (Hop 2)</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleSelectAccount('ACC-000010')}
-                  className="px-3 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 font-mono text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                  className="px-3 py-1 rounded-full bg-[#F8FAFC] hover:bg-[#F1F5F9] text-[#334155] border border-[#E2E8F0] font-mono text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
                   title="Demo: Normal everyday customer"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#64748B]"></span>
                   <span>ACC-000010 (Normal)</span>
                 </button>
               </div>
 
               {recentSearches.length > 0 && (
-                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 pt-1">
-                  <div className="flex items-center gap-1 text-slate-400">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-[#727780] pt-1">
+                  <div className="flex items-center gap-1 text-[#868E96]">
                     <History className="w-3.5 h-3.5" />
                     <span>Recent:</span>
                   </div>
@@ -298,7 +295,7 @@ export const V2SearchPage: React.FC = () => {
                       key={rec}
                       type="button"
                       onClick={() => handleSelectAccount(rec)}
-                      className="px-2.5 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-mono text-xs transition-colors cursor-pointer"
+                      className="px-2.5 py-0.5 rounded-full bg-[#F1F3F5] hover:bg-[#E9ECEF] text-[#495057] font-mono text-xs transition-colors cursor-pointer"
                     >
                       {rec}
                     </button>
@@ -306,7 +303,7 @@ export const V2SearchPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={clearRecentSearches}
-                    className="p-1 text-slate-400 hover:text-slate-600 transition-colors ml-1 cursor-pointer"
+                    className="p-1 text-[#868E96] hover:text-[#202124] transition-colors ml-1 cursor-pointer"
                     title="Clear recent searches"
                     aria-label="Clear recent searches"
                   >
@@ -318,63 +315,63 @@ export const V2SearchPage: React.FC = () => {
           </div>
         </section>
 
-        {/* 3-Step Visual Workflow (Requirement 4) */}
+        {/* 3-Step Visual Workflow (Integrated lightly, inspired by Reference 2) */}
         <section aria-label="How it works" className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-[#727780]">
               How it works
             </h2>
-            <span className="text-xs text-slate-400">3 simple steps</span>
+            <span className="text-xs text-[#868E96]">3 simple steps</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 space-y-2 shadow-xs">
-              <div className="w-8 h-8 rounded-xl bg-slate-900 text-teal-400 flex items-center justify-center font-bold text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+            <div className="bg-white border border-[#E5E7EB] rounded-2xl p-4 sm:p-5 space-y-2.5 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+              <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-700 border border-sky-100 flex items-center justify-center font-bold text-xs">
                 1
               </div>
-              <h3 className="text-sm font-semibold text-slate-900">Find an account</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <h3 className="text-sm font-semibold text-[#202124]">1. Find an account</h3>
+              <p className="text-xs text-[#727780] leading-relaxed">
                 Enter an account ID or pick one of the demo examples to see its profile.
               </p>
             </div>
 
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 space-y-2 shadow-xs">
-              <div className="w-8 h-8 rounded-xl bg-slate-900 text-teal-400 flex items-center justify-center font-bold text-xs">
+            <div className="bg-white border border-[#E5E7EB] rounded-2xl p-4 sm:p-5 space-y-2.5 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+              <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-700 border border-purple-100 flex items-center justify-center font-bold text-xs">
                 2
               </div>
-              <h3 className="text-sm font-semibold text-slate-900">Review its activity</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <h3 className="text-sm font-semibold text-[#202124]">2. Review its activity</h3>
+              <p className="text-xs text-[#727780] leading-relaxed">
                 See past transfers, unusual spending patterns, and what the AI noticed.
               </p>
             </div>
 
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 space-y-2 shadow-xs">
-              <div className="w-8 h-8 rounded-xl bg-slate-900 text-teal-400 flex items-center justify-center font-bold text-xs">
+            <div className="bg-white border border-[#E5E7EB] rounded-2xl p-4 sm:p-5 space-y-2.5 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+              <div className="w-9 h-9 rounded-xl bg-teal-50 text-teal-700 border border-teal-100 flex items-center justify-center font-bold text-xs">
                 3
               </div>
-              <h3 className="text-sm font-semibold text-slate-900">Follow the money</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <h3 className="text-sm font-semibold text-[#202124]">3. Follow the money</h3>
+              <p className="text-xs text-[#727780] leading-relaxed">
                 Explore connected accounts and trace where outgoing transfers went next.
               </p>
             </div>
           </div>
         </section>
 
-        {/* Try an Example Section (Requirement 3) */}
+        {/* Try an Example Section (Clean cards inspired by Reference 2) */}
         <section aria-labelledby="examples-heading" className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E5E7EB] pb-3">
             <div>
-              <h2 id="examples-heading" className="text-base sm:text-lg font-bold text-slate-900">
+              <h2 id="examples-heading" className="text-base sm:text-lg font-bold text-[#202124]">
                 Try an example account
               </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-[#727780] mt-0.5">
                 Curated Synthetic Ledger Investigation Cases to explore how the system works
               </p>
             </div>
 
             {/* Filter Pills */}
-            <div className="flex items-center gap-1.5 text-xs">
-              <span className="text-slate-400 text-xs mr-1 hidden sm:inline">Filter:</span>
+            <div className="flex items-center gap-1.5 text-xs flex-wrap">
+              <span className="text-[#868E96] text-xs mr-1 hidden sm:inline">Filter:</span>
               {(['all', 'victim', 'mule', 'counterparty', 'baseline'] as const).map((filter) => {
                 const label = filter === 'all'
                   ? 'All (4)'
@@ -393,8 +390,8 @@ export const V2SearchPage: React.FC = () => {
                     onClick={() => setSelectedFilter(filter)}
                     className={`px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer ${
                       selectedFilter === filter
-                        ? 'bg-slate-900 text-white shadow-xs'
-                        : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
+                        ? 'bg-teal-700 text-white shadow-xs'
+                        : 'bg-white text-[#727780] hover:text-[#202124] border border-[#E5E7EB]'
                     }`}
                   >
                     {label}
@@ -404,7 +401,7 @@ export const V2SearchPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Example Cards Grid (Clean layout inspired by Reference 2) */}
+          {/* Example Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredCases.map((acc) => (
               <div
@@ -418,19 +415,19 @@ export const V2SearchPage: React.FC = () => {
                     handleSelectAccount(acc.id);
                   }
                 }}
-                className="bg-white border border-slate-200/90 rounded-2xl p-5 hover:border-slate-400 hover:shadow-md cursor-pointer transition-all duration-150 flex flex-col justify-between space-y-4 group focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:outline-none"
+                className="bg-white border border-[#E5E7EB] hover:border-teal-700/50 rounded-2xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-md cursor-pointer transition-all duration-150 flex flex-col justify-between space-y-4 group focus-visible:ring-2 focus-visible:ring-teal-700 focus-visible:outline-none"
               >
                 <div className="space-y-3">
                   {/* Card Header: ID, Name, Badge */}
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-slate-900 group-hover:text-teal-700 transition-colors">
+                        <span className="font-mono text-xs font-bold text-[#202124] group-hover:text-teal-700 transition-colors">
                           {acc.id}
                         </span>
-                        <span className="text-[11px] text-slate-400">· Demo Case</span>
+                        <span className="text-[11px] text-[#868E96]">· Demo Case</span>
                       </div>
-                      <h3 className="text-base font-semibold text-slate-900 mt-0.5">{acc.name}</h3>
+                      <h3 className="text-base font-semibold text-[#202124] mt-0.5">{acc.name}</h3>
                     </div>
 
                     <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border flex items-center gap-1.5 ${acc.tagColor}`}>
@@ -440,31 +437,31 @@ export const V2SearchPage: React.FC = () => {
                   </div>
 
                   {/* Understandable Description */}
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-[#4A4F56] leading-relaxed">
                     {acc.summary}
                   </p>
 
                   {/* Scannable Highlights Grid */}
-                  <div className="p-3 bg-slate-50/80 border border-slate-100 rounded-xl space-y-1.5 text-xs">
-                    <div className="flex items-center justify-between text-slate-600">
-                      <span className="text-slate-500">Activity volume:</span>
-                      <span className="font-semibold text-slate-800">{acc.activityCount}</span>
+                  <div className="p-3 bg-[#F8F9FA] border border-[#EBECEF] rounded-xl space-y-1.5 text-xs">
+                    <div className="flex items-center justify-between text-[#727780]">
+                      <span>Activity volume:</span>
+                      <span className="font-semibold text-[#202124]">{acc.activityCount}</span>
                     </div>
-                    <div className="flex items-center justify-between text-slate-600">
-                      <span className="text-slate-500">What happened:</span>
-                      <span className="font-medium text-slate-800">{acc.patternLabel}</span>
+                    <div className="flex items-center justify-between text-[#727780]">
+                      <span>What happened:</span>
+                      <span className="font-medium text-[#202124]">{acc.patternLabel}</span>
                     </div>
-                    <div className="flex items-center justify-between text-slate-600 pt-1 border-t border-slate-200/60">
-                      <span className="text-slate-500">Key takeaway:</span>
+                    <div className="flex items-center justify-between text-[#727780] pt-1 border-t border-[#E5E7EB]/70">
+                      <span>Key takeaway:</span>
                       <span className="font-medium text-teal-800">{acc.findingNote}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Card Action */}
-                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-                  <span className="text-slate-400 text-[11px]">Click to inspect</span>
-                  <span className="text-slate-900 font-semibold flex items-center gap-1 group-hover:text-teal-700 group-hover:translate-x-0.5 transition-all">
+                <div className="pt-2 border-t border-[#F1F3F5] flex items-center justify-between text-xs">
+                  <span className="text-[#868E96] text-[11px]">Click to inspect</span>
+                  <span className="text-teal-700 font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition-all">
                     <span>View account</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </span>
@@ -474,51 +471,51 @@ export const V2SearchPage: React.FC = () => {
           </div>
 
           {/* Simple Ground Truth Disclaimer */}
-          <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-500 flex items-start gap-2.5">
-            <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+          <div className="p-3.5 bg-white border border-[#E5E7EB] rounded-xl text-xs text-[#727780] flex items-start gap-2.5 shadow-2xs">
+            <Info className="w-4 h-4 text-[#868E96] shrink-0 mt-0.5" />
             <p className="leading-relaxed">
-              <strong className="text-slate-700">Ground-Truth Reference Notice:</strong> All accounts, names, and transactions shown above are synthetic simulations created for demonstration and testing. No real customer data or real-world banking records are used.
+              <strong className="text-[#202124]">Ground-Truth Reference Notice:</strong> All accounts, names, and transactions shown above are synthetic simulations created for demonstration and testing. No real customer data or real-world banking records are used.
             </p>
           </div>
         </section>
 
-        {/* Simplified Capabilities & System Status (Requirement 1 & 6) */}
+        {/* Simplified Capabilities & System Status */}
         <section aria-labelledby="status-heading" className="space-y-3 pt-2">
-          <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-            <h2 id="status-heading" className="text-xs font-bold uppercase tracking-wider text-slate-500">
+          <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-2">
+            <h2 id="status-heading" className="text-xs font-bold uppercase tracking-wider text-[#727780]">
               System capabilities & engine status
             </h2>
-            <span className="text-xs text-slate-400">Real-time status</span>
+            <span className="text-xs text-[#868E96]">Real-time status</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
             {/* Card 1: Money Flow Chain */}
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 space-y-2 shadow-xs">
-              <div className="w-8 h-8 rounded-xl bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-700">
+            <div className="bg-white border border-[#E5E7EB] rounded-2xl p-4 sm:p-5 space-y-2 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+              <div className="w-9 h-9 rounded-xl bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-700">
                 <GitFork className="w-4 h-4" />
               </div>
-              <h3 className="text-sm font-semibold text-slate-900">Follow the money chain</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <h3 className="text-sm font-semibold text-[#202124]">Follow the money chain</h3>
+              <p className="text-xs text-[#727780] leading-relaxed">
                 See how funds move between accounts step-by-step, helping you trace stolen money without losing track of the transfer path.
               </p>
             </div>
 
             {/* Card 2: Double-Check Every Alert */}
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 space-y-2 shadow-xs">
-              <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-700">
+            <div className="bg-white border border-[#E5E7EB] rounded-2xl p-4 sm:p-5 space-y-2 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+              <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-700">
                 <Layers className="w-4 h-4" />
               </div>
-              <h3 className="text-sm font-semibold text-slate-900">Double-check every alert</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <h3 className="text-sm font-semibold text-[#202124]">Double-check every alert</h3>
+              <p className="text-xs text-[#727780] leading-relaxed">
                 Combines standard banking rules with AI pattern detection so you can spot both obvious rule breaks and subtle fraud signals.
               </p>
             </div>
 
             {/* Card 3: AI Engine Status */}
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 space-y-2 shadow-xs flex flex-col justify-between">
+            <div className="bg-white border border-[#E5E7EB] rounded-2xl p-4 sm:p-5 space-y-2 shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-800">
+                  <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700">
                     <Cpu className="w-4 h-4" />
                   </div>
                   {modelStatus?.inference_ready ? (
@@ -534,20 +531,20 @@ export const V2SearchPage: React.FC = () => {
                   )}
                 </div>
 
-                <h3 className="text-sm font-semibold text-slate-900">Model Engine Status</h3>
-                <p className="text-xs text-slate-600 leading-relaxed mt-1">
+                <h3 className="text-sm font-semibold text-[#202124]">Model Engine Status</h3>
+                <p className="text-xs text-[#727780] leading-relaxed mt-1">
                   Ready to analyze accounts and check for suspicious transfer patterns.
                 </p>
               </div>
 
-              <div className="text-xs text-slate-500 pt-2 border-t border-slate-100 space-y-1 font-mono">
+              <div className="text-xs text-[#727780] pt-2 border-t border-[#F1F3F5] space-y-1 font-mono">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Account ML Model:</span>
-                  <span className="font-semibold text-slate-800">{modelStatus?.account_model?.version || 'v2-account-1.0.0'}</span>
+                  <span className="text-[#868E96]">Account ML Model:</span>
+                  <span className="font-semibold text-[#202124]">{modelStatus?.account_model?.version || 'v2-account-1.0.0'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Features Tracked:</span>
-                  <span className="font-semibold text-slate-800">{modelStatus?.account_model?.features_count ?? 26} dimensions</span>
+                  <span className="text-[#868E96]">Features Tracked:</span>
+                  <span className="font-semibold text-[#202124]">{modelStatus?.account_model?.features_count ?? 26} dimensions</span>
                 </div>
               </div>
             </div>
