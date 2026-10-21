@@ -110,9 +110,16 @@ export const V2AccountDetailPage: React.FC = () => {
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
 
   // Human Adjudication State
+  interface AdjudicationEntry {
+    status: string;
+    notes: string;
+    timestamp: string;
+    investigatorId: string;
+  }
   const [adjudicationStatus, setAdjudicationStatus] = useState<string>('pending_review');
   const [adjudicationNotes, setAdjudicationNotes] = useState<string>('');
   const [adjudicationSaved, setAdjudicationSaved] = useState(false);
+  const [adjudicationHistory, setAdjudicationHistory] = useState<AdjudicationEntry[]>([]);
 
   // Save to recent searches & load adjudication from localStorage
   useEffect(() => {
@@ -128,7 +135,7 @@ export const V2AccountDetailPage: React.FC = () => {
       // Ignore
     }
 
-    // Load adjudication
+    // Load adjudication & audit history
     try {
       const adjKey = `fs_v2_adjudication_${accountId}`;
       const savedAdj = localStorage.getItem(adjKey);
@@ -136,9 +143,22 @@ export const V2AccountDetailPage: React.FC = () => {
         const parsed = JSON.parse(savedAdj);
         setAdjudicationStatus(parsed.status || 'pending_review');
         setAdjudicationNotes(parsed.notes || '');
+        if (Array.isArray(parsed.history)) {
+          setAdjudicationHistory(parsed.history);
+        } else if (parsed.timestamp) {
+          setAdjudicationHistory([
+            {
+              status: parsed.status,
+              notes: parsed.notes,
+              timestamp: parsed.timestamp,
+              investigatorId: parsed.investigatorId || 'INV-COMPLIANCE-01',
+            },
+          ]);
+        }
       } else {
         setAdjudicationStatus('pending_review');
         setAdjudicationNotes('');
+        setAdjudicationHistory([]);
       }
     } catch {
       // Ignore
@@ -216,15 +236,24 @@ export const V2AccountDetailPage: React.FC = () => {
     if (!accountId) return;
     try {
       const adjKey = `fs_v2_adjudication_${accountId}`;
+      const newEntry: AdjudicationEntry = {
+        status: adjudicationStatus,
+        notes: adjudicationNotes,
+        timestamp: new Date().toISOString(),
+        investigatorId: 'INV-COMPLIANCE-01',
+      };
+      const updatedHistory = [newEntry, ...adjudicationHistory];
       localStorage.setItem(
         adjKey,
         JSON.stringify({
           status: adjudicationStatus,
           notes: adjudicationNotes,
-          timestamp: new Date().toISOString(),
-          investigatorId: 'INV-COMPLIANCE-01',
+          timestamp: newEntry.timestamp,
+          investigatorId: newEntry.investigatorId,
+          history: updatedHistory,
         })
       );
+      setAdjudicationHistory(updatedHistory);
       setAdjudicationSaved(true);
       setTimeout(() => setAdjudicationSaved(false), 2500);
     } catch {
@@ -754,6 +783,38 @@ export const V2AccountDetailPage: React.FC = () => {
                   />
                 </div>
               </div>
+
+              {/* Logged Audit Trail */}
+              {adjudicationHistory.length > 0 && (
+                <div className="pt-3 border-t border-slate-100 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-800 flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-[#0D9488]" />
+                      Logged Adjudication Audit Trail ({adjudicationHistory.length} {adjudicationHistory.length === 1 ? 'Entry' : 'Entries'})
+                    </span>
+                    <span className="font-mono text-[11px] text-slate-400">Persisted locally per account</span>
+                  </div>
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    {adjudicationHistory.map((entry, idx) => (
+                      <div key={idx} className="p-2.5 rounded bg-slate-50 border border-slate-200 text-xs space-y-1 font-mono">
+                        <div className="flex flex-wrap items-center justify-between gap-1 text-[11px]">
+                          <span className="font-semibold text-teal-800 capitalize bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">
+                            {entry.status.replace(/_/g, ' ')}
+                          </span>
+                          <span className="text-slate-400 text-[10px]">
+                            {entry.timestamp.replace('T', ' ').slice(0, 19)} UTC · {entry.investigatorId}
+                          </span>
+                        </div>
+                        {entry.notes && (
+                          <p className="text-slate-700 font-sans text-xs pt-0.5 leading-relaxed">
+                            "{entry.notes}"
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <p className="text-[11px] text-slate-400 font-mono border-t border-slate-100 pt-2">
                 Compliance Mandate: All adjudications are logged to the immutable audit ledger. Model outputs serve strictly as decision support; automated account freezing is prohibited.
