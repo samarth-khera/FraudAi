@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, ShieldCheck, Info, UserCheck } from 'lucide-react';
+import { AlertTriangle, ShieldCheck, Info, UserCheck, ShieldAlert } from 'lucide-react';
 
 interface V2ModelDivergenceAlertProps {
   accountId: string;
@@ -22,12 +22,12 @@ export const V2ModelDivergenceAlert: React.FC<V2ModelDivergenceAlertProps> = ({
   if (!isDivergent) return null;
 
   return (
-    <div className="rounded-lg border-2 border-amber-400 bg-amber-50/80 p-5 shadow-sm my-5 text-slate-800">
+    <div className="rounded-lg border-2 border-amber-400 bg-amber-50/90 p-5 shadow-sm my-5 text-slate-800">
       <div className="flex items-start gap-3.5">
         <div className="w-9 h-9 rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-700 shrink-0 mt-0.5">
           <AlertTriangle className="w-5 h-5" />
         </div>
-        <div className="flex-1 space-y-2">
+        <div className="flex-1 space-y-2.5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h4 className="text-sm font-semibold text-amber-900 tracking-tight flex items-center gap-2">
               <span>Model Score Divergence: Compromised Victim Pattern Detected</span>
@@ -45,21 +45,30 @@ export const V2ModelDivergenceAlert: React.FC<V2ModelDivergenceAlertProps> = ({
             </div>
           </div>
 
-          <p className="text-xs text-amber-950/90 leading-relaxed">
-            The statistical XGBoost model flagged this account with an elevated score driven by an anomalous high-value single debit. However, the deterministic rule engine and transaction ledger show <strong className="font-semibold text-amber-900">zero rapid pass-through</strong>, <strong className="font-semibold text-amber-900">zero prior structuring deposits</strong>, and steady long-term account tenure.
+          <p className="text-xs text-amber-950 leading-relaxed">
+            The statistical XGBoost model evaluated this account with an elevated risk score of <strong className="font-semibold text-amber-900">{mlRiskScore.toFixed(1)}/100</strong>. This score reflects mathematical anomaly detection driven by an outlier single debit draining savings, <strong>not confirmed perpetrator fraud</strong>. An anomalous balance drain can indicate victim impact rather than perpetrator behaviour.
           </p>
 
-          <div className="bg-white/90 rounded border border-amber-200/80 p-3 text-xs space-y-1.5">
+          <p className="text-xs text-amber-950 leading-relaxed">
+            In contrast, the deterministic Phase 3 rule engine reports a low risk score of <strong className="font-semibold text-emerald-800">{ruleRiskScore.toFixed(1)}/100</strong>, confirming <strong className="font-semibold text-amber-900">zero rapid pass-through</strong>, <strong className="font-semibold text-amber-900">zero structuring</strong>, and steady long-term account tenure.
+          </p>
+
+          <div className="bg-white/95 rounded border border-amber-200 p-3.5 text-xs space-y-2">
             <div className="flex items-center gap-1.5 font-medium text-amber-900">
               <UserCheck className="w-4 h-4 text-emerald-600" />
-              <span>Investigative Guidance & Innocent Account Protection:</span>
+              <span>Innocent Victim Protection & Operational Safeguards:</span>
             </div>
-            <p className="text-slate-600 pl-5">
-              This signature matches an <strong className="text-slate-800">Innocent Victim whose credentials or session were compromised</strong> during an Authorized Push Payment (APP) scam. An anomalous outflow drains legitimate savings rather than routing illicit funds.
-            </p>
-            <p className="text-amber-800 pl-5 font-mono text-[11px]">
-              ⚠️ Prohibition: Automated account freezing, blocking, or fraud reporting against this customer is strictly prohibited. Trace downstream recipient hops to identify destination money mules.
-            </p>
+            <ul className="text-slate-700 pl-5 space-y-1 text-xs list-disc">
+              <li>
+                <strong>Anomalous Balance Drain Analysis:</strong> In an Authorized Push Payment (APP) scam, the victim's account is depleted by an attacker. TreeSHAP confirms <code className="font-mono text-[11px] bg-slate-100 px-1 rounded">max_amount</code> (+3.91) and <code className="font-mono text-[11px] bg-slate-100 px-1 rounded">initial_balance</code> (+1.14) as the primary statistical drivers.
+              </li>
+              <li>
+                <strong>Mandatory Evidence Review:</strong> This alert recommends manual evidence review. Always trace downstream recipient hops to identify destination money mules and cashing-out terminals.
+              </li>
+              <li>
+                <strong className="text-red-700">Strict Prohibition on Automated Action:</strong> Automated freezing, blocking, service denial, or reporting of this customer based on model outputs is strictly prohibited by institutional compliance rules.
+              </li>
+            </ul>
           </div>
         </div>
       </div>

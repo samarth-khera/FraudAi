@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Shield, Search, Cpu, ExternalLink, ArrowRight, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { v2Api } from '../../services/v2Api';
 import { V2ModelStatusResponse } from '../../types/v2';
+import { normalizeAccountId } from '../../pages/v2/V2SearchPage';
 
 export const V2Header: React.FC = () => {
   const navigate = useNavigate();
@@ -17,9 +18,9 @@ export const V2Header: React.FC = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = searchId.trim();
-    if (trimmed) {
-      navigate(`/v2/accounts/${encodeURIComponent(trimmed)}`);
+    const normalized = normalizeAccountId(searchId);
+    if (normalized) {
+      navigate(`/v2/accounts/${encodeURIComponent(normalized)}`);
     }
   };
 
@@ -60,7 +61,7 @@ export const V2Header: React.FC = () => {
             {searchId && (
               <button
                 type="submit"
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded text-[10px] font-medium bg-[#0D9488] text-white hover:bg-[#0F766E] transition-colors"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded text-[10px] font-medium bg-[#0D9488] text-white hover:bg-[#0F766E] transition-colors cursor-pointer"
               >
                 Go
               </button>

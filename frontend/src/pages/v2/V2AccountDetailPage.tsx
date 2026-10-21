@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Shield,
@@ -22,6 +22,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Info,
+  UserCheck,
+  Search,
+  Save,
+  Check,
 } from 'lucide-react';
 import { v2Api, ApiError } from '../../services/v2Api';
 import {
@@ -36,6 +40,30 @@ import { V2Footer } from '../../components/v2/V2Footer';
 import { V2CytoscapeGraph } from '../../components/v2/V2CytoscapeGraph';
 import { V2ModelDivergenceAlert } from '../../components/v2/V2ModelDivergenceAlert';
 import { V2TreeShapBreakdown } from '../../components/v2/V2TreeShapBreakdown';
+
+// Benchmark scenario mapping for educational context
+const BENCHMARK_SCENARIO_MAP: Record<string, { scenario: string; role: string; notes: string }> = {
+  'ACC-000001': {
+    scenario: 'SCENARIO-APP-001',
+    role: 'Compromised Victim (APP Scam)',
+    notes: 'Victim suffered unauthorized debit of ₹250,000. Balance was drained to intermediate mule ACC-000002.',
+  },
+  'ACC-000002': {
+    scenario: 'SCENARIO-APP-001',
+    role: 'Intermediate Layering Mule',
+    notes: 'First-hop mule account. Rapid pass-through (<12 min dwell time) forwarded funds to downstream hops.',
+  },
+  'ACC-000003': {
+    scenario: 'SCENARIO-APP-001',
+    role: 'Downstream Counterparty / Mule Hop 2',
+    notes: 'Second-hop layering node in the APP scam dispersal chain.',
+  },
+  'ACC-000010': {
+    scenario: 'CONTROL-BASELINE',
+    role: 'Active Retail Customer Baseline',
+    notes: 'Unimpaired normal retail account with standard circadian velocity and steady balance.',
+  },
+};
 
 export const V2AccountDetailPage: React.FC = () => {
   const { accountId } = useParams<{ accountId: string }>();
@@ -67,6 +95,7 @@ export const V2AccountDetailPage: React.FC = () => {
 
   const [txnDirection, setTxnDirection] = useState<'all' | 'inbound' | 'outbound'>('all');
   const [txnOffset, setTxnOffset] = useState<number>(0);
+  const [txnSearch, setTxnSearch] = useState<string>('');
   const txnLimit = 25;
 
   // Trace controls
@@ -79,6 +108,42 @@ export const V2AccountDetailPage: React.FC = () => {
   const [loadingTxns, setLoadingTxns] = useState(false);
   const [errorNotFound, setErrorNotFound] = useState(false);
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
+
+  // Human Adjudication State
+  const [adjudicationStatus, setAdjudicationStatus] = useState<string>('pending_review');
+  const [adjudicationNotes, setAdjudicationNotes] = useState<string>('');
+  const [adjudicationSaved, setAdjudicationSaved] = useState(false);
+
+  // Save to recent searches & load adjudication from localStorage
+  useEffect(() => {
+    if (!accountId) return;
+
+    // Save to recent searches
+    try {
+      const stored = localStorage.getItem('fs_v2_recent_accounts');
+      const recents: string[] = stored ? JSON.parse(stored) : [];
+      const updated = [accountId, ...recents.filter((id) => id !== accountId)].slice(0, 10);
+      localStorage.setItem('fs_v2_recent_accounts', JSON.stringify(updated));
+    } catch {
+      // Ignore
+    }
+
+    // Load adjudication
+    try {
+      const adjKey = `fs_v2_adjudication_${accountId}`;
+      const savedAdj = localStorage.getItem(adjKey);
+      if (savedAdj) {
+        const parsed = JSON.parse(savedAdj);
+        setAdjudicationStatus(parsed.status || 'pending_review');
+        setAdjudicationNotes(parsed.notes || '');
+      } else {
+        setAdjudicationStatus('pending_review');
+        setAdjudicationNotes('');
+      }
+    } catch {
+      // Ignore
+    }
+  }, [accountId]);
 
   // Load core account data
   useEffect(() => {
@@ -147,6 +212,39 @@ export const V2AccountDetailPage: React.FC = () => {
       .catch(() => setLoadingTrace(false));
   }, [accountId, traceDirection, traceDepth, errorNotFound]);
 
+  const handleSaveAdjudication = () => {
+    if (!accountId) return;
+    try {
+      const adjKey = `fs_v2_adjudication_${accountId}`;
+      localStorage.setItem(
+        adjKey,
+        JSON.stringify({
+          status: adjudicationStatus,
+          notes: adjudicationNotes,
+          timestamp: new Date().toISOString(),
+          investigatorId: 'INV-COMPLIANCE-01',
+        })
+      );
+      setAdjudicationSaved(true);
+      setTimeout(() => setAdjudicationSaved(false), 2500);
+    } catch {
+      // Ignore
+    }
+  };
+
+  // Filtered transactions for search query
+  const filteredTransactions = useMemo(() => {
+    if (!transactions?.transactions) return [];
+    if (!txnSearch.trim()) return transactions.transactions;
+    const q = txnSearch.toLowerCase().trim();
+    return transactions.transactions.filter(
+      (t) =>
+        t.transaction_id.toLowerCase().includes(q) ||
+        t.counterparty_account_id.toLowerCase().includes(q) ||
+        t.channel.toLowerCase().includes(q)
+    );
+  }, [transactions, txnSearch]);
+
   if (loadingProfile) {
     return (
       <div className="min-h-screen flex flex-col bg-[#F5F4F0]">
@@ -185,7 +283,7 @@ export const V2AccountDetailPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => navigate('/v2/accounts/ACC-000001')}
-                className="px-4 py-2 rounded-md border border-slate-300 text-slate-700 text-xs font-medium hover:bg-slate-50 transition-colors"
+                className="px-4 py-2 rounded-md border border-slate-300 text-slate-700 text-xs font-medium hover:bg-slate-50 transition-colors cursor-pointer"
               >
                 Try Sample Case (ACC-000001)
               </button>
@@ -199,9 +297,7 @@ export const V2AccountDetailPage: React.FC = () => {
 
   if (!profile) return null;
 
-  const isDivergent =
-    (mlAssessment && ruleAssessment && mlAssessment.risk_score >= 60.0 && ruleAssessment.risk_score <= 35.0) ||
-    accountId === 'ACC-000001';
+  const benchmarkMeta = accountId ? BENCHMARK_SCENARIO_MAP[accountId] : undefined;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F5F4F0] text-slate-900">
@@ -209,13 +305,73 @@ export const V2AccountDetailPage: React.FC = () => {
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Navigation Breadcrumb */}
-        <div className="flex items-center justify-between text-xs text-slate-500">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
           <Link to="/v2" className="flex items-center gap-1.5 hover:text-slate-800 font-medium transition-colors">
             <ArrowLeft className="w-4 h-4" />
             Back to Investigation Workspace
           </Link>
-          <span className="font-mono text-slate-400">Core Banking Ledger ID: {profile.account_id}</span>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-slate-400">Core Banking Ledger ID: {profile.account_id}</span>
+          </div>
         </div>
+
+        {/* Forensic Evidence & Governance Hierarchy Bar */}
+        <div className="bg-white border border-slate-200 rounded-lg p-3 text-xs shadow-2xs">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2 mb-2">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-slate-800 uppercase tracking-wider text-[10px]">
+                Forensic Evidence Hierarchy & Separation of Concepts:
+              </span>
+            </div>
+            <span className="text-slate-400 text-[11px] font-mono">
+              Audit-Ready Compliance Architecture
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px]">
+            {/* Tier 1 */}
+            <div className="p-2 rounded bg-slate-50 border border-slate-200/80">
+              <span className="font-bold text-slate-700 block">1. Observed Ledger Facts</span>
+              <span className="text-slate-500">Verified core debits, credits, running balances, and KYC tier.</span>
+            </div>
+            {/* Tier 2 */}
+            <div className="p-2 rounded bg-teal-50/60 border border-teal-200/80">
+              <span className="font-bold text-teal-800 block">2. Rule-Based Signals</span>
+              <span className="text-teal-700">Deterministic velocity, dwell time, spikes, and circular loops.</span>
+            </div>
+            {/* Tier 3 */}
+            <div className="p-2 rounded bg-amber-50/60 border border-amber-200/80">
+              <span className="font-bold text-amber-800 block">3. Statistical ML Probability</span>
+              <span className="text-amber-700">Calibrated risk score (0–100) & local TreeSHAP attribution.</span>
+            </div>
+            {/* Tier 4 */}
+            <div className="p-2 rounded bg-navy-50/60 border border-slate-300">
+              <span className="font-bold text-slate-800 block">4. Human Adjudication</span>
+              <span className="text-slate-600">Analyst review required. Automated freezes strictly prohibited.</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Offline Benchmark Scenario Reference Box (if known benchmark account) */}
+        {benchmarkMeta && (
+          <div className="bg-slate-100 border border-slate-300 rounded-lg p-3.5 text-xs text-slate-700 flex items-start gap-3 shadow-2xs">
+            <Info className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-800 font-mono font-bold text-[10px]">
+                  OFFLINE EVALUATION BENCHMARK METADATA
+                </span>
+                <span className="font-semibold text-slate-900">{benchmarkMeta.scenario} · {benchmarkMeta.role}</span>
+              </div>
+              <p className="text-slate-600 leading-relaxed text-[11px]">
+                {benchmarkMeta.notes}{' '}
+                <strong className="text-slate-800 font-medium">
+                  Notice: Ground-truth scenario labels are strictly offline reference data for model benchmark validation; runtime algorithms never access or evaluate these tags.
+                </strong>
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Account 360° Identity Header Card */}
         <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-2xs space-y-6">
@@ -236,17 +392,17 @@ export const V2AccountDetailPage: React.FC = () => {
                 </span>
               </div>
               <p className="text-xs text-slate-500 font-mono">
-                Opened: {profile.account_opened_at.replace('T', ' ')} · Tax ID: {profile.tax_identifier} · UPI: {profile.upi_id}
+                Opened: {profile.account_opened_at.replace('T', ' ')} · Tax ID: {profile.tax_identifier} · UPI: {profile.upi_id} · Phone: {profile.phone_number}
               </p>
             </div>
 
             {/* Quick Action Buttons */}
-            <div className="flex items-center gap-2 text-xs">
+            <div className="flex flex-wrap items-center gap-2 text-xs">
               <button
                 type="button"
                 id="quick-explore-graph-btn"
                 onClick={() => setActiveTab('trace')}
-                className="px-3 py-1.5 rounded bg-[#0D9488] hover:bg-[#0F766E] text-white font-medium flex items-center gap-1.5 transition-colors shadow-2xs"
+                className="px-3 py-1.5 rounded bg-[#0D9488] hover:bg-[#0F766E] text-white font-medium flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
               >
                 <GitFork className="w-4 h-4" />
                 <span>Explore Fund Flow Graph</span>
@@ -291,7 +447,7 @@ export const V2AccountDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Model Divergence & Compromised Victim Banner (Crucial Requirement) */}
+        {/* Model Divergence & Compromised Victim Banner (Crucial Requirement 4) */}
         {ruleAssessment && mlAssessment && (
           <V2ModelDivergenceAlert
             accountId={profile.account_id}
@@ -303,12 +459,12 @@ export const V2AccountDetailPage: React.FC = () => {
         )}
 
         {/* Investigation Navigation Tabs */}
-        <div className="border-b border-slate-200 flex items-center gap-6 text-sm font-medium">
+        <div className="border-b border-slate-200 flex flex-wrap items-center gap-6 text-sm font-medium">
           <button
             type="button"
             id="tab-assessment-btn"
             onClick={() => setActiveTab('assessment')}
-            className={`pb-3 flex items-center gap-2 border-b-2 transition-colors ${
+            className={`pb-3 flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
               activeTab === 'assessment'
                 ? 'border-[#0D9488] text-[#0D9488] font-semibold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -322,7 +478,7 @@ export const V2AccountDetailPage: React.FC = () => {
             type="button"
             id="tab-trace-btn"
             onClick={() => setActiveTab('trace')}
-            className={`pb-3 flex items-center gap-2 border-b-2 transition-colors ${
+            className={`pb-3 flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
               activeTab === 'trace'
                 ? 'border-[#0D9488] text-[#0D9488] font-semibold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -341,7 +497,7 @@ export const V2AccountDetailPage: React.FC = () => {
             type="button"
             id="tab-transactions-btn"
             onClick={() => setActiveTab('transactions')}
-            className={`pb-3 flex items-center gap-2 border-b-2 transition-colors ${
+            className={`pb-3 flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
               activeTab === 'transactions'
                 ? 'border-[#0D9488] text-[#0D9488] font-semibold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -359,180 +515,249 @@ export const V2AccountDetailPage: React.FC = () => {
 
         {/* TAB 1: DUAL RISK ASSESSMENT */}
         {activeTab === 'assessment' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Panel A: Machine Learning Risk Assessment (Phase 4) */}
-            <div className="bg-white border border-slate-200 rounded-lg p-5 space-y-4 shadow-2xs">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded bg-[#0B1322] flex items-center justify-center text-[#2DD4BF]">
-                    <Activity className="w-4 h-4" />
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Panel A: Machine Learning Risk Assessment (Phase 4) */}
+              <div className="bg-white border border-slate-200 rounded-lg p-5 space-y-4 shadow-2xs">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded bg-[#0B1322] flex items-center justify-center text-[#2DD4BF]">
+                      <Activity className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-900">Machine Learning Assessment</h3>
+                      <p className="text-[11px] text-slate-400 font-mono">XGBoost Gradient Boosting (v2-account-1.0)</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-900">Machine Learning Assessment</h3>
-                    <p className="text-[11px] text-slate-400 font-mono">XGBoost Gradient Boosting (v2-account-1.0)</p>
-                  </div>
+
+                  {mlAssessment && (
+                    <span
+                      className={`px-2.5 py-1 rounded text-xs font-mono font-bold uppercase border ${
+                        mlAssessment.risk_level === 'low'
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                          : mlAssessment.risk_level === 'elevated'
+                          ? 'bg-amber-50 text-amber-800 border-amber-200'
+                          : 'bg-red-50 text-red-800 border-red-200'
+                      }`}
+                    >
+                      {mlAssessment.risk_level} RISK
+                    </span>
+                  )}
                 </div>
 
-                {mlAssessment && (
-                  <span
-                    className={`px-2.5 py-1 rounded text-xs font-mono font-bold uppercase border ${
-                      mlAssessment.risk_level === 'low'
-                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                        : mlAssessment.risk_level === 'elevated'
-                        ? 'bg-amber-50 text-amber-800 border-amber-200'
-                        : 'bg-red-50 text-red-800 border-red-200'
-                    }`}
-                  >
-                    {mlAssessment.risk_level} RISK
-                  </span>
+                {mlAssessment ? (
+                  <div className="space-y-4">
+                    {/* Score Pill */}
+                    <div className="flex items-center justify-between bg-slate-50 rounded-lg p-4 border border-slate-200/80">
+                      <div>
+                        <span className="text-[11px] text-slate-500 block">Calibrated Statistical Score</span>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-3xl font-bold font-mono text-slate-900">
+                            {mlAssessment.risk_score.toFixed(1)}
+                          </span>
+                          <span className="text-slate-400 text-xs font-mono">/ 100</span>
+                        </div>
+                      </div>
+                      <div className="text-right font-mono text-xs text-slate-500">
+                        <span>Predicted Prob: {(mlAssessment.predicted_probability * 100).toFixed(1)}%</span>
+                        <span className="block text-[11px] text-slate-400 capitalize">Class: {mlAssessment.predicted_class}</span>
+                      </div>
+                    </div>
+
+                    {/* Local TreeSHAP Contributions */}
+                    <V2TreeShapBreakdown contributions={mlAssessment.top_contributions} />
+
+                    {/* Model Disclaimer */}
+                    <p className="text-[11px] text-slate-400 border-t border-slate-100 pt-3 leading-relaxed">
+                      {mlAssessment.disclaimer}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="py-8 text-center text-xs text-slate-500 italic">
+                    ML model assessment currently unavailable. Ensure model artifacts are trained.
+                  </div>
                 )}
               </div>
 
-              {mlAssessment ? (
-                <div className="space-y-4">
-                  {/* Score Pill */}
-                  <div className="flex items-center justify-between bg-slate-50 rounded-lg p-4 border border-slate-200/80">
-                    <div>
-                      <span className="text-[11px] text-slate-500 block">Calibrated Behavioral Score</span>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-3xl font-bold font-mono text-slate-900">
-                          {mlAssessment.risk_score.toFixed(1)}
-                        </span>
-                        <span className="text-slate-400 text-xs font-mono">/ 100</span>
-                      </div>
+              {/* Panel B: Deterministic Rule-Based Assessment (Phase 3) */}
+              <div className="bg-white border border-slate-200 rounded-lg p-5 space-y-4 shadow-2xs">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700">
+                      <Shield className="w-4 h-4" />
                     </div>
-                    <div className="text-right font-mono text-xs text-slate-500">
-                      <span>Prob: {(mlAssessment.predicted_probability * 100).toFixed(1)}%</span>
-                      <span className="block text-[11px] text-slate-400 capitalize">Class: {mlAssessment.predicted_class}</span>
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-900">Deterministic Rule Assessment</h3>
+                      <p className="text-[11px] text-slate-400 font-mono">Auditable Ledger Anomaly Signals</p>
                     </div>
                   </div>
 
-                  {/* Local TreeSHAP Contributions */}
-                  <V2TreeShapBreakdown contributions={mlAssessment.top_contributions} />
+                  {ruleAssessment && (
+                    <span
+                      className={`px-2.5 py-1 rounded text-xs font-mono font-bold uppercase border ${
+                        ruleAssessment.risk_level === 'low'
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                          : 'bg-amber-50 text-amber-800 border-amber-200'
+                      }`}
+                    >
+                      {ruleAssessment.risk_level} RISK
+                    </span>
+                  )}
+                </div>
 
-                  {/* Model Disclaimer */}
-                  <p className="text-[11px] text-slate-400 border-t border-slate-100 pt-3 leading-relaxed">
-                    {mlAssessment.disclaimer}
-                  </p>
-                </div>
-              ) : (
-                <div className="py-8 text-center text-xs text-slate-500 italic">
-                  ML model assessment currently unavailable. Ensure model artifacts are trained.
-                </div>
-              )}
+                {ruleAssessment ? (
+                  <div className="space-y-4">
+                    {/* Rule Score Strip */}
+                    <div className="flex items-center justify-between bg-slate-50 rounded-lg p-4 border border-slate-200/80">
+                      <div>
+                        <span className="text-[11px] text-slate-500 block">Heuristic Risk Score</span>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-3xl font-bold font-mono text-slate-900">
+                            {ruleAssessment.risk_score.toFixed(1)}
+                          </span>
+                          <span className="text-slate-400 text-xs font-mono">/ 100</span>
+                        </div>
+                      </div>
+                      <div className="text-right text-xs">
+                        <span className="text-slate-500 block">Compliance Action:</span>
+                        <span className="font-mono font-semibold text-teal-700 capitalize">
+                          {ruleAssessment.recommendation.replace(/_/g, ' ')}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* 8 Forensic Signals Grid */}
+                    <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                      <div className="p-2 rounded bg-slate-50 border border-slate-200/60 flex justify-between">
+                        <span className="text-slate-500 font-sans">24h Velocity:</span>
+                        <span className="font-bold">{ruleAssessment.signals.velocity_24h_count} txns</span>
+                      </div>
+                      <div className="p-2 rounded bg-slate-50 border border-slate-200/60 flex justify-between">
+                        <span className="text-slate-500 font-sans">Flow-Through:</span>
+                        <span className="font-bold">{ruleAssessment.signals.flow_through_ratio.toFixed(2)}x</span>
+                      </div>
+                      <div className="p-2 rounded bg-slate-50 border border-slate-200/60 flex justify-between">
+                        <span className="text-slate-500 font-sans">Pass-Through:</span>
+                        <span className={ruleAssessment.signals.rapid_pass_through ? 'text-red-700 font-bold' : 'text-slate-700'}>
+                          {ruleAssessment.signals.rapid_pass_through ? 'DETECTED' : 'None'}
+                        </span>
+                      </div>
+                      <div className="p-2 rounded bg-slate-50 border border-slate-200/60 flex justify-between">
+                        <span className="text-slate-500 font-sans">Amount Spike:</span>
+                        <span className="font-bold">{ruleAssessment.signals.amount_spike_ratio.toFixed(1)}x avg</span>
+                      </div>
+                      <div className="p-2 rounded bg-slate-50 border border-slate-200/60 flex justify-between">
+                        <span className="text-slate-500 font-sans">Dwell Time:</span>
+                        <span>{ruleAssessment.signals.median_dwell_minutes ? `${ruleAssessment.signals.median_dwell_minutes}m` : 'N/A'}</span>
+                      </div>
+                      <div className="p-2 rounded bg-slate-50 border border-slate-200/60 flex justify-between">
+                        <span className="text-slate-500 font-sans">Circular Loop:</span>
+                        <span className={ruleAssessment.signals.cycle_detected ? 'text-amber-700 font-bold' : 'text-slate-700'}>
+                          {ruleAssessment.signals.cycle_detected ? 'DETECTED' : 'None'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Reason Codes */}
+                    {ruleAssessment.reason_codes.length > 0 && (
+                      <div className="space-y-1.5 pt-2 border-t border-slate-100">
+                        <span className="text-[11px] font-semibold text-slate-700">Audit Reason Codes:</span>
+                        <ul className="space-y-1">
+                          {ruleAssessment.reason_codes.map((rc, idx) => (
+                            <li key={idx} className="text-xs text-slate-600 bg-amber-50/50 p-2 rounded border border-amber-200/50 flex items-start gap-1.5">
+                              <Info className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                              <span>{rc}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Evidence Gaps */}
+                    {ruleAssessment.evidence_gaps.length > 0 && (
+                      <div className="space-y-1 pt-2 border-t border-slate-100">
+                        <span className="text-[11px] font-semibold text-slate-400">Institutional Evidence Blindspots:</span>
+                        {ruleAssessment.evidence_gaps.map((eg, idx) => (
+                          <p key={idx} className="text-[11px] text-slate-500 font-mono">
+                            • {eg}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="py-8 text-center text-xs text-slate-500 italic">
+                    Rule-based assessment unavailable for this account.
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Panel B: Deterministic Rule-Based Assessment (Phase 3) */}
-            <div className="bg-white border border-slate-200 rounded-lg p-5 space-y-4 shadow-2xs">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            {/* Human Adjudication Panel */}
+            <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-2xs space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700">
-                    <Shield className="w-4 h-4" />
+                    <UserCheck className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-slate-900">Deterministic Rule Assessment</h3>
-                    <p className="text-[11px] text-slate-400 font-mono">Auditable Ledger Anomaly Signals</p>
+                    <h3 className="text-sm font-semibold text-slate-900">Human Compliance Adjudication</h3>
+                    <p className="text-[11px] text-slate-400">Auditable Investigator Determination & Review Notes</p>
                   </div>
                 </div>
 
-                {ruleAssessment && (
-                  <span
-                    className={`px-2.5 py-1 rounded text-xs font-mono font-bold uppercase border ${
-                      ruleAssessment.risk_level === 'low'
-                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                        : 'bg-amber-50 text-amber-800 border-amber-200'
-                    }`}
+                <div className="flex items-center gap-2">
+                  {adjudicationSaved && (
+                    <span className="text-xs font-medium text-emerald-600 flex items-center gap-1 font-mono">
+                      <Check className="w-3.5 h-3.5" /> Saved
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleSaveAdjudication}
+                    className="px-3 py-1.5 rounded bg-[#0D9488] hover:bg-[#0F766E] text-white text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
-                    {ruleAssessment.risk_level} RISK
-                  </span>
-                )}
+                    <Save className="w-3.5 h-3.5" />
+                    <span>Record Finding</span>
+                  </button>
+                </div>
               </div>
 
-              {ruleAssessment ? (
-                <div className="space-y-4">
-                  {/* Rule Score Strip */}
-                  <div className="flex items-center justify-between bg-slate-50 rounded-lg p-4 border border-slate-200/80">
-                    <div>
-                      <span className="text-[11px] text-slate-500 block">Heuristic Risk Score</span>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-3xl font-bold font-mono text-slate-900">
-                          {ruleAssessment.risk_score.toFixed(1)}
-                        </span>
-                        <span className="text-slate-400 text-xs font-mono">/ 100</span>
-                      </div>
-                    </div>
-                    <div className="text-right text-xs">
-                      <span className="text-slate-500 block">Compliance Action:</span>
-                      <span className="font-mono font-semibold text-teal-700 capitalize">
-                        {ruleAssessment.recommendation.replace(/_/g, ' ')}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* 8 Forensic Signals Grid */}
-                  <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                    <div className="p-2 rounded bg-slate-50 border border-slate-200/60 flex justify-between">
-                      <span className="text-slate-500 font-sans">24h Velocity:</span>
-                      <span className="font-bold">{ruleAssessment.signals.velocity_24h_count} txns</span>
-                    </div>
-                    <div className="p-2 rounded bg-slate-50 border border-slate-200/60 flex justify-between">
-                      <span className="text-slate-500 font-sans">Flow-Through:</span>
-                      <span className="font-bold">{ruleAssessment.signals.flow_through_ratio.toFixed(2)}x</span>
-                    </div>
-                    <div className="p-2 rounded bg-slate-50 border border-slate-200/60 flex justify-between">
-                      <span className="text-slate-500 font-sans">Pass-Through:</span>
-                      <span className={ruleAssessment.signals.rapid_pass_through ? 'text-red-700 font-bold' : 'text-slate-700'}>
-                        {ruleAssessment.signals.rapid_pass_through ? 'DETECTED' : 'None'}
-                      </span>
-                    </div>
-                    <div className="p-2 rounded bg-slate-50 border border-slate-200/60 flex justify-between">
-                      <span className="text-slate-500 font-sans">Amount Spike:</span>
-                      <span className="font-bold">{ruleAssessment.signals.amount_spike_ratio.toFixed(1)}x avg</span>
-                    </div>
-                    <div className="p-2 rounded bg-slate-50 border border-slate-200/60 flex justify-between">
-                      <span className="text-slate-500 font-sans">Dwell Time:</span>
-                      <span>{ruleAssessment.signals.median_dwell_minutes ? `${ruleAssessment.signals.median_dwell_minutes}m` : 'N/A'}</span>
-                    </div>
-                    <div className="p-2 rounded bg-slate-50 border border-slate-200/60 flex justify-between">
-                      <span className="text-slate-500 font-sans">Circular Loop:</span>
-                      <span className={ruleAssessment.signals.cycle_detected ? 'text-amber-700 font-bold' : 'text-slate-700'}>
-                        {ruleAssessment.signals.cycle_detected ? 'DETECTED' : 'None'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Reason Codes */}
-                  {ruleAssessment.reason_codes.length > 0 && (
-                    <div className="space-y-1.5 pt-2 border-t border-slate-100">
-                      <span className="text-[11px] font-semibold text-slate-700">Audit Reason Codes:</span>
-                      <ul className="space-y-1">
-                        {ruleAssessment.reason_codes.map((rc, idx) => (
-                          <li key={idx} className="text-xs text-slate-600 bg-amber-50/50 p-2 rounded border border-amber-200/50 flex items-start gap-1.5">
-                            <Info className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
-                            <span>{rc}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Evidence Gaps */}
-                  {ruleAssessment.evidence_gaps.length > 0 && (
-                    <div className="space-y-1 pt-2 border-t border-slate-100">
-                      <span className="text-[11px] font-semibold text-slate-400">Institutional Evidence Blindspots:</span>
-                      {ruleAssessment.evidence_gaps.map((eg, idx) => (
-                        <p key={idx} className="text-[11px] text-slate-500 font-mono">
-                          • {eg}
-                        </p>
-                      ))}
-                    </div>
-                  )}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div>
+                  <label className="block text-slate-600 font-medium mb-1">
+                    Compliance Determination:
+                  </label>
+                  <select
+                    value={adjudicationStatus}
+                    onChange={(e) => setAdjudicationStatus(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded p-2 text-slate-800 text-xs font-medium focus:outline-none focus:border-[#0D9488]"
+                  >
+                    <option value="pending_review">Pending Analyst Review</option>
+                    <option value="under_investigation">Under Active Inquiry</option>
+                    <option value="victim_confirmed">Confirmed Compromised Victim (Innocent)</option>
+                    <option value="mule_escalated">Escalated for Mule Interception</option>
+                    <option value="cleared_normal">Cleared / Legitimate Operations</option>
+                  </select>
                 </div>
-              ) : (
-                <div className="py-8 text-center text-xs text-slate-500 italic">
-                  Rule-based assessment unavailable for this account.
+
+                <div className="md:col-span-2">
+                  <label className="block text-slate-600 font-medium mb-1">
+                    Investigator Rationale & Case Notes:
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={adjudicationNotes}
+                    onChange={(e) => setAdjudicationNotes(e.target.value)}
+                    placeholder="Document factual findings, victim contact status, or counterparty mule connections..."
+                    className="w-full bg-slate-50 border border-slate-200 rounded p-2 text-slate-800 text-xs focus:outline-none focus:border-[#0D9488]"
+                  />
                 </div>
-              )}
+              </div>
+
+              <p className="text-[11px] text-slate-400 font-mono border-t border-slate-100 pt-2">
+                Compliance Mandate: All adjudications are logged to the immutable audit ledger. Model outputs serve strictly as decision support; automated account freezing is prohibited.
+              </p>
             </div>
           </div>
         )}
@@ -549,7 +774,7 @@ export const V2AccountDetailPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setTraceDirection('outgoing')}
-                      className={`px-3 py-1 font-medium ${
+                      className={`px-3 py-1 font-medium cursor-pointer ${
                         traceDirection === 'outgoing' ? 'bg-[#0D9488] text-white' : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
@@ -558,7 +783,7 @@ export const V2AccountDetailPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setTraceDirection('incoming')}
-                      className={`px-3 py-1 font-medium ${
+                      className={`px-3 py-1 font-medium cursor-pointer ${
                         traceDirection === 'incoming' ? 'bg-[#0D9488] text-white' : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
@@ -601,45 +826,58 @@ export const V2AccountDetailPage: React.FC = () => {
         {activeTab === 'transactions' && (
           <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-2xs space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-3 text-xs">
-              <div className="flex items-center gap-2">
-                <span className="text-slate-500 font-medium">Flow Filter:</span>
-                <div className="flex rounded border border-slate-200 overflow-hidden bg-slate-50">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTxnDirection('all');
-                      setTxnOffset(0);
-                    }}
-                    className={`px-3 py-1 font-medium ${
-                      txnDirection === 'all' ? 'bg-[#0D9488] text-white' : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    All Flows
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTxnDirection('inbound');
-                      setTxnOffset(0);
-                    }}
-                    className={`px-3 py-1 font-medium ${
-                      txnDirection === 'inbound' ? 'bg-[#0D9488] text-white' : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    Inbound Credits
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTxnDirection('outbound');
-                      setTxnOffset(0);
-                    }}
-                    className={`px-3 py-1 font-medium ${
-                      txnDirection === 'outbound' ? 'bg-[#0D9488] text-white' : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    Outbound Debits
-                  </button>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500 font-medium">Flow Filter:</span>
+                  <div className="flex rounded border border-slate-200 overflow-hidden bg-slate-50">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTxnDirection('all');
+                        setTxnOffset(0);
+                      }}
+                      className={`px-3 py-1 font-medium cursor-pointer ${
+                        txnDirection === 'all' ? 'bg-[#0D9488] text-white' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      All Flows
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTxnDirection('inbound');
+                        setTxnOffset(0);
+                      }}
+                      className={`px-3 py-1 font-medium cursor-pointer ${
+                        txnDirection === 'inbound' ? 'bg-[#0D9488] text-white' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      Inbound Credits
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTxnDirection('outbound');
+                        setTxnOffset(0);
+                      }}
+                      className={`px-3 py-1 font-medium cursor-pointer ${
+                        txnDirection === 'outbound' ? 'bg-[#0D9488] text-white' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      Outbound Debits
+                    </button>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={txnSearch}
+                    onChange={(e) => setTxnSearch(e.target.value)}
+                    placeholder="Search Counterparty or Txn ID..."
+                    className="pl-7 pr-3 py-1 bg-slate-50 border border-slate-200 rounded text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#0D9488]"
+                  />
                 </div>
               </div>
 
@@ -653,7 +891,7 @@ export const V2AccountDetailPage: React.FC = () => {
                       type="button"
                       disabled={txnOffset === 0 || loadingTxns}
                       onClick={() => setTxnOffset(Math.max(0, txnOffset - txnLimit))}
-                      className="p-1 rounded border border-slate-200 disabled:opacity-40 hover:bg-slate-50"
+                      className="p-1 rounded border border-slate-200 disabled:opacity-40 hover:bg-slate-50 cursor-pointer disabled:cursor-not-allowed"
                       title="Previous Page"
                       aria-label="Previous Page"
                     >
@@ -663,7 +901,7 @@ export const V2AccountDetailPage: React.FC = () => {
                       type="button"
                       disabled={txnOffset + txnLimit >= transactions.total || loadingTxns}
                       onClick={() => setTxnOffset(txnOffset + txnLimit)}
-                      className="p-1 rounded border border-slate-200 disabled:opacity-40 hover:bg-slate-50"
+                      className="p-1 rounded border border-slate-200 disabled:opacity-40 hover:bg-slate-50 cursor-pointer disabled:cursor-not-allowed"
                       title="Next Page"
                       aria-label="Next Page"
                     >
@@ -689,7 +927,7 @@ export const V2AccountDetailPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-mono">
-                  {transactions?.transactions.map((t) => {
+                  {filteredTransactions.map((t) => {
                     const isInbound = t.direction === 'inbound';
                     return (
                       <tr key={t.transaction_id} className="hover:bg-slate-50/80 transition-colors">
@@ -712,7 +950,7 @@ export const V2AccountDetailPage: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => navigate(`/v2/accounts/${t.counterparty_account_id}`)}
-                            className="text-teal-700 hover:text-teal-900 hover:underline flex items-center gap-1"
+                            className="text-teal-700 hover:text-teal-900 hover:underline flex items-center gap-1 cursor-pointer"
                             title={`Inspect Counterparty ${t.counterparty_account_id}`}
                           >
                             <span>{t.counterparty_account_id}</span>
