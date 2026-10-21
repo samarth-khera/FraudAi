@@ -14,6 +14,19 @@
     --border-subtle: #E2DFD7;
     --border-strong: #CFCBC0;
 
+    /* V2 Reference-Derived Luxury Finance Tokens */
+    --v2-canvas: #F8F6F0;
+    --v2-surface: #FFFFFF;
+    --v2-surface-warm: #FFFEFA;
+    --v2-recessed: #FAF7F2;
+    --v2-border: #EAE3D6;
+    --v2-border-strong: #DDD4C4;
+    --v2-orange: #EA8500;
+    --v2-orange-hover: #D96D00;
+    --v2-orange-light: #FFF4E6;
+    --v2-charcoal: #1C1917;
+    --v2-muted: #78716C;
+
     --navy-950: #070C16;
     --navy-900: #0B1322;
     --navy-800: #111C30;
@@ -133,14 +146,35 @@
   background: #9E988B;
 }
 
-/* Keyboard accessibility & focus ring in electric teal */
+/* Keyboard accessibility & focus ring in electric teal (V1) and warm orange (V2) */
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid #0D9488;
+  outline: 2px solid #EA8500;
   outline-offset: 2px;
+}
+
+/* V2 Reference-Led Luxury Financial Surfaces */
+.v2-card {
+  background-color: #FFFFFF;
+  border: 1px solid #EAE3D6;
+  border-radius: 1.5rem;
+  box-shadow: 0 4px 20px -2px rgba(180, 150, 120, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.v2-card-interactive:hover {
+  border-color: rgba(234, 133, 0, 0.45);
+  box-shadow: 0 12px 36px -4px rgba(180, 150, 120, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
+  transform: translateY(-2px);
+}
+
+.v2-panel-recessed {
+  background-color: #FAF7F2;
+  border: 1px solid #EBE4D8;
+  border-radius: 1rem;
 }
 
 @media (prefers-reduced-motion: reduce) {
