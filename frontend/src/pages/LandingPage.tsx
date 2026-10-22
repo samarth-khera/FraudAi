@@ -14,6 +14,8 @@ import {
   GitBranch,
   Layers,
 } from 'lucide-react';
+import { UnifiedHeader } from '../components/layout/UnifiedHeader';
+import { V2Footer } from '../components/v2/V2Footer';
 
 interface PreviewNode {
   id: string;
@@ -141,52 +143,9 @@ export const LandingPage: React.FC = () => {
   const activeNode = PREVIEW_NODES[selectedId] || PREVIEW_NODES.C300;
 
   return (
-    <div className="min-h-screen bg-[#F5F4F0] text-[#0B1322] flex flex-col">
-      {/* Midnight-Navy Top Navigation */}
-      <header className="sticky top-0 z-40 bg-[#070C16] border-b border-[#1C2B45] text-white">
-        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-md bg-[#0D9488] flex items-center justify-center text-white border border-[#2DD4BF]/40">
-              <Shield className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="font-bold text-base text-white tracking-tight flex items-center gap-2">
-                FraudShield
-                <span className="font-mono text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#111C30] text-[#2DD4BF] border border-[#1C2B45]">
-                  AI
-                </span>
-              </span>
-              <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">
-                Financial Forensics &amp; Innocent Protection
-              </span>
-            </div>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-7 text-xs font-medium text-slate-300">
-            <a href="#preview" className="hover:text-[#2DD4BF] transition-colors">Live Topology Preview</a>
-            <a href="#features" className="hover:text-[#2DD4BF] transition-colors">Forensic Architecture</a>
-            <a href="#safeguards" className="hover:text-[#2DD4BF] transition-colors">Innocent Protection</a>
-            <Link to="/app/model-insights" className="hover:text-[#2DD4BF] transition-colors">Model Validation</Link>
-          </nav>
-
-          <div className="flex items-center gap-3">
-            <Link
-              to="/app/fund-flow"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-[#111C30] hover:bg-[#1C2B45] text-slate-200 border border-[#1C2B45] text-xs font-medium transition-colors"
-            >
-              <Network className="w-3.5 h-3.5 text-[#2DD4BF]" />
-              <span>Fund Flow Graph</span>
-            </Link>
-            <Link
-              to="/app/dashboard"
-              className="px-4 py-2 rounded-md bg-[#0D9488] hover:bg-[#0F766E] text-white text-xs font-semibold transition-colors flex items-center gap-1.5"
-            >
-              <span>Explore Investigation</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#F8F6F0] text-[#1A1714] flex flex-col">
+      {/* Unified Platform Navigation */}
+      <UnifiedHeader />
 
       {/* Architectural Midnight-Navy Hero + Interactive Case FS-1042 Preview */}
       <section className="blueprint-grid-dark text-white border-b border-[#1C2B45] pt-12 pb-16 lg:pt-16 lg:pb-20">
@@ -598,26 +557,8 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="mt-auto bg-[#070C16] text-slate-400 py-8 border-t border-[#1C2B45]">
-        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
-          <div className="flex items-center gap-2.5">
-            <div className="w-5 h-5 rounded bg-[#0D9488] flex items-center justify-center text-white">
-              <Shield className="w-3 h-3" />
-            </div>
-            <span className="font-bold text-white">FraudShield AI</span>
-            <span className="font-mono text-[11px] text-slate-500">· Financial Forensics Workbench</span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-6">
-            <Link to="/app/dashboard" className="hover:text-[#2DD4BF] transition-colors">Investigation Brief</Link>
-            <Link to="/app/fund-flow" className="hover:text-[#2DD4BF] transition-colors">Fund Flow Graph</Link>
-            <Link to="/app/transaction-check" className="hover:text-[#2DD4BF] transition-colors">Transaction Check</Link>
-            <Link to="/app/cases/FS-1042" className="hover:text-[#2DD4BF] transition-colors">Case FS-1042</Link>
-            <Link to="/app/model-insights" className="hover:text-[#2DD4BF] transition-colors">Model Validation</Link>
-          </div>
-        </div>
-      </footer>
+      {/* Unified Footer */}
+      <V2Footer />
     </div>
   );
 };
