@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Shield,
@@ -26,7 +26,16 @@ import {
   Search,
   Save,
   Check,
+  ArrowRight,
+  FileText,
+  Scale,
+  Sparkles,
+  ArrowDownLeft,
+  ArrowUpRight,
+  ShieldAlert,
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { gsap } from 'gsap';
 import { v2Api, ApiError } from '../../services/v2Api';
 import {
   V2AccountAssessmentResponse,
@@ -41,7 +50,7 @@ import { V2CytoscapeGraph } from '../../components/v2/V2CytoscapeGraph';
 import { V2ModelDivergenceAlert } from '../../components/v2/V2ModelDivergenceAlert';
 import { V2TreeShapBreakdown } from '../../components/v2/V2TreeShapBreakdown';
 
-// Benchmark scenario mapping for educational context
+// Benchmark scenario mapping for educational and validation context
 const BENCHMARK_SCENARIO_MAP: Record<string, { scenario: string; role: string; notes: string }> = {
   'ACC-000001': {
     scenario: 'SCENARIO-APP-001',
@@ -65,40 +74,50 @@ const BENCHMARK_SCENARIO_MAP: Record<string, { scenario: string; role: string; n
   },
 };
 
+interface AdjudicationEntry {
+  status: string;
+  notes: string;
+  timestamp: string;
+  investigatorId: string;
+}
+
 export const V2AccountDetailPage: React.FC = () => {
   const { accountId } = useParams<{ accountId: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const pageContainerRef = useRef<HTMLDivElement>(null);
+  const adjudicationRef = useRef<HTMLDivElement>(null);
 
-  // State
+  // Core Data State
   const [profile, setProfile] = useState<V2AccountProfileResponse | null>(null);
   const [ruleAssessment, setRuleAssessment] = useState<V2AccountAssessmentResponse | null>(null);
   const [mlAssessment, setMlAssessment] = useState<V2AccountMLAssessmentResponse | null>(null);
   const [transactions, setTransactions] = useState<V2AccountTransactionsResponse | null>(null);
   const [traceData, setTraceData] = useState<V2TraceGraphResponse | null>(null);
 
-  // Filters & Pagination
-  const initialTab = (searchParams.get('tab') as 'assessment' | 'trace' | 'transactions') || 'assessment';
-  const [activeTab, setActiveTabState] = useState<'assessment' | 'trace' | 'transactions'>(initialTab);
+  // Tab State
+  const initialTab = (searchParams.get('tab') as 'assessment' | 'trace' | 'transactions' | 'review') || 'assessment';
+  const [activeTab, setActiveTabState] = useState<'assessment' | 'trace' | 'transactions' | 'review'>(initialTab);
 
-  const setActiveTab = (tab: 'assessment' | 'trace' | 'transactions') => {
+  const setActiveTab = (tab: 'assessment' | 'trace' | 'transactions' | 'review') => {
     setActiveTabState(tab);
     setSearchParams({ tab });
   };
 
   useEffect(() => {
-    const tabParam = searchParams.get('tab') as 'assessment' | 'trace' | 'transactions';
-    if (tabParam && ['assessment', 'trace', 'transactions'].includes(tabParam)) {
+    const tabParam = searchParams.get('tab') as 'assessment' | 'trace' | 'transactions' | 'review';
+    if (tabParam && ['assessment', 'trace', 'transactions', 'review'].includes(tabParam)) {
       setActiveTabState(tabParam);
     }
   }, [searchParams]);
 
+  // Transaction Filters & Pagination
   const [txnDirection, setTxnDirection] = useState<'all' | 'inbound' | 'outbound'>('all');
   const [txnOffset, setTxnOffset] = useState<number>(0);
   const [txnSearch, setTxnSearch] = useState<string>('');
   const txnLimit = 25;
 
-  // Trace controls
+  // Trace Controls
   const [traceDepth, setTraceDepth] = useState<number>(3);
   const [traceDirection, setTraceDirection] = useState<'outgoing' | 'incoming'>('outgoing');
 
@@ -109,23 +128,19 @@ export const V2AccountDetailPage: React.FC = () => {
   const [errorNotFound, setErrorNotFound] = useState(false);
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
 
+  // Rule technical details collapsible
+  const [showTechnicalReasonCodes, setShowTechnicalReasonCodes] = useState(false);
+
   // Human Adjudication State
-  interface AdjudicationEntry {
-    status: string;
-    notes: string;
-    timestamp: string;
-    investigatorId: string;
-  }
   const [adjudicationStatus, setAdjudicationStatus] = useState<string>('pending_review');
   const [adjudicationNotes, setAdjudicationNotes] = useState<string>('');
   const [adjudicationSaved, setAdjudicationSaved] = useState(false);
   const [adjudicationHistory, setAdjudicationHistory] = useState<AdjudicationEntry[]>([]);
 
-  // Save to recent searches & load adjudication from localStorage
+  // 1. Save to recent searches & load adjudication from localStorage
   useEffect(() => {
     if (!accountId) return;
 
-    // Save to recent searches
     try {
       const stored = localStorage.getItem('fs_v2_recent_accounts');
       const recents: string[] = stored ? JSON.parse(stored) : [];
@@ -135,7 +150,6 @@ export const V2AccountDetailPage: React.FC = () => {
       // Ignore
     }
 
-    // Load adjudication & audit history
     try {
       const adjKey = `fs_v2_adjudication_${accountId}`;
       const savedAdj = localStorage.getItem(adjKey);
@@ -165,7 +179,7 @@ export const V2AccountDetailPage: React.FC = () => {
     }
   }, [accountId]);
 
-  // Load core account data
+  // 2. Load core account data
   useEffect(() => {
     if (!accountId) return;
 
@@ -194,7 +208,7 @@ export const V2AccountDetailPage: React.FC = () => {
       });
   }, [accountId]);
 
-  // Load transactions
+  // 3. Load transactions
   useEffect(() => {
     if (!accountId || errorNotFound) return;
     setLoadingTxns(true);
@@ -213,7 +227,7 @@ export const V2AccountDetailPage: React.FC = () => {
       .catch(() => setLoadingTxns(false));
   }, [accountId, txnDirection, txnOffset, errorNotFound]);
 
-  // Load trace data
+  // 4. Load trace data
   useEffect(() => {
     if (!accountId || errorNotFound) return;
     setLoadingTrace(true);
@@ -231,6 +245,26 @@ export const V2AccountDetailPage: React.FC = () => {
       })
       .catch(() => setLoadingTrace(false));
   }, [accountId, traceDirection, traceDepth, errorNotFound]);
+
+  // 5. Coordinated GSAP page entrance
+  useEffect(() => {
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReducedMotion || !pageContainerRef.current || loadingProfile) return;
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        '.gsap-dossier-card',
+        { opacity: 0, y: 14 },
+        { opacity: 1, y: 0, duration: 0.5, stagger: 0.08, ease: 'power2.out' }
+      );
+    }, pageContainerRef);
+
+    return () => ctx.revert();
+  }, [loadingProfile, activeTab]);
 
   const handleSaveAdjudication = () => {
     if (!accountId) return;
@@ -255,68 +289,61 @@ export const V2AccountDetailPage: React.FC = () => {
       );
       setAdjudicationHistory(updatedHistory);
       setAdjudicationSaved(true);
-      setTimeout(() => setAdjudicationSaved(false), 2500);
+      setTimeout(() => setAdjudicationSaved(false), 3000);
     } catch {
       // Ignore
     }
   };
 
-  // Filtered transactions for search query
-  const filteredTransactions = useMemo(() => {
-    if (!transactions?.transactions) return [];
-    if (!txnSearch.trim()) return transactions.transactions;
-    const q = txnSearch.toLowerCase().trim();
-    return transactions.transactions.filter(
-      (t) =>
-        t.transaction_id.toLowerCase().includes(q) ||
-        t.counterparty_account_id.toLowerCase().includes(q) ||
-        t.channel.toLowerCase().includes(q)
-    );
-  }, [transactions, txnSearch]);
+  const tabsRef = useRef<HTMLDivElement>(null);
 
-  if (loadingProfile) {
-    return (
-      <div className="min-h-screen flex flex-col bg-[#F5F4F0]">
-        <V2Header />
-        <main className="flex-1 flex items-center justify-center py-20">
-          <div className="flex flex-col items-center gap-3">
-            <RefreshCw className="w-8 h-8 text-[#0D9488] animate-spin" />
-            <p className="text-sm font-medium text-slate-600 font-mono">Loading 360° Account Intelligence...</p>
-          </div>
-        </main>
-        <V2Footer />
-      </div>
-    );
-  }
+  const navigateToTab = (tab: 'assessment' | 'trace' | 'transactions' | 'review') => {
+    setActiveTab(tab);
+    if (tab === 'review') {
+      adjudicationRef.current?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
+  const scrollToAdjudication = () => {
+    setActiveTab('review');
+    if (adjudicationRef.current) {
+      adjudicationRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // 404 Not Found State
   if (errorNotFound) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#F5F4F0]">
+      <div className="min-h-screen flex flex-col bg-[#F8F6F0] text-[#1A1714] font-sans selection:bg-[#EA8500]/20 selection:text-[#EA8500]">
         <V2Header />
-        <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-16">
-          <div className="bg-white border border-slate-200 rounded-lg p-8 text-center space-y-4 shadow-sm">
-            <div className="w-12 h-12 rounded-full bg-red-50 border border-red-200 flex items-center justify-center text-red-600 mx-auto">
-              <AlertTriangle className="w-6 h-6" />
-            </div>
-            <h2 className="text-lg font-bold text-slate-900 font-display">Account Not Found in Core Ledger</h2>
-            <p className="text-sm text-slate-600 max-w-md mx-auto">
-              The identifier <code className="bg-slate-100 px-2 py-0.5 rounded font-mono font-bold text-slate-800">{accountId}</code> was not found in the synthetic banking database.
+        <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-16 flex flex-col items-center justify-center text-center space-y-6">
+          <div className="w-16 h-16 rounded-3xl bg-[#FFF4E6] border border-[#FCD5B5] flex items-center justify-center text-[#EA8500] shadow-sm">
+            <AlertTriangle className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-[#1A1714] font-display">
+              Account Not Found in Core Ledger
+            </h2>
+            <p className="text-sm text-[#6B655B] max-w-md mx-auto">
+              The identifier <code className="bg-[#FAF7F2] border border-[#EAE3D6] px-2 py-0.5 rounded font-mono font-bold text-[#1A1714]">{accountId}</code> was not found in the synthetic banking database.
             </p>
-            <div className="pt-4 flex flex-wrap items-center justify-center gap-3">
-              <Link
-                to="/v2"
-                className="px-4 py-2 rounded-md bg-[#0D9488] text-white text-xs font-medium hover:bg-[#0F766E] transition-colors"
-              >
-                Return to Search Workspace
-              </Link>
-              <button
-                type="button"
-                onClick={() => navigate('/v2/accounts/ACC-000001')}
-                className="px-4 py-2 rounded-md border border-slate-300 text-slate-700 text-xs font-medium hover:bg-slate-50 transition-colors cursor-pointer"
-              >
-                Try Sample Case (ACC-000001)
-              </button>
-            </div>
+          </div>
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              to="/v2"
+              className="px-5 py-2.5 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white text-xs font-bold transition-all shadow-xs"
+            >
+              Return to Search Workspace
+            </Link>
+            <button
+              type="button"
+              onClick={() => navigate('/v2/accounts/ACC-000001')}
+              className="px-5 py-2.5 rounded-xl border border-[#EAE3D6] bg-white text-[#1A1714] text-xs font-bold hover:bg-[#FAF7F2] hover:border-[#FCD5B5] transition-all cursor-pointer shadow-2xs"
+            >
+              Try Sample Case (ACC-000001)
+            </button>
           </div>
         </main>
         <V2Footer />
@@ -324,77 +351,144 @@ export const V2AccountDetailPage: React.FC = () => {
     );
   }
 
-  if (!profile) return null;
+  if (loadingProfile || !profile) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#F8F6F0] text-[#1A1714] font-sans">
+        <V2Header />
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-16 flex flex-col items-center justify-center space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-[#FFF4E6] border border-[#FCD5B5] flex items-center justify-center text-[#EA8500] animate-spin">
+            <RefreshCw className="w-6 h-6" />
+          </div>
+          <p className="text-sm text-[#6B655B] font-mono">Loading core account dossier and ML telemetry...</p>
+        </main>
+        <V2Footer />
+      </div>
+    );
+  }
 
   const benchmarkMeta = accountId ? BENCHMARK_SCENARIO_MAP[accountId] : undefined;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F5F4F0] text-slate-900">
+    <div
+      ref={pageContainerRef}
+      style={{ backgroundImage: 'radial-gradient(circle at 50% -10%, #FFE8CC 0%, #F8F6F0 40%)' }}
+      className="min-h-screen flex flex-col bg-[#F8F6F0] text-[#1A1714] font-sans selection:bg-[#EA8500]/20 selection:text-[#EA8500]"
+    >
       <V2Header />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Navigation Breadcrumb */}
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
-          <Link to="/v2" className="flex items-center gap-1.5 hover:text-slate-800 font-medium transition-colors">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
+        {/* Navigation Breadcrumb & Sequence Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-[#6B655B]">
+          <Link
+            to="/v2"
+            className="inline-flex items-center gap-1.5 text-[#6B655B] hover:text-[#EA8500] font-bold transition-colors"
+          >
             <ArrowLeft className="w-4 h-4" />
-            Back to Investigation Workspace
+            <span>Back to Search Workspace</span>
           </Link>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-slate-400">Core Banking Ledger ID: {profile.account_id}</span>
+
+          {/* Investigation Sequence Stepper */}
+          <div className="hidden lg:flex items-center gap-2 font-mono text-[11px] bg-[#FAF7F2] border border-[#EAE3D6] px-3.5 py-1.5 rounded-full shadow-2xs">
+            <span className="font-bold text-[#EA8500]">Overview</span>
+            <span className="text-[#DDD4C4]">➔</span>
+            <button
+              onClick={() => navigateToTab('assessment')}
+              className={`hover:text-[#EA8500] cursor-pointer transition-colors ${
+                activeTab === 'assessment' ? 'text-[#EA8500] font-bold' : 'text-[#6B655B]'
+              }`}
+            >
+              Understand scores
+            </button>
+            <span className="text-[#DDD4C4]">➔</span>
+            <button
+              onClick={() => navigateToTab('trace')}
+              className={`hover:text-[#EA8500] cursor-pointer transition-colors ${
+                activeTab === 'trace' ? 'text-[#EA8500] font-bold' : 'text-[#6B655B]'
+              }`}
+            >
+              Follow the money
+            </button>
+            <span className="text-[#DDD4C4]">➔</span>
+            <button
+              onClick={() => navigateToTab('transactions')}
+              className={`hover:text-[#EA8500] cursor-pointer transition-colors ${
+                activeTab === 'transactions' ? 'text-[#EA8500] font-bold' : 'text-[#6B655B]'
+              }`}
+            >
+              Review transactions
+            </button>
+            <span className="text-[#DDD4C4]">➔</span>
+            <button
+              onClick={scrollToAdjudication}
+              className="text-[#6B655B] hover:text-[#EA8500] cursor-pointer transition-colors"
+            >
+              Record a finding
+            </button>
           </div>
         </div>
 
         {/* Forensic Evidence & Governance Hierarchy Bar */}
-        <div className="bg-white border border-slate-200 rounded-lg p-3 text-xs shadow-2xs">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2 mb-2">
+        <div className="gsap-dossier-card bg-white border border-[#EAE3D6] rounded-2xl p-4 sm:p-5 text-xs shadow-2xs space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#EAE3D6]/70 pb-2.5">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-800 uppercase tracking-wider text-[10px]">
+              <Scale className="w-4 h-4 text-[#EA8500]" />
+              <span className="font-bold text-[#1A1714] uppercase tracking-wider text-[11px]">
                 Forensic Evidence Hierarchy & Separation of Concepts:
               </span>
             </div>
-            <span className="text-slate-400 text-[11px] font-mono">
+            <span className="text-[#8C857B] text-[11px] font-mono">
               Audit-Ready Compliance Architecture
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
             {/* Tier 1 */}
-            <div className="p-2 rounded bg-slate-50 border border-slate-200/80">
-              <span className="font-bold text-slate-700 block">1. Observed Ledger Facts</span>
-              <span className="text-slate-500">Verified core debits, credits, running balances, and KYC tier.</span>
+            <div className="p-3 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6]">
+              <span className="font-bold text-[#1A1714] block">1. Observed Ledger Facts</span>
+              <span className="text-[#6B655B] text-[11px] leading-relaxed">
+                Verified core debits, credits, running balances, and KYC tier.
+              </span>
             </div>
             {/* Tier 2 */}
-            <div className="p-2 rounded bg-teal-50/60 border border-teal-200/80">
-              <span className="font-bold text-teal-800 block">2. Rule-Based Signals</span>
-              <span className="text-teal-700">Deterministic velocity, dwell time, spikes, and circular loops.</span>
+            <div className="p-3 rounded-xl bg-[#EBF5FF] border border-[#BFDBFE]">
+              <span className="font-bold text-[#1E40AF] block">2. Rule-Based Signals</span>
+              <span className="text-[#1E40AF]/80 text-[11px] leading-relaxed">
+                Deterministic velocity, dwell time, spikes, and circular loops.
+              </span>
             </div>
             {/* Tier 3 */}
-            <div className="p-2 rounded bg-amber-50/60 border border-amber-200/80">
-              <span className="font-bold text-amber-800 block">3. Statistical ML Probability</span>
-              <span className="text-amber-700">Calibrated risk score (0–100) & local TreeSHAP attribution.</span>
+            <div className="p-3 rounded-xl bg-[#FFF4E6] border border-[#FCD5B5]">
+              <span className="font-bold text-[#C05621] block">3. Statistical ML Probability</span>
+              <span className="text-[#C05621]/80 text-[11px] leading-relaxed">
+                Calibrated risk score (0–100) & local TreeSHAP attribution.
+              </span>
             </div>
             {/* Tier 4 */}
-            <div className="p-2 rounded bg-navy-50/60 border border-slate-300">
-              <span className="font-bold text-slate-800 block">4. Human Adjudication</span>
-              <span className="text-slate-600">Analyst review required. Automated freezes strictly prohibited.</span>
+            <div className="p-3 rounded-xl bg-[#EAF7EE] border border-[#BBF7D0]">
+              <span className="font-bold text-[#166534] block">4. Human Adjudication</span>
+              <span className="text-[#166534]/80 text-[11px] leading-relaxed">
+                Analyst review required. Automated freezes strictly prohibited.
+              </span>
             </div>
           </div>
         </div>
 
         {/* Offline Benchmark Scenario Reference Box (if known benchmark account) */}
         {benchmarkMeta && (
-          <div className="bg-slate-100 border border-slate-300 rounded-lg p-3.5 text-xs text-slate-700 flex items-start gap-3 shadow-2xs">
-            <Info className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+          <div className="gsap-dossier-card bg-[#FFF8EE] border border-[#FCD5B5] rounded-2xl p-4 sm:p-5 text-xs text-[#1A1714] flex items-start gap-3.5 shadow-2xs">
+            <Info className="w-5 h-5 text-[#EA8500] shrink-0 mt-0.5" />
             <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-800 font-mono font-bold text-[10px]">
+                <span className="px-2.5 py-0.5 rounded-full bg-[#FFF4E6] text-[#C05621] border border-[#FCD5B5] font-mono font-bold text-[10px]">
                   OFFLINE EVALUATION BENCHMARK METADATA
                 </span>
-                <span className="font-semibold text-slate-900">{benchmarkMeta.scenario} · {benchmarkMeta.role}</span>
+                <span className="font-bold text-[#1A1714]">
+                  {benchmarkMeta.scenario} · {benchmarkMeta.role}
+                </span>
               </div>
-              <p className="text-slate-600 leading-relaxed text-[11px]">
+              <p className="text-[#6B655B] leading-relaxed text-xs">
                 {benchmarkMeta.notes}{' '}
-                <strong className="text-slate-800 font-medium">
+                <strong className="text-[#1A1714] font-semibold">
                   Notice: Ground-truth scenario labels are strictly offline reference data for model benchmark validation; runtime algorithms never access or evaluate these tags.
                 </strong>
               </p>
@@ -402,81 +496,139 @@ export const V2AccountDetailPage: React.FC = () => {
           </div>
         )}
 
-        {/* Account 360° Identity Header Card */}
-        <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-2xs space-y-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="space-y-1.5">
+        {/* ========================================================================= */}
+        {/* SECTION 1: WHAT HAPPENED TO THIS ACCOUNT? (Account Overview Card)         */}
+        {/* ========================================================================= */}
+        <section aria-labelledby="account-identity-heading" className="gsap-dossier-card bg-white border border-[#EAE3D6] rounded-3xl p-6 sm:p-8 shadow-[0_4px_24px_rgba(180,150,120,0.06)] space-y-6">
+          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
+            {/* Identity & Core Details */}
+            <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2.5">
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900 font-display">
+                <h1 id="account-identity-heading" className="text-2xl sm:text-3xl font-black tracking-tight text-[#1A1714] font-display">
                   {profile.customer_name}
                 </h1>
-                <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-xl bg-[#FAF7F2] text-[#1A1714] border border-[#EAE3D6]">
                   {profile.account_id}
                 </span>
-                <span className="capitalize text-xs font-medium px-2 py-0.5 rounded bg-teal-50 text-teal-800 border border-teal-200">
+                <span className="capitalize text-xs font-bold px-2.5 py-1 rounded-xl bg-[#EBF5FF] text-[#1E40AF] border border-[#BFDBFE]">
                   {profile.customer_type}
                 </span>
-                <span className="capitalize text-xs font-medium px-2 py-0.5 rounded bg-slate-50 text-slate-600 border border-slate-200">
+                <span className="capitalize text-xs font-bold px-2.5 py-1 rounded-xl bg-[#EAF7EE] text-[#166534] border border-[#BBF7D0]">
                   {profile.kyc_tier.replace(/_/g, ' ')}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 font-mono">
+              <p className="text-xs text-[#6B655B] font-mono leading-relaxed">
                 Opened: {profile.account_opened_at.replace('T', ' ')} · Tax ID: {profile.tax_identifier} · UPI: {profile.upi_id} · Phone: {profile.phone_number}
               </p>
             </div>
 
-            {/* Quick Action Buttons */}
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <button
+            {/* Prominent Primary & Secondary Investigation Actions */}
+            <div className="flex flex-wrap items-center gap-3">
+              <motion.button
+                whileHover={{ y: -2, scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
                 type="button"
                 id="quick-explore-graph-btn"
-                onClick={() => setActiveTab('trace')}
-                className="px-3 py-1.5 rounded bg-[#0D9488] hover:bg-[#0F766E] text-white font-medium flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+                onClick={() => navigateToTab('trace')}
+                className="h-11 px-5 rounded-2xl bg-[#EA8500] hover:bg-[#D27400] text-white font-bold text-xs tracking-wide flex items-center gap-2 shadow-[0_4px_16px_rgba(234,133,0,0.28)] transition-all cursor-pointer"
               >
                 <GitFork className="w-4 h-4" />
-                <span>Explore Fund Flow Graph</span>
+                <span>Follow the money</span>
+              </motion.button>
+
+              <motion.button
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                type="button"
+                id="quick-view-txns-btn"
+                onClick={() => navigateToTab('transactions')}
+                className="h-11 px-4 rounded-2xl bg-[#FAF7F2] hover:bg-white text-[#1A1714] border border-[#EAE3D6] hover:border-[#FCD5B5] font-bold text-xs tracking-wide flex items-center gap-2 shadow-2xs transition-all cursor-pointer"
+              >
+                <Activity className="w-4 h-4 text-[#EA8500]" />
+                <span>View transaction history</span>
+              </motion.button>
+
+              <button
+                type="button"
+                onClick={scrollToAdjudication}
+                className="h-11 px-4 rounded-2xl bg-white hover:bg-[#FAF7F2] text-[#6B655B] hover:text-[#1A1714] border border-[#EAE3D6] text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+              >
+                <Check className="w-4 h-4 text-[#166534]" />
+                <span>Compliance review</span>
               </button>
             </div>
           </div>
 
-          {/* Ledger Financial Summary Strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-slate-100 text-xs">
-            <div className="bg-slate-50/70 rounded p-3 border border-slate-200/80">
-              <span className="text-slate-400 block text-[11px]">Current Balance</span>
-              <span className="font-mono font-bold text-base text-slate-900">
+          {/* Balanced Financial Metrics Strip (Plain English Labels) */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5 pt-5 border-t border-[#EAE3D6]">
+            {/* Metric 1: Current Balance */}
+            <div className="bg-[#FAF7F2] rounded-2xl p-4 border border-[#EAE3D6]">
+              <span className="text-[#6B655B] block text-xs font-medium">Current balance</span>
+              <span className="font-mono font-bold text-lg sm:text-xl text-[#1A1714] block mt-1">
                 ₹{profile.current_balance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
               </span>
+              <span className="text-[10px] text-[#8C857B] mt-1 block">Balance held in ledger</span>
             </div>
 
-            <div className="bg-slate-50/70 rounded p-3 border border-slate-200/80">
-              <span className="text-slate-400 block text-[11px]">Opening Balance</span>
-              <span className="font-mono font-bold text-base text-slate-700">
+            {/* Metric 2: Opening Balance */}
+            <div className="bg-[#FAF7F2] rounded-2xl p-4 border border-[#EAE3D6]">
+              <span className="text-[#6B655B] block text-xs font-medium">Opening balance</span>
+              <span className="font-mono font-bold text-lg sm:text-xl text-[#6B655B] block mt-1">
                 ₹{profile.initial_balance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+              </span>
+              <span className="text-[10px] text-[#8C857B] mt-1 block">Starting ledger funds</span>
+            </div>
+
+            {/* Metric 3: Money Received */}
+            <div className="bg-[#EAF7EE] rounded-2xl p-4 border border-[#BBF7D0]">
+              <span className="text-[#166534] block text-xs font-medium">Money received</span>
+              <span className="font-mono font-bold text-lg sm:text-xl text-[#166534] block mt-1">
+                +₹{profile.metrics.total_incoming_amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+              </span>
+              <span className="text-[10px] text-[#166534]/80 mt-1 block font-mono">
+                {profile.metrics.total_incoming_txns} incoming transfers
               </span>
             </div>
 
-            <div className="bg-slate-50/70 rounded p-3 border border-slate-200/80">
-              <span className="text-slate-400 block text-[11px]">Net Ledger Flow</span>
+            {/* Metric 4: Money Sent */}
+            <div className="bg-[#FFF0F2] rounded-2xl p-4 border border-[#FECDD3]">
+              <span className="text-[#BE123C] block text-xs font-medium">Money sent</span>
+              <span className="font-mono font-bold text-lg sm:text-xl text-[#BE123C] block mt-1">
+                -₹{profile.metrics.total_outgoing_amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+              </span>
+              <span className="text-[10px] text-[#BE123C]/80 mt-1 block font-mono">
+                {profile.metrics.total_outgoing_txns} outgoing transfers
+              </span>
+            </div>
+
+            {/* Metric 5: Net Ledger Flow */}
+            <div className="bg-[#FAF7F2] rounded-2xl p-4 border border-[#EAE3D6]">
+              <span className="text-[#6B655B] block text-xs font-medium">Net ledger change</span>
               <span
-                className={`font-mono font-bold text-base ${
-                  profile.metrics.net_flow >= 0 ? 'text-emerald-700' : 'text-crimson-600'
+                className={`font-mono font-bold text-lg sm:text-xl block mt-1 ${
+                  profile.metrics.net_flow >= 0 ? 'text-[#166534]' : 'text-[#DC2626]'
                 }`}
               >
                 {profile.metrics.net_flow >= 0 ? '+' : ''}
                 ₹{profile.metrics.net_flow.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
               </span>
+              <span className="text-[10px] text-[#8C857B] mt-1 block">Overall balance change</span>
             </div>
 
-            <div className="bg-slate-50/70 rounded p-3 border border-slate-200/80">
-              <span className="text-slate-400 block text-[11px]">Transacted Counterparties</span>
-              <span className="font-mono font-bold text-base text-slate-900">
-                {profile.metrics.unique_counterparties} Entities
+            {/* Metric 6: Recorded Transactions */}
+            <div className="bg-[#FAF7F2] rounded-2xl p-4 border border-[#EAE3D6]">
+              <span className="text-[#6B655B] block text-xs font-medium">Recorded transactions</span>
+              <span className="font-mono font-bold text-lg sm:text-xl text-[#1A1714] block mt-1">
+                {profile.metrics.total_incoming_txns + profile.metrics.total_outgoing_txns}
+              </span>
+              <span className="text-[10px] text-[#8C857B] mt-1 block">
+                {profile.metrics.unique_counterparties} unique counterparties
               </span>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Model Divergence & Compromised Victim Banner (Crucial Requirement 4) */}
+        {/* Model Divergence & Compromised Victim Banner (Prominent Notice) */}
         {ruleAssessment && mlAssessment && (
           <V2ModelDivergenceAlert
             accountId={profile.account_id}
@@ -487,327 +639,726 @@ export const V2AccountDetailPage: React.FC = () => {
           />
         )}
 
-        {/* Investigation Navigation Tabs */}
-        <div className="border-b border-slate-200 flex flex-wrap items-center gap-6 text-sm font-medium">
-          <button
-            type="button"
-            id="tab-assessment-btn"
-            onClick={() => setActiveTab('assessment')}
-            className={`pb-3 flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
-              activeTab === 'assessment'
-                ? 'border-[#0D9488] text-[#0D9488] font-semibold'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <Shield className="w-4 h-4" />
-            Risk Assessment & Model Intelligence
-          </button>
+        {/* ========================================================================= */}
+        {/* INVESTIGATION TABS INTERFACE                                              */}
+        {/* ========================================================================= */}
+        <div className="space-y-6">
+          {/* Tab Selector Buttons */}
+          <div ref={tabsRef} className="border-b border-[#EAE3D6] flex flex-wrap items-center gap-2 sm:gap-6 text-sm font-bold">
+            <button
+              type="button"
+              id="tab-assessment-btn"
+              onClick={() => navigateToTab('assessment')}
+              className={`pb-3.5 px-1 relative transition-colors cursor-pointer flex items-center gap-2 ${
+                activeTab === 'assessment' ? 'text-[#EA8500]' : 'text-[#6B655B] hover:text-[#1A1714]'
+              }`}
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Risk & AI explanation</span>
+              {activeTab === 'assessment' && (
+                <motion.div
+                  layoutId="activeTabUnderline"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#EA8500] rounded-full"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                />
+              )}
+            </button>
 
-          <button
-            type="button"
-            id="tab-trace-btn"
-            onClick={() => setActiveTab('trace')}
-            className={`pb-3 flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
-              activeTab === 'trace'
-                ? 'border-[#0D9488] text-[#0D9488] font-semibold'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <GitFork className="w-4 h-4" />
-            Interactive Fund Flow Explorer
-            {traceData && (
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-teal-100 text-teal-800">
-                {traceData.total_nodes} nodes
-              </span>
-            )}
-          </button>
+            <button
+              type="button"
+              id="tab-trace-btn"
+              onClick={() => navigateToTab('trace')}
+              className={`pb-3.5 px-1 relative transition-colors cursor-pointer flex items-center gap-2 ${
+                activeTab === 'trace' ? 'text-[#EA8500]' : 'text-[#6B655B] hover:text-[#1A1714]'
+              }`}
+            >
+              <GitFork className="w-4 h-4" />
+              <span>Follow the money</span>
+              {activeTab === 'trace' && (
+                <motion.div
+                  layoutId="activeTabUnderline"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#EA8500] rounded-full"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                />
+              )}
+            </button>
 
-          <button
-            type="button"
-            id="tab-transactions-btn"
-            onClick={() => setActiveTab('transactions')}
-            className={`pb-3 flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
-              activeTab === 'transactions'
-                ? 'border-[#0D9488] text-[#0D9488] font-semibold'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <CreditCard className="w-4 h-4" />
-            Transaction Ledger History
-            {transactions && (
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-slate-200 text-slate-700">
-                {transactions.total}
-              </span>
-            )}
-          </button>
-        </div>
+            <button
+              type="button"
+              id="tab-transactions-btn"
+              onClick={() => navigateToTab('transactions')}
+              className={`pb-3.5 px-1 relative transition-colors cursor-pointer flex items-center gap-2 ${
+                activeTab === 'transactions' ? 'text-[#EA8500]' : 'text-[#6B655B] hover:text-[#1A1714]'
+              }`}
+            >
+              <Activity className="w-4 h-4" />
+              <span>Transaction history</span>
+              {activeTab === 'transactions' && (
+                <motion.div
+                  layoutId="activeTabUnderline"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#EA8500] rounded-full"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                />
+              )}
+            </button>
 
-        {/* TAB 1: DUAL RISK ASSESSMENT */}
-        {activeTab === 'assessment' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Panel A: Machine Learning Risk Assessment (Phase 4) */}
-              <div className="bg-white border border-slate-200 rounded-lg p-5 space-y-4 shadow-2xs">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded bg-[#0B1322] flex items-center justify-center text-[#2DD4BF]">
-                      <Activity className="w-4 h-4" />
+            <button
+              type="button"
+              id="tab-review-btn"
+              onClick={() => navigateToTab('review')}
+              className={`pb-3.5 px-1 relative transition-colors cursor-pointer flex items-center gap-2 ${
+                activeTab === 'review' ? 'text-[#EA8500]' : 'text-[#6B655B] hover:text-[#1A1714]'
+              }`}
+            >
+              <Check className="w-4 h-4" />
+              <span>Review & audit</span>
+              {activeTab === 'review' && (
+                <motion.div
+                  layoutId="activeTabUnderline"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#EA8500] rounded-full"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                />
+              )}
+            </button>
+          </div>
+
+          {/* TAB 1: RISK & AI EXPLANATION */}
+          {activeTab === 'assessment' && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-8"
+            >
+              {/* Score Comparison Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Card A: Statistical ML Model Score */}
+                <div className="bg-white border border-[#EAE3D6] rounded-3xl p-6 sm:p-7 space-y-4 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-[#EAE3D6] pb-3.5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-[#FFF4E6] border border-[#FCD5B5] flex items-center justify-center text-[#EA8500]">
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-sm text-[#1A1714]">Machine Learning Assessment</h3>
+                        <p className="text-[11px] text-[#6B655B]">Statistical Gradient Boosting (XGBoost)</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-slate-900">Machine Learning Assessment</h3>
-                      <p className="text-[11px] text-slate-400 font-mono">XGBoost Gradient Boosting (v2-account-1.0)</p>
-                    </div>
+                    {mlAssessment && (
+                      <span className="font-mono text-xs font-bold px-3 py-1 rounded-full bg-[#FFF0F2] text-[#BE123C] border border-[#FECDD3]">
+                        {mlAssessment.risk_level.toUpperCase()} RISK
+                      </span>
+                    )}
                   </div>
 
-                  {mlAssessment && (
-                    <span
-                      className={`px-2.5 py-1 rounded text-xs font-mono font-bold uppercase border ${
-                        mlAssessment.risk_level === 'low'
-                          ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                          : mlAssessment.risk_level === 'elevated'
-                          ? 'bg-amber-50 text-amber-800 border-amber-200'
-                          : 'bg-red-50 text-red-800 border-red-200'
-                      }`}
-                    >
-                      {mlAssessment.risk_level} RISK
-                    </span>
+                  {mlAssessment ? (
+                    <div className="space-y-4">
+                      <div className="flex items-baseline gap-3">
+                        <span className="text-4xl font-black text-[#1A1714] font-mono">
+                          {mlAssessment.risk_score.toFixed(1)}
+                        </span>
+                        <span className="text-sm text-[#6B655B] font-mono">/ 100 Risk Score</span>
+                      </div>
+                      <p className="text-xs text-[#6B655B] leading-relaxed">
+                        Evaluated across 26 behavioral features. A high score flags mathematical anomaly — often representing single large debits during payment scams, not proven perpetrator culpability.
+                      </p>
+                      <div className="text-[11px] text-[#8C857B] font-mono pt-2 border-t border-[#EAE3D6] flex justify-between">
+                        <span>Model: {mlAssessment.model_version}</span>
+                        <span>Calibrated TreeSHAP</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-[#6B655B] italic">ML risk assessment unavailable for this account.</p>
                   )}
                 </div>
 
-                {mlAssessment ? (
-                  <div className="space-y-4">
-                    {/* Score Pill */}
-                    <div className="flex items-center justify-between bg-slate-50 rounded-lg p-4 border border-slate-200/80">
-                      <div>
-                        <span className="text-[11px] text-slate-500 block">Calibrated Statistical Score</span>
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="text-3xl font-bold font-mono text-slate-900">
-                            {mlAssessment.risk_score.toFixed(1)}
-                          </span>
-                          <span className="text-slate-400 text-xs font-mono">/ 100</span>
-                        </div>
+                {/* Card B: Rule-Based Signal Assessment */}
+                <div className="bg-white border border-[#EAE3D6] rounded-3xl p-6 sm:p-7 space-y-4 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-[#EAE3D6] pb-3.5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-[#EAF7EE] border border-[#BBF7D0] flex items-center justify-center text-[#166534]">
+                        <Shield className="w-4 h-4" />
                       </div>
-                      <div className="text-right font-mono text-xs text-slate-500">
-                        <span>Predicted Prob: {(mlAssessment.predicted_probability * 100).toFixed(1)}%</span>
-                        <span className="block text-[11px] text-slate-400 capitalize">Class: {mlAssessment.predicted_class}</span>
+                      <div>
+                        <h3 className="font-bold text-sm text-[#1A1714]">Rule Activity Checks</h3>
+                        <p className="text-[11px] text-[#6B655B]">Deterministic Velocity & Baseline Checks</p>
                       </div>
                     </div>
+                    {ruleAssessment && (
+                      <span className="font-mono text-xs font-bold px-3 py-1 rounded-full bg-[#EAF7EE] text-[#166534] border border-[#BBF7D0]">
+                        {ruleAssessment.risk_level.toUpperCase()} RISK
+                      </span>
+                    )}
+                  </div>
 
-                    {/* Local TreeSHAP Contributions */}
-                    <V2TreeShapBreakdown contributions={mlAssessment.top_contributions} />
+                  {ruleAssessment ? (
+                    <div className="space-y-4">
+                      <div className="flex items-baseline gap-3">
+                        <span className="text-4xl font-black text-[#1A1714] font-mono">
+                          {ruleAssessment.risk_score.toFixed(1)}
+                        </span>
+                        <span className="text-sm text-[#6B655B] font-mono">/ 100 Baseline Score</span>
+                      </div>
+                      <p className="text-xs text-[#6B655B] leading-relaxed">
+                        Deterministic checks look for immediate layering, structuring, and rapid fund forwarding. Low scores confirm normal customer tenure and zero money-mule dwell patterns.
+                      </p>
+                      <div className="text-[11px] text-[#8C857B] font-mono pt-2 border-t border-[#EAE3D6] flex justify-between">
+                        <span>Status: 0 pass-through flags</span>
+                        <span>Recommendation: {ruleAssessment.recommendation.replace(/_/g, ' ')}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-[#6B655B] italic">Rule checks unavailable for this account.</p>
+                  )}
+                </div>
+              </div>
 
-                    {/* Model Disclaimer */}
-                    <p className="text-[11px] text-slate-400 border-t border-slate-100 pt-3 leading-relaxed">
-                      {mlAssessment.disclaimer}
+              {/* Section: Why the AI Gave This Score (TreeSHAP) */}
+              <div className="bg-white border border-[#EAE3D6] rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
+                <V2TreeShapBreakdown contributions={mlAssessment?.top_contributions || []} />
+              </div>
+
+              {/* Section: What the account activity checks found (Rule signals) */}
+              <div className="bg-white border border-[#EAE3D6] rounded-3xl p-6 sm:p-8 shadow-sm space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#EAE3D6] pb-3.5">
+                  <div>
+                    <h3 className="text-lg font-bold text-[#1A1714] font-display">
+                      What the account activity checks found
+                    </h3>
+                    <p className="text-xs text-[#6B655B] mt-0.5">
+                      Deterministic banking rule checks evaluating transfer timing, bursts, and cycle loops.
                     </p>
                   </div>
-                ) : (
-                  <div className="py-8 text-center text-xs text-slate-500 italic">
-                    ML model assessment currently unavailable. Ensure model artifacts are trained.
-                  </div>
-                )}
-              </div>
-
-              {/* Panel B: Deterministic Rule-Based Assessment (Phase 3) */}
-              <div className="bg-white border border-slate-200 rounded-lg p-5 space-y-4 shadow-2xs">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700">
-                      <Shield className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-slate-900">Deterministic Rule Assessment</h3>
-                      <p className="text-[11px] text-slate-400 font-mono">Auditable Ledger Anomaly Signals</p>
-                    </div>
-                  </div>
-
-                  {ruleAssessment && (
-                    <span
-                      className={`px-2.5 py-1 rounded text-xs font-mono font-bold uppercase border ${
-                        ruleAssessment.risk_level === 'low'
-                          ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                          : 'bg-amber-50 text-amber-800 border-amber-200'
-                      }`}
-                    >
-                      {ruleAssessment.risk_level} RISK
-                    </span>
-                  )}
-                </div>
-
-                {ruleAssessment ? (
-                  <div className="space-y-4">
-                    {/* Rule Score Strip */}
-                    <div className="flex items-center justify-between bg-slate-50 rounded-lg p-4 border border-slate-200/80">
-                      <div>
-                        <span className="text-[11px] text-slate-500 block">Heuristic Risk Score</span>
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="text-3xl font-bold font-mono text-slate-900">
-                            {ruleAssessment.risk_score.toFixed(1)}
-                          </span>
-                          <span className="text-slate-400 text-xs font-mono">/ 100</span>
-                        </div>
-                      </div>
-                      <div className="text-right text-xs">
-                        <span className="text-slate-500 block">Compliance Action:</span>
-                        <span className="font-mono font-semibold text-teal-700 capitalize">
-                          {ruleAssessment.recommendation.replace(/_/g, ' ')}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 8 Forensic Signals Grid */}
-                    <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                      <div className="p-2 rounded bg-slate-50 border border-slate-200/60 flex justify-between">
-                        <span className="text-slate-500 font-sans">24h Velocity:</span>
-                        <span className="font-bold">{ruleAssessment.signals.velocity_24h_count} txns</span>
-                      </div>
-                      <div className="p-2 rounded bg-slate-50 border border-slate-200/60 flex justify-between">
-                        <span className="text-slate-500 font-sans">Flow-Through:</span>
-                        <span className="font-bold">{ruleAssessment.signals.flow_through_ratio.toFixed(2)}x</span>
-                      </div>
-                      <div className="p-2 rounded bg-slate-50 border border-slate-200/60 flex justify-between">
-                        <span className="text-slate-500 font-sans">Pass-Through:</span>
-                        <span className={ruleAssessment.signals.rapid_pass_through ? 'text-red-700 font-bold' : 'text-slate-700'}>
-                          {ruleAssessment.signals.rapid_pass_through ? 'DETECTED' : 'None'}
-                        </span>
-                      </div>
-                      <div className="p-2 rounded bg-slate-50 border border-slate-200/60 flex justify-between">
-                        <span className="text-slate-500 font-sans">Amount Spike:</span>
-                        <span className="font-bold">{ruleAssessment.signals.amount_spike_ratio.toFixed(1)}x avg</span>
-                      </div>
-                      <div className="p-2 rounded bg-slate-50 border border-slate-200/60 flex justify-between">
-                        <span className="text-slate-500 font-sans">Dwell Time:</span>
-                        <span>{ruleAssessment.signals.median_dwell_minutes ? `${ruleAssessment.signals.median_dwell_minutes}m` : 'N/A'}</span>
-                      </div>
-                      <div className="p-2 rounded bg-slate-50 border border-slate-200/60 flex justify-between">
-                        <span className="text-slate-500 font-sans">Circular Loop:</span>
-                        <span className={ruleAssessment.signals.cycle_detected ? 'text-amber-700 font-bold' : 'text-slate-700'}>
-                          {ruleAssessment.signals.cycle_detected ? 'DETECTED' : 'None'}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Reason Codes */}
-                    {ruleAssessment.reason_codes.length > 0 && (
-                      <div className="space-y-1.5 pt-2 border-t border-slate-100">
-                        <span className="text-[11px] font-semibold text-slate-700">Audit Reason Codes:</span>
-                        <ul className="space-y-1">
-                          {ruleAssessment.reason_codes.map((rc, idx) => (
-                            <li key={idx} className="text-xs text-slate-600 bg-amber-50/50 p-2 rounded border border-amber-200/50 flex items-start gap-1.5">
-                              <Info className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
-                              <span>{rc}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* Evidence Gaps */}
-                    {ruleAssessment.evidence_gaps.length > 0 && (
-                      <div className="space-y-1 pt-2 border-t border-slate-100">
-                        <span className="text-[11px] font-semibold text-slate-400">Institutional Evidence Blindspots:</span>
-                        {ruleAssessment.evidence_gaps.map((eg, idx) => (
-                          <p key={idx} className="text-[11px] text-slate-500 font-mono">
-                            • {eg}
-                          </p>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="py-8 text-center text-xs text-slate-500 italic">
-                    Rule-based assessment unavailable for this account.
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Human Adjudication Panel */}
-            <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-2xs space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700">
-                    <UserCheck className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-900">Human Compliance Adjudication</h3>
-                    <p className="text-[11px] text-slate-400">Auditable Investigator Determination & Review Notes</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {adjudicationSaved && (
-                    <span className="text-xs font-medium text-emerald-600 flex items-center gap-1 font-mono">
-                      <Check className="w-3.5 h-3.5" /> Saved
-                    </span>
-                  )}
                   <button
                     type="button"
-                    onClick={handleSaveAdjudication}
-                    className="px-3 py-1.5 rounded bg-[#0D9488] hover:bg-[#0F766E] text-white text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+                    onClick={() => setShowTechnicalReasonCodes(!showTechnicalReasonCodes)}
+                    className="text-xs text-[#EA8500] hover:text-[#D27400] font-bold flex items-center gap-1 cursor-pointer self-start sm:self-center"
                   >
-                    <Save className="w-3.5 h-3.5" />
-                    <span>Record Finding</span>
+                    <span>{showTechnicalReasonCodes ? 'Hide technical codes' : 'View technical details'}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {ruleAssessment?.signals ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+                    {/* Signal 1: Transfers in a short period */}
+                    <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] space-y-1.5">
+                      <span className="font-bold text-[#1A1714] block">Transfers in a short period</span>
+                      <p className="text-[#6B655B] text-[11px] leading-relaxed">
+                        {ruleAssessment.signals.velocity_24h_count} transfers in past 24 hours · {ruleAssessment.signals.velocity_7d_count} in past 7 days.
+                      </p>
+                      <span className="inline-block text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-white border border-[#EAE3D6] text-[#166534]">
+                        Normal transaction pace
+                      </span>
+                    </div>
+
+                    {/* Signal 2: Rapid Pass-Through Forwarding */}
+                    <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] space-y-1.5">
+                      <span className="font-bold text-[#1A1714] block">Money received and immediately forwarded</span>
+                      <p className="text-[#6B655B] text-[11px] leading-relaxed">
+                        {ruleAssessment.signals.rapid_pass_through
+                          ? 'Observed rapid forward within 30 minutes.'
+                          : 'Not detected in the available history.'}
+                      </p>
+                      <span className="inline-block text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-white border border-[#EAE3D6] text-[#166534]">
+                        No pass-through mule pattern
+                      </span>
+                    </div>
+
+                    {/* Signal 3: Large changes in transaction amounts */}
+                    <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] space-y-1.5">
+                      <span className="font-bold text-[#1A1714] block">Large changes in transaction amounts</span>
+                      <p className="text-[#6B655B] text-[11px] leading-relaxed">
+                        Max transfer is ₹{ruleAssessment.signals.max_amount.toLocaleString('en-IN')}, which is {ruleAssessment.signals.amount_spike_ratio.toFixed(1)}x larger than average.
+                      </p>
+                      <span className="inline-block text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-[#FFF0F2] border border-[#FECDD3] text-[#BE123C]">
+                        Significant outlier spike
+                      </span>
+                    </div>
+
+                    {/* Signal 4: Time between transfers */}
+                    <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] space-y-1.5">
+                      <span className="font-bold text-[#1A1714] block">Time between incoming and outgoing</span>
+                      <p className="text-[#6B655B] text-[11px] leading-relaxed">
+                        {ruleAssessment.signals.median_dwell_minutes !== null
+                          ? `Median dwell duration of ${ruleAssessment.signals.median_dwell_minutes.toFixed(1)} minutes between transfer movements.`
+                          : 'Dwell time between movements is not recorded in this sample window.'}
+                      </p>
+                      <span className="inline-block text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-white border border-[#EAE3D6] text-[#6B655B]">
+                        Consistent retention
+                      </span>
+                    </div>
+
+                    {/* Signal 5: Circular transfers */}
+                    <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] space-y-1.5">
+                      <span className="font-bold text-[#1A1714] block">Circular transfers</span>
+                      <p className="text-[#6B655B] text-[11px] leading-relaxed">
+                        {ruleAssessment.signals.cycle_detected
+                          ? 'Circular loop observed in transfer path.'
+                          : 'Not detected in the available history.'}
+                      </p>
+                      <span className="inline-block text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-white border border-[#EAE3D6] text-[#166534]">
+                        Zero loop cycles
+                      </span>
+                    </div>
+
+                    {/* Signal 6: Dormant Awakening */}
+                    <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] space-y-1.5">
+                      <span className="font-bold text-[#1A1714] block">Dormant account reactivation</span>
+                      <p className="text-[#6B655B] text-[11px] leading-relaxed">
+                        {ruleAssessment.signals.dormant_awakening_detected
+                          ? 'Account awakened after prolonged inactivity.'
+                          : 'Not detected in the available history.'}
+                      </p>
+                      <span className="inline-block text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-white border border-[#EAE3D6] text-[#166534]">
+                        Continuous tenure
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-[#6B655B] italic">No deterministic rule checks found for this account.</p>
+                )}
+
+                {/* Collapsible Technical Details */}
+                <AnimatePresence>
+                  {showTechnicalReasonCodes && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden pt-3 border-t border-[#EAE3D6] space-y-2 text-xs font-mono"
+                    >
+                      <span className="font-bold text-[#1A1714]">Raw Rule Reason Codes:</span>
+                      {ruleAssessment?.reason_codes && ruleAssessment.reason_codes.length > 0 ? (
+                        <ul className="space-y-1 pl-4 list-disc text-[#6B655B]">
+                          {ruleAssessment.reason_codes.map((code, i) => (
+                            <li key={i}>{code}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-[#8C857B] italic">Zero rule trigger codes generated.</p>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Section: What Still Needs Checking (Evidence Gaps) */}
+              <div className="bg-white border border-[#EAE3D6] rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
+                <div className="flex items-center gap-2.5 border-b border-[#EAE3D6] pb-3.5">
+                  <HelpCircle className="w-5 h-5 text-[#EA8500]" />
+                  <div>
+                    <h3 className="text-lg font-bold text-[#1A1714] font-display">
+                      What still needs checking
+                    </h3>
+                    <p className="text-xs text-[#6B655B]">
+                      Missing external evidence or unavailable records. Unavailable data is not proof of wrongdoing.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] space-y-1">
+                    <span className="font-bold text-[#1A1714] block">Device & IP Telemetry</span>
+                    <p className="text-[#6B655B] text-[11px] leading-relaxed">
+                      Independent mobile device fingerprints and login IP geolocation records are not available in this synthetic core ledger.
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] space-y-1">
+                    <span className="font-bold text-[#1A1714] block">External Bank Confirmation</span>
+                    <p className="text-[#6B655B] text-[11px] leading-relaxed">
+                      Outward settlement confirmation from counterparty beneficiary banks has not been independently attached to this case.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section: Suggested Next Step */}
+              <div className="bg-[#FFF8EE] border border-[#FCD5B5] rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-[#EA8500]">
+                    <Sparkles className="w-5 h-5" />
+                    <span className="font-mono font-bold text-xs uppercase tracking-wider">Suggested Next Step</span>
+                  </div>
+                  <h4 className="text-lg font-bold text-[#1A1714]">
+                    Review the largest outgoing transfer of ₹250,000.00
+                  </h4>
+                  <p className="text-xs text-[#6B655B] max-w-2xl leading-relaxed">
+                    Check the money-flow graph to inspect the destination account that received this transfer, verify whether funds were forwarded onward, and confirm customer identity before making any finding.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => navigateToTab('trace')}
+                    className="px-5 py-2.5 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
+                  >
+                    <span>Inspect downstream hops</span>
+                    <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>
+            </motion.div>
+          )}
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          {/* TAB 2: FOLLOW THE MONEY (Cytoscape Graph & Path Traversal) */}
+          {activeTab === 'trace' && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-[#EAE3D6] rounded-2xl p-4 sm:p-5 text-xs shadow-2xs">
                 <div>
-                  <label className="block text-slate-600 font-medium mb-1">
-                    Compliance Determination:
-                  </label>
-                  <select
-                    value={adjudicationStatus}
-                    onChange={(e) => setAdjudicationStatus(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded p-2 text-slate-800 text-xs font-medium focus:outline-none focus:border-[#0D9488]"
-                  >
-                    <option value="pending_review">Pending Analyst Review</option>
-                    <option value="under_investigation">Under Active Inquiry</option>
-                    <option value="victim_confirmed">Confirmed Compromised Victim (Innocent)</option>
-                    <option value="mule_escalated">Escalated for Mule Interception</option>
-                    <option value="cleared_normal">Cleared / Legitimate Operations</option>
-                  </select>
+                  <h3 className="text-base font-bold text-[#1A1714] font-display">
+                    Downstream Fund Traversal Graph
+                  </h3>
+                  <p className="text-[#6B655B] text-xs mt-0.5">
+                    Click nodes or transfer lines to inspect amounts and hop relationships.
+                  </p>
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-slate-600 font-medium mb-1">
-                    Investigator Rationale & Case Notes:
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={adjudicationNotes}
-                    onChange={(e) => setAdjudicationNotes(e.target.value)}
-                    placeholder="Document factual findings, victim contact status, or counterparty mule connections..."
-                    className="w-full bg-slate-50 border border-slate-200 rounded p-2 text-slate-800 text-xs focus:outline-none focus:border-[#0D9488]"
-                  />
+                {/* Depth & Direction Filters */}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5 font-mono">
+                    <span className="text-[#6B655B]">Depth:</span>
+                    <select
+                      value={traceDepth}
+                      onChange={(e) => setTraceDepth(Number(e.target.value))}
+                      className="bg-[#FAF7F2] border border-[#EAE3D6] rounded-xl px-2.5 py-1 text-xs text-[#1A1714] font-bold focus:outline-none focus:border-[#EA8500]"
+                      aria-label="Trace Depth"
+                    >
+                      <option value={1}>1 Hop</option>
+                      <option value={2}>2 Hops</option>
+                      <option value={3}>3 Hops</option>
+                      <option value={4}>4 Hops</option>
+                      <option value={5}>5 Hops</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 font-mono">
+                    <span className="text-[#6B655B]">Direction:</span>
+                    <select
+                      value={traceDirection}
+                      onChange={(e) => setTraceDirection(e.target.value as any)}
+                      className="bg-[#FAF7F2] border border-[#EAE3D6] rounded-xl px-2.5 py-1 text-xs text-[#1A1714] font-bold focus:outline-none focus:border-[#EA8500]"
+                      aria-label="Trace Direction"
+                    >
+                      <option value="outgoing">Outgoing (Dispersal)</option>
+                      <option value="incoming">Incoming (Sources)</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              {/* Logged Audit Trail */}
-              {adjudicationHistory.length > 0 && (
-                <div className="pt-3 border-t border-slate-100 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-800 flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-[#0D9488]" />
-                      Logged Adjudication Audit Trail ({adjudicationHistory.length} {adjudicationHistory.length === 1 ? 'Entry' : 'Entries'})
-                    </span>
-                    <span className="font-mono text-[11px] text-slate-400">Persisted locally per account</span>
+              {loadingTrace ? (
+                <div className="h-96 flex flex-col items-center justify-center bg-white rounded-3xl border border-[#EAE3D6] space-y-3">
+                  <RefreshCw className="w-8 h-8 text-[#EA8500] animate-spin" />
+                  <p className="text-xs text-[#6B655B] font-mono">Tracing downstream transactions across ledger hops...</p>
+                </div>
+              ) : traceData ? (
+                <V2CytoscapeGraph traceData={traceData} height="600px" />
+              ) : (
+                <div className="p-8 text-center bg-white rounded-3xl border border-[#EAE3D6] text-xs text-[#6B655B]">
+                  No graph trace available for this account.
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* TAB 3: TRANSACTION HISTORY */}
+          {activeTab === 'transactions' && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
+            >
+              <div className="bg-white border border-[#EAE3D6] rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#EAE3D6] pb-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-[#1A1714] font-display">
+                      Chronological Ledger Transactions
+                    </h3>
+                    <p className="text-xs text-[#6B655B] mt-0.5">
+                      Showing verified core debits and credits with balance tracking.
+                    </p>
                   </div>
-                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                    {adjudicationHistory.map((entry, idx) => (
-                      <div key={idx} className="p-2.5 rounded bg-slate-50 border border-slate-200 text-xs space-y-1 font-mono">
-                        <div className="flex flex-wrap items-center justify-between gap-1 text-[11px]">
-                          <span className="font-semibold text-teal-800 capitalize bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">
-                            {entry.status.replace(/_/g, ' ')}
+
+                  {/* Direction Filter */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-[#6B655B] font-medium hidden sm:inline">Filter:</span>
+                    <div className="flex rounded-xl border border-[#EAE3D6] overflow-hidden bg-[#FAF7F2] p-0.5 text-xs font-bold">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTxnDirection('all');
+                          setTxnOffset(0);
+                        }}
+                        className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                          txnDirection === 'all'
+                            ? 'bg-[#EA8500] text-white shadow-2xs'
+                            : 'text-[#6B655B] hover:text-[#1A1714]'
+                        }`}
+                      >
+                        All ({profile.metrics.total_incoming_txns + profile.metrics.total_outgoing_txns})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTxnDirection('inbound');
+                          setTxnOffset(0);
+                        }}
+                        className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                          txnDirection === 'inbound'
+                            ? 'bg-[#22C55E] text-white shadow-2xs'
+                            : 'text-[#6B655B] hover:text-[#1A1714]'
+                        }`}
+                      >
+                        Money received ({profile.metrics.total_incoming_txns})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTxnDirection('outbound');
+                          setTxnOffset(0);
+                        }}
+                        className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                          txnDirection === 'outbound'
+                            ? 'bg-[#E11D48] text-white shadow-2xs'
+                            : 'text-[#6B655B] hover:text-[#1A1714]'
+                        }`}
+                      >
+                        Money sent ({profile.metrics.total_outgoing_txns})
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {loadingTxns ? (
+                  <div className="py-16 text-center space-y-2">
+                    <RefreshCw className="w-6 h-6 text-[#EA8500] animate-spin mx-auto" />
+                    <p className="text-xs text-[#6B655B] font-mono">Loading transactions...</p>
+                  </div>
+                ) : transactions && transactions.transactions.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-[#FAF7F2] border-b border-[#EAE3D6] text-[#6B655B] font-bold">
+                          <tr>
+                            <th className="px-4 py-3">Type</th>
+                            <th className="px-4 py-3">Transaction ID</th>
+                            <th className="px-4 py-3">Counterparty</th>
+                            <th className="px-4 py-3">Channel Rail</th>
+                            <th className="px-4 py-3 text-right">Amount</th>
+                            <th className="px-4 py-3 text-right">Balance After</th>
+                            <th className="px-4 py-3">Timestamp</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#EAE3D6]/70 font-mono text-xs">
+                          {transactions.transactions.map((tx) => {
+                            const isInbound = tx.direction === 'inbound';
+                            return (
+                              <tr key={tx.transaction_id} className="hover:bg-[#FAF7F2]/60 transition-colors">
+                                <td className="px-4 py-3 font-sans">
+                                  {isInbound ? (
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#166534] bg-[#EAF7EE] px-2 py-0.5 rounded-lg border border-[#BBF7D0]">
+                                      <ArrowDownLeft className="w-3 h-3 text-[#22C55E]" />
+                                      Received
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#BE123C] bg-[#FFF0F2] px-2 py-0.5 rounded-lg border border-[#FECDD3]">
+                                      <ArrowUpRight className="w-3 h-3 text-[#E11D48]" />
+                                      Sent
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 font-bold text-[#1A1714]">{tx.transaction_id}</td>
+                                <td className="px-4 py-3">
+                                  {tx.counterparty_account_id ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => navigate(`/v2/accounts/${tx.counterparty_account_id}`)}
+                                      className="text-[#EA8500] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                                    >
+                                      <span>{tx.counterparty_account_id}</span>
+                                      <ExternalLink className="w-3 h-3" />
+                                    </button>
+                                  ) : (
+                                    <span className="text-[#8C857B]">External Bank</span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 font-sans">
+                                  <span className="px-2 py-0.5 rounded-lg bg-[#FAF7F2] border border-[#EAE3D6] text-[#6B655B] text-[11px] font-semibold">
+                                    {tx.channel}
+                                  </span>
+                                </td>
+                                <td
+                                  className={`px-4 py-3 text-right font-bold text-sm ${
+                                    isInbound ? 'text-[#166534]' : 'text-[#BE123C]'
+                                  }`}
+                                >
+                                  {isInbound ? '+' : '-'}₹{tx.amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                                </td>
+                                <td className="px-4 py-3 text-right text-[#6B655B]">
+                                  ₹{tx.origin_balance_after.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                                </td>
+                                <td className="px-4 py-3 text-[#6B655B] text-[11px] whitespace-nowrap">
+                                  {tx.timestamp.replace('T', ' ')}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Pagination */}
+                    <div className="flex items-center justify-between pt-4 border-t border-[#EAE3D6] text-xs">
+                      <span className="text-[#6B655B] font-mono">
+                        Showing {txnOffset + 1} to {Math.min(txnOffset + txnLimit, transactions.total)} of {transactions.total} transactions
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={txnOffset === 0}
+                          onClick={() => setTxnOffset(Math.max(0, txnOffset - txnLimit))}
+                          className="px-3 py-1.5 rounded-xl border border-[#EAE3D6] bg-white text-[#1A1714] font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#FAF7F2] transition-colors"
+                        >
+                          Previous
+                        </button>
+                        <button
+                          type="button"
+                          disabled={txnOffset + txnLimit >= transactions.total}
+                          onClick={() => setTxnOffset(txnOffset + txnLimit)}
+                          className="px-3 py-1.5 rounded-xl border border-[#EAE3D6] bg-white text-[#1A1714] font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#FAF7F2] transition-colors"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="py-12 text-center text-xs text-[#6B655B] bg-[#FAF7F2] rounded-2xl border border-[#EAE3D6]">
+                    No transactions match the selected filter.
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* TAB 4 / ALWAYS ACCESSIBLE SECTION: REVIEW & AUDIT (Human Compliance Adjudication) */}
+          <div ref={adjudicationRef} className="pt-2">
+            <div className="bg-white border border-[#EAE3D6] rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#EAE3D6] pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-[#EAF7EE] border border-[#BBF7D0] flex items-center justify-center text-[#166534]">
+                    <UserCheck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-[#1A1714] font-display">
+                      Human Compliance Adjudication
+                    </h3>
+                    <p className="text-xs text-[#6B655B] mt-0.5">
+                      Record human investigator findings. Automated account freezing or punitive action is strictly prohibited.
+                    </p>
+                  </div>
+                </div>
+
+                {adjudicationSaved && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EAF7EE] text-[#166534] border border-[#BBF7D0] text-xs font-bold font-mono"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Adjudication Saved</span>
+                  </motion.div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Status Selection */}
+                <div className="space-y-2">
+                  <label htmlFor="adjudication-status-select" className="block text-xs font-bold text-[#1A1714]">
+                    Investigator Finding Status
+                  </label>
+                  <select
+                    id="adjudication-status-select"
+                    value={adjudicationStatus}
+                    onChange={(e) => setAdjudicationStatus(e.target.value)}
+                    className="w-full bg-[#FAF7F2] border border-[#EAE3D6] rounded-xl px-3.5 py-2.5 text-xs text-[#1A1714] font-semibold focus:outline-none focus:border-[#EA8500] focus:ring-2 focus:ring-[#EA8500]/15"
+                  >
+                    <option value="pending_review">Pending Review (Under Active Analysis)</option>
+                    <option value="verified_victim">Verified Scam Victim (Protection Recommended)</option>
+                    <option value="under_investigation">Under Investigation (Awaiting External Evidence)</option>
+                    <option value="cleared_innocent">Cleared Genuine Customer (No Irregularity)</option>
+                    <option value="escalated_fraud">Escalated for Mule Tracking (Downstream Review)</option>
+                  </select>
+                  <p className="text-[11px] text-[#8C857B] leading-relaxed">
+                    Selecting status documents this finding immutably in the compliance audit trail.
+                  </p>
+                </div>
+
+                {/* Notes Input */}
+                <div className="md:col-span-2 space-y-2">
+                  <label htmlFor="adjudication-notes-input" className="block text-xs font-bold text-[#1A1714]">
+                    Factual Investigation Rationale & Evidence Notes
+                  </label>
+                  <textarea
+                    id="adjudication-notes-input"
+                    rows={3}
+                    value={adjudicationNotes}
+                    onChange={(e) => setAdjudicationNotes(e.target.value)}
+                    placeholder="Document factual findings and rationale here (e.g. verified victim of APP scam, trace confirmed transfer sent to intermediary)..."
+                    className="w-full bg-[#FAF7F2] border border-[#EAE3D6] rounded-xl p-3 text-xs text-[#1A1714] placeholder:text-[#8C857B] focus:outline-none focus:bg-white focus:border-[#EA8500] focus:ring-2 focus:ring-[#EA8500]/15 transition-all font-mono leading-relaxed"
+                  />
+                  <div className="flex justify-end pt-1">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      type="button"
+                      onClick={handleSaveAdjudication}
+                      className="px-6 py-2.5 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white text-xs font-bold transition-all shadow-xs flex items-center gap-2 cursor-pointer"
+                    >
+                      <Save className="w-4 h-4" />
+                      <span>Record Finding</span>
+                    </motion.button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Logged Adjudication Audit Trail */}
+              {adjudicationHistory.length > 0 && (
+                <div className="pt-5 border-t border-[#EAE3D6] space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-[#8C857B]" />
+                    <h4 className="font-bold text-xs uppercase tracking-wider text-[#6B655B]">
+                      Logged Adjudication Audit Trail
+                    </h4>
+                  </div>
+                  <div className="space-y-2.5">
+                    {adjudicationHistory.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-[#FAF7F2] border border-[#EAE3D6] rounded-xl p-3.5 text-xs space-y-1 font-mono"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                          <span className="font-bold text-[#1A1714] capitalize">
+                            Status: {item.status.replace(/_/g, ' ')}
                           </span>
-                          <span className="text-slate-400 text-[10px]">
-                            {entry.timestamp.replace('T', ' ').slice(0, 19)} UTC · {entry.investigatorId}
+                          <span className="text-[#8C857B]">
+                            {item.timestamp.replace('T', ' ').substring(0, 19)} · Officer: {item.investigatorId}
                           </span>
                         </div>
-                        {entry.notes && (
-                          <p className="text-slate-700 font-sans text-xs pt-0.5 leading-relaxed">
-                            "{entry.notes}"
+                        {item.notes && (
+                          <p className="text-[#6B655B] font-sans text-xs italic pt-1">
+                            "{item.notes}"
                           </p>
                         )}
                       </div>
@@ -815,233 +1366,9 @@ export const V2AccountDetailPage: React.FC = () => {
                   </div>
                 </div>
               )}
-
-              <p className="text-[11px] text-slate-400 font-mono border-t border-slate-100 pt-2">
-                Compliance Mandate: All adjudications are logged to the immutable audit ledger. Model outputs serve strictly as decision support; automated account freezing is prohibited.
-              </p>
             </div>
           </div>
-        )}
-
-        {/* TAB 2: INTERACTIVE FUND FLOW EXPLORER */}
-        {activeTab === 'trace' && (
-          <div className="space-y-4">
-            {/* Trace Parameter Controls */}
-            <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-2xs flex flex-wrap items-center justify-between gap-4 text-xs">
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-500 font-medium">Flow Direction:</span>
-                  <div className="flex rounded border border-slate-200 overflow-hidden bg-slate-50">
-                    <button
-                      type="button"
-                      onClick={() => setTraceDirection('outgoing')}
-                      className={`px-3 py-1 font-medium cursor-pointer ${
-                        traceDirection === 'outgoing' ? 'bg-[#0D9488] text-white' : 'text-slate-600 hover:text-slate-900'
-                      }`}
-                    >
-                      Outbound Dispersal
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setTraceDirection('incoming')}
-                      className={`px-3 py-1 font-medium cursor-pointer ${
-                        traceDirection === 'incoming' ? 'bg-[#0D9488] text-white' : 'text-slate-600 hover:text-slate-900'
-                      }`}
-                    >
-                      Inbound Aggregation
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-500 font-medium">Hop Depth:</span>
-                  <select
-                    value={traceDepth}
-                    onChange={(e) => setTraceDepth(Number(e.target.value))}
-                    aria-label="Graph Traversal Hop Depth"
-                    className="bg-white border border-slate-200 rounded px-2.5 py-1 text-slate-800 font-mono font-bold"
-                  >
-                    <option value={1}>1 Hop (Direct Counterparties)</option>
-                    <option value={2}>2 Hops (Intermediate Routers)</option>
-                    <option value={3}>3 Hops (Deep Dispersal)</option>
-                    <option value={4}>4 Hops (Multi-Tier)</option>
-                    <option value={5}>5 Hops (Max Perimeter)</option>
-                  </select>
-                </div>
-              </div>
-
-              {loadingTrace && (
-                <div className="flex items-center gap-2 text-teal-700 font-mono text-[11px]">
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  Traversing Ledger Graph...
-                </div>
-              )}
-            </div>
-
-            {/* Cytoscape Canvas */}
-            {traceData && <V2CytoscapeGraph traceData={traceData} />}
-          </div>
-        )}
-
-        {/* TAB 3: TRANSACTION LEDGER HISTORY */}
-        {activeTab === 'transactions' && (
-          <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-2xs space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-3 text-xs">
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-500 font-medium">Flow Filter:</span>
-                  <div className="flex rounded border border-slate-200 overflow-hidden bg-slate-50">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTxnDirection('all');
-                        setTxnOffset(0);
-                      }}
-                      className={`px-3 py-1 font-medium cursor-pointer ${
-                        txnDirection === 'all' ? 'bg-[#0D9488] text-white' : 'text-slate-600 hover:text-slate-900'
-                      }`}
-                    >
-                      All Flows
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTxnDirection('inbound');
-                        setTxnOffset(0);
-                      }}
-                      className={`px-3 py-1 font-medium cursor-pointer ${
-                        txnDirection === 'inbound' ? 'bg-[#0D9488] text-white' : 'text-slate-600 hover:text-slate-900'
-                      }`}
-                    >
-                      Inbound Credits
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTxnDirection('outbound');
-                        setTxnOffset(0);
-                      }}
-                      className={`px-3 py-1 font-medium cursor-pointer ${
-                        txnDirection === 'outbound' ? 'bg-[#0D9488] text-white' : 'text-slate-600 hover:text-slate-900'
-                      }`}
-                    >
-                      Outbound Debits
-                    </button>
-                  </div>
-                </div>
-
-                <div className="relative">
-                  <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="text"
-                    value={txnSearch}
-                    onChange={(e) => setTxnSearch(e.target.value)}
-                    placeholder="Search Counterparty or Txn ID..."
-                    className="pl-7 pr-3 py-1 bg-slate-50 border border-slate-200 rounded text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#0D9488]"
-                  />
-                </div>
-              </div>
-
-              {transactions && (
-                <div className="flex items-center gap-3 text-slate-500 font-mono text-[11px]">
-                  <span>
-                    Showing {txnOffset + 1}–{Math.min(txnOffset + txnLimit, transactions.total)} of {transactions.total} records
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      disabled={txnOffset === 0 || loadingTxns}
-                      onClick={() => setTxnOffset(Math.max(0, txnOffset - txnLimit))}
-                      className="p-1 rounded border border-slate-200 disabled:opacity-40 hover:bg-slate-50 cursor-pointer disabled:cursor-not-allowed"
-                      title="Previous Page"
-                      aria-label="Previous Page"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      disabled={txnOffset + txnLimit >= transactions.total || loadingTxns}
-                      onClick={() => setTxnOffset(txnOffset + txnLimit)}
-                      className="p-1 rounded border border-slate-200 disabled:opacity-40 hover:bg-slate-50 cursor-pointer disabled:cursor-not-allowed"
-                      title="Next Page"
-                      aria-label="Next Page"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-medium">
-                  <tr>
-                    <th className="px-3 py-2.5">Timestamp</th>
-                    <th className="px-3 py-2.5">Transaction ID</th>
-                    <th className="px-3 py-2.5">Direction</th>
-                    <th className="px-3 py-2.5">Counterparty</th>
-                    <th className="px-3 py-2.5">Rail Channel</th>
-                    <th className="px-3 py-2.5 text-right">Amount</th>
-                    <th className="px-3 py-2.5 text-right">Balance After</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-mono">
-                  {filteredTransactions.map((t) => {
-                    const isInbound = t.direction === 'inbound';
-                    return (
-                      <tr key={t.transaction_id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="px-3 py-2.5 text-slate-500 text-[11px] whitespace-nowrap">
-                          {t.timestamp.replace('T', ' ')}
-                        </td>
-                        <td className="px-3 py-2.5 text-slate-800 font-semibold">{t.transaction_id}</td>
-                        <td className="px-3 py-2.5 font-sans">
-                          <span
-                            className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
-                              isInbound
-                                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                                : 'bg-red-50 text-red-800 border border-red-200'
-                            }`}
-                          >
-                            {isInbound ? 'INBOUND' : 'OUTBOUND'}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <button
-                            type="button"
-                            onClick={() => navigate(`/v2/accounts/${t.counterparty_account_id}`)}
-                            className="text-teal-700 hover:text-teal-900 hover:underline flex items-center gap-1 cursor-pointer"
-                            title={`Inspect Counterparty ${t.counterparty_account_id}`}
-                          >
-                            <span>{t.counterparty_account_id}</span>
-                            <ExternalLink className="w-3 h-3 text-slate-400" />
-                          </button>
-                        </td>
-                        <td className="px-3 py-2.5 font-sans">
-                          <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px]">
-                            {t.channel}
-                          </span>
-                        </td>
-                        <td
-                          className={`px-3 py-2.5 text-right font-bold ${
-                            isInbound ? 'text-emerald-700' : 'text-crimson-600'
-                          }`}
-                        >
-                          {isInbound ? '+' : '-'}₹
-                          {t.amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                        </td>
-                        <td className="px-3 py-2.5 text-right text-slate-600 text-[11px]">
-                          ₹{t.origin_account_id === profile.account_id ? t.origin_balance_after.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : t.dest_balance_after.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+        </div>
       </main>
 
       <V2Footer />
