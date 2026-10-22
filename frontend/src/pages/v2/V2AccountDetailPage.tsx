@@ -60,6 +60,8 @@ import { V2TransactionHistogram } from '../../components/v2/V2TransactionHistogr
 import { V2ActivityTimeline } from '../../components/v2/V2ActivityTimeline';
 import { V2MoneyFlowComparison } from '../../components/v2/V2MoneyFlowComparison';
 import { V2NextStepsRecommendation } from '../../components/v2/V2NextStepsRecommendation';
+import { V2BankingHeroHeader } from '../../components/v2/V2BankingHeroHeader';
+import { V2BankingDashboardRow } from '../../components/v2/V2BankingDashboardRow';
 
 interface AdjudicationEntry {
   status: string;
@@ -428,126 +430,16 @@ export const V2AccountDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Account Header Hero Banner */}
-        <div className="bg-white rounded-3xl border border-[#EAE3D6] p-6 sm:p-8 shadow-xs gsap-fade-in space-y-5">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            {/* Account Identity */}
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1A1714] font-display tracking-tight">
-                  {profile?.customer_name || 'Account Dossier'}
-                </h1>
-                <button
-                  onClick={handleCopyId}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] font-mono text-xs font-bold text-[#1A1714] hover:bg-[#F2ECE1] transition-colors"
-                  title="Copy Account ID"
-                >
-                  <span>{accountId}</span>
-                  {copiedId ? <Check className="w-3.5 h-3.5 text-[#10B981]" /> : <Copy className="w-3.5 h-3.5 text-[#8C857B]" />}
-                </button>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#EAF7EE] text-[#166534] border border-[#BBF7D0] uppercase tracking-wider">
-                  {profile?.status || 'Active'}
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FAF7F2] text-[#6B655B] border border-[#EAE3D6] uppercase tracking-wider">
-                  {profile?.customer_type || 'Retail'}
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FAF7F2] text-[#6B655B] border border-[#EAE3D6] uppercase tracking-wider">
-                  {profile?.kyc_tier.replace(/_/g, ' ') || 'Tier 2'}
-                </span>
-              </div>
-
-              {/* Profile Details Subtext */}
-              <div className="flex flex-wrap items-center gap-4 text-xs text-[#6B655B]">
-                <span>UPI: <strong className="font-mono text-[#1A1714]">{profile?.upi_id || 'N/A'}</strong></span>
-                <span>•</span>
-                <span>Phone: <strong className="font-mono text-[#1A1714]">{profile?.phone_number || 'N/A'}</strong></span>
-                <span>•</span>
-                <span>Email: <strong className="font-mono text-[#1A1714]">{profile?.email || 'N/A'}</strong></span>
-                <span>•</span>
-                <span>Opened: <strong className="font-mono text-[#1A1714]">{profile?.account_opened_at ? new Date(profile.account_opened_at).toLocaleDateString('en-IN') : 'N/A'}</strong></span>
-              </div>
-            </div>
-
-            {/* Live Analysis Trigger Action */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <button
-                id="btn-run-live-analysis"
-                onClick={handleRunLiveAnalysis}
-                disabled={isAnalyzing}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#EA8500] hover:bg-[#D27400] disabled:bg-[#EA8500]/50 text-white font-bold text-sm transition-all shadow-sm hover:shadow hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
-              >
-                {isAnalyzing ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>Analyzing Ledger & Running ML...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4" />
-                    <span>{liveAnalysis ? 'Re-run Live Analysis' : 'Run Live Analysis'}</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Ledger Facts 6-Card Metric Strip */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 pt-4 border-t border-[#FAF7F2]">
-            {/* Current Balance */}
-            <div className="bg-[#FAF7F2] rounded-2xl p-3.5 border border-[#EAE3D6]">
-              <span className="text-[11px] font-medium text-[#6B655B] block mb-1">Current Ledger Balance</span>
-              <span className="text-base sm:text-lg font-bold text-[#1A1714] font-mono block">
-                ₹{profile?.current_balance.toLocaleString('en-IN', { maximumFractionDigits: 2 }) || '0.00'}
-              </span>
-              <span className="text-[10px] text-[#8C857B] block mt-0.5">Initial: ₹{profile?.initial_balance.toLocaleString('en-IN')}</span>
-            </div>
-
-            {/* Money Received */}
-            <div className="bg-[#FAF7F2] rounded-2xl p-3.5 border border-[#EAE3D6]">
-              <span className="text-[11px] font-medium text-[#6B655B] block mb-1">Money Received</span>
-              <span className="text-base sm:text-lg font-bold text-[#10B981] font-mono block">
-                ₹{profile?.metrics.total_incoming_amount.toLocaleString('en-IN', { maximumFractionDigits: 2 }) || '0.00'}
-              </span>
-              <span className="text-[10px] text-[#8C857B] block mt-0.5">{profile?.metrics.total_incoming_txns || 0} incoming credits</span>
-            </div>
-
-            {/* Money Sent */}
-            <div className="bg-[#FAF7F2] rounded-2xl p-3.5 border border-[#EAE3D6]">
-              <span className="text-[11px] font-medium text-[#6B655B] block mb-1">Money Sent</span>
-              <span className="text-base sm:text-lg font-bold text-[#EA8500] font-mono block">
-                ₹{profile?.metrics.total_outgoing_amount.toLocaleString('en-IN', { maximumFractionDigits: 2 }) || '0.00'}
-              </span>
-              <span className="text-[10px] text-[#8C857B] block mt-0.5">{profile?.metrics.total_outgoing_txns || 0} outgoing debits</span>
-            </div>
-
-            {/* Total Transactions */}
-            <div className="bg-[#FAF7F2] rounded-2xl p-3.5 border border-[#EAE3D6]">
-              <span className="text-[11px] font-medium text-[#6B655B] block mb-1">Available Transactions</span>
-              <span className="text-base sm:text-lg font-bold text-[#1A1714] font-mono block">
-                {(profile?.metrics.total_incoming_txns || 0) + (profile?.metrics.total_outgoing_txns || 0)}
-              </span>
-              <span className="text-[10px] text-[#8C857B] block mt-0.5">Double-entry ledger</span>
-            </div>
-
-            {/* Counterparties */}
-            <div className="bg-[#FAF7F2] rounded-2xl p-3.5 border border-[#EAE3D6]">
-              <span className="text-[11px] font-medium text-[#6B655B] block mb-1">Counterparties</span>
-              <span className="text-base sm:text-lg font-bold text-[#1A1714] font-mono block">
-                {profile?.metrics.unique_counterparties || 0}
-              </span>
-              <span className="text-[10px] text-[#8C857B] block mt-0.5">Distinct trading entities</span>
-            </div>
-
-            {/* Latest Activity */}
-            <div className="bg-[#FAF7F2] rounded-2xl p-3.5 border border-[#EAE3D6]">
-              <span className="text-[11px] font-medium text-[#6B655B] block mb-1">Latest Activity</span>
-              <span className="text-xs sm:text-sm font-bold text-[#1A1714] font-mono block truncate" title={profile?.metrics.last_activity_at || 'None'}>
-                {profile?.metrics.last_activity_at ? new Date(profile.metrics.last_activity_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'No Activity'}
-              </span>
-              <span className="text-[10px] text-[#8C857B] block mt-0.5">Most recent ledger event</span>
-            </div>
-          </div>
-        </div>
+        {/* Reference Dashboard: Header Navigation and Hero Row A */}
+        <V2BankingHeroHeader
+          profile={profile}
+          liveAnalysis={liveAnalysis}
+          isAnalyzing={isAnalyzing}
+          onRunLiveAnalysis={handleRunLiveAnalysis}
+          onNavigateTab={setActiveTab}
+          activeTab={activeTab}
+          transactionCount={(profile?.metrics.total_incoming_txns || 0) + (profile?.metrics.total_outgoing_txns || 0)}
+        />
 
         {/* Evidence Hierarchy Guiding Notice */}
         <div className="bg-white rounded-2xl border border-[#EAE3D6] p-4 text-xs text-[#6B655B] flex flex-col md:flex-row md:items-center justify-between gap-3 gsap-fade-in shadow-2xs">
@@ -574,67 +466,7 @@ export const V2AccountDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Workspace Navigation Tabs */}
-        <div ref={tabsRef} className="flex border-b border-[#EAE3D6] gap-2 overflow-x-auto scrollbar-none pb-px">
-          <button
-            onClick={() => setActiveTab('assessment')}
-            className={`px-4 py-2.5 text-xs font-bold rounded-t-xl transition-all border-b-2 flex items-center gap-2 shrink-0 ${
-              activeTab === 'assessment'
-                ? 'border-[#EA8500] text-[#EA8500] bg-white shadow-2xs'
-                : 'border-transparent text-[#6B655B] hover:text-[#1A1714] hover:bg-[#FAF7F2]'
-            }`}
-          >
-            <Shield className="w-4 h-4" />
-            <span>Analysis & Risk Intelligence</span>
-            {liveAnalysis && (
-              <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-            )}
-          </button>
-
-          <button
-            onClick={() => setActiveTab('trace')}
-            className={`px-4 py-2.5 text-xs font-bold rounded-t-xl transition-all border-b-2 flex items-center gap-2 shrink-0 ${
-              activeTab === 'trace'
-                ? 'border-[#EA8500] text-[#EA8500] bg-white shadow-2xs'
-                : 'border-transparent text-[#6B655B] hover:text-[#1A1714] hover:bg-[#FAF7F2]'
-            }`}
-          >
-            <GitFork className="w-4 h-4" />
-            <span>Follow the Money (Graph Trace)</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('transactions')}
-            className={`px-4 py-2.5 text-xs font-bold rounded-t-xl transition-all border-b-2 flex items-center gap-2 shrink-0 ${
-              activeTab === 'transactions'
-                ? 'border-[#EA8500] text-[#EA8500] bg-white shadow-2xs'
-                : 'border-transparent text-[#6B655B] hover:text-[#1A1714] hover:bg-[#FAF7F2]'
-            }`}
-          >
-            <Layers className="w-4 h-4" />
-            <span>Transaction Ledger</span>
-            <span className="px-1.5 py-0.2 rounded-full bg-[#FAF7F2] border border-[#EAE3D6] text-[10px] font-mono text-[#6B655B]">
-              {filteredTransactions.length}
-            </span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('review')}
-            className={`px-4 py-2.5 text-xs font-bold rounded-t-xl transition-all border-b-2 flex items-center gap-2 shrink-0 ${
-              activeTab === 'review'
-                ? 'border-[#EA8500] text-[#EA8500] bg-white shadow-2xs'
-                : 'border-transparent text-[#6B655B] hover:text-[#1A1714] hover:bg-[#FAF7F2]'
-            }`}
-          >
-            <UserCheck className="w-4 h-4" />
-            <span>Compliance & Audit</span>
-            {adjudicationHistory.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full bg-[#FAF7F2] border border-[#EAE3D6] text-[10px] font-mono text-[#6B655B]">
-                {adjudicationHistory.length}
-              </span>
-            )}
-          </button>
-        </div>
+        <div ref={tabsRef} className="hidden" />
 
         {/* ========================================================================= */}
         {/* TAB 1: ANALYSIS & RISK INTELLIGENCE                                       */}
@@ -655,36 +487,46 @@ export const V2AccountDetailPage: React.FC = () => {
 
             {/* Case A: Before Fresh Live Analysis is Run */}
             {!liveAnalysis && !isAnalyzing && (
-              <div className="bg-white rounded-3xl border border-[#EAE3D6] p-8 sm:p-12 text-center shadow-xs space-y-6">
-                <div className="w-20 h-20 rounded-3xl bg-[#FFF4E6] border border-[#FCD5B5] flex items-center justify-center text-[#EA8500] mx-auto shadow-sm">
-                  <Sparkles className="w-10 h-10" />
+              <div className="space-y-6">
+                <div className="bg-white rounded-3xl border border-[#EAE3D6] p-8 sm:p-12 text-center shadow-xs space-y-6">
+                  <div className="w-20 h-20 rounded-3xl bg-[#FFF4E6] border border-[#FCD5B5] flex items-center justify-center text-[#EA8500] mx-auto shadow-sm">
+                    <Sparkles className="w-10 h-10" />
+                  </div>
+
+                  <div className="max-w-2xl mx-auto space-y-2">
+                    <h3 className="text-2xl font-extrabold text-[#1A1714] font-display">
+                      Account Analysis Pending for Current Session
+                    </h3>
+                    <p className="text-sm text-[#6B655B] leading-relaxed">
+                      Analyse this account's recorded activity, check for unusual patterns, estimate risk, and explain what an investigator should review.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <button
+                      onClick={handleRunLiveAnalysis}
+                      className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-2xl bg-[#EA8500] hover:bg-[#D27400] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                    >
+                      <Play className="w-4 h-4 fill-current" />
+                      <span>Run Live Analysis</span>
+                    </button>
+                  </div>
+
+                  {/* Honest initial state note */}
+                  <div className="max-w-xl mx-auto pt-4 border-t border-[#FAF7F2] text-xs text-[#8C857B] leading-relaxed">
+                    <p>
+                      <strong className="text-[#6B655B]">Honest Initial State Guarantee:</strong> No precomputed, stale, or synthetic demo scores are displayed. Clicking "Run Live Analysis" calculates fresh feature vectors from the latest ledger transactions and runs the loaded XGBoost model with TreeSHAP.
+                    </p>
+                  </div>
                 </div>
 
-                <div className="max-w-2xl mx-auto space-y-2">
-                  <h3 className="text-2xl font-extrabold text-[#1A1714] font-display">
-                    Account Analysis Pending for Current Session
-                  </h3>
-                  <p className="text-sm text-[#6B655B] leading-relaxed">
-                    Analyse this account's recorded activity, check for unusual patterns, estimate risk, and explain what an investigator should review.
-                  </p>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <button
-                    onClick={handleRunLiveAnalysis}
-                    className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-2xl bg-[#EA8500] hover:bg-[#D27400] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                  >
-                    <Play className="w-4 h-4 fill-current" />
-                    <span>Run Live Analysis</span>
-                  </button>
-                </div>
-
-                {/* Honest initial state note */}
-                <div className="max-w-xl mx-auto pt-4 border-t border-[#FAF7F2] text-xs text-[#8C857B] leading-relaxed">
-                  <p>
-                    <strong className="text-[#6B655B]">Honest Initial State Guarantee:</strong> No precomputed, stale, or synthetic demo scores are displayed. Clicking "Run Live Analysis" calculates fresh feature vectors from the latest ledger transactions and runs the loaded XGBoost model with TreeSHAP.
-                  </p>
-                </div>
+                {/* Reference Dashboard Row 2: 3 Side-by-Side Cards (Pending Baseline) */}
+                <V2BankingDashboardRow
+                  liveAnalysis={null}
+                  transactions={allTxns}
+                  onSelectTransaction={(txn) => setSelectedTxnForDetail(txn)}
+                  onViewAllTransactions={() => setActiveTab('transactions')}
+                />
               </div>
             )}
 
@@ -735,7 +577,7 @@ export const V2AccountDetailPage: React.FC = () => {
                   {/* High Level Key Findings Strip */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                     <div className="bg-[#FAF7F2] rounded-2xl p-4 border border-[#EAE3D6] space-y-1">
-                      <span className="text-[11px] font-bold text-[#8C857B] uppercase block">ML Statistical Estimate</span>
+                      <span className="text-[11px] font-bold text-[#8C857B] uppercase block">ML Statistical Score</span>
                       <div className="flex items-baseline gap-2">
                         <span className="text-2xl font-extrabold text-[#1A1714] font-mono">
                           {liveAnalysis.ml_assessment.risk_score.toFixed(1)}
@@ -780,14 +622,22 @@ export const V2AccountDetailPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 2. Side-by-Side Overall Risk Comparison Meters */}
+                {/* 2. Reference Dashboard Row 2: 3 Side-by-Side Cards (Live Evaluated) */}
+                <V2BankingDashboardRow
+                  liveAnalysis={liveAnalysis}
+                  transactions={allTxns}
+                  onSelectTransaction={(txn) => setSelectedTxnForDetail(txn)}
+                  onViewAllTransactions={() => setActiveTab('transactions')}
+                />
+
+                {/* 3. Side-by-Side Overall Risk Comparison Meters */}
                 <V2RiskComparisonMeters
                   mlAssessment={liveAnalysis.ml_assessment}
                   ruleAssessment={liveAnalysis.rule_assessment}
                   divergence={liveAnalysis.divergence}
                 />
 
-                {/* 3. Balanced 2-Column Responsive Grid for Interactive Charts */}
+                {/* 4. Balanced 2-Column Responsive Grid for Interactive Charts */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Chart A: Transaction Amount Histogram with Click-to-Filter */}
                   <V2TransactionHistogram
@@ -796,7 +646,6 @@ export const V2AccountDetailPage: React.FC = () => {
                     onSelectBin={(bin) => {
                       setSelectedHistogramBin(bin);
                       if (bin) {
-                        // When user clicks a bin, also navigate or scroll to transaction ledger if desired
                         setTxnPage(0);
                       }
                     }}
@@ -813,38 +662,37 @@ export const V2AccountDetailPage: React.FC = () => {
                   />
                 </div>
 
-                {/* 4. Balanced 2-Column Responsive Grid for Money Flow & TreeSHAP */}
+                {/* 5. Balanced 2-Column Responsive Grid: TreeSHAP (Left) + Next Steps (Right) */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Chart C: Money Received vs Money Sent Comparative Reconciler */}
-                  <V2MoneyFlowComparison
-                    totalReceived={liveAnalysis.ledger_snapshot.total_received}
-                    totalSent={liveAnalysis.ledger_snapshot.total_sent}
-                    currentBalance={liveAnalysis.ledger_snapshot.current_balance}
-                    initialBalance={profile?.initial_balance || 0}
-                    totalTransactions={liveAnalysis.ledger_snapshot.transactions_examined}
-                    uniqueCounterparties={profile?.metrics.unique_counterparties || 0}
-                    flowThroughRatio={liveAnalysis.rule_assessment.signals.flow_through_ratio}
-                  />
-
                   {/* Chart D: TreeSHAP Horizontal Waterfall Contribution Chart */}
                   <V2TreeShapBreakdown
                     contributions={liveAnalysis.ml_assessment.top_contributions || []}
                   />
+
+                  {/* Recommendations Section */}
+                  <V2NextStepsRecommendation
+                    recommendedActions={liveAnalysis.recommended_actions}
+                    humanReviewRecommended={liveAnalysis.human_review_recommended}
+                    disclaimer={liveAnalysis.disclaimer}
+                    onNavigateToTab={(tab) => {
+                      setActiveTab(tab);
+                      if (tab === 'review') {
+                        adjudicationRef.current?.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
+                  />
                 </div>
 
-                {/* 5. What should the investigator do next? Dedicated Recommendations Section */}
-                <V2NextStepsRecommendation
-                  recommendedActions={liveAnalysis.recommended_actions}
-                  humanReviewRecommended={liveAnalysis.human_review_recommended}
-                  disclaimer={liveAnalysis.disclaimer}
-                  onNavigateToTab={(tab) => {
-                    setActiveTab(tab);
-                    if (tab === 'review') {
-                      adjudicationRef.current?.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
+                {/* 6. Money Received vs Money Sent Comparative Reconciler */}
+                <V2MoneyFlowComparison
+                  totalReceived={liveAnalysis.ledger_snapshot.total_received}
+                  totalSent={liveAnalysis.ledger_snapshot.total_sent}
+                  currentBalance={liveAnalysis.ledger_snapshot.current_balance}
+                  initialBalance={profile?.initial_balance || 0}
+                  totalTransactions={liveAnalysis.ledger_snapshot.transactions_examined}
+                  uniqueCounterparties={profile?.metrics.unique_counterparties || 0}
+                  flowThroughRatio={liveAnalysis.rule_assessment.signals.flow_through_ratio}
                 />
-
               </div>
             )}
 
