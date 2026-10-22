@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 try:
     from app.api.v2.schemas import (
         AccountAssessmentResponse,
+        AccountLiveAnalysisResponse,
         AccountMLAssessmentResponse,
         AccountProfileResponse,
         AccountTransactionsResponse,
@@ -19,11 +20,13 @@ try:
     from app.db.v2.session import get_v2_db
     from app.services.v2.account_service import AccountService
     from app.services.v2.graph_tracer import ForensicGraphTracer
+    from app.services.v2.live_analysis import AccountLiveAnalysisService
     from app.services.v2.ml_service import ModelUnavailableException, V2MLInferenceService
     from app.services.v2.risk_assessment import AccountRiskAssessor
 except ModuleNotFoundError:
     from backend.app.api.v2.schemas import (
         AccountAssessmentResponse,
+        AccountLiveAnalysisResponse,
         AccountMLAssessmentResponse,
         AccountProfileResponse,
         AccountTransactionsResponse,
@@ -33,6 +36,7 @@ except ModuleNotFoundError:
     from backend.app.db.v2.session import get_v2_db
     from backend.app.services.v2.account_service import AccountService
     from backend.app.services.v2.graph_tracer import ForensicGraphTracer
+    from backend.app.services.v2.live_analysis import AccountLiveAnalysisService
     from backend.app.services.v2.ml_service import ModelUnavailableException, V2MLInferenceService
     from backend.app.services.v2.risk_assessment import AccountRiskAssessor
 
@@ -193,3 +197,45 @@ def get_account_ml_assessment(
             },
         )
     return assessment
+
+
+@router.post(
+    "/accounts/{account_id}/analyze",
+    response_model=AccountLiveAnalysisResponse,
+    summary="Execute Fresh Live Account Risk Analysis",
+    description="Orchestrates on-demand real-time feature extraction, rule assessment, ML inference, TreeSHAP explanation, and advisory recommendation generation.",
+)
+def run_live_account_analysis(
+    account_id: str,
+    db: Session = Depends(get_v2_db),
+) -> AccountLiveAnalysisResponse:
+    try:
+        analysis = AccountLiveAnalysisService.run_analysis(db, account_id)
+    except ModelUnavailableException as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "code": "model_unavailable",
+                "message": str(e),
+            },
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "code": "analysis_failed",
+                "message": f"Live account analysis failed: {e}",
+            },
+        )
+
+    if not analysis:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "account_not_found",
+                "message": f"Account '{account_id}' was not found in the V2 ledger.",
+            },
+        )
+
+    return analysis
+

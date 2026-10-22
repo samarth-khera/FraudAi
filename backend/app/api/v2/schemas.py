@@ -187,3 +187,52 @@ class ModelStatusResponse(BaseModel):
     overall_status: str
     inference_ready: bool
     disclaimer: str
+
+
+# ------------------------------------------------------------------------------
+# 6. Live Analysis & Recommendation Schemas
+# ------------------------------------------------------------------------------
+
+class RecommendedAction(BaseModel):
+    action_id: str
+    title: str
+    priority: str = Field(..., description="'high_priority', 'recommended', 'routine', or 'more_evidence_needed'")
+    action_type: str = Field(..., description="Action classification identifier")
+    rationale: str = Field(..., description="Plain-English explanation of why this action is recommended")
+    supporting_evidence: str = Field(..., description="Observed transaction, signal, or ratio supporting this action")
+    suggested_records: str = Field(..., description="Additional institutional or external records that would clarify the case")
+    remaining_uncertainty: str = Field(..., description="Blind spots or missing context that prevent conclusive assessment")
+
+
+class LedgerSnapshotInfo(BaseModel):
+    transactions_examined: int
+    latest_transaction_timestamp: Optional[str] = None
+    first_transaction_timestamp: Optional[str] = None
+    total_received: float
+    total_sent: float
+    current_balance: float
+
+
+class ModelDivergenceInfo(BaseModel):
+    divergence_detected: bool
+    ml_score: float
+    rule_score: float
+    score_delta: float
+    interpretation: str
+    suggested_focus: str
+
+
+class AccountLiveAnalysisResponse(BaseModel):
+    analysis_id: str
+    account_id: str
+    analyzed_at: str
+    model_version: str
+    ledger_snapshot: LedgerSnapshotInfo
+    rule_assessment: AccountAssessmentResponse
+    ml_assessment: AccountMLAssessmentResponse
+    divergence: ModelDivergenceInfo
+    recommended_actions: list[RecommendedAction]
+    evidence_gaps: list[str]
+    human_review_recommended: bool
+    disclaimer: str
+
