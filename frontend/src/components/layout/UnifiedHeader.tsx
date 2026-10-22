@@ -175,7 +175,7 @@ export const UnifiedHeader: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 bg-[#FFFFFF]/95 backdrop-blur-md border-b border-[#EAE3D6] text-[#1A1714] shadow-[0_2px_14px_rgba(180,150,120,0.06)] transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3 sm:gap-4">
+      <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3 sm:gap-4">
         {/* Brand */}
         <div className="flex items-center gap-3 shrink-0">
           <Link to="/" className="flex items-center gap-2.5 group">
@@ -215,7 +215,7 @@ export const UnifiedHeader: React.FC = () => {
               <Link
                 key={item.name}
                 to={item.path}
-                className={`relative px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer ${
+                className={`relative px-2.5 2xl:px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer ${
                   active
                     ? 'text-[#EA8500] font-bold bg-[#FFF4E6] border border-[#FCD5B5] shadow-2xs'
                     : 'text-[#6B655B] hover:text-[#1A1714] hover:bg-white/80'
@@ -237,16 +237,16 @@ export const UnifiedHeader: React.FC = () => {
         </nav>
 
         {/* Global Quick Search & Right Controls */}
-        <div className="flex items-center gap-2.5 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
           {/* Universal Search Bar */}
-          <form onSubmit={handleSearchSubmit} className="relative hidden md:block w-48 lg:w-64">
+          <form onSubmit={handleSearchSubmit} className="relative hidden xl:block w-36 2xl:w-52">
             <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#8C857B]" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search (ACC-, FS-, T001)..."
-              className="w-full bg-[#FAF7F2] border border-[#EAE3D6] rounded-xl pl-8 pr-12 py-1.5 text-xs text-[#1A1714] placeholder:text-[#8C857B] focus:outline-none focus:bg-white focus:border-[#EA8500] focus:ring-2 focus:ring-[#EA8500]/15 font-mono transition-all"
+              placeholder="Search (ACC-, FS-)..."
+              className="w-full bg-[#FAF7F2] border border-[#EAE3D6] rounded-xl pl-8 pr-10 py-1.5 text-xs text-[#1A1714] placeholder:text-[#8C857B] focus:outline-none focus:bg-white focus:border-[#EA8500] focus:ring-2 focus:ring-[#EA8500]/15 font-mono transition-all"
               aria-label="Universal Search"
             />
             {searchQuery && (
@@ -260,9 +260,9 @@ export const UnifiedHeader: React.FC = () => {
           </form>
 
           {/* AI Engine Status Pill */}
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] text-xs shadow-2xs">
+          <div className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] text-xs shadow-2xs shrink-0">
             <Cpu className="w-3.5 h-3.5 text-[#6B655B]" />
-            <span className="text-[#6B655B] font-medium text-[11px] hidden lg:inline">Engine:</span>
+            <span className="text-[#6B655B] font-medium text-[11px] hidden 2xl:inline">Engine:</span>
             {isModelReady ? (
               <span className="inline-flex items-center gap-1.5 px-2 py-0.2 rounded-full bg-[#EAF7EE] text-[#166534] border border-[#BBF7D0] font-bold font-mono text-[11px]">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
@@ -279,7 +279,7 @@ export const UnifiedHeader: React.FC = () => {
           {/* Quick Jump Pill: FS-1042 Case */}
           <Link
             to="/app/cases/FS-1042"
-            className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#FAF7F2] hover:bg-[#FFF4E6] text-[#6B655B] hover:text-[#EA8500] border border-[#EAE3D6] hover:border-[#FCD5B5] text-[11px] font-mono font-semibold transition-all shadow-2xs"
+            className="hidden 2xl:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#FAF7F2] hover:bg-[#FFF4E6] text-[#6B655B] hover:text-[#EA8500] border border-[#EAE3D6] hover:border-[#FCD5B5] text-[11px] font-mono font-semibold transition-all shadow-2xs shrink-0"
             title="Jump to Incident Case FS-1042"
           >
             <span>FS-1042</span>

@@ -98,7 +98,7 @@ export const LandingPage: React.FC = () => {
           className="relative pt-6 pb-14 sm:pt-10 sm:pb-18 border-b border-[#EAE3D6] overflow-hidden"
         >
           {/* Subtle warm ambient backdrop aura */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1100px] h-[450px] bg-gradient-to-b from-[#EA8500]/6 via-[#FAF7F2] to-transparent pointer-events-none rounded-full blur-3xl -z-10" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1360px] h-[450px] bg-gradient-to-b from-[#EA8500]/6 via-[#FAF7F2] to-transparent pointer-events-none rounded-full blur-3xl -z-10" />
 
           <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-10 items-start">

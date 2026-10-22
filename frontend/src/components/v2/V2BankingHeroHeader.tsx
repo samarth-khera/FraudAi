@@ -88,7 +88,7 @@ export const V2BankingHeroHeader: React.FC<V2BankingHeroHeaderProps> = ({
         </div>
 
         {/* Center: Horizontal Pill Navigation (Reference: Overview, Wealth, Cards, Tools) */}
-        <div className="flex items-center gap-1.5 bg-[#FAF7F2] p-1 rounded-full border border-[#EAE3D6] self-start md:self-center overflow-x-auto scrollbar-none">
+        <div className="flex items-center gap-1.5 bg-[#FAF7F2] p-1 rounded-full border border-[#EAE3D6] self-start md:self-center overflow-x-auto max-w-full scrollbar-none">
           <button
             onClick={() => onNavigateTab('assessment')}
             className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all cursor-pointer whitespace-nowrap ${
