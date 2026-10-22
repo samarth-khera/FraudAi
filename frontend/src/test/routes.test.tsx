@@ -13,9 +13,12 @@ describe('Page Rendering', () => {
       </MemoryRouter>
     );
 
+    expect(screen.getAllByText(/Follow the money/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Understand the risk/i)).toBeInTheDocument();
     expect(screen.getByText(/Trace the Flow/i)).toBeInTheDocument();
     expect(screen.getByText(/Protect the Innocent/i)).toBeInTheDocument();
-    expect(screen.getByText('Open Investigation Dashboard')).toBeInTheDocument();
+    expect(screen.getAllByText('Start Investigation').length).toBeGreaterThan(0);
+    expect(screen.getByText('Explore a Demo')).toBeInTheDocument();
     expect(screen.getByText('Explore Demo Case FS-1042')).toBeInTheDocument();
   });
 
