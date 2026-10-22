@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, ShieldCheck, Info, UserCheck, ShieldAlert } from 'lucide-react';
+import { AlertTriangle, UserCheck, Shield, Scale } from 'lucide-react';
 
 interface V2ModelDivergenceAlertProps {
   accountId: string;
@@ -22,51 +22,65 @@ export const V2ModelDivergenceAlert: React.FC<V2ModelDivergenceAlertProps> = ({
   if (!isDivergent) return null;
 
   return (
-    <div className="rounded-lg border-2 border-amber-400 bg-amber-50/90 p-5 shadow-sm my-5 text-slate-800">
-      <div className="flex items-start gap-3.5">
-        <div className="w-9 h-9 rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-700 shrink-0 mt-0.5">
+    <div className="rounded-2xl border-2 border-[#FCD5B5] bg-[#FFF8EE] p-6 shadow-sm text-[#1A1714] space-y-4">
+      <div className="flex items-start gap-4">
+        <div className="w-11 h-11 rounded-2xl bg-[#FFF4E6] border border-[#FCD5B5] flex items-center justify-center text-[#EA8500] shrink-0 mt-0.5 shadow-2xs">
           <AlertTriangle className="w-5 h-5" />
         </div>
-        <div className="flex-1 space-y-2.5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h4 className="text-sm font-semibold text-amber-900 tracking-tight flex items-center gap-2">
-              <span>Model Score Divergence: Compromised Victim Pattern Detected</span>
-              <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-200 text-amber-900 border border-amber-300">
-                AUDIT REQUIRED
-              </span>
-            </h4>
-            <div className="flex items-center gap-2 text-xs font-mono">
-              <span className="px-2 py-0.5 rounded bg-red-100 text-red-800 border border-red-200 font-semibold">
-                ML Score: {mlRiskScore.toFixed(1)}/100 ({mlRiskLevel.toUpperCase()})
-              </span>
-              <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200 font-semibold">
-                Rule Baseline: {ruleRiskScore.toFixed(1)}/100 ({ruleRiskLevel.toUpperCase()})
-              </span>
+        <div className="flex-1 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#C05621] bg-[#FFF4E6] px-2.5 py-0.5 rounded-full border border-[#FCD5B5]">
+                  AUDIT REQUIRED
+                </span>
+                <span className="text-[11px] text-[#6B655B] font-mono">
+                  Model Score Divergence: Compromised Victim Pattern Detected
+                </span>
+              </div>
+              <h3 className="text-lg font-bold text-[#1A1714] mt-1 font-display">
+                The AI and the rule checks disagree
+              </h3>
+            </div>
+
+            {/* Side-by-side Score Comparison */}
+            <div className="flex items-center gap-2.5 font-mono text-xs">
+              <div className="px-3 py-1.5 rounded-xl bg-[#FFF0F2] text-[#BE123C] border border-[#FECDD3] font-bold flex items-center gap-1.5 shadow-2xs">
+                <span className="w-2 h-2 rounded-full bg-[#E11D48]"></span>
+                <span>ML Score: {mlRiskScore.toFixed(1)}/100</span>
+                <span className="text-[10px] uppercase font-normal opacity-80">({mlRiskLevel})</span>
+              </div>
+              <div className="px-3 py-1.5 rounded-xl bg-[#EAF7EE] text-[#166534] border border-[#BBF7D0] font-bold flex items-center gap-1.5 shadow-2xs">
+                <span className="w-2 h-2 rounded-full bg-[#22C55E]"></span>
+                <span>Rule Baseline: {ruleRiskScore.toFixed(1)}/100</span>
+                <span className="text-[10px] uppercase font-normal opacity-80">({ruleRiskLevel})</span>
+              </div>
             </div>
           </div>
 
-          <p className="text-xs text-amber-950 leading-relaxed">
-            The statistical XGBoost model evaluated this account with an elevated risk score of <strong className="font-semibold text-amber-900">{mlRiskScore.toFixed(1)}/100</strong>. This score reflects mathematical anomaly detection driven by an outlier single debit draining savings, <strong>not confirmed perpetrator fraud</strong>. An anomalous balance drain can indicate victim impact rather than perpetrator behaviour.
+          <p className="text-sm text-[#443E38] leading-relaxed">
+            The AI noticed an unusually large transaction and a major change in account balance. The rule checks found fewer suspicious behaviour patterns. This needs a closer look; neither score proves that the account holder committed fraud. Anomalous balance drain can indicate victim impact rather than perpetrator behaviour.
           </p>
 
-          <p className="text-xs text-amber-950 leading-relaxed">
-            In contrast, the deterministic Phase 3 rule engine reports a low risk score of <strong className="font-semibold text-emerald-800">{ruleRiskScore.toFixed(1)}/100</strong>, confirming <strong className="font-semibold text-amber-900">zero rapid pass-through</strong>, <strong className="font-semibold text-amber-900">zero structuring</strong>, and steady long-term account tenure.
+          <p className="text-xs text-[#6B655B] leading-relaxed">
+            In contrast, deterministic rule checks report a low score of <strong className="font-semibold text-[#166534]">{ruleRiskScore.toFixed(1)}/100</strong>, confirming zero rapid pass-through, zero structuring, and normal account tenure prior to this anomalous event.
           </p>
 
-          <div className="bg-white/95 rounded border border-amber-200 p-3.5 text-xs space-y-2">
-            <div className="flex items-center gap-1.5 font-medium text-amber-900">
-              <UserCheck className="w-4 h-4 text-emerald-600" />
-              <span>Innocent Victim Protection & Operational Safeguards:</span>
+          {/* Operational Safeguards Card */}
+          <div className="bg-white rounded-xl border border-[#EAE3D6] p-4 text-xs space-y-2.5 shadow-2xs">
+            <div className="flex items-center gap-2 font-bold text-[#1A1714]">
+              <UserCheck className="w-4 h-4 text-[#166534]" />
+              <span>Innocent Account Protection & Safeguards:</span>
             </div>
-            <ul className="text-slate-700 pl-5 space-y-1 text-xs list-disc">
+            <ul className="text-[#6B655B] pl-5 space-y-1.5 text-xs list-disc leading-relaxed">
               <li>
-                <strong>Anomalous Balance Drain Analysis:</strong> In an Authorized Push Payment (APP) scam, the victim's account is depleted by an attacker. TreeSHAP confirms <code className="font-mono text-[11px] bg-slate-100 px-1 rounded">max_amount</code> (+3.91) and <code className="font-mono text-[11px] bg-slate-100 px-1 rounded">initial_balance</code> (+1.14) as the primary statistical drivers.
+                <strong className="text-[#1A1714]">Anomalous Balance Drain Analysis:</strong> In an Authorized Push Payment (APP) scam, the victim's account is depleted by an attacker. TreeSHAP confirms <code className="font-mono text-[11px] bg-[#FAF7F2] px-1.5 py-0.5 rounded border border-[#EAE3D6] text-[#1A1714]">max_amount</code> (+3.91) and <code className="font-mono text-[11px] bg-[#FAF7F2] px-1.5 py-0.5 rounded border border-[#EAE3D6] text-[#1A1714]">initial_balance</code> (+1.14) as the primary statistical drivers.
               </li>
               <li>
-                <strong>Mandatory Evidence Review:</strong> This alert recommends manual evidence review. Always trace downstream recipient hops to identify destination money mules and cashing-out terminals.
+                <strong className="text-[#1A1714]">Mandatory Evidence Review:</strong> This alert recommends manual evidence review. Always trace downstream recipient hops to identify destination money mules and cashing-out terminals.
               </li>
               <li>
-                <strong className="text-red-700">Strict Prohibition on Automated Action:</strong> Automated freezing, blocking, service denial, or reporting of this customer based on model outputs is strictly prohibited by institutional compliance rules.
+                <strong className="text-[#DC2626]">Strict Prohibition on Automated Action:</strong> Automated freezing, blocking, service denial, or reporting of this customer based on model outputs is strictly prohibited by institutional compliance rules.
               </li>
             </ul>
           </div>

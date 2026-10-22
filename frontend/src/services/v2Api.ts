@@ -136,4 +136,16 @@ export const v2Api = {
     const res = await fetch(`${BASE_URL}/models/status`);
     return handleResponse<V2ModelStatusResponse>(res);
   },
+
+  /**
+   * Executes an on-demand fresh live analysis of the account's ledger and model inference.
+   */
+  async runLiveAnalysis(accountId: string): Promise<import('../types/v2').V2AccountLiveAnalysisResponse> {
+    const res = await fetch(`${BASE_URL}/accounts/${encodeURIComponent(accountId)}/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return handleResponse<import('../types/v2').V2AccountLiveAnalysisResponse>(res);
+  },
 };
+

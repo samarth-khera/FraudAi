@@ -164,3 +164,48 @@ export interface V2TraceGraphResponse {
   attribution_status: string;
   attribution_disclaimer: string;
 }
+
+export interface V2RecommendedAction {
+  action_id: string;
+  title: string;
+  priority: 'high_priority' | 'recommended' | 'routine' | 'more_evidence_needed';
+  action_type: string;
+  rationale: string;
+  supporting_evidence: string;
+  suggested_records: string;
+  remaining_uncertainty: string;
+}
+
+export interface V2LedgerSnapshotInfo {
+  transactions_examined: number;
+  latest_transaction_timestamp: string | null;
+  first_transaction_timestamp: string | null;
+  total_received: number;
+  total_sent: number;
+  current_balance: number;
+}
+
+export interface V2ModelDivergenceInfo {
+  divergence_detected: boolean;
+  ml_score: number;
+  rule_score: number;
+  score_delta: number;
+  interpretation: string;
+  suggested_focus: string;
+}
+
+export interface V2AccountLiveAnalysisResponse {
+  analysis_id: string;
+  account_id: string;
+  analyzed_at: string;
+  model_version: string;
+  ledger_snapshot: V2LedgerSnapshotInfo;
+  rule_assessment: V2AccountAssessmentResponse;
+  ml_assessment: V2AccountMLAssessmentResponse;
+  divergence: V2ModelDivergenceInfo;
+  recommended_actions: V2RecommendedAction[];
+  evidence_gaps: string[];
+  human_review_recommended: boolean;
+  disclaimer: string;
+}
+
