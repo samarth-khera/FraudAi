@@ -7,6 +7,8 @@ interface V2ModelDivergenceAlertProps {
   mlRiskLevel: string;
   ruleRiskScore: number;
   ruleRiskLevel: string;
+  interpretation?: string;
+  suggestedFocus?: string;
 }
 
 export const V2ModelDivergenceAlert: React.FC<V2ModelDivergenceAlertProps> = ({
@@ -15,9 +17,12 @@ export const V2ModelDivergenceAlert: React.FC<V2ModelDivergenceAlertProps> = ({
   mlRiskLevel,
   ruleRiskScore,
   ruleRiskLevel,
+  interpretation,
+  suggestedFocus,
 }) => {
-  // Divergence check: ML score is high (>= 60) while Rule Baseline is low/elevated (<= 35)
-  const isDivergent = (mlRiskScore >= 60.0 && ruleRiskScore <= 35.0) || accountId === 'ACC-000001';
+  // Divergence check: ML score and Rule baseline differ significantly (delta >= 30 pts or elevated ML with low rule)
+  const scoreDelta = Math.abs(mlRiskScore - ruleRiskScore);
+  const isDivergent = scoreDelta >= 30.0 || (mlRiskScore >= 60.0 && ruleRiskScore <= 35.0);
 
   if (!isDivergent) return null;
 
@@ -59,12 +64,15 @@ export const V2ModelDivergenceAlert: React.FC<V2ModelDivergenceAlertProps> = ({
           </div>
 
           <p className="text-sm text-[#443E38] leading-relaxed">
-            The AI noticed an unusually large transaction and a major change in account balance. The rule checks found fewer suspicious behaviour patterns. This needs a closer look; neither score proves that the account holder committed fraud. Anomalous balance drain can indicate victim impact rather than perpetrator behaviour.
+            {interpretation || 'The AI noticed an unusually large transaction and a major change in account balance. The rule checks found fewer suspicious behaviour patterns. This needs a closer look; neither score proves that the account holder committed fraud. Anomalous balance drain can indicate victim impact rather than perpetrator behaviour.'}
           </p>
 
-          <p className="text-xs text-[#6B655B] leading-relaxed">
-            In contrast, deterministic rule checks report a low score of <strong className="font-semibold text-[#166534]">{ruleRiskScore.toFixed(1)}/100</strong>, confirming zero rapid pass-through, zero structuring, and normal account tenure prior to this anomalous event.
-          </p>
+          {suggestedFocus && (
+            <div className="p-3 rounded-xl bg-white/80 border border-[#FCD5B5] text-xs text-[#6B655B] leading-relaxed">
+              <strong className="text-[#C05621] font-semibold">Recommended Investigative Focus: </strong>
+              <span>{suggestedFocus}</span>
+            </div>
+          )}
 
           {/* Operational Safeguards Card */}
           <div className="bg-white rounded-xl border border-[#EAE3D6] p-4 text-xs space-y-2.5 shadow-2xs">

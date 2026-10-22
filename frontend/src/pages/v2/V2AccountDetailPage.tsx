@@ -38,6 +38,7 @@ import {
   Copy,
   Wallet,
   X,
+  Cpu,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { gsap } from 'gsap';
@@ -61,7 +62,7 @@ import { V2ActivityTimeline } from '../../components/v2/V2ActivityTimeline';
 import { V2MoneyFlowComparison } from '../../components/v2/V2MoneyFlowComparison';
 import { V2NextStepsRecommendation } from '../../components/v2/V2NextStepsRecommendation';
 import { V2BankingHeroHeader } from '../../components/v2/V2BankingHeroHeader';
-import { V2BankingDashboardRow } from '../../components/v2/V2BankingDashboardRow';
+import { V2ModelDivergenceAlert } from '../../components/v2/V2ModelDivergenceAlert';
 
 interface AdjudicationEntry {
   status: string;
@@ -469,7 +470,7 @@ export const V2AccountDetailPage: React.FC = () => {
         <div ref={tabsRef} className="hidden" />
 
         {/* ========================================================================= */}
-        {/* TAB 1: ANALYSIS & RISK INTELLIGENCE                                       */}
+        {/* TAB 1: OVERVIEW & RISK INTELLIGENCE                                       */}
         {/* ========================================================================= */}
         {activeTab === 'assessment' && (
           <div className="space-y-6 gsap-fade-in">
@@ -485,235 +486,482 @@ export const V2AccountDetailPage: React.FC = () => {
               </div>
             )}
 
-            {/* Case A: Before Fresh Live Analysis is Run */}
+            {/* ===================================================================== */}
+            {/* ROW B — ANALYSIS RESULT                                               */}
+            {/* ===================================================================== */}
+
+            {/* Case B1: Analysis Not Yet Run */}
             {!liveAnalysis && !isAnalyzing && (
-              <div className="space-y-6">
-                <div className="bg-white rounded-3xl border border-[#EAE3D6] p-8 sm:p-12 text-center shadow-xs space-y-6">
-                  <div className="w-20 h-20 rounded-3xl bg-[#FFF4E6] border border-[#FCD5B5] flex items-center justify-center text-[#EA8500] mx-auto shadow-sm">
-                    <Sparkles className="w-10 h-10" />
-                  </div>
-
-                  <div className="max-w-2xl mx-auto space-y-2">
-                    <h3 className="text-2xl font-extrabold text-[#1A1714] font-display">
-                      Account Analysis Pending for Current Session
-                    </h3>
-                    <p className="text-sm text-[#6B655B] leading-relaxed">
-                      Analyse this account's recorded activity, check for unusual patterns, estimate risk, and explain what an investigator should review.
-                    </p>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <button
-                      onClick={handleRunLiveAnalysis}
-                      className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-2xl bg-[#EA8500] hover:bg-[#D27400] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                    >
-                      <Play className="w-4 h-4 fill-current" />
-                      <span>Run Live Analysis</span>
-                    </button>
-                  </div>
-
-                  {/* Honest initial state note */}
-                  <div className="max-w-xl mx-auto pt-4 border-t border-[#FAF7F2] text-xs text-[#8C857B] leading-relaxed">
-                    <p>
-                      <strong className="text-[#6B655B]">Honest Initial State Guarantee:</strong> No precomputed, stale, or synthetic demo scores are displayed. Clicking "Run Live Analysis" calculates fresh feature vectors from the latest ledger transactions and runs the loaded XGBoost model with TreeSHAP.
-                    </p>
-                  </div>
+              <div className="bg-white rounded-3xl border border-[#EAE3D6] p-8 sm:p-10 text-center shadow-xs space-y-6">
+                <div className="w-16 h-16 rounded-3xl bg-[#FFF4E6] border border-[#FCD5B5] flex items-center justify-center text-[#EA8500] mx-auto shadow-sm">
+                  <Sparkles className="w-8 h-8" />
                 </div>
 
-                {/* Reference Dashboard Row 2: 3 Side-by-Side Cards (Pending Baseline) */}
-                <V2BankingDashboardRow
-                  liveAnalysis={null}
-                  transactions={allTxns}
-                  onSelectTransaction={(txn) => setSelectedTxnForDetail(txn)}
-                  onViewAllTransactions={() => setActiveTab('transactions')}
-                />
+                <div className="max-w-2xl mx-auto space-y-2">
+                  <h3 className="text-2xl font-black text-[#1A1714] font-display">
+                    Account Analysis Pending for Current Session
+                  </h3>
+                  <p className="text-sm text-[#6B655B] leading-relaxed">
+                    FraudShield evaluates genuine, real-time inferences calculated directly from ledger transactions. Click "Run Live Analysis" to compute 26 behavioral features, evaluate rule signals, and infer ML risk scores with TreeSHAP.
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                  <button
+                    onClick={handleRunLiveAnalysis}
+                    className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-2xl bg-[#EA8500] hover:bg-[#D27400] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                  >
+                    <Play className="w-4 h-4 fill-current" />
+                    <span>Run Live Analysis</span>
+                  </button>
+                </div>
+
+                <div className="max-w-xl mx-auto pt-4 border-t border-[#FAF7F2] text-xs text-[#8C857B] leading-relaxed flex items-center justify-center gap-2">
+                  <Shield className="w-4 h-4 text-[#10B981]" />
+                  <span>Ledger status: <strong className="text-[#1A1714] font-mono">{allTxns.length} transactions</strong> ready for real-time evaluation.</span>
+                </div>
               </div>
             )}
 
-            {/* Case B: Analyzing in Progress */}
+            {/* Case B2: Analyzing in Progress */}
             {isAnalyzing && (
               <div className="bg-white rounded-3xl border border-[#EAE3D6] p-12 text-center shadow-xs space-y-4">
-                <div className="w-16 h-16 rounded-3xl bg-[#FFF4E6] border border-[#FCD5B5] flex items-center justify-center text-[#EA8500] mx-auto animate-spin">
-                  <RefreshCw className="w-8 h-8" />
+                <div className="w-14 h-14 rounded-2xl bg-[#FFF4E6] border border-[#FCD5B5] flex items-center justify-center text-[#EA8500] mx-auto animate-spin">
+                  <RefreshCw className="w-7 h-7" />
                 </div>
-                <h3 className="text-xl font-bold text-[#1A1714]">Analyzing Account Ledger</h3>
+                <h3 className="text-xl font-bold text-[#1A1714]">Analyzing Account Ledger in Real Time</h3>
                 <p className="text-xs text-[#6B655B] max-w-md mx-auto leading-relaxed">
-                  Extracting 26 behavioral features, calculating rule signals, running XGBoost inference and calculating native TreeSHAP local attributions...
+                  Extracting 26 behavioral features from {allTxns.length} transactions, computing rule signals, evaluating XGBoost inference, and generating native TreeSHAP local attributions...
                 </p>
               </div>
             )}
 
-            {/* Case C: Analysis Completed - Full Interactive Report */}
+            {/* Case B3: Analysis Completed - Side-by-Side ML & Rule Findings */}
             {liveAnalysis && (
-              <div className="space-y-6">
-                
-                {/* 1. "What did the analysis find?" Prominent Summary Card */}
-                <div className="bg-white rounded-3xl border border-[#EAE3D6] p-6 sm:p-8 shadow-xs space-y-5">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#FAF7F2] pb-4">
-                    <div>
+              <div className="bg-white rounded-3xl border border-[#EAE3D6] p-6 sm:p-7 shadow-xs space-y-5">
+                {/* Header with Run Metadata */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#FAF7F2] pb-4">
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <h2 className="text-xl sm:text-2xl font-black text-[#1A1714] font-display">
+                        What Did the Analysis Find?
+                      </h2>
+                      <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-[#EAF7EE] text-[#166534] border border-[#BBF7D0] uppercase tracking-wider">
+                        Analysis Complete
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#6B655B] mt-1">
+                      Freshly computed evaluation of {liveAnalysis.ledger_snapshot.transactions_examined} ledger records completed at {new Date(liveAnalysis.analyzed_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-[#6B655B] self-start sm:self-center">
+                    <span className="px-2.5 py-1 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6]">
+                      Run: <strong className="text-[#1A1714]">{liveAnalysis.analysis_id}</strong>
+                    </span>
+                    <span className="px-2.5 py-1 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6]">
+                      Model: <strong className="text-[#1A1714]">{liveAnalysis.model_version}</strong>
+                    </span>
+                    <span className="px-2.5 py-1 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6]">
+                      Examined: <strong className="text-[#1A1714]">{liveAnalysis.ledger_snapshot.transactions_examined} txns</strong>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Side-by-Side Score Cards (ML Score and Rule Score) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* ML Risk Score Card */}
+                  <div className="bg-[#FAF7F2] rounded-2xl p-5 border border-[#EAE3D6] space-y-3">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <h2 className="text-xl sm:text-2xl font-black text-[#1A1714] font-display">
-                          What Did the Analysis Find?
-                        </h2>
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#EAF7EE] text-[#166534] border border-[#BBF7D0] uppercase tracking-wider">
-                          Analysis Complete
-                        </span>
+                        <div className="w-8 h-8 rounded-xl bg-[#FFF4E6] flex items-center justify-center text-[#EA8500]">
+                          <Cpu className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold text-[#1A1714] block">ML Statistical Assessment</span>
+                          <span className="text-[10px] text-[#6B655B] font-mono">26 runtime ledger features</span>
+                        </div>
                       </div>
-                      <p className="text-xs text-[#6B655B] mt-1">
-                        Freshly computed evaluation of {liveAnalysis.ledger_snapshot.transactions_examined} ledger records completed at {new Date(liveAnalysis.analyzed_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}.
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-[#6B655B] self-start sm:self-center">
-                      <span className="px-2.5 py-1 rounded-lg bg-[#FAF7F2] border border-[#EAE3D6]">
-                        Run: <strong>{liveAnalysis.analysis_id}</strong>
-                      </span>
-                      <span className="px-2.5 py-1 rounded-lg bg-[#FAF7F2] border border-[#EAE3D6]">
-                        Model: <strong>{liveAnalysis.model_version}</strong>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
+                        liveAnalysis.ml_assessment.risk_level === 'high' || liveAnalysis.ml_assessment.risk_level === 'critical'
+                          ? 'bg-[#FEF2F2] text-[#DC2626] border border-[#FCA5A5]'
+                          : liveAnalysis.ml_assessment.risk_level === 'elevated'
+                          ? 'bg-[#FFF7ED] text-[#EA580C] border border-[#FDBA74]'
+                          : 'bg-[#ECFDF5] text-[#059669] border border-[#6EE7B7]'
+                      }`}>
+                        {liveAnalysis.ml_assessment.risk_level} Risk
                       </span>
                     </div>
+
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl font-black text-[#1A1714] font-mono">
+                        {liveAnalysis.ml_assessment.risk_score.toFixed(1)}
+                      </span>
+                      <span className="text-sm font-medium text-[#6B655B] font-mono">/ 100</span>
+                      <span className="ml-auto text-xs font-mono text-[#6B655B]">
+                        Class: <strong className="uppercase text-[#1A1714]">{liveAnalysis.ml_assessment.predicted_class}</strong>
+                      </span>
+                    </div>
+
+                    {/* Calibrated Meter */}
+                    <div className="w-full bg-white rounded-full h-2.5 overflow-hidden border border-[#EAE3D6]">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          liveAnalysis.ml_assessment.risk_level === 'high' || liveAnalysis.ml_assessment.risk_level === 'critical'
+                            ? 'bg-[#DC2626]'
+                            : liveAnalysis.ml_assessment.risk_level === 'elevated'
+                            ? 'bg-[#EA8500]'
+                            : 'bg-[#10B981]'
+                        }`}
+                        style={{ width: `${Math.min(Math.max(liveAnalysis.ml_assessment.risk_score, 0), 100)}%` }}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10px] text-[#8C857B] font-mono">
+                      <span>Low (0-29)</span>
+                      <span>Elevated (30-69)</span>
+                      <span>High (70-89)</span>
+                      <span>Critical (90+)</span>
+                    </div>
+
+                    <p className="text-xs text-[#6B655B] leading-relaxed pt-1 border-t border-[#EAE3D6]/60">
+                      Statistical pattern model evaluating multi-dimensional transfer velocity, burst volume, and balance depletion dynamics.
+                    </p>
                   </div>
 
-                  {/* High Level Key Findings Strip */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                    <div className="bg-[#FAF7F2] rounded-2xl p-4 border border-[#EAE3D6] space-y-1">
-                      <span className="text-[11px] font-bold text-[#8C857B] uppercase block">ML Statistical Score</span>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-extrabold text-[#1A1714] font-mono">
-                          {liveAnalysis.ml_assessment.risk_score.toFixed(1)}
-                        </span>
-                        <span className="text-xs text-[#6B655B]">/ 100</span>
-                        <span className="text-xs font-bold uppercase text-[#EA8500]">({liveAnalysis.ml_assessment.risk_level})</span>
+                  {/* Rule Behavioral Baseline Card */}
+                  <div className="bg-[#FAF7F2] rounded-2xl p-5 border border-[#EAE3D6] space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-[#6B655B] border border-[#EAE3D6]">
+                          <Scale className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold text-[#1A1714] block">Rule Deterministic Check</span>
+                          <span className="text-[10px] text-[#6B655B] font-mono">Observable heuristics</span>
+                        </div>
                       </div>
-                      <p className="text-[#6B655B] text-[11px]">
-                        Predicted class: <strong className="uppercase text-[#1A1714]">{liveAnalysis.ml_assessment.predicted_class}</strong>
-                      </p>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
+                        liveAnalysis.rule_assessment.risk_level === 'high' || liveAnalysis.rule_assessment.risk_level === 'critical'
+                          ? 'bg-[#FEF2F2] text-[#DC2626] border border-[#FCA5A5]'
+                          : liveAnalysis.rule_assessment.risk_level === 'elevated'
+                          ? 'bg-[#FFF7ED] text-[#EA580C] border border-[#FDBA74]'
+                          : 'bg-[#ECFDF5] text-[#059669] border border-[#6EE7B7]'
+                      }`}>
+                        {liveAnalysis.rule_assessment.risk_level} Risk
+                      </span>
                     </div>
 
-                    <div className="bg-[#FAF7F2] rounded-2xl p-4 border border-[#EAE3D6] space-y-1">
-                      <span className="text-[11px] font-bold text-[#8C857B] uppercase block">Rule Behavioral Score</span>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-extrabold text-[#1A1714] font-mono">
-                          {liveAnalysis.rule_assessment.risk_score.toFixed(1)}
-                        </span>
-                        <span className="text-xs text-[#6B655B]">/ 100</span>
-                        <span className="text-xs font-bold uppercase text-[#6B655B]">({liveAnalysis.rule_assessment.risk_level})</span>
-                      </div>
-                      <p className="text-[#6B655B] text-[11px]">
-                        Uncertainty rating: <strong className="uppercase text-[#1A1714]">{liveAnalysis.rule_assessment.uncertainty_rating}</strong>
-                      </p>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl font-black text-[#1A1714] font-mono">
+                        {liveAnalysis.rule_assessment.risk_score.toFixed(1)}
+                      </span>
+                      <span className="text-sm font-medium text-[#6B655B] font-mono">/ 100</span>
+                      <span className="ml-auto text-xs font-mono text-[#6B655B]">
+                        Uncertainty: <strong className="uppercase text-[#1A1714]">{liveAnalysis.rule_assessment.uncertainty_rating}</strong>
+                      </span>
                     </div>
 
-                    <div className="bg-[#FAF7F2] rounded-2xl p-4 border border-[#EAE3D6] space-y-1">
-                      <span className="text-[11px] font-bold text-[#8C857B] uppercase block">Human Review Status</span>
-                      <div className="flex items-center gap-2 pt-1">
-                        <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border uppercase tracking-wider ${
-                          liveAnalysis.human_review_recommended
-                            ? 'bg-[#FFF4E6] text-[#EA8500] border-[#FCD5B5]'
-                            : 'bg-[#EAF7EE] text-[#10B981] border-[#BBF7D0]'
-                        }`}>
-                          {liveAnalysis.human_review_recommended ? 'Review Recommended' : 'Routine Baseline'}
-                        </span>
-                      </div>
-                      <p className="text-[#6B655B] text-[11px] pt-1">
-                        {liveAnalysis.recommended_actions.length} actionable investigation steps identified.
-                      </p>
+                    {/* Calibrated Meter */}
+                    <div className="w-full bg-white rounded-full h-2.5 overflow-hidden border border-[#EAE3D6]">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          liveAnalysis.rule_assessment.risk_level === 'high' || liveAnalysis.rule_assessment.risk_level === 'critical'
+                            ? 'bg-[#DC2626]'
+                            : liveAnalysis.rule_assessment.risk_level === 'elevated'
+                            ? 'bg-[#EA8500]'
+                            : 'bg-[#10B981]'
+                        }`}
+                        style={{ width: `${Math.min(Math.max(liveAnalysis.rule_assessment.risk_score, 0), 100)}%` }}
+                      />
                     </div>
+
+                    <div className="flex items-center justify-between text-[10px] text-[#8C857B] font-mono">
+                      <span>Low (0-25)</span>
+                      <span>Elevated (26-55)</span>
+                      <span>High (56-80)</span>
+                      <span>Critical (81+)</span>
+                    </div>
+
+                    <p className="text-xs text-[#6B655B] leading-relaxed pt-1 border-t border-[#EAE3D6]/60">
+                      Deterministic compliance rules evaluating observable transaction thresholds, burst velocity, and flow-through ratios.
+                    </p>
                   </div>
                 </div>
 
-                {/* 2. Reference Dashboard Row 2: 3 Side-by-Side Cards (Live Evaluated) */}
-                <V2BankingDashboardRow
-                  liveAnalysis={liveAnalysis}
-                  transactions={allTxns}
-                  onSelectTransaction={(txn) => setSelectedTxnForDetail(txn)}
-                  onViewAllTransactions={() => setActiveTab('transactions')}
-                />
-
-                {/* 3. Side-by-Side Overall Risk Comparison Meters */}
-                <V2RiskComparisonMeters
-                  mlAssessment={liveAnalysis.ml_assessment}
-                  ruleAssessment={liveAnalysis.rule_assessment}
-                  divergence={liveAnalysis.divergence}
-                />
-
-                {/* 4. Balanced 2-Column Responsive Grid for Interactive Charts */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Chart A: Transaction Amount Histogram with Click-to-Filter */}
-                  <V2TransactionHistogram
-                    transactions={allTxns}
-                    selectedBin={selectedHistogramBin}
-                    onSelectBin={(bin) => {
-                      setSelectedHistogramBin(bin);
-                      if (bin) {
-                        setTxnPage(0);
-                      }
-                    }}
-                  />
-
-                  {/* Chart B: Activity Timeline with Click-to-Filter */}
-                  <V2ActivityTimeline
-                    transactions={allTxns}
-                    selectedDate={selectedTimelineDate}
-                    onSelectDate={(date) => {
-                      setSelectedTimelineDate(date);
-                      setTxnPage(0);
-                    }}
-                  />
+                {/* Plain-English Summary of Finding */}
+                <div className="bg-[#FAF7F2] rounded-2xl p-4 sm:p-5 border border-[#EAE3D6] space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Info className="w-4 h-4 text-[#EA8500]" />
+                    <h4 className="text-xs font-bold text-[#1A1714] uppercase tracking-wide">
+                      Plain-English Finding Summary
+                    </h4>
+                  </div>
+                  <p className="text-sm text-[#443E38] leading-relaxed">
+                    {liveAnalysis.divergence?.interpretation ||
+                      `The ML model estimated a risk score of ${liveAnalysis.ml_assessment.risk_score.toFixed(1)}/100 (${liveAnalysis.ml_assessment.risk_level}), while deterministic rule checks evaluated a baseline of ${liveAnalysis.rule_assessment.risk_score.toFixed(1)}/100 (${liveAnalysis.rule_assessment.risk_level}). Assessment evaluated ${liveAnalysis.ledger_snapshot.transactions_examined} ledger movements. Neither score constitutes proof of fraud; follow recommended investigative steps before taking any action.`}
+                  </p>
                 </div>
 
-                {/* 5. Balanced 2-Column Responsive Grid: TreeSHAP (Left) + Next Steps (Right) */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Chart D: TreeSHAP Horizontal Waterfall Contribution Chart */}
-                  <V2TreeShapBreakdown
-                    contributions={liveAnalysis.ml_assessment.top_contributions || []}
-                  />
-
-                  {/* Recommendations Section */}
-                  <V2NextStepsRecommendation
-                    recommendedActions={liveAnalysis.recommended_actions}
-                    humanReviewRecommended={liveAnalysis.human_review_recommended}
-                    disclaimer={liveAnalysis.disclaimer}
-                    onNavigateToTab={(tab) => {
-                      setActiveTab(tab);
-                      if (tab === 'review') {
-                        adjudicationRef.current?.scrollIntoView({ behavior: 'smooth' });
-                      }
-                    }}
-                  />
-                </div>
-
-                {/* 6. Money Received vs Money Sent Comparative Reconciler */}
-                <V2MoneyFlowComparison
-                  totalReceived={liveAnalysis.ledger_snapshot.total_received}
-                  totalSent={liveAnalysis.ledger_snapshot.total_sent}
-                  currentBalance={liveAnalysis.ledger_snapshot.current_balance}
-                  initialBalance={profile?.initial_balance || 0}
-                  totalTransactions={liveAnalysis.ledger_snapshot.transactions_examined}
-                  uniqueCounterparties={profile?.metrics.unique_counterparties || 0}
-                  flowThroughRatio={liveAnalysis.rule_assessment.signals.flow_through_ratio}
+                {/* Model Divergence Alert Component */}
+                <V2ModelDivergenceAlert
+                  accountId={accountId || ''}
+                  mlRiskScore={liveAnalysis.ml_assessment.risk_score}
+                  mlRiskLevel={liveAnalysis.ml_assessment.risk_level}
+                  ruleRiskScore={liveAnalysis.rule_assessment.risk_score}
+                  ruleRiskLevel={liveAnalysis.rule_assessment.risk_level}
+                  interpretation={liveAnalysis.divergence?.interpretation}
+                  suggestedFocus={liveAnalysis.divergence?.suggested_focus}
                 />
               </div>
             )}
 
-            {/* Exploratory non-predictive visualizations available even before analysis */}
-            {!liveAnalysis && !isAnalyzing && allTxns.length > 0 && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between border-b border-[#EAE3D6] pb-2">
-                  <h4 className="text-sm font-bold text-[#1A1714]">Exploratory Non-Predictive Ledger Visualizations</h4>
-                  <span className="text-xs text-[#6B655B]">Derived strictly from observable ledger records</span>
+            {/* ===================================================================== */}
+            {/* ROW C — RISK AND ACTIVITY CHARTS (BALANCED 2X2 GRID)                  */}
+            {/* ===================================================================== */}
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-[#1A1714] font-display flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-[#EA8500]" />
+                    Risk & Activity Analytics
+                  </h3>
+                  <p className="text-xs text-[#6B655B]">
+                    Balanced forensic visualizations. Clicking any histogram bin or timeline date filters transactions immediately.
+                  </p>
                 </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <V2TransactionHistogram
-                    transactions={allTxns}
-                    selectedBin={selectedHistogramBin}
-                    onSelectBin={(bin) => setSelectedHistogramBin(bin)}
+                {(selectedHistogramBin || selectedTimelineDate) && (
+                  <button
+                    onClick={() => {
+                      setSelectedHistogramBin(null);
+                      setSelectedTimelineDate(null);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-[#FAF7F2] border border-[#EAE3D6] text-xs font-bold text-[#EA8500] transition-colors shadow-2xs self-start sm:self-center cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Clear Chart Filter</span>
+                  </button>
+                )}
+              </div>
+
+              {/* 2x2 Balanced Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Chart 1: Risk Comparison */}
+                {liveAnalysis ? (
+                  <V2RiskComparisonMeters
+                    mlAssessment={liveAnalysis.ml_assessment}
+                    ruleAssessment={liveAnalysis.rule_assessment}
+                    divergence={liveAnalysis.divergence}
                   />
-                  <V2ActivityTimeline
-                    transactions={allTxns}
-                    selectedDate={selectedTimelineDate}
-                    onSelectDate={(date) => setSelectedTimelineDate(date)}
-                  />
+                ) : (
+                  <div className="bg-white rounded-2xl border border-[#EAE3D6] p-6 flex flex-col justify-between space-y-4 shadow-2xs">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-[#FFF4E6] flex items-center justify-center text-[#EA8500]">
+                        <Scale className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-[#1A1714]">Risk Score Comparison</h4>
+                        <p className="text-xs text-[#6B655B]">ML Statistical Model vs Rule Baseline</p>
+                      </div>
+                    </div>
+                    <div className="py-8 text-center space-y-3">
+                      <p className="text-xs text-[#6B655B] max-w-sm mx-auto leading-relaxed">
+                        Run Live Analysis to compute and compare the 26-feature ML statistical risk score against deterministic rule thresholds.
+                      </p>
+                      <button
+                        onClick={handleRunLiveAnalysis}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                      >
+                        <Play className="w-3.5 h-3.5 fill-current" />
+                        <span>Run Live Analysis</span>
+                      </button>
+                    </div>
+                    <div className="pt-3 border-t border-[#FAF7F2] flex items-center justify-between text-[11px] text-[#8C857B] font-mono">
+                      <span>Low: 0–29</span>
+                      <span>Elevated: 30–69</span>
+                      <span>High: 70+</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Chart 2: Transaction Amount Histogram */}
+                <V2TransactionHistogram
+                  transactions={allTxns}
+                  selectedBin={selectedHistogramBin}
+                  onSelectBin={(bin) => {
+                    setSelectedHistogramBin(bin);
+                    if (bin) setTxnPage(0);
+                  }}
+                />
+
+                {/* Chart 3: Activity Timeline */}
+                <V2ActivityTimeline
+                  transactions={allTxns}
+                  selectedDate={selectedTimelineDate}
+                  onSelectDate={(date) => {
+                    setSelectedTimelineDate(date);
+                    if (date) setTxnPage(0);
+                  }}
+                />
+
+                {/* Chart 4: Money Received vs. Money Sent */}
+                <V2MoneyFlowComparison
+                  totalReceived={liveAnalysis ? liveAnalysis.ledger_snapshot.total_received : (profile?.metrics.total_incoming_amount ?? 0)}
+                  totalSent={liveAnalysis ? liveAnalysis.ledger_snapshot.total_sent : (profile?.metrics.total_outgoing_amount ?? 0)}
+                  currentBalance={liveAnalysis ? liveAnalysis.ledger_snapshot.current_balance : (profile?.current_balance ?? 0)}
+                  initialBalance={profile?.initial_balance || 0}
+                  totalTransactions={liveAnalysis ? liveAnalysis.ledger_snapshot.transactions_examined : allTxns.length}
+                  uniqueCounterparties={profile?.metrics.unique_counterparties || 0}
+                  flowThroughRatio={liveAnalysis ? liveAnalysis.rule_assessment.signals.flow_through_ratio : ((profile?.metrics.total_incoming_amount ?? 0) > 0 ? (profile?.metrics.total_outgoing_amount ?? 0) / (profile?.metrics.total_incoming_amount ?? 1) : 0)}
+                />
+              </div>
+
+              {/* Interactive Chart Filter Preview Drawer (shown when histogram or timeline filter is active) */}
+              {(selectedHistogramBin || selectedTimelineDate) && (
+                <div className="bg-white rounded-2xl border-2 border-[#EA8500]/30 p-5 shadow-xs space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#FAF7F2] pb-3">
+                    <div className="flex items-center gap-2">
+                      <Filter className="w-4 h-4 text-[#EA8500]" />
+                      <span className="text-xs font-bold text-[#1A1714]">
+                        Filtered Transactions Preview:
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-[#FFF4E6] text-[#EA8500] border border-[#FCD5B5]">
+                        {selectedHistogramBin ? `Amount: ${selectedHistogramBin.label}` : `Date: ${selectedTimelineDate}`}
+                      </span>
+                      <span className="text-xs text-[#6B655B] font-mono">
+                        ({filteredTransactions.length} of {allTxns.length} records)
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setActiveTab('transactions')}
+                        className="inline-flex items-center gap-1 text-xs font-bold text-[#EA8500] hover:text-[#D27400] transition-colors cursor-pointer"
+                      >
+                        <span>View in Full Ledger Tab</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedHistogramBin(null);
+                          setSelectedTimelineDate(null);
+                        }}
+                        className="p-1 rounded-lg text-[#8C857B] hover:text-[#1A1714] hover:bg-[#FAF7F2] transition-colors cursor-pointer"
+                        title="Clear filter"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Quick table of matching transactions */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs font-mono">
+                      <thead>
+                        <tr className="border-b border-[#EAE3D6] text-[#8C857B]">
+                          <th className="py-2 px-3">Transaction ID</th>
+                          <th className="py-2 px-3">Date & Time</th>
+                          <th className="py-2 px-3">Flow</th>
+                          <th className="py-2 px-3">Counterparty</th>
+                          <th className="py-2 px-3">Channel</th>
+                          <th className="py-2 px-3 text-right">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#FAF7F2]">
+                        {filteredTransactions.slice(0, 5).map((txn) => (
+                          <tr key={txn.transaction_id} className="hover:bg-[#FAF7F2] transition-colors">
+                            <td className="py-2 px-3 font-bold text-[#1A1714]">{txn.transaction_id}</td>
+                            <td className="py-2 px-3 text-[#6B655B] font-sans">
+                              {new Date(txn.timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            </td>
+                            <td className="py-2 px-3">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                txn.direction === 'inbound' ? 'bg-[#EAF7EE] text-[#166534]' : 'bg-[#FFF4E6] text-[#EA8500]'
+                              }`}>
+                                {txn.direction}
+                              </span>
+                            </td>
+                            <td className="py-2 px-3 text-[#1A1714]">{txn.counterparty_account_id}</td>
+                            <td className="py-2 px-3 text-[#6B655B] uppercase text-[10px]">{txn.channel}</td>
+                            <td className={`py-2 px-3 text-right font-bold ${
+                              txn.direction === 'inbound' ? 'text-[#10B981]' : 'text-[#EA8500]'
+                            }`}>
+                              {txn.direction === 'inbound' ? '+' : '-'}₹{Number(txn.amount).toLocaleString('en-IN')}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ===================================================================== */}
+            {/* ROW D — AI EXPLANATION & NEXT STEPS                                   */}
+            {/* ===================================================================== */}
+            {liveAnalysis ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left: Why the AI gave this score (TreeSHAP) */}
+                <V2TreeShapBreakdown
+                  contributions={liveAnalysis.ml_assessment.top_contributions || []}
+                />
+
+                {/* Right: What should the investigator check next? */}
+                <V2NextStepsRecommendation
+                  recommendedActions={liveAnalysis.recommended_actions}
+                  humanReviewRecommended={liveAnalysis.human_review_recommended}
+                  disclaimer={liveAnalysis.disclaimer}
+                  onNavigateToTab={(tab) => {
+                    setActiveTab(tab);
+                    if (tab === 'review') {
+                      adjudicationRef.current?.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white rounded-3xl border border-[#EAE3D6] p-6 space-y-3 shadow-xs">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-[#EA8500]" />
+                    <h4 className="text-base font-bold text-[#1A1714] font-display">
+                      Why the AI gave this score (TreeSHAP Attributions)
+                    </h4>
+                  </div>
+                  <p className="text-xs text-[#6B655B] leading-relaxed">
+                    Interactive TreeSHAP local contribution charts will display mathematical feature weights once live analysis evaluates this account's 26 behavioral features.
+                  </p>
+                  <div className="pt-2">
+                    <button
+                      onClick={handleRunLiveAnalysis}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#FAF7F2] hover:bg-[#F2ECE1] border border-[#EAE3D6] text-xs font-bold text-[#1A1714] transition-colors cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-[#EA8500]" />
+                      <span>Run Live Analysis to compute TreeSHAP</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-3xl border border-[#EAE3D6] p-6 space-y-3 shadow-xs">
+                  <div className="flex items-center gap-2">
+                    <ShieldAlert className="w-5 h-5 text-[#EA8500]" />
+                    <h4 className="text-base font-bold text-[#1A1714] font-display">
+                      What should the investigator check next?
+                    </h4>
+                  </div>
+                  <p className="text-xs text-[#6B655B] leading-relaxed">
+                    Evidence-based advisory actions, supporting signals, and recommended regulatory safeguards will be populated upon completing live analysis.
+                  </p>
+                  <div className="pt-2">
+                    <button
+                      onClick={() => setActiveTab('trace')}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#FAF7F2] hover:bg-[#F2ECE1] border border-[#EAE3D6] text-xs font-bold text-[#1A1714] transition-colors cursor-pointer"
+                    >
+                      <GitFork className="w-3.5 h-3.5 text-[#EA8500]" />
+                      <span>Explore Fund Flow Trace</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
