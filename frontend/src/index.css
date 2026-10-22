@@ -7,12 +7,48 @@
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
     /* Core Forensic Art Direction Tokens */
-    --bg-canvas: #F5F4F0;
+    --bg-canvas: #F8F6F0;
     --bg-surface: #FFFFFF;
-    --bg-recessed: #FAF9F6;
+    --bg-recessed: #FAF7F2;
     --bg-muted: #EFECE6;
-    --border-subtle: #E2DFD7;
-    --border-strong: #CFCBC0;
+    --border-subtle: #EAE3D6;
+    --border-strong: #DDD4C4;
+
+    /* V2 Warm Cream & Vivid Orange Design System Tokens */
+    --v2-canvas: #F8F6F0;
+    --v2-surface: #FFFFFF;
+    --v2-surface-warm: #FFFEFA;
+    --v2-recessed: #FAF7F2;
+    --v2-border: #EAE3D6;
+    --v2-border-strong: #DDD4C4;
+    --v2-orange: #EA8500;
+    --v2-orange-hover: #D27400;
+    --v2-orange-light: #FFF4E6;
+    --v2-orange-border: #FCD5B5;
+    --v2-text: #1A1714;
+    --v2-muted: #6B655B;
+    --v2-subtle: #8C857B;
+
+    /* Supporting Accents */
+    --v2-mint-bg: #EAF7EE;
+    --v2-mint-text: #166534;
+    --v2-mint-border: #BBF7D0;
+
+    --v2-blue-bg: #EBF5FF;
+    --v2-blue-text: #1E40AF;
+    --v2-blue-border: #BFDBFE;
+
+    --v2-lavender-bg: #F5EEFD;
+    --v2-lavender-text: #7E22CE;
+    --v2-lavender-border: #E9D5FF;
+
+    --v2-peach-bg: #FFF4E6;
+    --v2-peach-text: #C05621;
+    --v2-peach-border: #FCD5B5;
+
+    --v2-rose-bg: #FFF0F2;
+    --v2-rose-text: #BE123C;
+    --v2-rose-border: #FECDD3;
 
     --navy-950: #070C16;
     --navy-900: #0B1322;
@@ -33,8 +69,8 @@
 
   body {
     font-family: var(--font-sans);
-    background-color: var(--bg-canvas);
-    color: var(--navy-900);
+    background-color: var(--v2-canvas);
+    color: var(--v2-text);
     min-height: 100vh;
     margin: 0;
     overflow-x: hidden;
@@ -57,17 +93,17 @@
   }
 }
 
-/* Forensic Workspace Surfaces (replaces generic glassmorphism) */
+/* Forensic Workspace Surfaces */
 .forensic-panel {
   background-color: #FFFFFF;
-  border: 1px solid #E2DFD7;
+  border: 1px solid #EAE3D6;
   border-radius: 0.5rem;
-  box-shadow: 0 1px 2px rgba(11, 19, 34, 0.04);
+  box-shadow: 0 1px 2px rgba(26, 23, 20, 0.04);
 }
 
 .forensic-panel-recessed {
-  background-color: #FAF9F6;
-  border: 1px solid #E2DFD7;
+  background-color: #FAF7F2;
+  border: 1px solid #EAE3D6;
   border-radius: 0.5rem;
 }
 
@@ -78,11 +114,10 @@
   color: #F8FAFC;
 }
 
-/* Backwards-compatible alias kept clean & architectural */
 .glass-card {
   background-color: #FFFFFF;
-  border: 1px solid #E2DFD7;
-  box-shadow: 0 1px 2px rgba(11, 19, 34, 0.04);
+  border: 1px solid #EAE3D6;
+  box-shadow: 0 1px 2px rgba(26, 23, 20, 0.04);
 }
 
 .glass-card-hover {
@@ -90,8 +125,8 @@
 }
 
 .glass-card-hover:hover {
-  border-color: #0D9488;
-  box-shadow: 0 4px 12px -2px rgba(11, 19, 34, 0.07);
+  border-color: #EA8500;
+  box-shadow: 0 4px 12px -2px rgba(234, 133, 0, 0.08);
 }
 
 .navy-sidebar {
@@ -101,46 +136,70 @@
 
 /* Technical Blueprint Dot Grid for Graph & Hero Stages */
 .blueprint-grid {
-  background-color: #FAF9F6;
-  background-image: radial-gradient(#CFCBC0 1px, transparent 1px);
+  background-color: #FAF7F2;
+  background-image: radial-gradient(#DDD4C4 1px, transparent 1px);
   background-size: 20px 20px;
 }
 
-.blueprint-grid-dark {
-  background-color: #070C16;
+.blueprint-grid-warm {
+  background-color: #FAF7F2;
   background-image:
-    linear-gradient(to right, rgba(28, 43, 69, 0.35) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(28, 43, 69, 0.35) 1px, transparent 1px);
-  background-size: 32px 32px;
+    linear-gradient(to right, rgba(234, 227, 214, 0.75) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(234, 227, 214, 0.75) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
-/* Custom scrollbar */
+/* Custom warm scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #F5F4F0;
+  background: #F8F6F0;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #C7C2B6;
+  background: #DDD4C4;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #9E988B;
+  background: #C7C2B6;
 }
 
-/* Keyboard accessibility & focus ring in electric teal */
+/* Keyboard accessibility & focus ring in vivid orange (#EA8500) */
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid #0D9488;
+  outline: 2px solid #EA8500;
   outline-offset: 2px;
+}
+
+/* V2 Warm Cream & Orange Surfaces */
+.v2-card,
+.fintech-card {
+  background-color: #FFFFFF;
+  border: 1px solid #EAE3D6;
+  border-radius: 1.5rem;
+  box-shadow: 0 4px 24px rgba(180, 150, 120, 0.06), 0 2px 6px -1px rgba(26, 23, 20, 0.03);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.v2-card-interactive:hover,
+.fintech-card-interactive:hover {
+  border-color: rgba(234, 133, 0, 0.45);
+  box-shadow: 0 16px 36px -4px rgba(180, 150, 120, 0.12), 0 4px 12px -2px rgba(26, 23, 20, 0.04);
+  transform: translateY(-2px);
+}
+
+.v2-panel-recessed,
+.fintech-panel-recessed {
+  background-color: #FAF7F2;
+  border: 1px solid #EAE3D6;
+  border-radius: 1rem;
 }
 
 @media (prefers-reduced-motion: reduce) {
