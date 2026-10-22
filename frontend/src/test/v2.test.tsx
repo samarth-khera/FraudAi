@@ -18,6 +18,7 @@ vi.mock('../services/v2Api', () => ({
     getMLAssessment: vi.fn(),
     getTransactions: vi.fn(),
     getTrace: vi.fn(),
+    runLiveAnalysis: vi.fn(),
   },
   ApiError: class ApiError extends Error {
     status: number;
@@ -107,11 +108,9 @@ describe('V2TreeShapBreakdown Component', () => {
   it('renders TreeSHAP features with scores and directions', () => {
     render(<V2TreeShapBreakdown contributions={sampleContributions} />);
 
-    expect(screen.getByText(/Key Driving Behavioral Features/i)).toBeInTheDocument();
-    expect(screen.getByText(/Max Transaction Amount/i)).toBeInTheDocument();
-    expect(screen.getByText('+3.9147')).toBeInTheDocument();
-    expect(screen.getByText(/Current Account Balance/i)).toBeInTheDocument();
-    expect(screen.getByText('-0.2986')).toBeInTheDocument();
+    expect(screen.getByText(/TreeSHAP Feature Attribution/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Largest transaction amount/i)[0]).toBeInTheDocument();
+    expect(screen.getAllByText(/Current balance/i)[0]).toBeInTheDocument();
   });
 });
 
@@ -168,6 +167,30 @@ describe('V2SearchPage Component', () => {
 
 describe('V2AccountDetailPage Component', () => {
   beforeEach(() => {
+    vi.mocked(v2Api.getModelsStatus).mockResolvedValue({
+      account_model: {
+        available: true,
+        version: 'v2-account-1.0.0',
+        model_type: 'XGBClassifier',
+        features_count: 26,
+        trained_at: '2026-10-20T14:56:12Z',
+        test_metrics: { roc_auc: 0.9945 },
+        limitations: 'Synthetic data',
+      },
+      paysim_benchmark: {
+        available: true,
+        version: 'v2-benchmark-1.0.0',
+        model_type: 'PaySim XGBoost',
+        features_count: 14,
+        trained_at: '2026-10-20T14:54:45Z',
+        test_metrics: { roc_auc: 1.0 },
+        limitations: 'Historical benchmark',
+      },
+      overall_status: 'healthy',
+      inference_ready: true,
+      disclaimer: 'Decision support only',
+    });
+
     vi.mocked(v2Api.getAccount).mockResolvedValue({
       account_id: 'ACC-000001',
       customer_name: 'Aditi Joshi',
@@ -293,9 +316,95 @@ describe('V2AccountDetailPage Component', () => {
       attribution_status: 'observed_transfers_with_bounded_exposure',
       attribution_disclaimer: 'Bounded attribution',
     });
+
+    vi.mocked(v2Api.runLiveAnalysis).mockResolvedValue({
+      analysis_id: 'RUN-TEST-001',
+      account_id: 'ACC-000001',
+      analyzed_at: '2026-10-22T09:00:00Z',
+      model_version: 'v2-account-1.0.0',
+      ledger_snapshot: {
+        transactions_examined: 56,
+        latest_transaction_timestamp: '2026-03-31T03:05:52',
+        first_transaction_timestamp: '2026-01-03T03:02:29',
+        total_received: 288043.01,
+        total_sent: 410886.78,
+        current_balance: 177156.23,
+      },
+      rule_assessment: {
+        account_id: 'ACC-000001',
+        risk_score: 25.0,
+        risk_level: 'low',
+        signals: {
+          total_transactions: 56,
+          velocity_24h_count: 1,
+          velocity_7d_count: 8,
+          velocity_30d_count: 21,
+          flow_through_ratio: 1.4265,
+          rapid_pass_through: false,
+          median_dwell_minutes: 2.8,
+          max_amount: 250000.0,
+          avg_amount: 12480.89,
+          amount_spike_ratio: 20.03,
+          unique_counterparties: 56,
+          counterparty_diversity_ratio: 1.0,
+          fan_in_ratio: 0.4107,
+          fan_out_ratio: 0.5893,
+          dormancy_gap_days: null,
+          dormant_awakening_detected: false,
+          cycle_detected: false,
+        },
+        reason_codes: ['UNUSUAL_AMOUNT_SPIKE: Maximum transaction (250000.00) is 20.0x higher than average.'],
+        evidence_gaps: ['DEVICE_TELEMETRY_UNAVAILABLE'],
+        uncertainty_rating: 'low',
+        recommendation: 'routine_monitoring',
+        disclaimer: 'Decision support only.',
+      },
+      ml_assessment: {
+        account_id: 'ACC-000001',
+        risk_score: 76.5,
+        risk_level: 'high',
+        predicted_probability: 0.7648,
+        predicted_class: 'suspicious',
+        model_version: 'v2-account-1.0.0',
+        model_type: 'XGBClassifier',
+        top_contributions: [
+          {
+            feature_name: 'max_amount',
+            feature_value: 250000.0,
+            contribution_score: 3.9147,
+            impact_direction: 'increases_risk',
+          },
+        ],
+        observable_features: { max_amount: 250000.0 },
+        disclaimer: 'Decision support only.',
+      },
+      divergence: {
+        divergence_detected: true,
+        ml_score: 76.5,
+        rule_score: 25.0,
+        score_delta: 51.5,
+        interpretation: 'Compromised Victim / Outlier Drain Disparity: Model indicates victim impact.',
+        suggested_focus: 'Verify customer authorization rather than presuming perpetrator guilt.',
+      },
+      recommended_actions: [
+        {
+          action_id: 'ACT-001',
+          title: 'Review High-Value Outlier Transfer of ₹250,000.00',
+          priority: 'high_priority',
+          action_type: 'review_large_transaction',
+          rationale: 'The largest single transfer is 20.0x higher than average.',
+          supporting_evidence: 'Observed peak transfer: ₹250,000.00.',
+          suggested_records: 'Verify customer mandate and 2FA/OTP delivery logs.',
+          remaining_uncertainty: 'One-off capital expenditures can produce identical spikes.',
+        },
+      ],
+      evidence_gaps: ['DEVICE_TELEMETRY_UNAVAILABLE'],
+      human_review_recommended: true,
+      disclaimer: 'Decision support only.',
+    });
   });
 
-  it('renders 360° account dossier with evidence hierarchy, tabs, and human adjudication panel', async () => {
+  it('renders initial non-predictive ledger facts with Run Live Analysis button', async () => {
     render(
       <MemoryRouter initialEntries={['/v2/accounts/ACC-000001']}>
         <Routes>
@@ -315,21 +424,44 @@ describe('V2AccountDetailPage Component', () => {
     expect(screen.getByText(/2. Rule-Based Signals/i)).toBeInTheDocument();
     expect(screen.getByText(/3. Statistical ML Probability/i)).toBeInTheDocument();
 
-    // Verify offline benchmark metadata notice for ACC-000001
-    expect(screen.getByText(/OFFLINE EVALUATION BENCHMARK METADATA/i)).toBeInTheDocument();
-    expect(screen.getByText(/SCENARIO-APP-001 · Compromised Victim/i)).toBeInTheDocument();
+    // Verify Honest Initial State: pending analysis, no precomputed prediction
+    expect(screen.getByText(/Account Analysis Pending for Current Session/i)).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /Run Live Analysis/i })[0]).toBeInTheDocument();
+    expect(screen.queryByText(/What Did the Analysis Find\?/i)).not.toBeInTheDocument();
+  });
 
-    // Verify divergence banner is present
-    expect(screen.getByText(/Model Score Divergence: Compromised Victim Pattern Detected/i)).toBeInTheDocument();
+  it('triggers live analysis on demand and renders findings, meters, and recommendations', async () => {
+    render(
+      <MemoryRouter initialEntries={['/v2/accounts/ACC-000001']}>
+        <Routes>
+          <Route path="/v2/accounts/:accountId" element={<V2AccountDetailPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
 
-    // Verify Human Adjudication Panel
-    expect(screen.getByText(/Human Compliance Adjudication/i)).toBeInTheDocument();
-    expect(screen.getByText(/Record Finding/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Aditi Joshi')).toBeInTheDocument();
+    });
+
+    // Click Run Live Analysis
+    const runBtn = screen.getAllByRole('button', { name: /Run Live Analysis/i })[0];
+    fireEvent.click(runBtn);
+
+    // Verify fresh results appear
+    await waitFor(() => {
+      expect(screen.getByText(/What Did the Analysis Find\?/i)).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/RUN-TEST-001/i)).toBeInTheDocument();
+    expect(screen.getByText(/ML Risk Estimate/i)).toBeInTheDocument();
+    expect(screen.getByText(/Rule Behavioral Baseline/i)).toBeInTheDocument();
+    expect(screen.getByText(/What Should the Investigator Do Next\?/i)).toBeInTheDocument();
+    expect(screen.getByText(/Review High-Value Outlier Transfer of ₹250,000.00/i)).toBeInTheDocument();
   });
 
   it('records human adjudication finding and renders audit trail entry', async () => {
     render(
-      <MemoryRouter initialEntries={['/v2/accounts/ACC-000001']}>
+      <MemoryRouter initialEntries={['/v2/accounts/ACC-000001?tab=review']}>
         <Routes>
           <Route path="/v2/accounts/:accountId" element={<V2AccountDetailPage />} />
         </Routes>
@@ -355,3 +487,4 @@ describe('V2AccountDetailPage Component', () => {
     });
   });
 });
+
