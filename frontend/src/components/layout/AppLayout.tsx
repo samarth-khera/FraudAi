@@ -12,7 +12,7 @@ export const AppLayout: React.FC = () => {
 
       {/* Forensic Protocol & Fairness Safeguard Ribbon */}
       <div className="bg-[#FFF4E6] border-b border-[#FCD5B5] px-4 sm:px-6 lg:px-8 py-2 text-xs shadow-2xs">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+        <div className="max-w-[1360px] mx-auto flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <Scale className="w-3.5 h-3.5 text-[#EA8500] shrink-0" />
             <span className="truncate sm:whitespace-normal text-[11px] text-[#6B655B] leading-tight">
@@ -28,7 +28,7 @@ export const AppLayout: React.FC = () => {
       </div>
 
       {/* Page Outlet Frame */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+      <main className="flex-1 max-w-[1360px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Outlet />
       </main>
 
