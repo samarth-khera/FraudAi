@@ -456,7 +456,7 @@ export const ModelInsightsPage: React.FC = () => {
           <button
             onClick={fetchStatus}
             disabled={loading}
-            className="px-4 py-2 rounded-xl bg-white hover:bg-[#FAF7F2] border border-[#EAE3D6] text-xs font-semibold text-[#1A1714] flex items-center gap-2 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+            className="btn-secondary py-2 px-4 text-xs font-semibold shadow-xs disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 text-[#EA8500] ${loading ? 'animate-spin' : ''}`} />
             <span>Refresh Models</span>

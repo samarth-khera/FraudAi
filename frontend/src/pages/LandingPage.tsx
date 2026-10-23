@@ -23,6 +23,7 @@ import {
   HelpCircle,
   Database,
   Info,
+  LayoutGrid,
 } from 'lucide-react';
 import { UnifiedHeader } from '../components/layout/UnifiedHeader';
 import { V2Footer } from '../components/v2/V2Footer';
@@ -107,42 +108,67 @@ export const LandingPage: React.FC = () => {
                 {/* Stage 1 Pill & Status Indicator */}
                 <div className="hero-enter inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#EAE3D6] text-[11px] font-mono text-[#6B655B] shadow-2xs">
                   <span className="w-2 h-2 rounded-full bg-[#EA8500] animate-pulse" />
-                  <span className="font-semibold text-[#1A1714]">Stage 1 · Account Search & Money Flow</span>
+                  <span className="font-semibold text-[#1A1714]">Financial Crime Investigation Platform</span>
                   <span className="text-[#C5BDB0]">·</span>
-                  <span className="text-[#0D9488] font-bold">Core Ledger: Live</span>
+                  <span className="text-[#166534] font-bold">Demo Ledger: Live (10k Accounts)</span>
                 </div>
 
-                {/* Main Headline */}
-                <div className="hero-enter space-y-1.5">
+                {/* Main Headline (Phase 1 Approved Messaging) */}
+                <div className="hero-enter space-y-2">
                   <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-[#1A1714] leading-[1.12]">
                     Follow the money.{' '}
                     <span className="text-[#EA8500] block mt-1">
-                      Understand the risk.
+                      Understand the risk. Investigate with evidence.
                     </span>
                   </h1>
-                  <p className="text-xs font-mono font-medium tracking-wide uppercase text-[#8C857B] pt-0.5">
-                    Trace the flow. Protect the innocent.
+                </div>
+
+                {/* Supporting Text (Phase 1 Approved Plain-English Messaging) */}
+                <p className="hero-enter text-sm sm:text-base text-[#6B655B] leading-relaxed max-w-xl">
+                  FraudShield AI helps investigators trace suspicious money movement across connected accounts, understand AI-generated risk signals, review available evidence, and record investigation decisions.
+                </p>
+
+                {/* Prominent Action CTAs (Phase 1 Primary & Secondary) */}
+                <div className="hero-enter flex flex-wrap items-center gap-3 pt-1">
+                  <Link
+                    to="/guided-investigation"
+                    className="btn-primary text-sm py-3 px-5 sm:px-6 rounded-xl font-bold flex items-center gap-2 shadow-md hover:shadow-lg"
+                  >
+                    <Sparkles className="w-4 h-4 text-white" />
+                    <span>Start Guided Investigation</span>
+                    <ArrowRight className="w-4 h-4 text-white" />
+                  </Link>
+
+                  <Link
+                    to="/workspace"
+                    className="btn-secondary text-sm py-3 px-5 rounded-xl font-semibold flex items-center gap-2"
+                  >
+                    <LayoutGrid className="w-4 h-4 text-[#6B655B]" />
+                    <span>Explore the Workspace</span>
+                  </Link>
+                </div>
+
+                {/* Demonstration Data & Forensic Transparency Indicator */}
+                <div className="hero-enter p-3 rounded-xl bg-white border border-[#EAE3D6] text-xs text-[#6B655B] flex items-start gap-2.5 shadow-2xs">
+                  <Scale className="w-4 h-4 text-[#EA8500] shrink-0 mt-0.5" />
+                  <p className="leading-snug">
+                    <strong className="text-[#1A1714] font-semibold">Demonstration Mode:</strong> Sample investigation uses synthetic financial records. AI risk scores provide advisory decision support; mathematical anomalies are not legal proof of criminal activity.
                   </p>
                 </div>
 
-                {/* Supporting Text */}
-                <p className="hero-enter text-sm sm:text-base text-[#6B655B] leading-relaxed max-w-xl">
-                  Explore account activity, see where money moved, and understand what the AI noticed—all in one investigation workspace.
-                </p>
-
-                {/* Account Repository Lookup Card (matching reference layout) */}
-                <div className="hero-enter bg-white border border-[#EAE3D6] rounded-2xl p-4 sm:p-5 shadow-sm space-y-3.5">
+                {/* Account Repository Lookup Card */}
+                <div className="hero-enter bg-white border border-[#EAE3D6] rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
                   <div className="flex items-center justify-between text-[11px] font-mono text-[#8C857B]">
                     <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[#1A1714]">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#EA8500]" />
-                      Account Repository Lookup
+                      Direct Account Search
                     </span>
                     <span className="px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#EAE3D6] text-[10px]">
-                      Core Ledger: Live (10,000 Accounts)
+                      Search 10,000 Accounts
                     </span>
                   </div>
 
-                  {/* Search Input Bar with Primary CTA */}
+                  {/* Search Input Bar */}
                   <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-2">
                     <div className="relative flex-1">
                       <Search className="w-4 h-4 text-[#8C857B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -154,87 +180,42 @@ export const LandingPage: React.FC = () => {
                         className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] text-xs font-mono text-[#1A1714] placeholder-[#8C857B] focus:outline-none focus:border-[#EA8500] focus:ring-1 focus:ring-[#EA8500] transition-all"
                       />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="submit"
-                        className="px-5 py-2.5 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white text-xs font-bold tracking-tight shadow-sm hover:shadow transition-all inline-flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap active:scale-[0.98]"
-                      >
-                        <span>Start Investigation</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
-                      <Link
-                        to="/accounts/ACC-000001"
-                        className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-[#FAF7F2] text-[#1A1714] border border-[#EAE3D6] text-xs font-semibold hover:border-[#D5CDC0] transition-all inline-flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap shadow-2xs"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-[#EA8500]" />
-                        <span>Explore a Demo</span>
-                      </Link>
-                    </div>
+                    <button
+                      type="submit"
+                      className="btn-primary py-2 px-4 rounded-xl text-xs font-bold"
+                    >
+                      <span>Search Account</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
                   </form>
-
-                  {/* Tip Subtitle */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#8C857B] pt-0.5">
-                    <span className="flex items-center gap-1">
-                      <Info className="w-3 h-3 text-[#EA8500]" />
-                      <span>Tip: Type an account ID like ACC-000001, or just 1.</span>
-                    </span>
-                    <span>Instant transaction review & AI checks</span>
-                  </div>
 
                   {/* Quick Examples Pills */}
                   <div className="pt-2 border-t border-[#EAE3D6]/80 flex flex-wrap items-center gap-1.5 text-xs">
                     <span className="text-[10px] font-mono uppercase tracking-wider text-[#8C857B] mr-1">
-                      Quick examples:
+                      Sample entities:
                     </span>
                     <Link
                       to="/accounts/ACC-000001"
                       className="px-2 py-0.5 rounded-md bg-[#FAF7F2] border border-[#EAE3D6] text-[11px] font-mono text-[#1A1714] hover:border-[#EA8500] hover:text-[#EA8500] transition-colors flex items-center gap-1"
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-[#EA8500]" />
-                      <span>ACC-000001 (Victim)</span>
+                      <span>ACC-000001 (Victim Drain)</span>
                     </Link>
                     <Link
                       to="/accounts/ACC-000002"
                       className="px-2 py-0.5 rounded-md bg-[#FAF7F2] border border-[#EAE3D6] text-[11px] font-mono text-[#1A1714] hover:border-[#EA8500] hover:text-[#EA8500] transition-colors flex items-center gap-1"
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                      <span>ACC-000002 (Mule)</span>
+                      <span>ACC-000002 (Mule Conduit)</span>
                     </Link>
                     <Link
-                      to="/accounts/ACC-000003"
+                      to="/cases/FS-1042"
                       className="px-2 py-0.5 rounded-md bg-[#FAF7F2] border border-[#EAE3D6] text-[11px] font-mono text-[#1A1714] hover:border-[#EA8500] hover:text-[#EA8500] transition-colors flex items-center gap-1"
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                      <span>ACC-000003 (Hop 2)</span>
-                    </Link>
-                    <Link
-                      to="/accounts/ACC-000010"
-                      className="px-2 py-0.5 rounded-md bg-[#FAF7F2] border border-[#EAE3D6] text-[11px] font-mono text-[#1A1714] hover:border-[#EA8500] hover:text-[#EA8500] transition-colors flex items-center gap-1"
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      <span>ACC-000010 (Normal)</span>
+                      <span>Case FS-1042 (UPI Theft)</span>
                     </Link>
                   </div>
-
-                  {/* Recent Searches Strip */}
-                  <div className="flex items-center gap-2 text-[10px] font-mono text-[#8C857B] pt-0.5">
-                    <span>Recent:</span>
-                    <Link to="/accounts/ACC-000001" className="hover:text-[#EA8500] underline">ACC-000001</Link>
-                    <span>·</span>
-                    <Link to="/accounts/ACC-000002" className="hover:text-[#EA8500] underline">ACC-000002</Link>
-                    <span>·</span>
-                    <Link to="/accounts/ACC-000003" className="hover:text-[#EA8500] underline">ACC-000003</Link>
-                    <span>·</span>
-                    <Link to="/accounts/ACC-000004" className="hover:text-[#EA8500] underline">ACC-000004</Link>
-                  </div>
-                </div>
-
-                {/* Safeguard Note */}
-                <div className="hero-enter p-3 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] text-xs text-[#6B655B] flex items-start gap-2.5">
-                  <Scale className="w-4 h-4 text-[#EA8500] flex-shrink-0 mt-0.5" />
-                  <p className="leading-snug">
-                    <strong className="text-[#1A1714] font-semibold">Forensic Principle:</strong> Automated account freezing is strictly prohibited. Connected accounts are reviewed by human investigators to prevent collateral harm to good-faith businesses.
-                  </p>
                 </div>
               </div>
 
@@ -471,7 +452,7 @@ export const LandingPage: React.FC = () => {
                     Evidence & Human Review
                   </h3>
                   <p className="text-xs text-[#6B655B] leading-relaxed">
-                    Structured case files separating observed movements from evidence sufficiency. Human compliance decisions recorded in an immutable audit log.
+                    Structured case files separating observed movements from evidence sufficiency. Human compliance decisions recorded in an append-only audit trail.
                   </p>
                 </div>
                 <div className="pt-4 mt-4 border-t border-[#EAE3D6] flex items-center justify-between text-xs text-[#8C857B]">

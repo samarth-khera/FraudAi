@@ -416,7 +416,7 @@ export const AuditPage: React.FC = () => {
           <button
             onClick={fetchEvents}
             disabled={loading}
-            className="px-4 py-2 rounded-xl bg-white hover:bg-[#FAF7F2] border border-[#EAE3D6] text-xs font-semibold text-[#1A1714] flex items-center gap-2 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+            className="btn-secondary py-2 px-4 text-xs font-semibold shadow-xs disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 text-[#EA8500] ${loading ? 'animate-spin' : ''}`} />
             <span>Refresh Events</span>
@@ -427,7 +427,7 @@ export const AuditPage: React.FC = () => {
             <button
               onClick={handleExportFilteredAll}
               disabled={isExporting || totalCount === 0}
-              className="px-4 py-2 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+              className="btn-primary py-2 px-4 text-xs font-semibold shadow-xs disabled:opacity-50"
               title="Export all records matching current filter (via backend CSV stream)"
             >
               <Download className="w-3.5 h-3.5" />
@@ -436,7 +436,7 @@ export const AuditPage: React.FC = () => {
             <button
               onClick={handleExportCurrentPage}
               disabled={isExporting || (auditData?.events.length ?? 0) === 0}
-              className="px-3 py-2 rounded-xl bg-white hover:bg-[#FAF7F2] border border-[#EAE3D6] text-[11px] font-semibold text-[#6B655B] transition-colors cursor-pointer shadow-xs disabled:opacity-50 hidden sm:inline-flex items-center gap-1"
+              className="btn-secondary py-2 px-3 text-[11px] font-semibold shadow-xs disabled:opacity-50 hidden sm:inline-flex items-center gap-1"
               title="Export only currently viewed page rows"
             >
               <span>Page Only</span>

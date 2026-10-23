@@ -51,3 +51,5 @@ env/
 *.sqlite3
 fraudshield.db
 test*.db
+node_modules/
+dist/
