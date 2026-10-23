@@ -22,19 +22,18 @@ describe('Page Rendering', () => {
     expect(screen.getByText('Explore Demo Case FS-1042')).toBeInTheDocument();
   });
 
-  it('renders ModelInsightsPage with real PaySim metrics and confusion matrix', () => {
+  it('renders ModelInsightsPage with model registry and architecture tabs', async () => {
     render(
       <MemoryRouter>
         <ModelInsightsPage />
       </MemoryRouter>
     );
 
-    expect(screen.getByText(/ML Model Performance & Validation/i)).toBeInTheDocument();
-    expect(screen.getByText('98.6%')).toBeInTheDocument();
-    expect(screen.getByText('83.6%')).toBeInTheDocument();
-    expect(screen.getByText('0.9828')).toBeInTheDocument();
-    expect(screen.getByText('True Negatives')).toBeInTheDocument();
-    expect(screen.getByText('True Positives')).toBeInTheDocument();
+    expect(screen.getByText('Model Insights')).toBeInTheDocument();
+    expect(screen.getByText('MODEL INTELLIGENCE')).toBeInTheDocument();
+    expect(screen.getByText('V2 Account-Level Fraud Model')).toBeInTheDocument();
+    expect(screen.getByText('Transaction-Level PaySim Benchmark')).toBeInTheDocument();
+    expect(screen.getByText('Model Comparison & Scope')).toBeInTheDocument();
   });
 });
 
