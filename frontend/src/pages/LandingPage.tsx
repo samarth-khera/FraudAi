@@ -1,623 +1,608 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { gsap } from 'gsap';
 import {
   Shield,
   ArrowRight,
-  Network,
+  Search,
+  Activity,
+  GitBranch,
   Cpu,
-  Lock,
   FileCheck2,
   CheckCircle2,
   AlertTriangle,
   Scale,
   ArrowUpRight,
-  GitBranch,
+  Lock,
   Layers,
+  Sparkles,
+  UserCheck,
+  ShieldAlert,
+  BarChart3,
+  HelpCircle,
+  Database,
+  Info,
 } from 'lucide-react';
+import { UnifiedHeader } from '../components/layout/UnifiedHeader';
+import { V2Footer } from '../components/v2/V2Footer';
+import { V2DemoTreeVisual } from '../components/v2/V2DemoTreeVisual';
 
-interface PreviewNode {
-  id: string;
-  hop: number;
-  roleLabel: string;
-  roleBadge: string;
-  grossIn: string;
-  grossOut: string;
-  traceableIn: string;
-  unforwarded: string;
-  reviewState: string;
-  evidenceNote: string;
-  txId?: string;
-}
-
-const PREVIEW_NODES: Record<string, PreviewNode> = {
-  V001: {
-    id: 'V001',
-    hop: 0,
-    roleLabel: 'Reporting Victim (Origin)',
-    roleBadge: 'REPORTING VICTIM',
-    grossIn: '₹0',
-    grossOut: '₹50,000',
-    traceableIn: '₹0',
-    unforwarded: '₹0 (Disputed Origin)',
-    reviewState: 'Reporting Victim',
-    evidenceNote: 'Reported unauthorized ₹50,000 UPI debit via leg T001 to initial receiver A100.',
-    txId: 'T001',
-  },
-  A100: {
-    id: 'A100',
-    hop: 1,
-    roleLabel: 'Reported Initial Receiver',
-    roleBadge: 'HOP 1 · INITIAL RECEIVER',
-    grossIn: '₹50,000',
-    grossOut: '₹50,000',
-    traceableIn: '₹50,000',
-    unforwarded: '₹0 (100% Forwarded)',
-    reviewState: 'Under Investigation',
-    evidenceNote: 'Received ₹50,000 from V001 (T001) and rapidly forwarded ₹50,000 via IMPS (T002) to B200 within 15 minutes.',
-    txId: 'T001',
-  },
-  B200: {
-    id: 'B200',
-    hop: 2,
-    roleLabel: 'Intermediate Pass-Through Account',
-    roleBadge: 'HOP 2 · INTERMEDIATE SPLIT',
-    grossIn: '₹50,000',
-    grossOut: '₹50,000',
-    traceableIn: '₹50,000',
-    unforwarded: '₹0 (Split to C300 & D400)',
-    reviewState: 'Under Review',
-    evidenceNote: 'Split ₹50,000 across two downstream branches: ₹30,000 UPI to C300 (T003) and ₹20,000 NEFT to D400 (T004).',
-    txId: 'T002',
-  },
-  C300: {
-    id: 'C300',
-    hop: 3,
-    roleLabel: 'Downstream Recipient (Commingled Flow)',
-    roleBadge: 'HOP 3 · PENDING HUMAN REVIEW',
-    grossIn: '₹30,000',
-    grossOut: '₹15,000',
-    traceableIn: '₹30,000',
-    unforwarded: '₹15,000 Retained',
-    reviewState: 'Under Review',
-    evidenceNote: 'Retains ₹15,000 of scenario-attributed exposure after forwarding ₹10,000 to E500 (T005) and ₹5,000 to F600 (T006). Requires invoice/KYC check before any compliance action.',
-    txId: 'T003',
-  },
-  D400: {
-    id: 'D400',
-    hop: 3,
-    roleLabel: 'Downstream Recipient (Partial Forward)',
-    roleBadge: 'HOP 3 · PENDING HUMAN REVIEW',
-    grossIn: '₹20,000',
-    grossOut: '₹10,000',
-    traceableIn: '₹20,000',
-    unforwarded: '₹10,000 Retained',
-    reviewState: 'Under Review',
-    evidenceNote: 'Received ₹20,000 NEFT via T004 and forwarded ₹10,000 to G700 (T007). Connection alone does not establish wrongdoing.',
-    txId: 'T004',
-  },
-  E500: {
-    id: 'E500',
-    hop: 4,
-    roleLabel: 'Terminal Downstream Recipient',
-    roleBadge: 'HOP 4 · TERMINAL NODE',
-    grossIn: '₹10,000',
-    grossOut: '₹0',
-    traceableIn: '₹10,000',
-    unforwarded: '₹10,000 Retained',
-    reviewState: 'Under Review',
-    evidenceNote: 'Terminal hop receiving ₹10,000 UPI from C300 (T005). May represent a good-faith merchant or service provider.',
-    txId: 'T005',
-  },
-  F600: {
-    id: 'F600',
-    hop: 4,
-    roleLabel: 'Terminal Downstream Recipient',
-    roleBadge: 'HOP 4 · TERMINAL NODE',
-    grossIn: '₹5,000',
-    grossOut: '₹0',
-    traceableIn: '₹5,000',
-    unforwarded: '₹5,000 Retained',
-    reviewState: 'Under Review',
-    evidenceNote: 'Terminal hop receiving ₹5,000 NEFT from C300 (T006). Zero automated account freeze applied.',
-    txId: 'T006',
-  },
-  G700: {
-    id: 'G700',
-    hop: 4,
-    roleLabel: 'Terminal Downstream Recipient',
-    roleBadge: 'HOP 4 · TERMINAL NODE',
-    grossIn: '₹10,000',
-    grossOut: '₹0',
-    traceableIn: '₹10,000',
-    unforwarded: '₹10,000 Retained',
-    reviewState: 'Under Review',
-    evidenceNote: 'Terminal hop receiving ₹10,000 UPI from D400 (T007). Requires human verification of commercial purpose.',
-    txId: 'T007',
-  },
+export const normalizeAccountId = (raw: string): string => {
+  const trimmed = raw.trim();
+  if (!trimmed) return '';
+  if (/^\d+$/.test(trimmed)) {
+    return `ACC-${trimmed.padStart(6, '0')}`;
+  }
+  if (/^acc-\d+$/i.test(trimmed)) {
+    const digits = trimmed.replace(/^acc-/i, '');
+    return `ACC-${digits.padStart(6, '0')}`;
+  }
+  return trimmed.toUpperCase();
 };
 
 export const LandingPage: React.FC = () => {
-  const [selectedId, setSelectedId] = useState<string>('C300');
-  const activeNode = PREVIEW_NODES[selectedId] || PREVIEW_NODES.C300;
+  const navigate = useNavigate();
+  const heroRef = useRef<HTMLDivElement>(null);
+  const [searchInput, setSearchInput] = useState('');
+
+  // Handle hero search submission
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchInput.trim()) {
+      const normalized = normalizeAccountId(searchInput);
+      navigate(`/accounts/${normalized}`);
+    } else {
+      navigate('/workspace');
+    }
+  };
+
+  // GSAP subtle hero entrance animation with reduced-motion respect
+  useEffect(() => {
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReducedMotion || !heroRef.current) return;
+
+    const ctx = gsap.context(() => {
+      gsap.from('.hero-enter', {
+        opacity: 0,
+        y: 16,
+        duration: 0.65,
+        stagger: 0.08,
+        ease: 'power2.out',
+      });
+      gsap.from('.hero-tree-enter', {
+        opacity: 0,
+        scale: 0.98,
+        duration: 0.8,
+        delay: 0.15,
+        ease: 'power2.out',
+      });
+    }, heroRef);
+
+    return () => ctx.revert();
+  }, []);
 
   return (
-    <div className="min-h-screen bg-[#F5F4F0] text-[#0B1322] flex flex-col">
-      {/* Midnight-Navy Top Navigation */}
-      <header className="sticky top-0 z-40 bg-[#070C16] border-b border-[#1C2B45] text-white">
-        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-md bg-[#0D9488] flex items-center justify-center text-white border border-[#2DD4BF]/40">
-              <Shield className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="font-bold text-base text-white tracking-tight flex items-center gap-2">
-                FraudShield
-                <span className="font-mono text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#111C30] text-[#2DD4BF] border border-[#1C2B45]">
-                  AI
-                </span>
-              </span>
-              <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">
-                Financial Forensics &amp; Innocent Protection
-              </span>
-            </div>
-          </Link>
+    <div className="min-h-screen bg-[#F8F6F0] text-[#1A1714] flex flex-col font-sans selection:bg-[#EA8500]/20 selection:text-[#1A1714]">
+      {/* 1. Unified Platform Navigation Shell */}
+      <UnifiedHeader />
 
-          <nav className="hidden md:flex items-center gap-7 text-xs font-medium text-slate-300">
-            <a href="#preview" className="hover:text-[#2DD4BF] transition-colors">Live Topology Preview</a>
-            <a href="#features" className="hover:text-[#2DD4BF] transition-colors">Forensic Architecture</a>
-            <a href="#safeguards" className="hover:text-[#2DD4BF] transition-colors">Innocent Protection</a>
-            <Link to="/app/model-insights" className="hover:text-[#2DD4BF] transition-colors">Model Validation</Link>
-          </nav>
+      <main className="flex-1">
+        {/* 2. Hero Section: Polished Horizontal Desktop Layout */}
+        <section
+          ref={heroRef}
+          className="relative pt-6 pb-14 sm:pt-10 sm:pb-18 border-b border-[#EAE3D6] overflow-hidden"
+        >
+          {/* Subtle warm ambient backdrop aura */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1360px] h-[450px] bg-gradient-to-b from-[#EA8500]/6 via-[#FAF7F2] to-transparent pointer-events-none rounded-full blur-3xl -z-10" />
 
-          <div className="flex items-center gap-3">
-            <Link
-              to="/app/fund-flow"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-[#111C30] hover:bg-[#1C2B45] text-slate-200 border border-[#1C2B45] text-xs font-medium transition-colors"
-            >
-              <Network className="w-3.5 h-3.5 text-[#2DD4BF]" />
-              <span>Fund Flow Graph</span>
-            </Link>
-            <Link
-              to="/app/dashboard"
-              className="px-4 py-2 rounded-md bg-[#0D9488] hover:bg-[#0F766E] text-white text-xs font-semibold transition-colors flex items-center gap-1.5"
-            >
-              <span>Explore Investigation</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        </div>
-      </header>
+          <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-10 items-start">
+              {/* Left Column: Headline, Description & Interactive Search Box (6 cols) */}
+              <div className="lg:col-span-6 space-y-5">
+                {/* Stage 1 Pill & Status Indicator */}
+                <div className="hero-enter inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#EAE3D6] text-[11px] font-mono text-[#6B655B] shadow-2xs">
+                  <span className="w-2 h-2 rounded-full bg-[#EA8500] animate-pulse" />
+                  <span className="font-semibold text-[#1A1714]">Stage 1 · Account Search & Money Flow</span>
+                  <span className="text-[#C5BDB0]">·</span>
+                  <span className="text-[#0D9488] font-bold">Core Ledger: Live</span>
+                </div>
 
-      {/* Architectural Midnight-Navy Hero + Interactive Case FS-1042 Preview */}
-      <section className="blueprint-grid-dark text-white border-b border-[#1C2B45] pt-12 pb-16 lg:pt-16 lg:pb-20">
-        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-            {/* Left Column: Editorial Thesis & Primary Actions (5 cols) */}
-            <div className="lg:col-span-5 space-y-6 pt-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-[#111C30] border border-[#1C2B45] text-[11px] font-mono text-[#2DD4BF]">
-                <Scale className="w-3.5 h-3.5" />
-                <span>DECISION-SUPPORT FORENSICS · ZERO AUTO-FREEZE</span>
+                {/* Main Headline */}
+                <div className="hero-enter space-y-1.5">
+                  <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-[#1A1714] leading-[1.12]">
+                    Follow the money.{' '}
+                    <span className="text-[#EA8500] block mt-1">
+                      Understand the risk.
+                    </span>
+                  </h1>
+                  <p className="text-xs font-mono font-medium tracking-wide uppercase text-[#8C857B] pt-0.5">
+                    Trace the flow. Protect the innocent.
+                  </p>
+                </div>
+
+                {/* Supporting Text */}
+                <p className="hero-enter text-sm sm:text-base text-[#6B655B] leading-relaxed max-w-xl">
+                  Explore account activity, see where money moved, and understand what the AI noticed—all in one investigation workspace.
+                </p>
+
+                {/* Account Repository Lookup Card (matching reference layout) */}
+                <div className="hero-enter bg-white border border-[#EAE3D6] rounded-2xl p-4 sm:p-5 shadow-sm space-y-3.5">
+                  <div className="flex items-center justify-between text-[11px] font-mono text-[#8C857B]">
+                    <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[#1A1714]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#EA8500]" />
+                      Account Repository Lookup
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#EAE3D6] text-[10px]">
+                      Core Ledger: Live (10,000 Accounts)
+                    </span>
+                  </div>
+
+                  {/* Search Input Bar with Primary CTA */}
+                  <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-2">
+                    <div className="relative flex-1">
+                      <Search className="w-4 h-4 text-[#8C857B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        placeholder="Enter synthetic account ID, e.g. ACC-000001"
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] text-xs font-mono text-[#1A1714] placeholder-[#8C857B] focus:outline-none focus:border-[#EA8500] focus:ring-1 focus:ring-[#EA8500] transition-all"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="submit"
+                        className="px-5 py-2.5 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white text-xs font-bold tracking-tight shadow-sm hover:shadow transition-all inline-flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap active:scale-[0.98]"
+                      >
+                        <span>Start Investigation</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                      <Link
+                        to="/accounts/ACC-000001"
+                        className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-[#FAF7F2] text-[#1A1714] border border-[#EAE3D6] text-xs font-semibold hover:border-[#D5CDC0] transition-all inline-flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap shadow-2xs"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-[#EA8500]" />
+                        <span>Explore a Demo</span>
+                      </Link>
+                    </div>
+                  </form>
+
+                  {/* Tip Subtitle */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#8C857B] pt-0.5">
+                    <span className="flex items-center gap-1">
+                      <Info className="w-3 h-3 text-[#EA8500]" />
+                      <span>Tip: Type an account ID like ACC-000001, or just 1.</span>
+                    </span>
+                    <span>Instant transaction review & AI checks</span>
+                  </div>
+
+                  {/* Quick Examples Pills */}
+                  <div className="pt-2 border-t border-[#EAE3D6]/80 flex flex-wrap items-center gap-1.5 text-xs">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-[#8C857B] mr-1">
+                      Quick examples:
+                    </span>
+                    <Link
+                      to="/accounts/ACC-000001"
+                      className="px-2 py-0.5 rounded-md bg-[#FAF7F2] border border-[#EAE3D6] text-[11px] font-mono text-[#1A1714] hover:border-[#EA8500] hover:text-[#EA8500] transition-colors flex items-center gap-1"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#EA8500]" />
+                      <span>ACC-000001 (Victim)</span>
+                    </Link>
+                    <Link
+                      to="/accounts/ACC-000002"
+                      className="px-2 py-0.5 rounded-md bg-[#FAF7F2] border border-[#EAE3D6] text-[11px] font-mono text-[#1A1714] hover:border-[#EA8500] hover:text-[#EA8500] transition-colors flex items-center gap-1"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                      <span>ACC-000002 (Mule)</span>
+                    </Link>
+                    <Link
+                      to="/accounts/ACC-000003"
+                      className="px-2 py-0.5 rounded-md bg-[#FAF7F2] border border-[#EAE3D6] text-[11px] font-mono text-[#1A1714] hover:border-[#EA8500] hover:text-[#EA8500] transition-colors flex items-center gap-1"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                      <span>ACC-000003 (Hop 2)</span>
+                    </Link>
+                    <Link
+                      to="/accounts/ACC-000010"
+                      className="px-2 py-0.5 rounded-md bg-[#FAF7F2] border border-[#EAE3D6] text-[11px] font-mono text-[#1A1714] hover:border-[#EA8500] hover:text-[#EA8500] transition-colors flex items-center gap-1"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span>ACC-000010 (Normal)</span>
+                    </Link>
+                  </div>
+
+                  {/* Recent Searches Strip */}
+                  <div className="flex items-center gap-2 text-[10px] font-mono text-[#8C857B] pt-0.5">
+                    <span>Recent:</span>
+                    <Link to="/accounts/ACC-000001" className="hover:text-[#EA8500] underline">ACC-000001</Link>
+                    <span>·</span>
+                    <Link to="/accounts/ACC-000002" className="hover:text-[#EA8500] underline">ACC-000002</Link>
+                    <span>·</span>
+                    <Link to="/accounts/ACC-000003" className="hover:text-[#EA8500] underline">ACC-000003</Link>
+                    <span>·</span>
+                    <Link to="/accounts/ACC-000004" className="hover:text-[#EA8500] underline">ACC-000004</Link>
+                  </div>
+                </div>
+
+                {/* Safeguard Note */}
+                <div className="hero-enter p-3 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] text-xs text-[#6B655B] flex items-start gap-2.5">
+                  <Scale className="w-4 h-4 text-[#EA8500] flex-shrink-0 mt-0.5" />
+                  <p className="leading-snug">
+                    <strong className="text-[#1A1714] font-semibold">Forensic Principle:</strong> Automated account freezing is strictly prohibited. Connected accounts are reviewed by human investigators to prevent collateral harm to good-faith businesses.
+                  </p>
+                </div>
               </div>
 
-              <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-[1.1]">
-                Trace the Flow.{' '}
-                <span className="text-[#2DD4BF] block mt-1">
-                  Protect the Innocent.
+              {/* Right Column: Animated Fund-Flow Tree Preview (6 cols) */}
+              <div className="lg:col-span-6 hero-tree-enter">
+                <V2DemoTreeVisual
+                  onSelectAccount={(accId) => navigate(`/accounts/${accId}`)}
+                  className="w-full shadow-lg"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 3. Section 2 — Explain How FraudShield Works (3 Balanced Columns) */}
+        <section className="py-14 sm:py-18 bg-white border-b border-[#EAE3D6]">
+          <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+            {/* Section Header */}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-[#EAE3D6] pb-4">
+              <div className="space-y-1">
+                <span className="font-mono text-xs font-bold text-[#EA8500] uppercase tracking-wider">
+                  STAGE 2 · HOW INVESTIGATION WORKS
                 </span>
-              </h1>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1A1714] tracking-tight">
+                  How investigation works
+                </h2>
+              </div>
+              <span className="text-xs font-mono text-[#8C857B]">
+                Sequential 3-step verification model
+              </span>
+            </div>
 
-              <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-                When financial fraud strikes, stolen funds rapidly split across UPI, IMPS, and NEFT hops—frequently landing in the accounts of legitimate merchants, gig workers, and vendors. FraudShield AI traces multi-hop fund exposure and explains pre-transaction ML signals while preventing automated blanket freezes on downstream recipients.
+            {/* 3 Balanced Horizontally Aligned Columns */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+              {/* Column 01: Find an account */}
+              <motion.div
+                whileHover={{ y: -3, transition: { duration: 0.18 } }}
+                className="p-6 sm:p-7 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] hover:border-[#EA8500]/60 transition-all flex flex-col justify-between shadow-2xs group"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-bold text-[#EA8500] bg-white border border-[#EAE3D6] px-2.5 py-1 rounded-lg">
+                      01 · STEP 1
+                    </span>
+                    <div className="w-10 h-10 rounded-xl bg-white border border-[#EAE3D6] flex items-center justify-center text-[#EA8500] group-hover:bg-[#FFF4E6] group-hover:border-[#FCD5B5] transition-colors">
+                      <Search className="w-5 h-5" />
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold text-[#1A1714]">
+                    1. Find an account
+                  </h3>
+                  <p className="text-sm text-[#6B655B] leading-relaxed">
+                    Search an account and review its available profile and transaction history.
+                  </p>
+                </div>
+                <div className="pt-5 mt-5 border-t border-[#EAE3D6]">
+                  <Link
+                    to="/workspace"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#EA8500] hover:text-[#D27400] transition-colors"
+                  >
+                    <span>Open Triage Workspace</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </motion.div>
+
+              {/* Column 02: Review the activity */}
+              <motion.div
+                whileHover={{ y: -3, transition: { duration: 0.18 } }}
+                className="p-6 sm:p-7 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] hover:border-[#EA8500]/60 transition-all flex flex-col justify-between shadow-2xs group"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-bold text-[#EA8500] bg-white border border-[#EAE3D6] px-2.5 py-1 rounded-lg">
+                      02 · STEP 2
+                    </span>
+                    <div className="w-10 h-10 rounded-xl bg-white border border-[#EAE3D6] flex items-center justify-center text-[#EA8500] group-hover:bg-[#FFF4E6] group-hover:border-[#FCD5B5] transition-colors">
+                      <Cpu className="w-5 h-5" />
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold text-[#1A1714]">
+                    2. Review the activity
+                  </h3>
+                  <p className="text-sm text-[#6B655B] leading-relaxed">
+                    Run an analysis to see unusual patterns, the AI's assessment, and what influenced its score.
+                  </p>
+                </div>
+                <div className="pt-5 mt-5 border-t border-[#EAE3D6]">
+                  <Link
+                    to="/accounts/ACC-000001"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#EA8500] hover:text-[#D27400] transition-colors"
+                  >
+                    <span>Run Live Analysis Demo</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </motion.div>
+
+              {/* Column 03: Follow the money */}
+              <motion.div
+                whileHover={{ y: -3, transition: { duration: 0.18 } }}
+                className="p-6 sm:p-7 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] hover:border-[#EA8500]/60 transition-all flex flex-col justify-between shadow-2xs group"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-bold text-[#EA8500] bg-white border border-[#EAE3D6] px-2.5 py-1 rounded-lg">
+                      03 · STEP 3
+                    </span>
+                    <div className="w-10 h-10 rounded-xl bg-white border border-[#EAE3D6] flex items-center justify-center text-[#EA8500] group-hover:bg-[#FFF4E6] group-hover:border-[#FCD5B5] transition-colors">
+                      <GitBranch className="w-5 h-5" />
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold text-[#1A1714]">
+                    3. Follow the money
+                  </h3>
+                  <p className="text-sm text-[#6B655B] leading-relaxed">
+                    Explore connected accounts and inspect where transfers went next.
+                  </p>
+                </div>
+                <div className="pt-5 mt-5 border-t border-[#EAE3D6]">
+                  <Link
+                    to="/fund-flow"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#EA8500] hover:text-[#D27400] transition-colors"
+                  >
+                    <span>Inspect Fund Lineage</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* 4. Section 3 — Compact Capabilities Section */}
+        <section className="py-14 sm:py-18 bg-[#F8F6F0] border-b border-[#EAE3D6]">
+          <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#EAE3D6] pb-4">
+              <div className="space-y-1">
+                <span className="font-mono text-xs font-bold text-[#EA8500] uppercase tracking-wider">
+                  STAGE 3 · CORE PLATFORM CAPABILITIES
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1A1714] tracking-tight">
+                  Forensic capabilities built for financial integrity
+                </h2>
+              </div>
+              <Link
+                to="/workspace"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#EA8500] hover:text-[#D27400] transition-colors"
+              >
+                <span>View all 10,000 accounts</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            {/* 4 Balanced Capability Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Capability 1: Account Intelligence */}
+              <Link
+                to="/accounts/ACC-000001"
+                className="p-6 rounded-2xl bg-white border border-[#EAE3D6] hover:border-[#EA8500]/60 hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer"
+              >
+                <div className="space-y-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] flex items-center justify-center text-[#EA8500] group-hover:bg-[#FFF4E6] group-hover:border-[#FCD5B5] transition-colors">
+                    <UserCheck className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-base font-bold text-[#1A1714] group-hover:text-[#EA8500] transition-colors">
+                    Account Intelligence
+                  </h3>
+                  <p className="text-xs text-[#6B655B] leading-relaxed">
+                    Examine 360° account dossiers, customer KYC tiers, business classifications, and historical ledger transactions across UPI, IMPS, and NEFT.
+                  </p>
+                </div>
+                <div className="pt-4 mt-4 border-t border-[#EAE3D6] flex items-center justify-between text-xs text-[#8C857B]">
+                  <span>View Account 360°</span>
+                  <ArrowUpRight className="w-4 h-4 text-[#EA8500] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </div>
+              </Link>
+
+              {/* Capability 2: Explainable AI */}
+              <Link
+                to="/insights"
+                className="p-6 rounded-2xl bg-white border border-[#EAE3D6] hover:border-[#EA8500]/60 hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer"
+              >
+                <div className="space-y-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] flex items-center justify-center text-[#EA8500] group-hover:bg-[#FFF4E6] group-hover:border-[#FCD5B5] transition-colors">
+                    <Cpu className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-base font-bold text-[#1A1714] group-hover:text-[#EA8500] transition-colors">
+                    Explainable AI
+                  </h3>
+                  <p className="text-xs text-[#6B655B] leading-relaxed">
+                    Dual-engine scoring: XGBoost pre-transaction inference decomposed into exact additive log-odds TreeSHAP contributions, benchmarked against PaySim.
+                  </p>
+                </div>
+                <div className="pt-4 mt-4 border-t border-[#EAE3D6] flex items-center justify-between text-xs text-[#8C857B]">
+                  <span>View PR-AUC & Matrix</span>
+                  <ArrowUpRight className="w-4 h-4 text-[#EA8500] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </div>
+              </Link>
+
+              {/* Capability 3: Fund-Flow Tracing */}
+              <Link
+                to="/fund-flow"
+                className="p-6 rounded-2xl bg-white border border-[#EAE3D6] hover:border-[#EA8500]/60 hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer"
+              >
+                <div className="space-y-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] flex items-center justify-center text-[#EA8500] group-hover:bg-[#FFF4E6] group-hover:border-[#FCD5B5] transition-colors">
+                    <GitBranch className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-base font-bold text-[#1A1714] group-hover:text-[#EA8500] transition-colors">
+                    Fund-Flow Tracing
+                  </h3>
+                  <p className="text-xs text-[#6B655B] leading-relaxed">
+                    Interactive multi-hop lineage graph. Bounds exposure to the origin claim to eliminate misleading volume double-counting across downstream hops.
+                  </p>
+                </div>
+                <div className="pt-4 mt-4 border-t border-[#EAE3D6] flex items-center justify-between text-xs text-[#8C857B]">
+                  <span>Explore Lineage Canvas</span>
+                  <ArrowUpRight className="w-4 h-4 text-[#EA8500] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </div>
+              </Link>
+
+              {/* Capability 4: Evidence & Human Review */}
+              <Link
+                to="/cases"
+                className="p-6 rounded-2xl bg-white border border-[#EAE3D6] hover:border-[#EA8500]/60 hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer"
+              >
+                <div className="space-y-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] flex items-center justify-center text-[#EA8500] group-hover:bg-[#FFF4E6] group-hover:border-[#FCD5B5] transition-colors">
+                    <FileCheck2 className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-base font-bold text-[#1A1714] group-hover:text-[#EA8500] transition-colors">
+                    Evidence & Human Review
+                  </h3>
+                  <p className="text-xs text-[#6B655B] leading-relaxed">
+                    Structured case files separating observed movements from evidence sufficiency. Human compliance decisions recorded in an immutable audit log.
+                  </p>
+                </div>
+                <div className="pt-4 mt-4 border-t border-[#EAE3D6] flex items-center justify-between text-xs text-[#8C857B]">
+                  <span>Open Case Management</span>
+                  <ArrowUpRight className="w-4 h-4 text-[#EA8500] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </div>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* 5. Section 4 — Trust-and-Safety Section */}
+        <section className="py-14 sm:py-18 bg-white border-b border-[#EAE3D6]">
+          <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+            {/* Header */}
+            <div className="max-w-2xl space-y-2">
+              <span className="font-mono text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                Trust, Safety & Fairness Protocol
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1A1714] tracking-tight">
+                Decision support without collateral harm
+              </h2>
+              <p className="text-sm text-[#6B655B] leading-relaxed">
+                FraudShield is designed to empower human investigators with actionable intelligence while preventing unjust automated penalties on legitimate citizens.
               </p>
+            </div>
 
-              {/* Primary CTAs (preserving exact test strings) */}
-              <div className="flex flex-wrap items-center gap-3 pt-1">
+            {/* Safeguard Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="p-5 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] space-y-2.5">
+                <div className="w-8 h-8 rounded-lg bg-white border border-[#EAE3D6] flex items-center justify-center text-[#EA8500]">
+                  <HelpCircle className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold text-[#1A1714]">
+                  Risk scores are decision signals, not proof
+                </h3>
+                <p className="text-xs text-[#6B655B] leading-relaxed">
+                  An AI risk estimate highlights statistical anomalies against baseline distributions. It is an alert for human review, never an automated determination of guilt.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] space-y-2.5">
+                <div className="w-8 h-8 rounded-lg bg-white border border-[#EAE3D6] flex items-center justify-center text-[#EA8500]">
+                  <ShieldAlert className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold text-[#1A1714]">
+                  Connected accounts are not automatically guilty
+                </h3>
+                <p className="text-xs text-[#6B655B] leading-relaxed">
+                  Receiving funds from a suspicious source does not make a merchant or vendor a fraudster. Good-faith merchants regularly sell goods to unknown customers.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] space-y-2.5">
+                <div className="w-8 h-8 rounded-lg bg-white border border-[#EAE3D6] flex items-center justify-center text-[#EA8500]">
+                  <Layers className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold text-[#1A1714]">
+                  Missing evidence & uncertainty must be visible
+                </h3>
+                <p className="text-xs text-[#6B655B] leading-relaxed">
+                  Pending KYC verification, absent commercial invoices, and unverified bank statements are surfaced as explicit evidence gaps rather than assumed criminal evasion.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] space-y-2.5">
+                <div className="w-8 h-8 rounded-lg bg-white border border-[#EAE3D6] flex items-center justify-center text-[#EA8500]">
+                  <UserCheck className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold text-[#1A1714]">
+                  Human investigators make the final decision
+                </h3>
+                <p className="text-xs text-[#6B655B] leading-relaxed">
+                  Automated blanket account freezing is strictly prohibited. Every compliance restriction requires human reviewer sign-off recorded in an append-only audit trail.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-[#FAF7F2] border border-[#EAE3D6] space-y-2.5 md:col-span-2 lg:col-span-2">
+                <div className="w-8 h-8 rounded-lg bg-white border border-[#EAE3D6] flex items-center justify-center text-[#EA8500]">
+                  <Database className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold text-[#1A1714]">
+                  Synthetic demonstration environment
+                </h3>
+                <p className="text-xs text-[#6B655B] leading-relaxed">
+                  All customer names, bank accounts, and transactions on this platform are synthetically generated from the PaySim research benchmark. No real customer privacy or credit standing is ever evaluated.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 6. Section 5 — Final Call to Action */}
+        <section className="py-16 sm:py-20 bg-white">
+          <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="p-10 sm:p-12 lg:p-14 rounded-3xl bg-[#FAF7F2] border border-[#EAE3D6] text-center space-y-6 relative overflow-hidden shadow-sm">
+              <div className="max-w-2xl mx-auto space-y-3">
+                <span className="font-mono text-xs font-bold text-[#EA8500] uppercase tracking-wider">
+                  Get Started
+                </span>
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1A1714] tracking-tight">
+                  Ready to start an investigation?
+                </h2>
+                <p className="text-sm sm:text-base text-[#6B655B] leading-relaxed">
+                  Search across 10,000 synthetic demo accounts, inspect multi-hop fund flow trees, or review active forensic cases.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-4 pt-1">
                 <Link
-                  to="/app/dashboard"
-                  className="px-5 py-3 rounded-md bg-[#0D9488] hover:bg-[#0F766E] text-white text-xs sm:text-sm font-semibold transition-colors inline-flex items-center gap-2"
+                  to="/workspace"
+                  className="px-7 py-3.5 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white text-sm font-bold shadow-[0_4px_16px_rgba(234,133,0,0.28)] hover:shadow-[0_6px_22px_rgba(234,133,0,0.38)] transition-all inline-flex items-center gap-2 cursor-pointer active:scale-[0.98]"
                 >
-                  <span>Open Investigation Dashboard</span>
+                  <span>Start Investigation</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
-                  to="/app/fund-flow"
-                  className="px-5 py-3 rounded-md bg-[#111C30] hover:bg-[#1C2B45] text-white border border-[#1C2B45] text-xs sm:text-sm font-semibold transition-colors inline-flex items-center gap-2"
+                  to="/cases/FS-1042"
+                  className="px-6 py-3.5 rounded-xl bg-white hover:bg-[#FAF7F2] text-[#1A1714] border border-[#EAE3D6] text-sm font-semibold transition-all inline-flex items-center gap-2 cursor-pointer shadow-2xs hover:border-[#D5CDC0]"
                 >
-                  <Network className="w-4 h-4 text-[#2DD4BF]" />
+                  <FileCheck2 className="w-4 h-4 text-[#EA8500]" />
                   <span>Explore Demo Case FS-1042</span>
                 </Link>
               </div>
-
-              {/* Key Forensic Differentiators */}
-              <div className="grid grid-cols-3 gap-3 pt-4 border-t border-[#1C2B45] text-xs">
-                <div>
-                  <div className="font-mono text-lg font-bold text-white">₹50,000</div>
-                  <div className="text-[11px] text-slate-400">Bounded Stolen Pool (vs ₹1.75L gross hops)</div>
-                </div>
-                <div>
-                  <div className="font-mono text-lg font-bold text-[#2DD4BF]">98.6%</div>
-                  <div className="text-[11px] text-slate-400">Pre-TX XGBoost Precision + TreeSHAP</div>
-                </div>
-                <div>
-                  <div className="font-mono text-lg font-bold text-emerald-400">0 Freezes</div>
-                  <div className="text-[11px] text-slate-400">Human-adjudicated audit trail</div>
-                </div>
-              </div>
-
-              {/* Prototype Disclaimer */}
-              <div className="p-3 rounded-md bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200 flex items-start gap-2.5">
-                <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-                <span>
-                  <strong className="text-amber-100">Synthetic Research Prototype:</strong> Trained on PaySim mobile-money logs with synthetic multi-hop scenario <code className="font-mono">FS-1042</code>. Built strictly for human decision support.
-                </span>
-              </div>
-            </div>
-
-            {/* Right Column: Interactive Live Product Preview (7 cols) */}
-            <div id="preview" className="lg:col-span-7 bg-[#0B1322] border border-[#1C2B45] rounded-lg overflow-hidden shadow-2xl">
-              {/* Preview Top Bar */}
-              <div className="px-4 py-3 bg-[#070C16] border-b border-[#1C2B45] flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#2DD4BF]" />
-                  <span className="font-mono text-xs font-semibold text-white">
-                    INTERACTIVE TOPOLOGY PREVIEW · CASE FS-1042
-                  </span>
-                </div>
-                <span className="text-[11px] font-mono text-slate-400">
-                  Click any node below to inspect exposure vs. gross movement
-                </span>
-              </div>
-
-              {/* Interactive Multi-Hop Schematic Diagram */}
-              <div className="p-4 sm:p-5 bg-[#09101D] border-b border-[#1C2B45]">
-                <div className="grid grid-cols-5 gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider pb-2 mb-3 border-b border-[#1C2B45]/80">
-                  <div>Hop 0 · Origin</div>
-                  <div>Hop 1 · Initial</div>
-                  <div>Hop 2 · Split</div>
-                  <div>Hop 3 · Review</div>
-                  <div>Hop 4 · Terminal</div>
-                </div>
-
-                <div className="grid grid-cols-5 gap-2.5 items-center">
-                  {/* Hop 0 */}
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedId('V001')}
-                      className={`w-full p-2.5 rounded text-left border transition-all ${
-                        selectedId === 'V001'
-                          ? 'bg-[#111C30] border-[#2DD4BF] ring-1 ring-[#2DD4BF]'
-                          : 'bg-[#0B1322] border-sky-500/40 hover:border-sky-400'
-                      }`}
-                    >
-                      <div className="font-mono font-bold text-xs text-sky-300">V001</div>
-                      <div className="text-[10px] text-slate-400 truncate">Victim Origin</div>
-                      <div className="font-mono text-[10px] text-white mt-1">-₹50,000</div>
-                    </button>
-                  </div>
-
-                  {/* Hop 1 */}
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedId('A100')}
-                      className={`w-full p-2.5 rounded text-left border transition-all ${
-                        selectedId === 'A100'
-                          ? 'bg-[#111C30] border-[#2DD4BF] ring-1 ring-[#2DD4BF]'
-                          : 'bg-[#0B1322] border-red-500/50 hover:border-red-400'
-                      }`}
-                    >
-                      <div className="font-mono font-bold text-xs text-red-300">A100</div>
-                      <div className="text-[10px] text-slate-400 truncate">Initial Recv</div>
-                      <div className="font-mono text-[10px] text-slate-200 mt-1">₹50k → ₹50k</div>
-                    </button>
-                  </div>
-
-                  {/* Hop 2 */}
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedId('B200')}
-                      className={`w-full p-2.5 rounded text-left border transition-all ${
-                        selectedId === 'B200'
-                          ? 'bg-[#111C30] border-[#2DD4BF] ring-1 ring-[#2DD4BF]'
-                          : 'bg-[#0B1322] border-teal-500/40 hover:border-teal-400'
-                      }`}
-                    >
-                      <div className="font-mono font-bold text-xs text-[#2DD4BF]">B200</div>
-                      <div className="text-[10px] text-slate-400 truncate">Router Split</div>
-                      <div className="font-mono text-[10px] text-slate-200 mt-1">₹30k / ₹20k</div>
-                    </button>
-                  </div>
-
-                  {/* Hop 3 */}
-                  <div className="space-y-2">
-                    {(['C300', 'D400'] as const).map((id) => (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => setSelectedId(id)}
-                        className={`w-full p-2 rounded text-left border transition-all ${
-                          selectedId === id
-                            ? 'bg-[#111C30] border-[#2DD4BF] ring-1 ring-[#2DD4BF]'
-                            : 'bg-[#0B1322] border-amber-500/40 hover:border-amber-400'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono font-bold text-xs text-amber-300">{id}</span>
-                          <span className="text-[9px] font-mono text-amber-200/80">REVIEW</span>
-                        </div>
-                        <div className="font-mono text-[10px] text-slate-300 mt-0.5">
-                          {id === 'C300' ? 'Hold: ₹15,000' : 'Hold: ₹10,000'}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Hop 4 */}
-                  <div className="space-y-1.5">
-                    {(['E500', 'F600', 'G700'] as const).map((id) => (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => setSelectedId(id)}
-                        className={`w-full px-2 py-1.5 rounded text-left border transition-all ${
-                          selectedId === id
-                            ? 'bg-[#111C30] border-[#2DD4BF] ring-1 ring-[#2DD4BF]'
-                            : 'bg-[#0B1322] border-[#1C2B45] hover:border-amber-400/60'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono font-bold text-[11px] text-slate-200">{id}</span>
-                          <span className="font-mono text-[10px] text-[#2DD4BF]">
-                            {id === 'F600' ? '₹5k' : '₹10k'}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Selected Node Live Forensic Dossier Preview */}
-              <div className="p-4 sm:p-5 bg-[#0B1322] space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <span className="font-mono text-base font-bold text-white">{activeNode.id}</span>
-                    <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-[#111C30] text-[#2DD4BF] border border-[#1C2B45]">
-                      {activeNode.roleBadge}
-                    </span>
-                    <span className="text-xs text-slate-300">{activeNode.roleLabel}</span>
-                  </div>
-                  <span className="font-mono text-[11px] text-emerald-400">
-                    Automated Action: none
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
-                  <div className="p-2.5 rounded bg-[#070C16] border border-[#1C2B45]">
-                    <span className="text-[10px] text-slate-400 block">Observed Gross In/Out</span>
-                    <span className="font-mono font-semibold text-white">
-                      {activeNode.grossIn} / {activeNode.grossOut}
-                    </span>
-                  </div>
-                  <div className="p-2.5 rounded bg-[#070C16] border border-[#1C2B45]">
-                    <span className="text-[10px] text-slate-400 block">Traceable Exposure In</span>
-                    <span className="font-mono font-semibold text-[#2DD4BF]">
-                      {activeNode.traceableIn}
-                    </span>
-                  </div>
-                  <div className="p-2.5 rounded bg-[#070C16] border border-[#1C2B45]">
-                    <span className="text-[10px] text-slate-400 block">Unforwarded Exposure</span>
-                    <span className="font-mono font-semibold text-amber-300">
-                      {activeNode.unforwarded}
-                    </span>
-                  </div>
-                  <div className="p-2.5 rounded bg-[#070C16] border border-[#1C2B45]">
-                    <span className="text-[10px] text-slate-400 block">Adjudication State</span>
-                    <span className="font-mono font-semibold text-slate-200">
-                      {activeNode.reviewState}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs">
-                  <p className="text-slate-300 text-[11px] flex-1 min-w-[220px]">
-                    {activeNode.evidenceNote}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    {activeNode.txId && (
-                      <Link
-                        to={`/app/transaction-check?caseId=FS-1042&txId=${activeNode.txId}`}
-                        className="px-2.5 py-1.5 rounded bg-[#111C30] hover:bg-[#1C2B45] text-[#2DD4BF] border border-[#1C2B45] font-mono text-[11px] inline-flex items-center gap-1"
-                      >
-                        <span>Explain {activeNode.txId}</span>
-                        <ArrowUpRight className="w-3 h-3" />
-                      </Link>
-                    )}
-                    <Link
-                      to="/app/fund-flow"
-                      className="px-3 py-1.5 rounded bg-[#0D9488] hover:bg-[#0F766E] text-white font-semibold text-[11px] inline-flex items-center gap-1"
-                    >
-                      <span>Inspect in Workspace</span>
-                      <ArrowRight className="w-3 h-3" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
-      {/* Why Naive Fund Tracing Fails & How FraudShield Solves It */}
-      <section id="features" className="py-16 bg-[#F5F4F0] border-b border-[#E2DFD7]">
-        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#D6D3CD] pb-6">
-            <div>
-              <span className="font-mono text-xs font-semibold uppercase tracking-wider text-[#0F766E]">
-                01 / ARCHITECTURAL DISCIPLINE
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-[#0B1322] tracking-tight mt-1">
-                Built for Forensic Precision, Not Blanket Enforcement
-              </h2>
-            </div>
-            <p className="text-xs sm:text-sm text-[#475569] max-w-md">
-              Every screen in FraudShield AI enforces strict separation between gross ledger movement, lineage-bounded exposure, ML transaction risk, and human compliance review.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="forensic-panel p-6 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs font-bold text-[#0F766E] bg-[#F0FDFA] border border-[#CCFBF1] px-2 py-0.5 rounded">
-                  PILLAR 01 · GRAPH LINEAGE
-                </span>
-                <GitBranch className="w-5 h-5 text-[#0D9488]" />
-              </div>
-              <h3 className="text-base font-bold text-[#0B1322]">
-                Anti-Double-Counting Fund Tracing
-              </h3>
-              <p className="text-xs text-[#475569] leading-relaxed">
-                When ₹50,000 moves across 7 downstream legs, naive summation reports ₹1,75,000 in "tainted volume." Our NetworkX traversal bounds exposure to the ₹50,000 origin claim and tracks only unforwarded balances at each hop.
-              </p>
-              <div className="pt-2 border-t border-[#E2DFD7] font-mono text-[11px] text-[#0B1322] flex justify-between">
-                <span>Gross Ledger Volume: ₹1,75,000</span>
-                <span className="text-[#0F766E] font-bold">Bounded Pool: ₹50,000</span>
-              </div>
-            </div>
-
-            <div className="forensic-panel p-6 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs font-bold text-[#0F766E] bg-[#F0FDFA] border border-[#CCFBF1] px-2 py-0.5 rounded">
-                  PILLAR 02 · EXPLAINABLE ML
-                </span>
-                <Cpu className="w-5 h-5 text-[#0D9488]" />
-              </div>
-              <h3 className="text-base font-bold text-[#0B1322]">
-                Leakage-Safe XGBoost + TreeSHAP
-              </h3>
-              <p className="text-xs text-[#475569] leading-relaxed">
-                Post-transaction balance columns leak the settlement outcome. Our deployed pipeline scores strictly pre-transaction telemetry and decomposes every prediction into exact additive log-odds TreeSHAP contributions.
-              </p>
-              <div className="pt-2 border-t border-[#E2DFD7] font-mono text-[11px] text-[#0B1322] flex justify-between">
-                <span>Test PR-AUC: 0.9828</span>
-                <span className="text-[#0F766E] font-bold">Precision: 98.6%</span>
-              </div>
-            </div>
-
-            <div className="forensic-panel p-6 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
-                  PILLAR 03 · INNOCENT PROTECTION
-                </span>
-                <FileCheck2 className="w-5 h-5 text-amber-600" />
-              </div>
-              <h3 className="text-base font-bold text-[#0B1322]">
-                Evidence Gaps &amp; Human Adjudication
-              </h3>
-              <p className="text-xs text-[#475569] leading-relaxed">
-                Downstream recipients are never labeled guilty or automatically frozen. Each account dossier surfaces missing KYC/invoice evidence gaps and records attributed reviewer decisions in an append-only SQLite audit trail.
-              </p>
-              <div className="pt-2 border-t border-[#E2DFD7] font-mono text-[11px] text-[#0B1322] flex justify-between">
-                <span>Automated Freezes: 0</span>
-                <span className="text-emerald-700 font-bold">100% Human Audited</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Six-Dimension Evidentiary Separation Section */}
-      <section id="safeguards" className="py-16 bg-white border-b border-[#E2DFD7]">
-        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            <div className="lg:col-span-5 space-y-4">
-              <span className="font-mono text-xs font-semibold uppercase tracking-wider text-[#0F766E]">
-                02 / EVIDENTIARY SAFEGUARDS
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-[#0B1322] tracking-tight">
-                Why We Never Auto-Freeze Downstream Accounts
-              </h2>
-              <p className="text-xs sm:text-sm text-[#475569] leading-relaxed">
-                A downstream transfer tells you where money moved—not why it moved. Freezing a Tier-3 merchant or vendor account solely because a fraudster paid them causes severe collateral harm to innocent citizens.
-              </p>
-              <div className="pt-2">
-                <Link
-                  to="/app/cases/FS-1042"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-[#0B1322] hover:bg-[#111C30] text-white text-xs font-semibold transition-colors"
-                >
-                  <span>Inspect Case FS-1042 Account Dossiers</span>
-                  <ArrowRight className="w-3.5 h-3.5 text-[#2DD4BF]" />
-                </Link>
-              </div>
-            </div>
-
-            <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-4 rounded-md bg-[#FAF9F6] border border-[#E2DFD7] space-y-1.5">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#0B1322]">
-                  <Layers className="w-4 h-4 text-[#0D9488]" />
-                  <span>1. Observed Gross Movement vs. 2. Traceable Exposure</span>
-                </div>
-                <p className="text-xs text-[#475569] leading-relaxed">
-                  Gross account inflows/outflows are displayed side-by-side with lineage-bounded stolen exposure so commingled legitimate funds are never mistaken for stolen proceeds.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-md bg-[#FAF9F6] border border-[#E2DFD7] space-y-1.5">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#0B1322]">
-                  <AlertTriangle className="w-4 h-4 text-amber-600" />
-                  <span>3. Transaction Risk vs. 4. Evidence Sufficiency</span>
-                </div>
-                <p className="text-xs text-[#475569] leading-relaxed">
-                  An XGBoost score measures pre-transaction anomaly on a single transfer leg; it never overrides missing invoice, KYC, or bank-statement verification on a recipient account.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-md bg-[#FAF9F6] border border-[#E2DFD7] space-y-1.5">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#0B1322]">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>5. Human Review State</span>
-                </div>
-                <p className="text-xs text-[#475569] leading-relaxed">
-                  Investigators explicitly record review status, evidence quality tier, cited transaction IDs, and written rationale before concluding an account review.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-md bg-[#FAF9F6] border border-[#E2DFD7] space-y-1.5">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#0B1322]">
-                  <Lock className="w-4 h-4 text-[#0D9488]" />
-                  <span>6. Append-Only Audit Provenance</span>
-                </div>
-                <p className="text-xs text-[#475569] leading-relaxed">
-                  Every trace calculation, status update, and reviewer decision is permanently logged with actor identity and before/after state transitions.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="mt-auto bg-[#070C16] text-slate-400 py-8 border-t border-[#1C2B45]">
-        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
-          <div className="flex items-center gap-2.5">
-            <div className="w-5 h-5 rounded bg-[#0D9488] flex items-center justify-center text-white">
-              <Shield className="w-3 h-3" />
-            </div>
-            <span className="font-bold text-white">FraudShield AI</span>
-            <span className="font-mono text-[11px] text-slate-500">· Financial Forensics Workbench</span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-6">
-            <Link to="/app/dashboard" className="hover:text-[#2DD4BF] transition-colors">Investigation Brief</Link>
-            <Link to="/app/fund-flow" className="hover:text-[#2DD4BF] transition-colors">Fund Flow Graph</Link>
-            <Link to="/app/transaction-check" className="hover:text-[#2DD4BF] transition-colors">Transaction Check</Link>
-            <Link to="/app/cases/FS-1042" className="hover:text-[#2DD4BF] transition-colors">Case FS-1042</Link>
-            <Link to="/app/model-insights" className="hover:text-[#2DD4BF] transition-colors">Model Validation</Link>
-          </div>
-        </div>
-      </footer>
+      {/* 7. Unified Platform Footer */}
+      <V2Footer />
     </div>
   );
 };
