@@ -4,7 +4,7 @@ import { ShieldAlert, BookOpen, ExternalLink, Lock } from 'lucide-react';
 export const V2Footer: React.FC = () => {
   return (
     <footer className="bg-[#FFFFFF]/95 backdrop-blur-sm border-t border-[#EAE3D6] text-[#6B655B] py-6 px-4 sm:px-6 lg:px-8 mt-auto shadow-[0_-2px_14px_rgba(180,150,120,0.04)]">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
+      <div className="max-w-[1360px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
         {/* Guardrail Disclaimer */}
         <div className="flex items-start gap-2.5 max-w-2xl">
           <ShieldAlert className="w-4 h-4 text-[#EA8500] shrink-0 mt-0.5" />

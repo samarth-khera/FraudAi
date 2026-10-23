@@ -15,14 +15,16 @@ export const App: React.FC = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Marketing Landing Page */}
+        {/* Marketing Landing Page (Redesign coming in Phase 2) */}
         <Route path="/" element={<LandingPage />} />
 
-        {/* V2 Forensic Investigation Workspace */}
+        {/* Workspace & Account Intelligence Hub (V2 & Unified Aliases) */}
+        <Route path="/workspace" element={<V2SearchPage />} />
         <Route path="/v2" element={<V2SearchPage />} />
+        <Route path="/accounts/:accountId" element={<V2AccountDetailPage />} />
         <Route path="/v2/accounts/:accountId" element={<V2AccountDetailPage />} />
 
-        {/* Investigation Application Workspace (V1) */}
+        {/* Unified Application Shell Routes (V1 Core & Aliases) */}
         <Route path="/app" element={<AppLayout />}>
           <Route index element={<Navigate to="/app/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
@@ -31,6 +33,15 @@ export const App: React.FC = () => {
           <Route path="cases" element={<CasesPage />} />
           <Route path="cases/:caseId" element={<CaseDetailPage />} />
           <Route path="model-insights" element={<ModelInsightsPage />} />
+        </Route>
+
+        {/* Top-Level Unified Route Aliases using AppLayout */}
+        <Route element={<AppLayout />}>
+          <Route path="/fund-flow" element={<FundFlowPage />} />
+          <Route path="/cases" element={<CasesPage />} />
+          <Route path="/cases/:caseId" element={<CaseDetailPage />} />
+          <Route path="/insights" element={<ModelInsightsPage />} />
+          <Route path="/audit" element={<Navigate to="/app/cases/FS-1042?tab=audit" replace />} />
         </Route>
 
         {/* Catch-all */}
