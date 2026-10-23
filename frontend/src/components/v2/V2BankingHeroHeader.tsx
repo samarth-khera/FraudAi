@@ -84,8 +84,14 @@ export const V2BankingHeroHeader: React.FC<V2BankingHeroHeaderProps> = ({
         </div>
 
         {/* Center: Horizontal Navigation Tabs */}
-        <div className="flex items-center gap-1.5 bg-[#FAF7F2] p-1 rounded-full border border-[#EAE3D6] self-start md:self-center overflow-x-auto max-w-full scrollbar-none">
+        <div
+          role="tablist"
+          aria-label="Account investigation sections"
+          className="flex items-center gap-1.5 bg-[#FAF7F2] p-1 rounded-full border border-[#EAE3D6] self-start md:self-center overflow-x-auto max-w-full scrollbar-none"
+        >
           <button
+            role="tab"
+            aria-selected={activeTab === 'assessment'}
             onClick={() => onNavigateTab('assessment')}
             className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'assessment'
@@ -96,6 +102,8 @@ export const V2BankingHeroHeader: React.FC<V2BankingHeroHeaderProps> = ({
             Overview & Analytics
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === 'trace'}
             onClick={() => onNavigateTab('trace')}
             className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'trace'
@@ -106,6 +114,8 @@ export const V2BankingHeroHeader: React.FC<V2BankingHeroHeaderProps> = ({
             Follow the Money
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === 'transactions'}
             onClick={() => onNavigateTab('transactions')}
             className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
               activeTab === 'transactions'
@@ -123,6 +133,8 @@ export const V2BankingHeroHeader: React.FC<V2BankingHeroHeaderProps> = ({
             </span>
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === 'review'}
             onClick={() => onNavigateTab('review')}
             className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'review'

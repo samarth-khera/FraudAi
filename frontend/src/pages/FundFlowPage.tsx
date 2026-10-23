@@ -218,9 +218,11 @@ export const FundFlowPage: React.FC = () => {
 
         {/* View Mode & Reload Controls */}
         <div className="flex items-center gap-2 self-start md:self-end">
-          <div className="flex rounded-xl border border-[#EAE3D6] overflow-hidden bg-[#FAF7F2] p-0.5 text-xs">
+          <div className="flex rounded-xl border border-[#EAE3D6] overflow-hidden bg-[#FAF7F2] p-0.5 text-xs" role="tablist" aria-label="View mode">
             <button
               type="button"
+              role="tab"
+              aria-selected={viewMode === 'graph'}
               onClick={() => {
                 setViewMode('graph');
                 syncUrlParams({ view: 'graph' });
@@ -236,6 +238,8 @@ export const FundFlowPage: React.FC = () => {
             </button>
             <button
               type="button"
+              role="tab"
+              aria-selected={viewMode === 'list'}
               onClick={() => {
                 setViewMode('list');
                 syncUrlParams({ view: 'list' });

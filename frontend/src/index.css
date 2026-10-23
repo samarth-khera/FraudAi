@@ -195,7 +195,22 @@ textarea:focus-visible {
   transform: translateY(-2px);
 }
 
-/* Unified Button Design System (Phase 3) */
+/* Focus-visible & A11y Rings */
+:focus-visible {
+  outline: 2px solid #EA8500 !important;
+  outline-offset: 2px !important;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #EA8500 !important;
+  outline-offset: 2px !important;
+}
+
+/* Unified Button Design System */
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -208,6 +223,7 @@ textarea:focus-visible {
   line-height: 1.25rem;
   letter-spacing: -0.01em;
   padding: 0.625rem 1.25rem;
+  min-height: 2.5rem;
   border-radius: 0.75rem;
   border: 1px solid #EA8500;
   box-shadow: 0 2px 8px rgba(234, 133, 0, 0.22), 0 1px 2px rgba(26, 23, 20, 0.05);
@@ -248,6 +264,7 @@ textarea:focus-visible {
   font-size: 0.8125rem;
   line-height: 1.25rem;
   padding: 0.625rem 1.125rem;
+  min-height: 2.5rem;
   border-radius: 0.75rem;
   border: 1px solid #EAE3D6;
   box-shadow: 0 1px 3px rgba(26, 23, 20, 0.04);

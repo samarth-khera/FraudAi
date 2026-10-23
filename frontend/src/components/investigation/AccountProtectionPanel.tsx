@@ -284,9 +284,9 @@ export const AccountProtectionPanel: React.FC<AccountProtectionPanelProps> = ({
               <span className="text-[10px] font-mono text-[#64748B] block">Upstream</span>
               <div className="font-mono font-bold text-[#0B1322] flex flex-wrap gap-1 mt-0.5">
                 {pos.upstream_account_ids.length > 0 ? (
-                  pos.upstream_account_ids.map((uid) => (
+                  pos.upstream_account_ids.map((uid, idx) => (
                     <button
-                      key={uid}
+                      key={`up-${uid}-${idx}`}
                       type="button"
                       onClick={() => onSelectAccount && onSelectAccount(uid)}
                       className="text-[#0F766E] hover:underline"
@@ -303,9 +303,9 @@ export const AccountProtectionPanel: React.FC<AccountProtectionPanelProps> = ({
               <span className="text-[10px] font-mono text-[#64748B] block">Downstream</span>
               <div className="font-mono font-bold text-[#0B1322] flex flex-wrap gap-1 mt-0.5">
                 {pos.downstream_account_ids.length > 0 ? (
-                  pos.downstream_account_ids.map((did) => (
+                  pos.downstream_account_ids.map((did, idx) => (
                     <button
-                      key={did}
+                      key={`down-${did}-${idx}`}
                       type="button"
                       onClick={() => onSelectAccount && onSelectAccount(did)}
                       className="text-[#0F766E] hover:underline"
@@ -405,21 +405,22 @@ export const AccountProtectionPanel: React.FC<AccountProtectionPanelProps> = ({
                 </span>
               </div>
               <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                {allAccountTxs.map((t) => {
-                  const isInbound = t.receiver_account_id === pos.account_id;
+                {allAccountTxs.map((t, idx) => {
+                  const txId = t.transaction_id || (t as any).id || `tx-${idx}`;
+                  const isInbound = (t.receiver_account_id || (t as any).target) === pos.account_id;
                   const stepVal = new Date(t.timestamp).getUTCHours() + 1 || 11;
                   const explainUrl = `/app/transaction-check?txId=${encodeURIComponent(
-                    t.transaction_id
+                    txId
                   )}&caseId=${encodeURIComponent(caseId)}&amount=${t.amount}&type=${encodeURIComponent(
                     t.transaction_type
                   )}&step=${stepVal}&sender=${encodeURIComponent(
-                    t.sender_account_id
-                  )}&receiver=${encodeURIComponent(t.receiver_account_id)}`;
+                    t.sender_account_id || (t as any).source || ''
+                  )}&receiver=${encodeURIComponent(t.receiver_account_id || (t as any).target || '')}`;
 
                   return (
                     <div
-                      key={`${t.transaction_id}-${isInbound ? 'in' : 'out'}`}
-                      onClick={() => onSelectTransaction && onSelectTransaction(t.transaction_id)}
+                      key={`${txId}-${isInbound ? 'in' : 'out'}-${idx}`}
+                      onClick={() => onSelectTransaction && onSelectTransaction(txId)}
                       className="p-2.5 rounded bg-[#FAF9F6] border border-[#E2DFD7] hover:border-[#0D9488] flex flex-wrap items-center justify-between gap-2 text-xs cursor-pointer transition-colors"
                     >
                       <div className="flex items-center gap-2 font-mono">
@@ -513,7 +514,7 @@ export const AccountProtectionPanel: React.FC<AccountProtectionPanelProps> = ({
             {ev.supporting_evidence.length > 0 ? (
               <ul className="list-disc pl-4 space-y-1 text-[11px] text-emerald-900">
                 {ev.supporting_evidence.map((item, i) => (
-                  <li key={i}>
+                  <li key={`supp-${i}`}>
                     <strong>[{item.evidence_type.replace(/_/g, ' ')}]</strong> {item.summary}
                   </li>
                 ))}
@@ -530,10 +531,10 @@ export const AccountProtectionPanel: React.FC<AccountProtectionPanelProps> = ({
             </div>
             <ul className="list-disc pl-4 space-y-1 text-[11px] text-amber-950">
               {ev.evidence_gaps.map((gap, i) => (
-                <li key={i}>{gap}</li>
+                <li key={`gap-${i}`}>{gap}</li>
               ))}
               {ev.uncertainty_factors.map((u, i) => (
-                <li key={`u-${i}`}>{u}</li>
+                <li key={`uncert-${i}`}>{u}</li>
               ))}
             </ul>
           </div>
@@ -547,7 +548,7 @@ export const AccountProtectionPanel: React.FC<AccountProtectionPanelProps> = ({
           <p className="text-[11px] text-[#475569]">{ev.recommendation_rationale}</p>
           <ul className="list-disc pl-4 space-y-1 text-[11px] text-[#334155] pt-0.5">
             {ev.verification_guidance.map((g, i) => (
-              <li key={i}>{g}</li>
+              <li key={`guide-${i}`}>{g}</li>
             ))}
           </ul>
         </div>
@@ -686,7 +687,13 @@ export const AccountProtectionPanel: React.FC<AccountProtectionPanelProps> = ({
                 Cite Supporting Transactions
               </span>
               <div className="flex flex-wrap gap-2">
-                {Array.from(new Set(allAccountTxs.map((t) => t.transaction_id))).map((tid) => {
+                {Array.from(
+                  new Set(
+                    allAccountTxs
+                      .map((t, idx) => t.transaction_id || (t as any).id || `tx-${idx}`)
+                      .filter(Boolean)
+                  )
+                ).map((tid) => {
                   const checked = selectedTxIds.includes(tid);
                   return (
                     <button
