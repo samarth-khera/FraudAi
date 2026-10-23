@@ -366,13 +366,22 @@ export const V2AccountDetailPage: React.FC = () => {
               Account Not Found in Core Ledger
             </h2>
             <p className="text-sm text-[#6B655B] max-w-md mx-auto">
-              The identifier <code className="bg-[#FAF7F2] border border-[#EAE3D6] px-2 py-0.5 rounded font-mono font-bold text-[#1A1714]">{accountId}</code> was not found in the V2 ledger database.
+              The identifier <code className="bg-[#FAF7F2] border border-[#EAE3D6] px-2 py-0.5 rounded font-mono font-bold text-[#1A1714]">{accountId}</code> was not found in the V2 core banking ledger.
+            </p>
+            <p className="text-xs text-[#8C857B] max-w-md mx-auto leading-relaxed">
+              If this identifier is an entity from an incident investigation network (such as Case FS-1042 counterparty nodes A100, B200, or C300), review its connected evidence and human adjudication in the Case Dossier.
             </p>
           </div>
           <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
             <Link
-              to="/v2"
+              to={`/cases/FS-1042?tab=review&account=${encodeURIComponent(accountId || '')}`}
               className="px-5 py-2.5 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white text-xs font-bold transition-all shadow-xs"
+            >
+              Open Incident Dossier (FS-1042)
+            </Link>
+            <Link
+              to="/workspace"
+              className="px-5 py-2.5 rounded-xl bg-white hover:bg-[#FAF7F2] border border-[#EAE3D6] text-[#1A1714] text-xs font-bold transition-all shadow-xs"
             >
               Return to Search Workspace
             </Link>
