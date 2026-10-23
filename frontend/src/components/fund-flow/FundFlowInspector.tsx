@@ -18,11 +18,12 @@ import {
   Clock,
   Sparkles,
   GitBranch,
+  LocateFixed,
 } from 'lucide-react';
 import { UnifiedTreeNode, UnifiedTreeEdge } from '../../services/unifiedFlowAdapter';
 import { v2Api } from '../../services/v2Api';
 
-interface FundFlowInspectorProps {
+export interface FundFlowInspectorProps {
   selectedNode: UnifiedTreeNode | null;
   selectedEdge: UnifiedTreeEdge | null;
   allEdges: UnifiedTreeEdge[];
@@ -32,6 +33,7 @@ interface FundFlowInspectorProps {
   onClose: () => void;
   mode: 'account' | 'case';
   caseId?: string;
+  onFocusNode?: (nodeId: string) => void;
 }
 
 export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
@@ -44,6 +46,7 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
   onClose,
   mode,
   caseId = 'FS-1042',
+  onFocusNode,
 }) => {
   const navigate = useNavigate();
   const [runningAnalysis, setRunningAnalysis] = useState(false);
@@ -118,7 +121,18 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
               <h3 className="font-bold text-[#1A1714] text-base font-display truncate">
                 {selectedNode.name}
               </h3>
-              <span className="font-mono text-[#6B655B] text-xs">{selectedNode.id}</span>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="font-mono text-[#6B655B] text-xs">{selectedNode.id}</span>
+                <button
+                  type="button"
+                  onClick={() => onFocusNode?.(selectedNode.id)}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-[#EA8500]/40 bg-[#FFF8EE] text-[#C05621] hover:bg-[#FFF4E6] text-[10px] font-semibold transition-colors cursor-pointer"
+                  title="Focus and center this account in tree view"
+                >
+                  <LocateFixed className="w-3 h-3 text-[#EA8500]" />
+                  <span>Focus in Tree</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -403,7 +417,10 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
               <button
                 key={n.id}
                 type="button"
-                onClick={() => onSelectNode(n)}
+                onClick={() => {
+                  onSelectNode(n);
+                  onFocusNode?.(n.id);
+                }}
                 className="w-full p-2.5 rounded-xl bg-[#FAF7F2] hover:bg-[#FFF4E6] border border-[#EAE3D6] hover:border-[#EA8500] text-left transition-colors flex items-center justify-between gap-2 cursor-pointer"
               >
                 <div className="min-w-0">
