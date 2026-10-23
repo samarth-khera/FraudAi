@@ -737,7 +737,7 @@ export const AccountProtectionPanel: React.FC<AccountProtectionPanelProps> = ({
             <button
               type="submit"
               disabled={savingReview}
-              className="px-5 py-2.5 rounded-md bg-[#0D9488] hover:bg-[#0F766E] text-white font-semibold text-xs disabled:opacity-50 transition-colors"
+              className="px-5 py-2.5 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white font-semibold text-xs disabled:opacity-50 transition-colors cursor-pointer shadow-xs"
             >
               {savingReview ? 'Recording Review...' : 'Record Human Review Decision'}
             </button>
@@ -749,7 +749,7 @@ export const AccountProtectionPanel: React.FC<AccountProtectionPanelProps> = ({
       <div className="forensic-panel p-4 space-y-3 text-xs">
         <div className="flex items-center justify-between pb-2 border-b border-[#E2DFD7]">
           <span className="font-bold text-[#0B1322] flex items-center gap-1.5">
-            <History className="w-4 h-4 text-[#0D9488]" />
+            <History className="w-4 h-4 text-[#EA8500]" />
             <span>Account Review Audit History ({audits.length})</span>
           </span>
         </div>
