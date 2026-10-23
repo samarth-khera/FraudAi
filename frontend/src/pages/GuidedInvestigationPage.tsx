@@ -201,6 +201,8 @@ export const GuidedInvestigationPage: React.FC = () => {
   // Handle interactive review submission in Step 5
   const handleSaveReview = async () => {
     setSubmittingReview(true);
+    setReviewSavedSuccess(false);
+    setError(null);
     try {
       await api.updateAccountReview('FS-1042', 'ACC-000001', {
         review_state: 'review_completed',

@@ -25,6 +25,37 @@ except ModuleNotFoundError:
     from backend.app.db.v2.models import AccountModel, TransactionModel
 
 
+def _mask_phone(phone: Optional[str]) -> str:
+    if not phone:
+        return ""
+    parts = phone.strip().split()
+    if len(parts) >= 3:
+        return f"{parts[0]} {parts[1][:1]}**** ***{parts[2][-2:]}"
+    elif len(phone) > 6:
+        return phone[:4] + "****" + phone[-2:]
+    return "****"
+
+
+def _mask_email(email: Optional[str]) -> str:
+    if not email or "@" not in email:
+        return ""
+    local, domain = email.strip().split("@", 1)
+    if len(local) <= 2:
+        masked_local = local[0] + "*"
+    else:
+        masked_local = local[0] + "*" * min(len(local) - 2, 6) + local[-1]
+    return f"{masked_local}@{domain}"
+
+
+def _mask_tax_identifier(tax_id: Optional[str]) -> str:
+    if not tax_id:
+        return ""
+    cleaned = tax_id.strip()
+    if len(cleaned) > 4:
+        return cleaned[:2] + "****" + cleaned[-2:]
+    return "****"
+
+
 class AccountService:
     """Service providing 360° profile metrics and chronological ledger histories."""
 
@@ -101,10 +132,10 @@ class AccountService:
             customer_name=account.customer_name,
             customer_type=account.customer_type,
             kyc_tier=account.kyc_tier,
-            phone_number=account.phone_number,
-            email=account.email,
+            phone_number=_mask_phone(account.phone_number),
+            email=_mask_email(account.email),
             upi_id=account.upi_id,
-            tax_identifier=account.tax_identifier,
+            tax_identifier=_mask_tax_identifier(account.tax_identifier),
             initial_balance=round(account.initial_balance, 2),
             current_balance=round(account.current_balance, 2),
             account_opened_at=account.account_opened_at.isoformat() if account.account_opened_at else "",

@@ -22,20 +22,24 @@ from app.schemas.trace import TracedTransaction, TraceWarning
 
 
 class CaseCreateRequest(BaseModel):
-    case_id: str = Field(min_length=1, max_length=50, description="Unique case identifier.")
-    reported_origin_transaction_id: str = Field(min_length=1, max_length=50)
-    reported_amount: Money = Field(gt=0, description="Reported fraud amount.")
-    currency: str = Field(default="INR", max_length=10)
+    model_config = ConfigDict(extra="forbid")
+
+    case_id: str = Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_\-\.]+$", description="Unique case identifier.")
+    reported_origin_transaction_id: str = Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_\-\.]+$")
+    reported_amount: Money = Field(gt=0, le=1_000_000_000, description="Reported fraud amount.")
+    currency: str = Field(default="INR", min_length=3, max_length=10, pattern=r"^[A-Za-z]+$")
     reported_at: Optional[datetime] = None
     investigation_status: InvestigationStatus = InvestigationStatus.UNDER_INVESTIGATION
-    description: str = Field(min_length=1, description="Summary description of the reported case.")
-    created_by: str = Field(default="analyst_placeholder", description="Reviewer/system creating the case.")
+    description: str = Field(min_length=1, max_length=5000, description="Summary description of the reported case.")
+    created_by: str = Field(default="analyst_placeholder", min_length=1, max_length=100, description="Reviewer/system creating the case.")
 
 
 class CaseUpdateRequest(BaseModel):
-    description: Optional[str] = Field(default=None, min_length=1)
+    model_config = ConfigDict(extra="forbid")
+
+    description: Optional[str] = Field(default=None, min_length=1, max_length=5000)
     investigation_status: Optional[InvestigationStatus] = None
-    updated_by: str = Field(default="analyst_placeholder", description="Reviewer identity.")
+    updated_by: str = Field(default="analyst_placeholder", min_length=1, max_length=100, description="Reviewer identity.")
 
 
 class AccountReviewUpdateRequest(BaseModel):
@@ -43,14 +47,16 @@ class AccountReviewUpdateRequest(BaseModel):
 
     review_state: ReviewState
     evidence_quality: EvidenceQuality = EvidenceQuality.NOT_ASSESSED
-    notes: Optional[str] = None
+    notes: Optional[str] = Field(default=None, max_length=5000)
     reviewer_id: str = Field(default="analyst_placeholder", min_length=1, max_length=100, description="Reviewer identity.")
     decision_reasons: list[str] = Field(
         default_factory=list,
+        max_length=30,
         description="Structured reasons for the human review decision.",
     )
     supporting_transaction_ids: list[str] = Field(
         default_factory=list,
+        max_length=50,
         description="Transaction IDs cited by the reviewer in support of this assessment.",
     )
     additional_info_needed: bool = Field(
@@ -60,8 +66,10 @@ class AccountReviewUpdateRequest(BaseModel):
 
 
 class CaseTransactionsAddRequest(BaseModel):
-    transactions: list[Transaction] = Field(min_length=1)
-    added_by: str = Field(default="system", description="Reviewer/system identity adding transactions.")
+    model_config = ConfigDict(extra="forbid")
+
+    transactions: list[Transaction] = Field(min_length=1, max_length=500)
+    added_by: str = Field(default="system", min_length=1, max_length=100, description="Reviewer/system identity adding transactions.")
 
 
 class AuditEventResponse(BaseModel):

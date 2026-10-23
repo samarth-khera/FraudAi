@@ -183,7 +183,11 @@ export const V2AccountDetailPage: React.FC = () => {
     setErrorNotFound(false);
     setErrorGeneral(null);
     setLoadingProfile(true);
-    setLiveAnalysis(null); // Crucial: Reset predictive results for new account until explicit run!
+    // Crucial: Reset state to prevent data from leaking between different account views
+    setProfile(null);
+    setTransactions(null);
+    setTraceData(null);
+    setLiveAnalysis(null); // Reset predictive results for new account until explicit run!
     setSelectedHistogramBin(null);
     setSelectedTimelineDate(null);
     setSelectedTxnForDetail(null);
