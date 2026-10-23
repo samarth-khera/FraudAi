@@ -1145,13 +1145,27 @@ export const CaseDetailPage: React.FC = () => {
                           <UserCheck className="w-4 h-4" />
                           <span>Adjudicate in Review &amp; Audit</span>
                         </button>
-                        <Link
-                          to={`/accounts/${encodeURIComponent(selectedNodeInfo.id)}`}
-                          className="w-full py-2 px-3 rounded-xl bg-white hover:bg-[#FAF7F2] border border-[#EAE3D6] text-[#1A1714] text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
-                        >
-                          <span>Open Account 360° Profile</span>
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </Link>
+                        {selectedNodeInfo.id.startsWith('ACC-') ? (
+                          <Link
+                            to={`/accounts/${encodeURIComponent(selectedNodeInfo.id)}`}
+                            className="w-full py-2 px-3 rounded-xl bg-white hover:bg-[#FAF7F2] border border-[#EAE3D6] text-[#1A1714] text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                          >
+                            <span>Open Account 360° Profile</span>
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </Link>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTxSearch(selectedNodeInfo.id);
+                              switchTab('transactions');
+                            }}
+                            className="w-full py-2 px-3 rounded-xl bg-white hover:bg-[#FAF7F2] border border-[#EAE3D6] text-[#1A1714] text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                          >
+                            <span>Filter Case Transactions</span>
+                            <ExternalLink className="w-3.5 h-3.5 text-[#8C857B]" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   ) : selectedEdgeInfo ? (
@@ -1489,12 +1503,23 @@ export const CaseDetailPage: React.FC = () => {
                 {filteredAccounts.map((acc) => (
                   <tr key={acc.id} className="hover:bg-[#FAF7F2] transition-colors">
                     <td className="py-3.5 px-4 font-mono font-bold text-[#1A1714]">
-                      <Link
-                        to={`/accounts/${encodeURIComponent(acc.id)}`}
-                        className="hover:text-[#EA8500] hover:underline"
-                      >
-                        {acc.id}
-                      </Link>
+                      {acc.id.startsWith('ACC-') ? (
+                        <Link
+                          to={`/accounts/${encodeURIComponent(acc.id)}`}
+                          className="hover:text-[#EA8500] hover:underline"
+                        >
+                          {acc.id}
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => switchTab('review', acc.id)}
+                          className="hover:text-[#EA8500] hover:underline font-mono font-bold text-left cursor-pointer"
+                          title="Inspect evidence in Review & Audit"
+                        >
+                          {acc.id}
+                        </button>
+                      )}
                     </td>
                     <td className="py-3.5 px-4 font-mono capitalize text-[#6B655B]">
                       {acc.role.replace(/_/g, ' ')} (Hop {acc.hop})
@@ -1513,12 +1538,14 @@ export const CaseDetailPage: React.FC = () => {
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Link
-                          to={`/accounts/${encodeURIComponent(acc.id)}`}
-                          className="px-2.5 py-1 rounded-xl bg-white border border-[#EAE3D6] hover:bg-[#FAF7F2] text-[#1A1714] text-[11px] font-semibold transition-colors"
-                        >
-                          Account 360°
-                        </Link>
+                        {acc.id.startsWith('ACC-') && (
+                          <Link
+                            to={`/accounts/${encodeURIComponent(acc.id)}`}
+                            className="px-2.5 py-1 rounded-xl bg-white border border-[#EAE3D6] hover:bg-[#FAF7F2] text-[#1A1714] text-[11px] font-semibold transition-colors"
+                          >
+                            Account 360°
+                          </Link>
+                        )}
                         <button
                           onClick={() => switchTab('review', acc.id)}
                           className="px-2.5 py-1 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white text-[11px] font-semibold transition-colors cursor-pointer shadow-xs"

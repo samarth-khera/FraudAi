@@ -251,21 +251,43 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
 
         {/* Primary Action Buttons */}
         <div className="pt-2 border-t border-[#EAE3D6] space-y-2">
-          <Link
-            to={accountUrl}
-            className="w-full py-2.5 px-3 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
-          >
-            <span>Open Account 360° Profile</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          {isV2Account ? (
+            <>
+              <Link
+                to={accountUrl}
+                className="w-full py-2.5 px-3 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
+              >
+                <span>Open Account 360° Profile</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
 
-          <Link
-            to={`${accountUrl}?tab=transactions`}
-            className="w-full py-2 px-3 rounded-xl bg-white hover:bg-[#FAF7F2] text-[#1A1714] border border-[#EAE3D6] font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
-          >
-            <span>View Ledger Transactions</span>
-            <ExternalLink className="w-3.5 h-3.5 text-[#8C857B]" />
-          </Link>
+              <Link
+                to={`${accountUrl}?tab=transactions`}
+                className="w-full py-2 px-3 rounded-xl bg-white hover:bg-[#FAF7F2] text-[#1A1714] border border-[#EAE3D6] font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              >
+                <span>View Ledger Transactions</span>
+                <ExternalLink className="w-3.5 h-3.5 text-[#8C857B]" />
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link
+                to={`/cases/${encodeURIComponent(caseId)}?tab=review&account=${encodeURIComponent(selectedNode.id)}`}
+                className="w-full py-2.5 px-3 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
+              >
+                <span>Adjudicate in Case Dossier ({caseId})</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+
+              <Link
+                to={`/cases/${encodeURIComponent(caseId)}?tab=transactions&search=${encodeURIComponent(selectedNode.id)}`}
+                className="w-full py-2 px-3 rounded-xl bg-white hover:bg-[#FAF7F2] text-[#1A1714] border border-[#EAE3D6] font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              >
+                <span>Filter Case Evidence</span>
+                <ExternalLink className="w-3.5 h-3.5 text-[#8C857B]" />
+              </Link>
+            </>
+          )}
 
           {isV2Account && (
             <button

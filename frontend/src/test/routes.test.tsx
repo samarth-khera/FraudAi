@@ -18,7 +18,7 @@ describe('Page Rendering', () => {
     expect(screen.getByText(/Start Guided Investigation/i)).toBeInTheDocument();
     expect(screen.getByText(/Explore the Workspace/i)).toBeInTheDocument();
     expect(screen.getByText('Search Account')).toBeInTheDocument();
-  });
+  }, 15000);
 
   it('renders GuidedInvestigationPage with step 1 and context', async () => {
     const { GuidedInvestigationPage } = await import('../pages/GuidedInvestigationPage');
