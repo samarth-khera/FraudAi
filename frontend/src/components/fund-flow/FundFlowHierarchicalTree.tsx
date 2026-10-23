@@ -5,6 +5,12 @@ import {
   Maximize2,
   RotateCcw,
   LocateFixed,
+  Move,
+  Save,
+  Check,
+  LayoutGrid,
+  GripVertical,
+  CheckCircle2,
   ChevronRight,
   ChevronDown,
   ArrowRight,
@@ -97,6 +103,29 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
   // Collapse / Expand set (stored node IDs whose downstream branches are collapsed)
   const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
 
+  // Manual Layout Customization State & Persistence
+  const [customPositions, setCustomPositions] = useState<Record<string, { x: number; y: number }>>({});
+  const [isCustomizeMode, setIsCustomizeMode] = useState<boolean>(false);
+  const [isLayoutDirty, setIsLayoutDirty] = useState<boolean>(false);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Active dragged node state in customize mode
+  const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
+  const nodeDragStartRef = useRef<{
+    nodeId: string;
+    startX: number;
+    startY: number;
+    startNodeX: number;
+    startNodeY: number;
+    hasMoved: boolean;
+  } | null>(null);
+
+  // Storage key isolated per graph context (rootAccountId or caseId)
+  const storageKey = useMemo(() => {
+    return `fraudshield_fund_flow_layout_${rootAccountId || 'default'}`;
+  }, [rootAccountId]);
+
   // Hovered edge for tooltip badge
   const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
@@ -126,6 +155,40 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
 
     return { childrenMap: cMap, parentMap: pMap, nodeLookup: nMap, edgeLookup: eMap };
   }, [nodes, edges]);
+
+  // Load and apply saved layout positions for this context (rootAccountId / caseId)
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          const validPositions: Record<string, { x: number; y: number }> = {};
+          let validCount = 0;
+          for (const [id, pos] of Object.entries(parsed)) {
+            if (
+              nodeLookup.has(id) &&
+              pos &&
+              typeof (pos as any).x === 'number' &&
+              typeof (pos as any).y === 'number'
+            ) {
+              validPositions[id] = pos as { x: number; y: number };
+              validCount++;
+            }
+          }
+          if (validCount > 0) {
+            setCustomPositions(validPositions);
+            setIsLayoutDirty(false);
+            return;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Unable to load saved layout from localStorage', err);
+    }
+    setCustomPositions({});
+    setIsLayoutDirty(false);
+  }, [storageKey, nodeLookup]);
 
   // Determine which nodes are hidden due to an ancestor being collapsed
   const hiddenNodeIds = useMemo(() => {
@@ -254,9 +317,12 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
       maxOverallY = Math.max(maxOverallY, lastY);
     });
 
-    // Construct LayoutNode models
+    // Construct LayoutNode models (using manual custom positions if set)
     const lNodes: LayoutNode[] = nodes.map((node) => {
-      const pos = posMap.get(node.id) || { x: 40, y: 40 };
+      const autoPos = posMap.get(node.id) || { x: 40, y: 40 };
+      const customPos = customPositions[node.id];
+      const effectivePos = customPos || autoPos;
+
       const children = childrenMap.get(node.id) || [];
       const parents = parentMap.get(node.id) || [];
       const isVisible = !hiddenNodeIds.has(node.id);
@@ -264,8 +330,8 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
 
       return {
         node,
-        x: pos.x,
-        y: pos.y,
+        x: effectivePos.x,
+        y: effectivePos.y,
         width: NODE_WIDTH,
         height: NODE_HEIGHT,
         children,
@@ -279,7 +345,7 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
     const lNodeMap = new Map<string, LayoutNode>();
     lNodes.forEach((ln) => lNodeMap.set(ln.node.id, ln));
 
-    // Construct LayoutEdge curves (Cubic Bezier curves)
+    // Construct LayoutEdge curves (Cubic Bezier curves with dynamic direction anchors)
     const lEdges: LayoutEdge[] = [];
     edges.forEach((edge) => {
       const sNode = lNodeMap.get(edge.source);
@@ -289,17 +355,39 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
 
       const isVisible = sNode.isVisible && tNode.isVisible;
 
-      // Coordinate anchors
-      const startX = sNode.x + sNode.width;
-      const startY = sNode.y + sNode.height / 2;
-      const endX = tNode.x;
-      const endY = tNode.y + tNode.height / 2;
+      // Smart dynamic anchor points based on relative node positions
+      let startX: number;
+      let startY: number;
+      let endX: number;
+      let endY: number;
+
+      if (tNode.x >= sNode.x + sNode.width - 30) {
+        // Target is forward (to the right of source)
+        startX = sNode.x + sNode.width;
+        startY = sNode.y + sNode.height / 2;
+        endX = tNode.x;
+        endY = tNode.y + tNode.height / 2;
+      } else if (tNode.x + tNode.width <= sNode.x + 30) {
+        // Target is backward (to the left of source)
+        startX = sNode.x;
+        startY = sNode.y + sNode.height / 2;
+        endX = tNode.x + tNode.width;
+        endY = tNode.y + tNode.height / 2;
+      } else {
+        // Target is vertically aligned or overlapping
+        startX = sNode.x + sNode.width / 2;
+        startY = sNode.y + (tNode.y > sNode.y ? sNode.height : 0);
+        endX = tNode.x + tNode.width / 2;
+        endY = tNode.y + (tNode.y > sNode.y ? 0 : tNode.height);
+      }
 
       let pathD = '';
       let midX = (startX + endX) / 2;
       let midY = (startY + endY) / 2;
 
-      if (edge.isCycle || endX <= startX) {
+      const dx = endX - startX;
+
+      if (edge.isCycle || (dx <= 0 && Math.abs(dx) < 60)) {
         // Loop or backward cross-link: Arch over or under with curved loop
         const loopOffset = Math.max(70, Math.abs(startY - endY) * 0.4);
         const controlY = Math.min(startY, endY) - loopOffset;
@@ -307,10 +395,14 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
         midX = (startX + endX) / 2;
         midY = controlY + 15;
       } else {
-        // Standard forward tree branch: smooth horizontal S-curve
-        const dx = Math.abs(endX - startX);
-        const curvature = Math.max(50, dx * 0.45);
-        pathD = `M ${startX} ${startY} C ${startX + curvature} ${startY}, ${endX - curvature} ${endY}, ${endX} ${endY}`;
+        // Smooth Bezier curve following card repositioning
+        const curvature = Math.max(45, Math.abs(dx) * 0.45);
+        const ctrl1X = startX + (dx >= 0 ? curvature : -curvature);
+        const ctrl1Y = startY;
+        const ctrl2X = endX - (dx >= 0 ? curvature : -curvature);
+        const ctrl2Y = endY;
+
+        pathD = `M ${startX} ${startY} C ${ctrl1X} ${ctrl1Y}, ${ctrl2X} ${ctrl2Y}, ${endX} ${endY}`;
         midX = (startX + endX) / 2;
         midY = (startY + endY) / 2;
       }
@@ -328,15 +420,25 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
     });
 
     const maxHop = colKeys.length > 0 ? colKeys[colKeys.length - 1] : 0;
-    const maxX = Math.max(900, 80 + (maxHop + 1) * (NODE_WIDTH + X_GAP) + 120);
-    const maxY = Math.max(540, maxOverallY + NODE_HEIGHT + 100);
+    let maxEffectiveX = 60 + (maxHop + 1) * (NODE_WIDTH + X_GAP);
+    let maxEffectiveY = maxOverallY + NODE_HEIGHT;
+
+    lNodes.forEach((ln) => {
+      if (ln.isVisible) {
+        maxEffectiveX = Math.max(maxEffectiveX, ln.x + ln.width + 140);
+        maxEffectiveY = Math.max(maxEffectiveY, ln.y + ln.height + 120);
+      }
+    });
+
+    const maxX = Math.max(900, maxEffectiveX);
+    const maxY = Math.max(540, maxEffectiveY);
 
     return {
       layoutNodes: lNodes,
       layoutEdges: lEdges,
       bounds: { width: maxX, height: maxY },
     };
-  }, [nodes, edges, childrenMap, parentMap, hiddenNodeIds, collapsedNodes]);
+  }, [nodes, edges, childrenMap, parentMap, hiddenNodeIds, collapsedNodes, customPositions]);
 
   // Identify nodes and edges in the path of the selected node or edge
   const activePathElements = useMemo(() => {
@@ -507,9 +609,35 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
     );
   }, [selectedNodeId, layoutNodes, pan, zoom]);
 
-  // Window-level pointer tracking for rock-solid pan dragging without stuck states
+  // Window-level pointer tracking for rock-solid pan dragging AND node dragging in customize mode
   useEffect(() => {
     const handleWindowPointerMove = (e: PointerEvent) => {
+      // 1. Handle node dragging when Customize Layout mode is active
+      if (nodeDragStartRef.current) {
+        const currentDrag = nodeDragStartRef.current;
+        const dx = e.clientX - currentDrag.startX;
+        const dy = e.clientY - currentDrag.startY;
+
+        if (!currentDrag.hasMoved && Math.hypot(dx, dy) > 3) {
+          currentDrag.hasMoved = true;
+        }
+
+        if (currentDrag.hasMoved) {
+          const currentZoom = zoomRef.current;
+          // Calculate new coordinates in tree canvas space, bounded safely
+          const newX = Math.max(10, Math.round(currentDrag.startNodeX + dx / currentZoom));
+          const newY = Math.max(10, Math.round(currentDrag.startNodeY + dy / currentZoom));
+
+          setCustomPositions((prev) => ({
+            ...prev,
+            [currentDrag.nodeId]: { x: newX, y: newY },
+          }));
+          setIsLayoutDirty(true);
+        }
+        return;
+      }
+
+      // 2. Handle canvas background panning
       if (!isPointerDownRef.current) return;
 
       const dx = e.clientX - pointerStartRef.current.x;
@@ -532,6 +660,22 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
     };
 
     const handleWindowPointerUp = () => {
+      if (nodeDragStartRef.current) {
+        const { nodeId, hasMoved } = nodeDragStartRef.current;
+        nodeDragStartRef.current = null;
+        setDraggedNodeId(null);
+
+        // If user tapped without dragging in customize mode, select the node
+        if (!hasMoved) {
+          const clickedNode = nodeLookup.get(nodeId);
+          if (clickedNode) {
+            onSelectNode(clickedNode);
+            onSelectEdge(null);
+          }
+        }
+        return;
+      }
+
       if (isPointerDownRef.current) {
         isPointerDownRef.current = false;
         setIsDragging(false);
@@ -547,7 +691,7 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
       window.removeEventListener('pointerup', handleWindowPointerUp);
       window.removeEventListener('pointercancel', handleWindowPointerUp);
     };
-  }, []);
+  }, [nodeLookup, onSelectNode, onSelectEdge]);
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return; // Only primary button
@@ -569,38 +713,102 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
     panStartRef.current = { ...panRef.current };
   };
 
-  // Wheel zoom anchored right around the pointer coordinates
-  const handleWheel = (e: React.WheelEvent) => {
-    // Trackpad two-finger pan (horizontal or vertical without ctrlKey)
-    if (!e.ctrlKey && Math.abs(e.deltaX) > 0) {
-      setPan((prev) => ({
-        x: prev.x - e.deltaX,
-        y: prev.y - e.deltaY,
-      }));
-      return;
+  // Node pointer down handler for Customize Layout mode
+  const handleNodePointerDown = (
+    node: UnifiedTreeNode,
+    nodeX: number,
+    nodeY: number,
+    e: React.PointerEvent
+  ) => {
+    if (e.button !== 0) return; // Only primary button
+    if (!isCustomizeMode) return;
+
+    e.stopPropagation();
+    nodeDragStartRef.current = {
+      nodeId: node.id,
+      startX: e.clientX,
+      startY: e.clientY,
+      startNodeX: nodeX,
+      startNodeY: nodeY,
+      hasMoved: false,
+    };
+    setDraggedNodeId(node.id);
+  };
+
+  // Native non-passive wheel listener on container to allow e.preventDefault() and prevent Chrome intervention warnings
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleNativeWheel = (e: WheelEvent) => {
+      // Prevent browser document scrolling when pointer is over the graph canvas
+      e.preventDefault();
+
+      // Trackpad two-finger pan (horizontal or vertical without ctrlKey)
+      if (!e.ctrlKey && Math.abs(e.deltaX) > 0) {
+        setPan((prev) => ({
+          x: prev.x - e.deltaX,
+          y: prev.y - e.deltaY,
+        }));
+        return;
+      }
+
+      const rect = container.getBoundingClientRect();
+      const cursorX = e.clientX - rect.left;
+      const cursorY = e.clientY - rect.top;
+
+      const zoomFactor = e.deltaY < 0 ? 1.09 : 0.91;
+      const currentZoom = zoomRef.current;
+      const currentPan = panRef.current;
+      const newZoom = Math.min(2.2, Math.max(0.35, currentZoom * zoomFactor));
+
+      if (newZoom !== currentZoom) {
+        const ratio = newZoom / currentZoom;
+        const newPanX = cursorX - (cursorX - currentPan.x) * ratio;
+        const newPanY = cursorY - (cursorY - currentPan.y) * ratio;
+
+        setZoom(newZoom);
+        setPan({ x: newPanX, y: newPanY });
+      }
+    };
+
+    container.addEventListener('wheel', handleNativeWheel, { passive: false });
+    return () => {
+      container.removeEventListener('wheel', handleNativeWheel);
+    };
+  }, []);
+
+  // Helper notification feedback
+  const showFeedback = (msg: string) => {
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    setFeedbackMessage(msg);
+    feedbackTimerRef.current = setTimeout(() => {
+      setFeedbackMessage(null);
+    }, 2800);
+  };
+
+  // Save customized layout to browser localStorage
+  const handleSaveLayout = () => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(customPositions));
+      setIsLayoutDirty(false);
+      showFeedback('Layout saved in browser');
+    } catch (err) {
+      console.error('Error saving layout to localStorage', err);
+      showFeedback('Could not save layout');
     }
+  };
 
-    // Stop document scroll when mouse wheeling directly over the graph canvas
-    e.preventDefault();
-    if (!containerRef.current) return;
-
-    const rect = containerRef.current.getBoundingClientRect();
-    const cursorX = e.clientX - rect.left;
-    const cursorY = e.clientY - rect.top;
-
-    const zoomFactor = e.deltaY < 0 ? 1.09 : 0.91;
-    const currentZoom = zoomRef.current;
-    const currentPan = panRef.current;
-    const newZoom = Math.min(2.2, Math.max(0.35, currentZoom * zoomFactor));
-
-    if (newZoom !== currentZoom) {
-      const ratio = newZoom / currentZoom;
-      const newPanX = cursorX - (cursorX - currentPan.x) * ratio;
-      const newPanY = cursorY - (cursorY - currentPan.y) * ratio;
-
-      setZoom(newZoom);
-      setPan({ x: newPanX, y: newPanY });
+  // Reset customized layout to standard hierarchical tree
+  const handleResetLayout = () => {
+    try {
+      localStorage.removeItem(storageKey);
+    } catch (err) {
+      console.warn('Error clearing layout from localStorage', err);
     }
+    setCustomPositions({});
+    setIsLayoutDirty(false);
+    showFeedback('Reset to default tree layout');
   };
 
   // Viewport-centered step zoom buttons (+ / -)
@@ -774,13 +982,12 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      onWheel={handleWheel}
       className={`relative w-full rounded-2xl border border-[#EAE3D6] bg-[#FAF7F2] overflow-hidden select-none blueprint-grid-warm shadow-xs outline-none focus:ring-1 focus:ring-[#EA8500]/40 ${
         isDragging ? 'cursor-grabbing' : 'cursor-grab'
       }`}
     >
       {/* Floating Canvas Action Controls Toolbar */}
-      <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-white/95 backdrop-blur-xs border border-[#EAE3D6] rounded-xl p-1.5 shadow-sm z-20">
+      <div className="absolute top-3 right-3 flex flex-wrap items-center gap-1.5 bg-white/95 backdrop-blur-xs border border-[#EAE3D6] rounded-xl p-1.5 shadow-sm z-20">
         <button
           type="button"
           onClick={handleZoomIn}
@@ -829,13 +1036,64 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
                   ? 'bg-[#EA8500] text-white border-[#D27400] shadow-2xs font-bold animate-pulse'
                   : 'bg-[#FAF7F2] hover:bg-[#FFF4E6] text-[#6B655B] hover:text-[#EA8500] border-[#EAE3D6]'
               }`}
-              title="Focus Selected Account (F)"
-              aria-label="Focus selected account"
+              title="Center Selected Account in Viewport (F)"
+              aria-label="Center Selected Account"
             >
               <LocateFixed className="w-3.5 h-3.5 text-current" />
-              <span className="hidden sm:inline">Focus Selected</span>
+              <span className="hidden sm:inline">Center Selected</span>
             </button>
           </>
+        )}
+
+        <div className="w-px h-4 bg-[#EAE3D6] mx-0.5" />
+
+        {/* Customize Layout Toggle */}
+        <button
+          type="button"
+          onClick={() => setIsCustomizeMode((prev) => !prev)}
+          className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+            isCustomizeMode
+              ? 'bg-[#EA8500] text-white border-[#D27400] shadow-2xs ring-2 ring-[#EA8500]/30 font-bold'
+              : 'bg-[#FAF7F2] hover:bg-[#FFF4E6] text-[#6B655B] hover:text-[#EA8500] border-[#EAE3D6]'
+          }`}
+          title={isCustomizeMode ? 'Finish custom layout' : 'Customize layout by dragging nodes'}
+          aria-pressed={isCustomizeMode}
+          aria-label="Customize Layout"
+        >
+          <Move className="w-3.5 h-3.5 text-current" />
+          <span>{isCustomizeMode ? 'Customizing...' : 'Customize Layout'}</span>
+        </button>
+
+        {/* Save Layout (visible when dirty or custom layout exists) */}
+        {(Object.keys(customPositions).length > 0 || isLayoutDirty) && (
+          <button
+            type="button"
+            onClick={handleSaveLayout}
+            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+              isLayoutDirty
+                ? 'bg-[#10B981] text-white border-[#059669] shadow-2xs animate-pulse font-bold'
+                : 'bg-[#FAF7F2] hover:bg-[#EAF7EE] text-[#0F766E] border-[#A7F3D0]'
+            }`}
+            title="Save manual node positions for this graph context in browser"
+            aria-label="Save Layout"
+          >
+            <Save className="w-3.5 h-3.5 text-current" />
+            <span className="hidden sm:inline">Save Layout</span>
+          </button>
+        )}
+
+        {/* Reset to Tree Layout (visible if custom positions exist) */}
+        {Object.keys(customPositions).length > 0 && (
+          <button
+            type="button"
+            onClick={handleResetLayout}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-[#FAF7F2] hover:bg-[#FFF0F2] text-[#BE123C] border border-[#FECDD3] transition-colors cursor-pointer"
+            title="Restore standard automatic tree layout"
+            aria-label="Reset to Tree Layout"
+          >
+            <LayoutGrid className="w-3.5 h-3.5 text-current" />
+            <span className="hidden sm:inline">Reset Tree</span>
+          </button>
         )}
 
         <div className="w-px h-4 bg-[#EAE3D6] mx-0.5" />
@@ -849,8 +1107,23 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
         </button>
       </div>
 
+      {/* Temporary Feedback Notification Toast */}
+      <AnimatePresence>
+        {feedbackMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.96 }}
+            className="absolute top-14 left-1/2 -translate-x-1/2 bg-[#1A1714] text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg flex items-center gap-2 z-30 pointer-events-none"
+          >
+            <CheckCircle2 className="w-4 h-4 text-[#22C55E]" />
+            <span>{feedbackMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Floating Canvas Hop Depth Headers Ribbon */}
-      <div className="absolute top-3 left-4 flex items-center gap-6 text-[11px] font-mono text-[#8C857B] pointer-events-none z-10">
+      <div className="absolute top-3 left-4 flex items-center gap-4 text-[11px] font-mono text-[#8C857B] pointer-events-none z-10">
         <span className="flex items-center gap-1.5 font-bold text-[#EA8500]">
           <span className="w-2 h-2 rounded-full bg-[#EA8500]" />
           ORIGIN (HOP 0)
@@ -859,10 +1132,16 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
           <ArrowRight className="w-3 h-3 text-[#B8AF9F]" />
           <span>DIRECT RECIPIENTS (HOP 1)</span>
         </span>
-        <span className="flex items-center gap-1.5">
+        <span className="hidden sm:flex items-center gap-1.5">
           <ArrowRight className="w-3 h-3 text-[#B8AF9F]" />
           <span>INTERMEDIARY (HOP 2+)</span>
         </span>
+        {Object.keys(customPositions).length > 0 && (
+          <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[#FFF4E6] text-[#C05621] border border-[#FCD5B5] flex items-center gap-1">
+            <Move className="w-3 h-3 text-[#EA8500]" />
+            MANUAL LAYOUT ACTIVE
+          </span>
+        )}
       </div>
 
       {/* Canvas Viewport Frame */}
@@ -1038,6 +1317,8 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
           const hasChildren = ln.hasChildren;
           const isCollapsed = ln.isCollapsed;
 
+          const isCurrentlyDragged = draggedNodeId === ln.node.id;
+
           return (
             <div
               key={ln.node.id}
@@ -1048,28 +1329,48 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
                 width: `${ln.width}px`,
                 height: `${ln.height}px`,
                 opacity: isSubdued ? 0.28 : 1,
+                zIndex: isCurrentlyDragged ? 40 : isSelected ? 30 : 10,
+                touchAction: 'none',
               }}
-              className="pointer-events-auto transition-opacity duration-200"
+              className={`pointer-events-auto transition-opacity duration-200 ${
+                isCurrentlyDragged ? 'scale-[1.03] transition-transform duration-75' : ''
+              }`}
             >
               <div
-                onPointerDown={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
+                onPointerDown={(e) => {
+                  if (isCustomizeMode) {
+                    handleNodePointerDown(ln.node, ln.x, ln.y, e);
+                  } else {
+                    e.stopPropagation();
+                  }
+                }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onSelectNode(ln.node);
-                  onSelectEdge(null);
+                  if (!isCustomizeMode) {
+                    onSelectNode(ln.node);
+                    onSelectEdge(null);
+                  }
                 }}
-                className={`interactive-node-card group relative w-full h-full bg-white rounded-xl p-2.5 flex flex-col justify-between border-2 transition-all cursor-pointer shadow-xs hover:shadow-md ${
-                  isSelected
-                    ? 'border-[#EA8500] ring-4 ring-[#EA8500]/15 bg-[#FFFBF6]'
+                className={`interactive-node-card group relative w-full h-full bg-white rounded-xl p-2.5 flex flex-col justify-between border-2 transition-all shadow-xs select-none ${
+                  isCustomizeMode
+                    ? isCurrentlyDragged
+                      ? 'cursor-grabbing border-[#EA8500] ring-4 ring-[#EA8500]/30 shadow-xl bg-[#FFFBF6]'
+                      : 'cursor-grab border-[#EAE3D6] hover:border-[#EA8500] hover:shadow-md'
+                    : isSelected
+                    ? 'cursor-pointer border-[#EA8500] ring-4 ring-[#EA8500]/15 bg-[#FFFBF6]'
                     : ln.node.isRoot
-                    ? 'border-[#EA8500] bg-[#FFF8EE]'
-                    : 'border-[#EAE3D6] hover:border-[#EA8500]/60'
+                    ? 'cursor-pointer border-[#EA8500] bg-[#FFF8EE]'
+                    : 'cursor-pointer border-[#EAE3D6] hover:border-[#EA8500]/60 hover:shadow-md'
                 }`}
               >
                 {/* Card Top: Icon, ID & Status Badge */}
                 <div className="flex items-center justify-between gap-1.5">
                   <div className="flex items-center gap-1.5 min-w-0">
+                    {isCustomizeMode && (
+                      <span className="p-0.5 rounded text-[#8C857B] group-hover:text-[#EA8500] cursor-grab">
+                        <GripVertical className="w-3.5 h-3.5 text-current" />
+                      </span>
+                    )}
                     <span
                       className={`p-1 rounded-lg shrink-0 ${
                         ln.node.isRoot
@@ -1095,7 +1396,7 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
                         : 'bg-[#FAF7F2] text-[#6B655B] border-[#EAE3D6]'
                     }`}
                   >
-                    {ln.node.statusLabel}
+                    {isCustomizeMode && isCurrentlyDragged ? 'Moving...' : ln.node.statusLabel}
                   </span>
                 </div>
 
@@ -1111,8 +1412,8 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
                   </span>
                 </div>
 
-                {/* Branch Expand / Collapse Toggle Pill (on right edge) */}
-                {hasChildren && (
+                {/* Branch Expand / Collapse Toggle Pill (on right edge) - only when not customizing */}
+                {hasChildren && !isCustomizeMode && (
                   <button
                     type="button"
                     onClick={(ev) => toggleCollapse(ln.node.id, ev)}
@@ -1155,8 +1456,14 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
       {/* Interactive Navigation Helper Hint */}
       <div className="absolute bottom-3 right-3 flex items-center gap-2 bg-white/95 backdrop-blur-xs border border-[#EAE3D6] rounded-xl px-3 py-1.5 text-[11px] font-mono text-[#6B655B] shadow-xs z-20 pointer-events-none">
         <span className="w-1.5 h-1.5 rounded-full bg-[#EA8500] shrink-0" />
-        <span className="hidden sm:inline">Scroll to zoom · Drag to move · Select an account to inspect</span>
-        <span className="sm:hidden">Scroll to zoom · Drag to move</span>
+        {isCustomizeMode ? (
+          <span>Drag cards to rearrange · Click Save Layout when finished</span>
+        ) : (
+          <>
+            <span className="hidden sm:inline">Scroll to zoom · Drag canvas to move · Select an account to inspect</span>
+            <span className="sm:hidden">Scroll to zoom · Drag to move</span>
+          </>
+        )}
       </div>
     </div>
   );
