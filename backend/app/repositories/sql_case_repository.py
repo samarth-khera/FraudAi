@@ -56,6 +56,14 @@ class EntityNotFoundError(Exception):
         self.message = message
 
 
+def sanitize_actor_id(actor: Optional[str]) -> str:
+    """Sanitize client-supplied reviewer or actor identifiers to prevent control character injection."""
+    if not actor:
+        return "analyst_placeholder"
+    cleaned = "".join(ch for ch in str(actor).strip() if ch.isprintable() and ch not in ("\r", "\n", "\t"))
+    return cleaned[:100] if cleaned else "analyst_placeholder"
+
+
 def _model_to_case(m: FraudCaseModel) -> FraudCase:
     return FraudCase(
         case_id=m.case_id,
@@ -180,11 +188,12 @@ class SqlCaseRepository:
         self.db.add(m)
         self.db.flush()
 
+        clean_user = sanitize_actor_id(initial_audit_user)
         # Audit event (append-only)
         audit = AuditEventModel(
             case_id=case.case_id,
             action="case_created",
-            performed_by=initial_audit_user,
+            performed_by=clean_user,
             entity_type="case",
             entity_id=case.case_id,
             timestamp=utc_now(),
@@ -219,11 +228,12 @@ class SqlCaseRepository:
             m.description = description
 
         if changes:
+            clean_user = sanitize_actor_id(user_id)
             m.updated_at = utc_now()
             audit = AuditEventModel(
                 case_id=case_id,
                 action="case_metadata_updated",
-                performed_by=user_id,
+                performed_by=clean_user,
                 entity_type="case",
                 entity_id=case_id,
                 timestamp=utc_now(),
@@ -325,10 +335,11 @@ class SqlCaseRepository:
 
         self.db.flush()
         if added and case_id:
+            clean_user = sanitize_actor_id(user_id)
             audit = AuditEventModel(
                 case_id=case_id,
                 action="transactions_added",
-                performed_by=user_id,
+                performed_by=clean_user,
                 entity_type="transaction",
                 entity_id=case_id,
                 timestamp=utc_now(),
@@ -382,11 +393,12 @@ class SqlCaseRepository:
             .first()
         )
         old_state = rev.review_state if rev else None
+        clean_reviewer = sanitize_actor_id(reviewer_id)
         if rev:
             rev.review_state = review_state.value
             rev.evidence_quality = evidence_quality.value
             rev.notes = notes
-            rev.reviewer_id = reviewer_id
+            rev.reviewer_id = clean_reviewer
             rev.updated_at = utc_now()
         else:
             rev = AccountReviewStatusModel(
@@ -395,7 +407,7 @@ class SqlCaseRepository:
                 review_state=review_state.value,
                 evidence_quality=evidence_quality.value,
                 notes=notes,
-                reviewer_id=reviewer_id,
+                reviewer_id=clean_reviewer,
                 automated_action_taken="none",
             )
             self.db.add(rev)
@@ -409,7 +421,7 @@ class SqlCaseRepository:
         audit = AuditEventModel(
             case_id=case_id,
             action="account_review_recorded",
-            performed_by=reviewer_id,
+            performed_by=clean_reviewer,
             entity_type="account_review",
             entity_id=f"{case_id}:{account_id}",
             timestamp=utc_now(),
@@ -489,14 +501,19 @@ class SqlCaseRepository:
         if end_date:
             query = query.filter(AuditEventModel.timestamp <= end_date)
         if search:
-            term = f"%{search}%"
+            escaped = (
+                search.replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_")
+            )
+            term = f"%{escaped}%"
             query = query.filter(
                 or_(
-                    AuditEventModel.case_id.ilike(term),
-                    AuditEventModel.action.ilike(term),
-                    AuditEventModel.performed_by.ilike(term),
-                    AuditEventModel.entity_id.ilike(term),
-                    AuditEventModel.details_json.ilike(term),
+                    AuditEventModel.case_id.ilike(term, escape="\\"),
+                    AuditEventModel.action.ilike(term, escape="\\"),
+                    AuditEventModel.performed_by.ilike(term, escape="\\"),
+                    AuditEventModel.entity_id.ilike(term, escape="\\"),
+                    AuditEventModel.details_json.ilike(term, escape="\\"),
                 )
             )
 
@@ -562,10 +579,11 @@ class SqlCaseRepository:
         entity_id: str,
         details: Optional[dict[str, Any]] = None,
     ) -> AuditEvent:
+        clean_actor = sanitize_actor_id(performed_by)
         audit = AuditEventModel(
             case_id=case_id,
             action=action,
-            performed_by=performed_by,
+            performed_by=clean_actor,
             entity_type=entity_type,
             entity_id=entity_id,
             timestamp=utc_now(),

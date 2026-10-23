@@ -118,8 +118,20 @@ export const CaseDetailPage: React.FC = () => {
   // Fetch Case Details
   const fetchCaseDetails = async (isManualRefresh = false) => {
     if (!caseId) return;
-    if (isManualRefresh) setRefreshing(true);
-    else setLoading(true);
+    if (isManualRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+      // Clear previous case state to prevent stale data leaking between cases
+      setCaseData(null);
+      setGraphData(null);
+      setTraceData(null);
+      setTransactions([]);
+      setAuditEvents([]);
+      setAccountAssessments([]);
+      setSelectedNodeId(null);
+      setSelectedEdgeId(null);
+    }
     setError(null);
 
     try {

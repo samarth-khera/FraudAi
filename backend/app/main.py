@@ -41,6 +41,11 @@ def _error(status: int, code: str, message: str, details=None) -> JSONResponse:
     return JSONResponse(status_code=status, content=body)
 
 
+import logging
+
+logger = logging.getLogger("fraudshield.api")
+
+
 def create_app() -> FastAPI:
     # Ensure database tables exist and seed demo data
     Base.metadata.create_all(bind=engine)
@@ -63,13 +68,24 @@ def create_app() -> FastAPI:
         ).split(",")
         if o.strip()
     ]
+    is_wildcard = "*" in allowed_origins
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=allowed_origins if "*" not in allowed_origins else ["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
+        allow_origins=allowed_origins if not is_wildcard else ["*"],
+        allow_credentials=not is_wildcard,
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["*"],
     )
+
+    @app.middleware("http")
+    async def add_security_headers(request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+        return response
 
     app.include_router(router)
     app.include_router(risk_router)
@@ -86,6 +102,15 @@ def create_app() -> FastAPI:
     async def validation_exc(_: Request, exc: RequestValidationError) -> JSONResponse:
         details = [{"loc": [str(x) for x in e["loc"]], "msg": e["msg"]} for e in exc.errors()]
         return _error(422, "validation_error", "Invalid request parameters.", details)
+
+    @app.exception_handler(Exception)
+    async def unhandled_exc(req: Request, exc: Exception) -> JSONResponse:
+        logger.error("Unhandled server error at %s: %s", req.url.path, exc, exc_info=True)
+        return _error(
+            500,
+            "internal_server_error",
+            "An unexpected error occurred while processing the request.",
+        )
 
     return app
 

@@ -8,8 +8,23 @@ import json
 from datetime import datetime
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, status
 from sqlalchemy.orm import Session
+
+CaseIdPath = Path(
+    ...,
+    min_length=1,
+    max_length=64,
+    pattern=r"^[A-Za-z0-9_\-\.]+$",
+    description="Unique case identifier.",
+)
+AccountIdPath = Path(
+    ...,
+    min_length=1,
+    max_length=64,
+    pattern=r"^[A-Za-z0-9_\-\.]+$",
+    description="Unique account identifier.",
+)
 
 from app.db.models import utc_now
 from app.db.session import SessionLocal, get_db
@@ -145,15 +160,18 @@ def create_case(
 
 
 @router.get("/api/cases/{case_id}", response_model=FraudCase, responses=_ERRORS, tags=["cases"])
-def get_case(case_id: str, repo: CaseRepository = Depends(get_repository)) -> FraudCase:
+def get_case(
+    case_id: str = CaseIdPath,
+    repo: CaseRepository = Depends(get_repository),
+) -> FraudCase:
     """Retrieve details for a specific case."""
     return _require_case(repo, case_id)
 
 
 @router.patch("/api/cases/{case_id}", response_model=FraudCase, responses=_ERRORS, tags=["cases"])
 def update_case(
-    case_id: str,
-    req: CaseUpdateRequest,
+    case_id: str = CaseIdPath,
+    req: CaseUpdateRequest = ...,
     repo: CaseRepository = Depends(get_repository),
 ) -> FraudCase:
     """Update case status or description. Appends an audit event."""
@@ -176,8 +194,8 @@ def update_case(
     tags=["cases"],
 )
 def add_case_transactions(
-    case_id: str,
-    req: CaseTransactionsAddRequest,
+    case_id: str = CaseIdPath,
+    req: CaseTransactionsAddRequest = ...,
     repo: CaseRepository = Depends(get_repository),
 ) -> list[Transaction]:
     """Add observed transactions to the case transaction store. Rejects conflicting duplicates."""
@@ -195,9 +213,9 @@ def add_case_transactions(
     tags=["cases"],
 )
 def record_account_review(
-    case_id: str,
-    account_id: str,
-    req: AccountReviewUpdateRequest,
+    case_id: str = CaseIdPath,
+    account_id: str = AccountIdPath,
+    req: AccountReviewUpdateRequest = ...,
     repo: CaseRepository = Depends(get_repository),
 ) -> AccountReviewStatus:
     """Record an account review decision with reviewer identity and append-only audit event."""
@@ -224,7 +242,7 @@ def record_account_review(
     tags=["cases"],
 )
 def list_case_account_assessments(
-    case_id: str,
+    case_id: str = CaseIdPath,
     max_depth: int = MaxDepth,
     repo: CaseRepository = Depends(get_repository),
 ) -> CaseAccountAssessmentsResponse:
@@ -250,8 +268,8 @@ def list_case_account_assessments(
     tags=["cases"],
 )
 def get_account_assessment(
-    case_id: str,
-    account_id: str,
+    case_id: str = CaseIdPath,
+    account_id: str = AccountIdPath,
     max_depth: int = MaxDepth,
     repo: CaseRepository = Depends(get_repository),
 ) -> AccountAssessmentResponse:
@@ -273,7 +291,6 @@ def get_account_assessment(
         raise HTTPException(status_code=409, detail={"code": exc.code, "message": exc.message})
 
 
-
 @router.get(
     "/api/cases/{case_id}/audit-trail",
     response_model=AuditTrailResponse,
@@ -281,7 +298,7 @@ def get_account_assessment(
     tags=["cases"],
 )
 def get_case_audit_trail(
-    case_id: str,
+    case_id: str = CaseIdPath,
     repo: CaseRepository = Depends(get_repository),
 ) -> AuditTrailResponse:
     """Retrieve the append-only audit trail for an investigation case."""
@@ -312,8 +329,10 @@ def _sanitize_csv_cell(value: Any) -> str:
     if value is None:
         return ""
     s = str(value)
-    # Neutralize spreadsheet formula injection (=, +, -, @, \t, \r)
-    if s and s[0] in ("=", "+", "-", "@", "\t", "\r"):
+    # Neutralize spreadsheet formula injection (=, +, -, @, |, %, \t, \r)
+    # Check both the raw string and stripped string to prevent whitespace-padded execution
+    stripped = s.lstrip()
+    if stripped and stripped[0] in ("=", "+", "-", "@", "|", "%", "\t", "\r"):
         return f"'{s}"
     return s
 
@@ -325,15 +344,15 @@ def _sanitize_csv_cell(value: Any) -> str:
     tags=["audit"],
 )
 def get_global_audit_events(
-    case_id: Optional[str] = Query(None, description="Filter by case ID"),
-    action: Optional[str] = Query(None, description="Filter by exact action name"),
-    category: Optional[str] = Query(None, description="Filter by category (reviews, case_changes, traces, transactions)"),
-    performed_by: Optional[str] = Query(None, description="Filter by actor / reviewer identity"),
-    entity_type: Optional[str] = Query(None, description="Filter by entity type"),
-    search: Optional[str] = Query(None, description="Search across case_id, action, actor, entity_id, and details"),
+    case_id: Optional[str] = Query(None, max_length=64, pattern=r"^[A-Za-z0-9_\-\.]+$", description="Filter by case ID"),
+    action: Optional[str] = Query(None, max_length=64, pattern=r"^[A-Za-z0-9_\-]+$", description="Filter by exact action name"),
+    category: Optional[str] = Query(None, max_length=32, pattern=r"^[A-Za-z0-9_]+$", description="Filter by category (reviews, case_changes, traces, transactions)"),
+    performed_by: Optional[str] = Query(None, max_length=100, description="Filter by actor / reviewer identity"),
+    entity_type: Optional[str] = Query(None, max_length=64, description="Filter by entity type"),
+    search: Optional[str] = Query(None, max_length=200, description="Search across case_id, action, actor, entity_id, and details"),
     start_date: Optional[datetime] = Query(None, description="Start date filter"),
     end_date: Optional[datetime] = Query(None, description="End date filter"),
-    skip: int = Query(0, ge=0, description="Offset"),
+    skip: int = Query(0, ge=0, le=100000, description="Offset"),
     limit: int = Query(50, ge=1, le=500, description="Page limit"),
     sort_order: str = Query("desc", pattern="^(asc|desc)$", description="Sort order"),
     repo: CaseRepository = Depends(get_repository),
@@ -393,12 +412,12 @@ def get_global_audit_events(
     tags=["audit"],
 )
 def export_audit_events_csv(
-    case_id: Optional[str] = Query(None, description="Filter by case ID"),
-    action: Optional[str] = Query(None, description="Filter by exact action name"),
-    category: Optional[str] = Query(None, description="Filter by category"),
-    performed_by: Optional[str] = Query(None, description="Filter by actor / reviewer identity"),
-    entity_type: Optional[str] = Query(None, description="Filter by entity type"),
-    search: Optional[str] = Query(None, description="Search across fields"),
+    case_id: Optional[str] = Query(None, max_length=64, pattern=r"^[A-Za-z0-9_\-\.]+$", description="Filter by case ID"),
+    action: Optional[str] = Query(None, max_length=64, pattern=r"^[A-Za-z0-9_\-]+$", description="Filter by exact action name"),
+    category: Optional[str] = Query(None, max_length=32, pattern=r"^[A-Za-z0-9_]+$", description="Filter by category"),
+    performed_by: Optional[str] = Query(None, max_length=100, description="Filter by actor / reviewer identity"),
+    entity_type: Optional[str] = Query(None, max_length=64, description="Filter by entity type"),
+    search: Optional[str] = Query(None, max_length=200, description="Search across fields"),
     start_date: Optional[datetime] = Query(None, description="Start date filter"),
     end_date: Optional[datetime] = Query(None, description="End date filter"),
     limit: int = Query(5000, ge=1, le=10000, description="Export limit"),
@@ -454,10 +473,12 @@ def export_audit_events_csv(
 
     return Response(
         content=csv_data,
-        media_type="text/csv",
+        media_type="text/csv; charset=utf-8",
         headers={
             "Content-Disposition": f'attachment; filename="{filename}"',
-            "Cache-Control": "no-cache",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "X-Content-Type-Options": "nosniff",
         },
     )
 
@@ -470,7 +491,7 @@ def export_audit_events_csv(
     tags=["cases"],
 )
 def get_case_transactions(
-    case_id: str,
+    case_id: str = CaseIdPath,
     max_depth: int = MaxDepth,
     repo: CaseRepository = Depends(get_repository),
 ) -> TransactionListResponse:
@@ -491,7 +512,7 @@ def get_case_transactions(
     tags=["cases"],
 )
 def get_case_graph(
-    case_id: str,
+    case_id: str = CaseIdPath,
     max_depth: int = MaxDepth,
     repo: CaseRepository = Depends(get_repository),
 ) -> GraphResponse:
@@ -507,7 +528,7 @@ def get_case_graph(
     tags=["cases"],
 )
 def get_case_trace(
-    case_id: str,
+    case_id: str = CaseIdPath,
     max_depth: int = MaxDepth,
     repo: CaseRepository = Depends(get_repository),
 ) -> TraceResult:
