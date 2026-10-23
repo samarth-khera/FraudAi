@@ -179,6 +179,11 @@ class SingleModelInfo(BaseModel):
     trained_at: Optional[str] = None
     test_metrics: Optional[dict[str, Any]] = None
     limitations: Optional[str] = None
+    feature_importances: Optional[dict[str, float]] = None
+    dataset_info: Optional[dict[str, Any]] = None
+    baseline_comparison: Optional[dict[str, Any]] = None
+    leakage_protections: Optional[list[str]] = None
+    features: Optional[list[str]] = None
 
 
 class ModelStatusResponse(BaseModel):

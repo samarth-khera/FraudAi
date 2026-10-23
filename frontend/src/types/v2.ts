@@ -116,6 +116,11 @@ export interface V2SingleModelInfo {
   trained_at: string | null;
   test_metrics: Record<string, any> | null;
   limitations: string | null;
+  feature_importances?: Record<string, number> | null;
+  dataset_info?: Record<string, any> | null;
+  baseline_comparison?: Record<string, any> | null;
+  leakage_protections?: string[] | null;
+  features?: string[] | null;
 }
 
 export interface V2ModelStatusResponse {
