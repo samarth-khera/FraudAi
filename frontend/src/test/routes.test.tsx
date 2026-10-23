@@ -35,6 +35,19 @@ describe('Page Rendering', () => {
     expect(screen.getByText('Transaction-Level PaySim Benchmark')).toBeInTheDocument();
     expect(screen.getByText('Model Comparison & Scope')).toBeInTheDocument();
   });
+
+  it('renders AuditPage with governance header and summary metrics', async () => {
+    const { AuditPage } = await import('../pages/AuditPage');
+    render(
+      <MemoryRouter>
+        <AuditPage />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('Audit & Governance')).toBeInTheDocument();
+    expect(screen.getByText('GOVERNANCE & PROVENANCE')).toBeInTheDocument();
+    expect(screen.getByText('Refresh Events')).toBeInTheDocument();
+  });
 });
 
 describe('Unified Platform Layout Shell', () => {

@@ -11,7 +11,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Optional
 
-from sqlalchemy import desc
+from sqlalchemy import asc, desc, func, or_
 from sqlalchemy.orm import Session
 
 from app.db.models import (
@@ -444,6 +444,114 @@ class SqlCaseRepository:
             .all()
         )
         return [_model_to_audit(r) for r in rows]
+
+    def list_global_audit_events(
+        self,
+        case_id: Optional[str] = None,
+        action: Optional[str] = None,
+        category: Optional[str] = None,
+        performed_by: Optional[str] = None,
+        entity_type: Optional[str] = None,
+        search: Optional[str] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        skip: int = 0,
+        limit: int = 50,
+        sort_order: str = "desc",
+    ) -> tuple[list[AuditEvent], int, dict[str, Any]]:
+        query = self.db.query(AuditEventModel)
+
+        if case_id:
+            query = query.filter(AuditEventModel.case_id == case_id)
+        if action:
+            query = query.filter(AuditEventModel.action == action)
+        if category:
+            cat = category.lower()
+            if cat in ("reviews", "review"):
+                query = query.filter(AuditEventModel.action.like("%review%"))
+            elif cat in ("case_changes", "case"):
+                query = query.filter(
+                    or_(
+                        AuditEventModel.action.like("%case%"),
+                        AuditEventModel.action.like("%status%"),
+                    )
+                )
+            elif cat in ("traces", "trace"):
+                query = query.filter(AuditEventModel.action.like("%trace%"))
+            elif cat in ("transactions", "tx"):
+                query = query.filter(AuditEventModel.action.like("%transaction%"))
+        if performed_by:
+            query = query.filter(AuditEventModel.performed_by == performed_by)
+        if entity_type:
+            query = query.filter(AuditEventModel.entity_type == entity_type)
+        if start_date:
+            query = query.filter(AuditEventModel.timestamp >= start_date)
+        if end_date:
+            query = query.filter(AuditEventModel.timestamp <= end_date)
+        if search:
+            term = f"%{search}%"
+            query = query.filter(
+                or_(
+                    AuditEventModel.case_id.ilike(term),
+                    AuditEventModel.action.ilike(term),
+                    AuditEventModel.performed_by.ilike(term),
+                    AuditEventModel.entity_id.ilike(term),
+                    AuditEventModel.details_json.ilike(term),
+                )
+            )
+
+        total_filtered = query.count()
+
+        if sort_order.lower() == "asc":
+            query = query.order_by(AuditEventModel.timestamp.asc(), AuditEventModel.event_id.asc())
+        else:
+            query = query.order_by(AuditEventModel.timestamp.desc(), AuditEventModel.event_id.desc())
+
+        rows = query.offset(skip).limit(limit).all()
+        events = [_model_to_audit(r) for r in rows]
+
+        # Summary statistics across all stored events
+        total_events = self.db.query(func.count(AuditEventModel.event_id)).scalar() or 0
+        reviews_count = (
+            self.db.query(func.count(AuditEventModel.event_id))
+            .filter(AuditEventModel.action.like("%review%"))
+            .scalar()
+            or 0
+        )
+        case_changes_count = (
+            self.db.query(func.count(AuditEventModel.event_id))
+            .filter(
+                or_(
+                    AuditEventModel.action.like("%case%"),
+                    AuditEventModel.action.like("%status%"),
+                )
+            )
+            .scalar()
+            or 0
+        )
+        trace_events_count = (
+            self.db.query(func.count(AuditEventModel.event_id))
+            .filter(AuditEventModel.action.like("%trace%"))
+            .scalar()
+            or 0
+        )
+        distinct_cases = self.db.query(func.count(func.distinct(AuditEventModel.case_id))).scalar() or 0
+        distinct_actors = self.db.query(func.count(func.distinct(AuditEventModel.performed_by))).scalar() or 0
+        most_recent = self.db.query(func.max(AuditEventModel.timestamp)).scalar()
+        earliest = self.db.query(func.min(AuditEventModel.timestamp)).scalar()
+
+        summary = {
+            "total_events": total_events,
+            "review_decisions_count": reviews_count,
+            "case_status_changes_count": case_changes_count,
+            "trace_events_count": trace_events_count,
+            "most_recent_timestamp": most_recent,
+            "earliest_timestamp": earliest,
+            "distinct_cases_count": distinct_cases,
+            "distinct_actors_count": distinct_actors,
+        }
+
+        return events, total_filtered, summary
 
     def record_audit_event(
         self,

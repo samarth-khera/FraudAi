@@ -77,10 +77,10 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     name: 'Audit Trail',
-    path: '/app/cases/FS-1042?tab=audit',
+    path: '/audit',
     icon: FileCheck2,
-    matchPaths: ['/audit', 'tab=audit'],
-    description: 'Immutable human adjudication & review log',
+    matchPaths: ['/audit', '/app/audit', 'tab=audit'],
+    description: 'Investigation decisions, evidence & provenance',
   },
 ];
 
@@ -133,7 +133,11 @@ export const UnifiedHeader: React.FC = () => {
       return currentPath === item.path;
     }
     if (item.name === 'Audit Trail') {
-      return currentSearch.includes('tab=audit') || currentPath === '/audit';
+      return (
+        currentSearch.includes('tab=audit') ||
+        currentPath === '/audit' ||
+        currentPath.startsWith('/app/audit')
+      );
     }
     if (item.name === 'Cases' && currentSearch.includes('tab=audit')) {
       return false; // Highlight Audit Trail instead

@@ -5,6 +5,8 @@ import {
   CaseAccountAssessmentsResponse,
   CaseListResponse,
   FraudCase,
+  GlobalAuditResponse,
+  AuditQueryParams,
   GraphResponse,
   RiskExplainResponse,
   RiskScoreRequest,
@@ -164,6 +166,42 @@ export const api = {
   // Audit Trail
   getCaseAuditTrail: (caseId: string) =>
     request<AuditTrailResponse>(`/api/cases/${encodeURIComponent(caseId)}/audit-trail`),
+
+  getGlobalAudit: (params?: AuditQueryParams) => {
+    const query = new URLSearchParams();
+    if (params) {
+      if (params.case_id) query.set('case_id', params.case_id);
+      if (params.action) query.set('action', params.action);
+      if (params.category && params.category !== 'all') query.set('category', params.category);
+      if (params.performed_by) query.set('performed_by', params.performed_by);
+      if (params.entity_type) query.set('entity_type', params.entity_type);
+      if (params.search) query.set('search', params.search);
+      if (params.start_date) query.set('start_date', params.start_date);
+      if (params.end_date) query.set('end_date', params.end_date);
+      if (params.skip !== undefined) query.set('skip', String(params.skip));
+      if (params.limit !== undefined) query.set('limit', String(params.limit));
+      if (params.sort_order) query.set('sort_order', params.sort_order);
+    }
+    const qStr = query.toString();
+    return request<GlobalAuditResponse>(`/api/audit${qStr ? `?${qStr}` : ''}`);
+  },
+
+  getAuditExportUrl: (params?: AuditQueryParams) => {
+    const query = new URLSearchParams();
+    if (params) {
+      if (params.case_id) query.set('case_id', params.case_id);
+      if (params.action) query.set('action', params.action);
+      if (params.category && params.category !== 'all') query.set('category', params.category);
+      if (params.performed_by) query.set('performed_by', params.performed_by);
+      if (params.entity_type) query.set('entity_type', params.entity_type);
+      if (params.search) query.set('search', params.search);
+      if (params.start_date) query.set('start_date', params.start_date);
+      if (params.end_date) query.set('end_date', params.end_date);
+      if (params.sort_order) query.set('sort_order', params.sort_order);
+    }
+    const qStr = query.toString();
+    return `${BASE_URL}/api/audit/export.csv${qStr ? `?${qStr}` : ''}`;
+  },
 
   // Risk Scoring & Explainable AI
   scoreRisk: (payload: RiskScoreRequest) =>
