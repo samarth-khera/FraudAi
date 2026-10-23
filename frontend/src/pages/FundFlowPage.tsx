@@ -70,6 +70,7 @@ export const FundFlowPage: React.FC = () => {
   // Selected Elements
   const [selectedNode, setSelectedNode] = useState<UnifiedTreeNode | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<UnifiedTreeEdge | null>(null);
+  const [focusTargetNodeId, setFocusTargetNodeId] = useState<string | null>(null);
 
   // Update URL Search Params synchronously
   const syncUrlParams = useCallback(
@@ -190,6 +191,7 @@ export const FundFlowPage: React.FC = () => {
     if (node) {
       setSelectedNode(node);
       setSelectedEdge(null);
+      setFocusTargetNodeId(accountId);
     }
   };
 
@@ -516,6 +518,8 @@ export const FundFlowPage: React.FC = () => {
                 rootAccountId={flowData.summary.rootAccountId}
                 selectedNodeId={selectedNode?.id || null}
                 selectedEdgeId={selectedEdge?.id || null}
+                focusTargetNodeId={focusTargetNodeId}
+                onFocusNodeConsumed={() => setFocusTargetNodeId(null)}
                 onSelectNode={(node) => {
                   setSelectedNode(node);
                   setSelectedEdge(null);
@@ -569,6 +573,7 @@ export const FundFlowPage: React.FC = () => {
             }}
             mode={traceMode}
             caseId={targetId}
+            onFocusNode={(nodeId) => setFocusTargetNodeId(nodeId)}
           />
         </div>
       </div>

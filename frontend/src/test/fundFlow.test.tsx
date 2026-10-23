@@ -203,12 +203,56 @@ describe('FundFlowHierarchicalTree Component', () => {
     expect(screen.getByText('Ishan Reddy')).toBeInTheDocument();
     expect(screen.getByText('ORIGIN (HOP 0)')).toBeInTheDocument();
   });
+
+  it('renders navigation controls toolbar and helper hint badge', () => {
+    const unified = adaptV2TraceToUnified(mockV2TraceResponse);
+    render(
+      <FundFlowHierarchicalTree
+        nodes={unified.nodes}
+        edges={unified.edges}
+        rootAccountId="ACC-000001"
+        selectedNodeId={null}
+        selectedEdgeId={null}
+        onSelectNode={vi.fn()}
+        onSelectEdge={vi.fn()}
+      />
+    );
+
+    expect(screen.getByLabelText('Zoom In')).toBeInTheDocument();
+    expect(screen.getByLabelText('Zoom Out')).toBeInTheDocument();
+    expect(screen.getByLabelText('Fit View')).toBeInTheDocument();
+    expect(screen.getByLabelText('Reset View')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Scroll to zoom · Drag to move · Select an account to inspect/i)
+    ).toBeInTheDocument();
+  });
+
+  it('renders Focus Selected control when a node is selected and allows focusing', () => {
+    const unified = adaptV2TraceToUnified(mockV2TraceResponse);
+    render(
+      <FundFlowHierarchicalTree
+        nodes={unified.nodes}
+        edges={unified.edges}
+        rootAccountId="ACC-000001"
+        selectedNodeId="ACC-000002"
+        selectedEdgeId={null}
+        onSelectNode={vi.fn()}
+        onSelectEdge={vi.fn()}
+      />
+    );
+
+    const focusBtn = screen.getByLabelText('Focus selected account');
+    expect(focusBtn).toBeInTheDocument();
+    expect(screen.getByText('Focus Selected')).toBeInTheDocument();
+    fireEvent.click(focusBtn);
+  });
 });
 
 describe('FundFlowInspector Component', () => {
-  it('renders account details, customer type, and balance when node is selected', () => {
+  it('renders account details, customer type, balance, and focus action when node is selected', () => {
     const unified = adaptV2TraceToUnified(mockV2TraceResponse);
     const selected = unified.nodes[0];
+    const onFocusNode = vi.fn();
 
     render(
       <MemoryRouter>
@@ -221,6 +265,7 @@ describe('FundFlowInspector Component', () => {
           onSelectEdge={vi.fn()}
           onClose={vi.fn()}
           mode="account"
+          onFocusNode={onFocusNode}
         />
       </MemoryRouter>
     );
@@ -228,6 +273,11 @@ describe('FundFlowInspector Component', () => {
     expect(screen.getByText('ROOT ORIGIN ACCOUNT')).toBeInTheDocument();
     expect(screen.getByText('Aditi Joshi')).toBeInTheDocument();
     expect(screen.getByText('ACC-000001')).toBeInTheDocument();
+    expect(screen.getByText('Focus in Tree')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Focus in Tree'));
+    expect(onFocusNode).toHaveBeenCalledWith('ACC-000001');
+
     expect(screen.getByText(/Open Account 360° Profile/i)).toBeInTheDocument();
     expect(screen.getByText(/View Ledger Transactions/i)).toBeInTheDocument();
   });

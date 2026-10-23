@@ -4,6 +4,7 @@ import {
   ZoomOut,
   Maximize2,
   RotateCcw,
+  LocateFixed,
   ChevronRight,
   ChevronDown,
   ArrowRight,
@@ -22,7 +23,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { gsap } from 'gsap';
 import { UnifiedTreeNode, UnifiedTreeEdge } from '../../services/unifiedFlowAdapter';
 
-interface FundFlowHierarchicalTreeProps {
+export interface FundFlowHierarchicalTreeProps {
   nodes: UnifiedTreeNode[];
   edges: UnifiedTreeEdge[];
   rootAccountId: string;
@@ -31,6 +32,8 @@ interface FundFlowHierarchicalTreeProps {
   onSelectNode: (node: UnifiedTreeNode | null) => void;
   onSelectEdge: (edge: UnifiedTreeEdge | null) => void;
   height?: string;
+  focusTargetNodeId?: string | null;
+  onFocusNodeConsumed?: () => void;
 }
 
 interface LayoutNode {
@@ -66,6 +69,8 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
   onSelectNode,
   onSelectEdge,
   height = '620px',
+  focusTargetNodeId,
+  onFocusNodeConsumed,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -73,12 +78,21 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
   const particleRef = useRef<SVGCircleElement>(null);
   const gsapCtxRef = useRef<gsap.Context | null>(null);
 
-  // Pan & Zoom State
+  // Pan & Zoom State & Refs
   const [zoom, setZoom] = useState<number>(1);
-  const [pan, setPan] = useState<{ x: number; y: number }>({ x: 30, y: 30 });
+  const [pan, setPan] = useState<{ x: number; y: number }>({ x: 40, y: 50 });
   const [isDragging, setIsDragging] = useState<boolean>(false);
-  const dragStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  const zoomRef = useRef<number>(zoom);
+  zoomRef.current = zoom;
+  const panRef = useRef<{ x: number; y: number }>(pan);
+  panRef.current = pan;
+
+  const isPointerDownRef = useRef<boolean>(false);
+  const pointerStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const panStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const hasMovedRef = useRef<boolean>(false);
+  const touchDistanceRef = useRef<number | null>(null);
 
   // Collapse / Expand set (stored node IDs whose downstream branches are collapsed)
   const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
@@ -314,8 +328,8 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
     });
 
     const maxHop = colKeys.length > 0 ? colKeys[colKeys.length - 1] : 0;
-    const maxX = 60 + (maxHop + 1) * (NODE_WIDTH + X_GAP);
-    const maxY = Math.max(520, maxOverallY + 80);
+    const maxX = Math.max(900, 80 + (maxHop + 1) * (NODE_WIDTH + X_GAP) + 120);
+    const maxY = Math.max(540, maxOverallY + NODE_HEIGHT + 100);
 
     return {
       layoutNodes: lNodes,
@@ -440,63 +454,274 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
     };
   }, [layoutEdges, selectedNodeId, selectedEdgeId]);
 
-  // Pan interaction handlers
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('.interactive-node-card')) return;
-    setIsDragging(true);
-    dragStartRef.current = { x: e.clientX, y: e.clientY };
-    panStartRef.current = { ...pan };
-  };
+  // Focus selected account in the center of the viewport
+  const focusNode = useCallback(
+    (nodeId: string) => {
+      const target = layoutNodes.find((ln) => ln.node.id === nodeId);
+      if (!target || !containerRef.current) return;
 
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent) => {
-      if (!isDragging) return;
-      const dx = e.clientX - dragStartRef.current.x;
-      const dy = e.clientY - dragStartRef.current.y;
-      setPan({
-        x: panStartRef.current.x + dx,
-        y: panStartRef.current.y + dy,
-      });
+      const cw = containerRef.current.clientWidth;
+      const ch = containerRef.current.clientHeight;
+
+      // Keep zoom comfortable and legible (0.85 to 1.15)
+      const currentZoom = zoomRef.current;
+      const targetZoom = Math.max(0.85, Math.min(currentZoom, 1.15));
+
+      const targetX = cw / 2 - (target.x + target.width / 2) * targetZoom;
+      const targetY = ch / 2 - (target.y + target.height / 2) * targetZoom;
+
+      setZoom(targetZoom);
+      setPan({ x: targetX, y: targetY });
     },
-    [isDragging]
+    [layoutNodes]
   );
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
+  // Focus node triggered from outside (e.g. from Inspector or parent)
+  useEffect(() => {
+    if (focusTargetNodeId) {
+      focusNode(focusTargetNodeId);
+      onFocusNodeConsumed?.();
+    }
+  }, [focusTargetNodeId, focusNode, onFocusNodeConsumed]);
+
+  // Check whether selected account node is currently visible in viewport
+  const isSelectedNodeInView = useMemo(() => {
+    if (!selectedNodeId || !containerRef.current) return true;
+    const target = layoutNodes.find((ln) => ln.node.id === selectedNodeId);
+    if (!target) return true;
+
+    const cw = containerRef.current.clientWidth;
+    const ch = containerRef.current.clientHeight;
+
+    const screenLeft = pan.x + target.x * zoom;
+    const screenRight = screenLeft + target.width * zoom;
+    const screenTop = pan.y + target.y * zoom;
+    const screenBottom = screenTop + target.height * zoom;
+
+    const margin = 20;
+    return (
+      screenRight > margin &&
+      screenLeft < cw - margin &&
+      screenBottom > margin &&
+      screenTop < ch - margin
+    );
+  }, [selectedNodeId, layoutNodes, pan, zoom]);
+
+  // Window-level pointer tracking for rock-solid pan dragging without stuck states
+  useEffect(() => {
+    const handleWindowPointerMove = (e: PointerEvent) => {
+      if (!isPointerDownRef.current) return;
+
+      const dx = e.clientX - pointerStartRef.current.x;
+      const dy = e.clientY - pointerStartRef.current.y;
+
+      // Activate drag only after exceeding deliberate threshold (prevents click accidental drags)
+      if (!hasMovedRef.current) {
+        if (Math.hypot(dx, dy) > 4) {
+          hasMovedRef.current = true;
+          setIsDragging(true);
+        }
+      }
+
+      if (hasMovedRef.current) {
+        setPan({
+          x: panStartRef.current.x + dx,
+          y: panStartRef.current.y + dy,
+        });
+      }
+    };
+
+    const handleWindowPointerUp = () => {
+      if (isPointerDownRef.current) {
+        isPointerDownRef.current = false;
+        setIsDragging(false);
+      }
+    };
+
+    window.addEventListener('pointermove', handleWindowPointerMove);
+    window.addEventListener('pointerup', handleWindowPointerUp);
+    window.addEventListener('pointercancel', handleWindowPointerUp);
+
+    return () => {
+      window.removeEventListener('pointermove', handleWindowPointerMove);
+      window.removeEventListener('pointerup', handleWindowPointerUp);
+      window.removeEventListener('pointercancel', handleWindowPointerUp);
+    };
+  }, []);
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return; // Only primary button
+    const target = e.target as HTMLElement;
+
+    // Never initiate background pan when interacting with node cards, buttons, or controls
+    if (
+      target.closest('.interactive-node-card') ||
+      target.closest('button') ||
+      target.closest('a') ||
+      target.closest('.no-pan')
+    ) {
+      return;
+    }
+
+    isPointerDownRef.current = true;
+    hasMovedRef.current = false;
+    pointerStartRef.current = { x: e.clientX, y: e.clientY };
+    panStartRef.current = { ...panRef.current };
   };
 
-  // Wheel zoom
+  // Wheel zoom anchored right around the pointer coordinates
   const handleWheel = (e: React.WheelEvent) => {
+    // Trackpad two-finger pan (horizontal or vertical without ctrlKey)
+    if (!e.ctrlKey && Math.abs(e.deltaX) > 0) {
+      setPan((prev) => ({
+        x: prev.x - e.deltaX,
+        y: prev.y - e.deltaY,
+      }));
+      return;
+    }
+
+    // Stop document scroll when mouse wheeling directly over the graph canvas
     e.preventDefault();
-    const zoomFactor = e.deltaY < 0 ? 1.08 : 0.92;
-    setZoom((prev) => Math.min(2.0, Math.max(0.4, prev * zoomFactor)));
+    if (!containerRef.current) return;
+
+    const rect = containerRef.current.getBoundingClientRect();
+    const cursorX = e.clientX - rect.left;
+    const cursorY = e.clientY - rect.top;
+
+    const zoomFactor = e.deltaY < 0 ? 1.09 : 0.91;
+    const currentZoom = zoomRef.current;
+    const currentPan = panRef.current;
+    const newZoom = Math.min(2.2, Math.max(0.35, currentZoom * zoomFactor));
+
+    if (newZoom !== currentZoom) {
+      const ratio = newZoom / currentZoom;
+      const newPanX = cursorX - (cursorX - currentPan.x) * ratio;
+      const newPanY = cursorY - (cursorY - currentPan.y) * ratio;
+
+      setZoom(newZoom);
+      setPan({ x: newPanX, y: newPanY });
+    }
   };
 
-  // Zoom controls
-  const handleZoomIn = () => setZoom((prev) => Math.min(2.0, prev * 1.2));
-  const handleZoomOut = () => setZoom((prev) => Math.max(0.4, prev * 0.82));
+  // Viewport-centered step zoom buttons (+ / -)
+  const zoomByStep = (factor: number) => {
+    if (!containerRef.current) return;
+    const cw = containerRef.current.clientWidth;
+    const ch = containerRef.current.clientHeight;
+    const centerX = cw / 2;
+    const centerY = ch / 2;
+
+    const currentZoom = zoomRef.current;
+    const currentPan = panRef.current;
+    const newZoom = Math.min(2.2, Math.max(0.35, currentZoom * factor));
+
+    if (newZoom !== currentZoom) {
+      const ratio = newZoom / currentZoom;
+      const newPanX = centerX - (centerX - currentPan.x) * ratio;
+      const newPanY = centerY - (centerY - currentPan.y) * ratio;
+      setZoom(newZoom);
+      setPan({ x: newPanX, y: newPanY });
+    }
+  };
+
+  const handleZoomIn = () => zoomByStep(1.2);
+  const handleZoomOut = () => zoomByStep(0.82);
+
+  // Fit tree neatly within canvas viewport bounds
   const handleFitView = useCallback(() => {
     if (!containerRef.current) return;
     const cw = containerRef.current.clientWidth;
     const ch = containerRef.current.clientHeight;
-    // Scale to fit horizontal hop columns without shrinking text excessively
-    const scaleX = (cw - 60) / Math.min(bounds.width, 1200);
-    const scaleY = (ch - 60) / Math.min(bounds.height, 800);
-    const newZoom = Math.min(1.0, Math.max(0.78, Math.min(scaleX, scaleY)));
+
+    const paddingX = 80;
+    const paddingY = 90;
+    const availableW = Math.max(200, cw - paddingX);
+    const availableH = Math.max(200, ch - paddingY);
+
+    const scaleX = availableW / Math.max(bounds.width, 1);
+    const scaleY = availableH / Math.max(bounds.height, 1);
+    const newZoom = Math.min(1.15, Math.max(0.38, Math.min(scaleX, scaleY)));
+
+    // Center tree within container
+    const newPanX = (cw - bounds.width * newZoom) / 2;
+    const newPanY = (ch - bounds.height * newZoom) / 2;
+
     setZoom(newZoom);
-    setPan({ x: 30, y: 40 });
+    setPan({ x: Math.max(20, newPanX), y: Math.max(30, newPanY) });
   }, [bounds.width, bounds.height]);
 
   const handleResetView = () => {
     setZoom(1);
-    setPan({ x: 30, y: 40 });
+    setPan({ x: 40, y: 50 });
     onSelectNode(null);
     onSelectEdge(null);
   };
 
+  // Keyboard navigation shortcuts
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === '+' || e.key === '=') {
+      e.preventDefault();
+      handleZoomIn();
+    } else if (e.key === '-' || e.key === '_') {
+      e.preventDefault();
+      handleZoomOut();
+    } else if (e.key === '0') {
+      e.preventDefault();
+      handleFitView();
+    } else if ((e.key === 'f' || e.key === 'F') && selectedNodeId) {
+      e.preventDefault();
+      focusNode(selectedNodeId);
+    } else if (e.key === 'Escape') {
+      onSelectNode(null);
+      onSelectEdge(null);
+    }
+  };
+
+  // Multi-touch pinch gestures for mobile & tablet screens
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      touchDistanceRef.current = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && touchDistanceRef.current !== null && containerRef.current) {
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      const scaleFactor = dist / touchDistanceRef.current;
+
+      if (Math.abs(scaleFactor - 1) > 0.02) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const midX = (t1.clientX + t2.clientX) / 2 - rect.left;
+        const midY = (t1.clientY + t2.clientY) / 2 - rect.top;
+
+        const currentZoom = zoomRef.current;
+        const currentPan = panRef.current;
+        const newZoom = Math.min(2.2, Math.max(0.35, currentZoom * scaleFactor));
+
+        if (newZoom !== currentZoom) {
+          const ratio = newZoom / currentZoom;
+          setZoom(newZoom);
+          setPan({
+            x: midX - (midX - currentPan.x) * ratio,
+            y: midY - (midY - currentPan.y) * ratio,
+          });
+          touchDistanceRef.current = dist;
+        }
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    touchDistanceRef.current = null;
+  };
+
   // Reset focus to root node when root account or dataset changes
   useEffect(() => {
-    setPan({ x: 30, y: 40 });
+    setPan({ x: 40, y: 50 });
     setZoom(1);
   }, [rootAccountId]);
 
@@ -542,23 +767,25 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
   return (
     <div
       ref={containerRef}
-      style={{ height }}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
+      style={{ height, touchAction: 'none' }}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      onPointerDown={handlePointerDown}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       onWheel={handleWheel}
-      className={`relative w-full rounded-2xl border border-[#EAE3D6] bg-[#FAF7F2] overflow-hidden select-none blueprint-grid-warm shadow-xs ${
+      className={`relative w-full rounded-2xl border border-[#EAE3D6] bg-[#FAF7F2] overflow-hidden select-none blueprint-grid-warm shadow-xs outline-none focus:ring-1 focus:ring-[#EA8500]/40 ${
         isDragging ? 'cursor-grabbing' : 'cursor-grab'
       }`}
     >
-      {/* Floating Canvas Action Controls */}
+      {/* Floating Canvas Action Controls Toolbar */}
       <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-white/95 backdrop-blur-xs border border-[#EAE3D6] rounded-xl p-1.5 shadow-sm z-20">
         <button
           type="button"
           onClick={handleZoomIn}
           className="p-1.5 rounded-lg text-[#6B655B] hover:text-[#1A1714] hover:bg-[#FAF7F2] transition-colors cursor-pointer"
-          title="Zoom In"
+          title="Zoom In (+)"
           aria-label="Zoom In"
         >
           <ZoomIn className="w-4 h-4" />
@@ -567,7 +794,7 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
           type="button"
           onClick={handleZoomOut}
           className="p-1.5 rounded-lg text-[#6B655B] hover:text-[#1A1714] hover:bg-[#FAF7F2] transition-colors cursor-pointer"
-          title="Zoom Out"
+          title="Zoom Out (-)"
           aria-label="Zoom Out"
         >
           <ZoomOut className="w-4 h-4" />
@@ -576,7 +803,7 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
           type="button"
           onClick={handleFitView}
           className="p-1.5 rounded-lg text-[#6B655B] hover:text-[#1A1714] hover:bg-[#FAF7F2] transition-colors cursor-pointer"
-          title="Fit Tree to Viewport"
+          title="Fit Tree to Screen (0)"
           aria-label="Fit View"
         >
           <Maximize2 className="w-4 h-4" />
@@ -590,12 +817,33 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
         >
           <RotateCcw className="w-4 h-4" />
         </button>
+
+        {selectedNodeId && (
+          <>
+            <div className="w-px h-4 bg-[#EAE3D6] mx-0.5" />
+            <button
+              type="button"
+              onClick={() => focusNode(selectedNodeId)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+                !isSelectedNodeInView
+                  ? 'bg-[#EA8500] text-white border-[#D27400] shadow-2xs font-bold animate-pulse'
+                  : 'bg-[#FAF7F2] hover:bg-[#FFF4E6] text-[#6B655B] hover:text-[#EA8500] border-[#EAE3D6]'
+              }`}
+              title="Focus Selected Account (F)"
+              aria-label="Focus selected account"
+            >
+              <LocateFixed className="w-3.5 h-3.5 text-current" />
+              <span className="hidden sm:inline">Focus Selected</span>
+            </button>
+          </>
+        )}
+
         <div className="w-px h-4 bg-[#EAE3D6] mx-0.5" />
         <button
           type="button"
           onClick={collapsedNodes.size > 0 ? handleExpandAll : handleCollapseAllChildren}
           className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-[#FAF7F2] hover:bg-[#FFF4E6] text-[#6B655B] hover:text-[#EA8500] border border-[#EAE3D6] transition-colors cursor-pointer"
-          title="Toggle branch visibility"
+          title="Toggle downstream branches visibility"
         >
           {collapsedNodes.size > 0 ? 'Expand All' : 'Collapse Deep'}
         </button>
@@ -625,7 +873,7 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
           transformOrigin: '0 0',
           width: `${bounds.width}px`,
           height: `${bounds.height}px`,
-          transition: isDragging ? 'none' : 'transform 0.08s ease-out',
+          transition: isDragging ? 'none' : 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
         className="absolute inset-0 pointer-events-none"
       >
@@ -804,6 +1052,8 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
               className="pointer-events-auto transition-opacity duration-200"
             >
               <div
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
                   e.stopPropagation();
                   onSelectNode(ln.node);
@@ -900,6 +1150,13 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
           <span className="w-5 h-0 border-t-2 border-dashed border-[#EA8500]" />
           <span>Cycle / Loop</span>
         </span>
+      </div>
+
+      {/* Interactive Navigation Helper Hint */}
+      <div className="absolute bottom-3 right-3 flex items-center gap-2 bg-white/95 backdrop-blur-xs border border-[#EAE3D6] rounded-xl px-3 py-1.5 text-[11px] font-mono text-[#6B655B] shadow-xs z-20 pointer-events-none">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#EA8500] shrink-0" />
+        <span className="hidden sm:inline">Scroll to zoom · Drag to move · Select an account to inspect</span>
+        <span className="sm:hidden">Scroll to zoom · Drag to move</span>
       </div>
     </div>
   );
