@@ -203,12 +203,185 @@ describe('FundFlowHierarchicalTree Component', () => {
     expect(screen.getByText('Ishan Reddy')).toBeInTheDocument();
     expect(screen.getByText('ORIGIN (HOP 0)')).toBeInTheDocument();
   });
+
+  it('renders navigation controls toolbar and helper hint badge', () => {
+    const unified = adaptV2TraceToUnified(mockV2TraceResponse);
+    render(
+      <FundFlowHierarchicalTree
+        nodes={unified.nodes}
+        edges={unified.edges}
+        rootAccountId="ACC-000001"
+        selectedNodeId={null}
+        selectedEdgeId={null}
+        onSelectNode={vi.fn()}
+        onSelectEdge={vi.fn()}
+      />
+    );
+
+    expect(screen.getByLabelText('Zoom In')).toBeInTheDocument();
+    expect(screen.getByLabelText('Zoom Out')).toBeInTheDocument();
+    expect(screen.getByLabelText('Fit View')).toBeInTheDocument();
+    expect(screen.getByLabelText('Reset View')).toBeInTheDocument();
+    expect(screen.getByLabelText('Customize Layout')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Scroll to zoom · Drag canvas to move · Select an account to inspect/i)
+    ).toBeInTheDocument();
+  });
+
+  it('renders Center Selected Account control when a node is selected and allows centering', () => {
+    const unified = adaptV2TraceToUnified(mockV2TraceResponse);
+    render(
+      <FundFlowHierarchicalTree
+        nodes={unified.nodes}
+        edges={unified.edges}
+        rootAccountId="ACC-000001"
+        selectedNodeId="ACC-000002"
+        selectedEdgeId={null}
+        onSelectNode={vi.fn()}
+        onSelectEdge={vi.fn()}
+      />
+    );
+
+    const focusBtn = screen.getByLabelText('Center Selected Account');
+    expect(focusBtn).toBeInTheDocument();
+    expect(screen.getByText('Center Selected')).toBeInTheDocument();
+    fireEvent.click(focusBtn);
+  });
+
+  it('supports toggling Customize Layout mode and dragging nodes to custom positions', () => {
+    const unified = adaptV2TraceToUnified(mockV2TraceResponse);
+    render(
+      <FundFlowHierarchicalTree
+        nodes={unified.nodes}
+        edges={unified.edges}
+        rootAccountId="ACC-000001"
+        selectedNodeId={null}
+        selectedEdgeId={null}
+        onSelectNode={vi.fn()}
+        onSelectEdge={vi.fn()}
+      />
+    );
+
+    const customizeBtn = screen.getByLabelText('Customize Layout');
+    expect(customizeBtn).toHaveAttribute('aria-pressed', 'false');
+
+    // Toggle on customize mode
+    fireEvent.click(customizeBtn);
+    expect(customizeBtn).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText('Customizing...')).toBeInTheDocument();
+    expect(screen.getByText(/Drag cards to rearrange/i)).toBeInTheDocument();
+
+    // Find node card
+    const nodeCard = screen.getByText('ACC-000002').closest('.interactive-node-card');
+    expect(nodeCard).toBeInTheDocument();
+
+    // Pointer down on node in customize mode
+    fireEvent.pointerDown(nodeCard!, { clientX: 200, clientY: 150, button: 0 });
+
+    // Move pointer across window
+    fireEvent(
+      window,
+      new MouseEvent('pointermove', { clientX: 350, clientY: 280, bubbles: true })
+    );
+
+    // Pointer up
+    fireEvent(window, new MouseEvent('pointerup', { bubbles: true }));
+
+    // Manual layout active indicator and Save Layout should appear
+    expect(screen.getByText('MANUAL LAYOUT ACTIVE')).toBeInTheDocument();
+    expect(screen.getByLabelText('Save Layout')).toBeInTheDocument();
+    expect(screen.getByLabelText('Reset to Tree Layout')).toBeInTheDocument();
+  });
+
+  it('persists layout to localStorage and restores it across re-renders', () => {
+    localStorage.clear();
+    const unified = adaptV2TraceToUnified(mockV2TraceResponse);
+
+    // Simulate saving layout
+    const savedLayout = {
+      'ACC-000002': { x: 500, y: 300 },
+    };
+    localStorage.setItem(
+      'fraudshield_fund_flow_layout_ACC-000001',
+      JSON.stringify(savedLayout)
+    );
+
+    render(
+      <FundFlowHierarchicalTree
+        nodes={unified.nodes}
+        edges={unified.edges}
+        rootAccountId="ACC-000001"
+        selectedNodeId={null}
+        selectedEdgeId={null}
+        onSelectNode={vi.fn()}
+        onSelectEdge={vi.fn()}
+      />
+    );
+
+    // Should indicate active manual layout restored from localStorage
+    expect(screen.getByText('MANUAL LAYOUT ACTIVE')).toBeInTheDocument();
+    expect(screen.getByLabelText('Reset to Tree Layout')).toBeInTheDocument();
+
+    // Resetting layout clears custom positions
+    const resetBtn = screen.getByLabelText('Reset to Tree Layout');
+    fireEvent.click(resetBtn);
+
+    expect(screen.queryByText('MANUAL LAYOUT ACTIVE')).not.toBeInTheDocument();
+    expect(localStorage.getItem('fraudshield_fund_flow_layout_ACC-000001')).toBeNull();
+  });
+
+  it('isolates saved layouts by graph context (account vs case)', () => {
+    localStorage.clear();
+    const savedAccountLayout = { 'ACC-000001': { x: 100, y: 100 } };
+    const savedCaseLayout = { 'V001': { x: 200, y: 200 } };
+
+    localStorage.setItem(
+      'fraudshield_fund_flow_layout_ACC-000001',
+      JSON.stringify(savedAccountLayout)
+    );
+    localStorage.setItem(
+      'fraudshield_fund_flow_layout_FS-1042',
+      JSON.stringify(savedCaseLayout)
+    );
+
+    const accountUnified = adaptV2TraceToUnified(mockV2TraceResponse);
+    const { unmount } = render(
+      <FundFlowHierarchicalTree
+        nodes={accountUnified.nodes}
+        edges={accountUnified.edges}
+        rootAccountId="ACC-000001"
+        selectedNodeId={null}
+        selectedEdgeId={null}
+        onSelectNode={vi.fn()}
+        onSelectEdge={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('MANUAL LAYOUT ACTIVE')).toBeInTheDocument();
+    unmount();
+
+    // Rendering with different account should not leak ACC-000001 layout
+    render(
+      <FundFlowHierarchicalTree
+        nodes={accountUnified.nodes}
+        edges={accountUnified.edges}
+        rootAccountId="ACC-000099"
+        selectedNodeId={null}
+        selectedEdgeId={null}
+        onSelectNode={vi.fn()}
+        onSelectEdge={vi.fn()}
+      />
+    );
+
+    expect(screen.queryByText('MANUAL LAYOUT ACTIVE')).not.toBeInTheDocument();
+  });
 });
 
 describe('FundFlowInspector Component', () => {
-  it('renders account details, customer type, and balance when node is selected', () => {
+  it('renders account details, customer type, balance, and focus action when node is selected', () => {
     const unified = adaptV2TraceToUnified(mockV2TraceResponse);
     const selected = unified.nodes[0];
+    const onFocusNode = vi.fn();
 
     render(
       <MemoryRouter>
@@ -221,6 +394,7 @@ describe('FundFlowInspector Component', () => {
           onSelectEdge={vi.fn()}
           onClose={vi.fn()}
           mode="account"
+          onFocusNode={onFocusNode}
         />
       </MemoryRouter>
     );
@@ -228,6 +402,11 @@ describe('FundFlowInspector Component', () => {
     expect(screen.getByText('ROOT ORIGIN ACCOUNT')).toBeInTheDocument();
     expect(screen.getByText('Aditi Joshi')).toBeInTheDocument();
     expect(screen.getByText('ACC-000001')).toBeInTheDocument();
+    expect(screen.getByText('Focus in Tree')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Focus in Tree'));
+    expect(onFocusNode).toHaveBeenCalledWith('ACC-000001');
+
     expect(screen.getByText(/Open Account 360° Profile/i)).toBeInTheDocument();
     expect(screen.getByText(/View Ledger Transactions/i)).toBeInTheDocument();
   });
