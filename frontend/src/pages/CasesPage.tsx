@@ -339,7 +339,7 @@ export const CasesPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs hover:shadow-sm cursor-pointer"
+            className="btn-primary py-2 px-4 text-xs font-semibold shadow-xs"
             aria-label="Create New Case"
           >
             <Plus className="w-4 h-4" />

@@ -488,9 +488,9 @@ export const AccountProtectionPanel: React.FC<AccountProtectionPanelProps> = ({
               Observed Structural &amp; Timing Signals (Not Proof of Intent)
             </span>
             <div className="space-y-2">
-              {signals.map((sig) => (
+              {signals.map((sig, idx) => (
                 <div
-                  key={sig.code}
+                  key={`${sig.code}-${idx}`}
                   className="p-3 rounded bg-[#FAF9F6] border border-[#E2DFD7] space-y-1"
                 >
                   <div className="flex items-center justify-between">
@@ -737,7 +737,7 @@ export const AccountProtectionPanel: React.FC<AccountProtectionPanelProps> = ({
             <button
               type="submit"
               disabled={savingReview}
-              className="px-5 py-2.5 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white font-semibold text-xs disabled:opacity-50 transition-colors cursor-pointer shadow-xs"
+              className="btn-primary py-2.5 px-5 text-xs font-semibold shadow-xs"
             >
               {savingReview ? 'Recording Review...' : 'Record Human Review Decision'}
             </button>

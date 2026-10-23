@@ -15,11 +15,23 @@ describe('Page Rendering', () => {
 
     expect(screen.getAllByText(/Follow the money/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Understand the risk/i)).toBeInTheDocument();
-    expect(screen.getByText(/Trace the Flow/i)).toBeInTheDocument();
-    expect(screen.getByText(/Protect the Innocent/i)).toBeInTheDocument();
-    expect(screen.getAllByText('Start Investigation').length).toBeGreaterThan(0);
-    expect(screen.getByText('Explore a Demo')).toBeInTheDocument();
-    expect(screen.getByText('Explore Demo Case FS-1042')).toBeInTheDocument();
+    expect(screen.getByText(/Start Guided Investigation/i)).toBeInTheDocument();
+    expect(screen.getByText(/Explore the Workspace/i)).toBeInTheDocument();
+    expect(screen.getByText('Search Account')).toBeInTheDocument();
+  });
+
+  it('renders GuidedInvestigationPage with step 1 and context', async () => {
+    const { GuidedInvestigationPage } = await import('../pages/GuidedInvestigationPage');
+    render(
+      <MemoryRouter>
+        <GuidedInvestigationPage />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('Interactive Guided Investigation')).toBeInTheDocument();
+    expect(screen.getByText('What happened?')).toBeInTheDocument();
+    expect(screen.getAllByText('Understand the Case').length).toBeGreaterThan(0);
+    expect(screen.getByText(/Proceed to Step 2/i)).toBeInTheDocument();
   });
 
   it('renders ModelInsightsPage with model registry and architecture tabs', async () => {
@@ -51,7 +63,7 @@ describe('Page Rendering', () => {
 });
 
 describe('Unified Platform Layout Shell', () => {
-  it('renders UnifiedHeader with brand, status, and all 7 core navigation links', async () => {
+  it('renders UnifiedHeader with brand, status, and task-oriented navigation links', async () => {
     const { UnifiedHeader } = await import('../components/layout/UnifiedHeader');
     render(
       <MemoryRouter initialEntries={['/workspace']}>
@@ -60,14 +72,13 @@ describe('Unified Platform Layout Shell', () => {
     );
 
     expect(screen.getByText('FraudShield AI')).toBeInTheDocument();
-    expect(screen.getByText('Home')).toBeInTheDocument();
-    expect(screen.getByText('Workspace')).toBeInTheDocument();
+    expect(screen.getByText('Overview')).toBeInTheDocument();
+    expect(screen.getByText('Investigations')).toBeInTheDocument();
     expect(screen.getByText('Accounts')).toBeInTheDocument();
     expect(screen.getByText('Fund Flow')).toBeInTheDocument();
-    expect(screen.getByText('Cases')).toBeInTheDocument();
-    expect(screen.getByText('Insights')).toBeInTheDocument();
-    expect(screen.getByText('Audit Trail')).toBeInTheDocument();
-    expect(screen.getByText('FS-1042')).toBeInTheDocument();
+    expect(screen.getByText('Model Insights')).toBeInTheDocument();
+    expect(screen.getByText('Audit History')).toBeInTheDocument();
+    expect(screen.getAllByText('Guided Tour').length).toBeGreaterThan(0);
   });
 
   it('renders AppLayout with UnifiedHeader, evidentiary safeguard protocol, and footer', async () => {

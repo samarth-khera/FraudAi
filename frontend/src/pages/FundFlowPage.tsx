@@ -264,6 +264,35 @@ export const FundFlowPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Contextual Guidance: How to read the money flow tree */}
+      <div className="p-3.5 rounded-2xl bg-white border border-[#EAE3D6] text-xs space-y-2 shadow-2xs">
+        <div className="flex items-center justify-between">
+          <span className="font-bold text-[#1A1714] flex items-center gap-1.5">
+            <Info className="w-4 h-4 text-[#EA8500]" />
+            <span>How to navigate and interpret this money flow tree:</span>
+          </span>
+          <span className="font-mono text-[11px] text-[#8C857B]">Left-to-Right Hierarchy</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-[#6B655B] text-[11px] leading-relaxed">
+          <div className="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6]">
+            <strong className="text-[#1A1714] block font-semibold mb-0.5">1. Nodes = Accounts</strong>
+            Cards represent accounts in the core ledger. Badges distinguish root victims, conduits, and downstream recipients.
+          </div>
+          <div className="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6]">
+            <strong className="text-[#1A1714] block font-semibold mb-0.5">2. Arrows = Transfers</strong>
+            Lines show direction and payment rails (UPI, IMPS, NEFT) with transferred amount and attribution share.
+          </div>
+          <div className="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6]">
+            <strong className="text-[#1A1714] block font-semibold mb-0.5">3. Hop Distance</strong>
+            Hops count steps from the root. Intermediate nodes with low dwell time indicate potential layering conduits.
+          </div>
+          <div className="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6]">
+            <strong className="text-[#1A1714] block font-semibold mb-0.5">4. Inspect & Open</strong>
+            Click any account node to open the side inspector, view counterparty details, or launch full Account Intelligence.
+          </div>
+        </div>
+      </div>
+
       {/* Ethical Safeguard Notice */}
       <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#FFFBF6] border border-[#FCD5B5] text-xs text-[#C05621]">
         <Scale className="w-4 h-4 text-[#EA8500] shrink-0" />

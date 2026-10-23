@@ -368,7 +368,7 @@ export const CaseDetailPage: React.FC = () => {
           <div className="pt-2 flex items-center justify-center gap-3">
             <Link
               to="/cases"
-              className="px-4 py-2 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white text-xs font-semibold inline-flex items-center gap-1.5 transition-colors shadow-xs"
+              className="btn-primary py-2 px-4 text-xs font-semibold shadow-xs"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Return to Case Management</span>
@@ -511,7 +511,7 @@ export const CaseDetailPage: React.FC = () => {
             {/* CSV Export Button */}
             <button
               onClick={handleExportCsv}
-              className="px-3 py-1.5 rounded-xl bg-white border border-[#EAE3D6] hover:bg-[#FAF7F2] text-[#1A1714] font-semibold text-xs inline-flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+              className="btn-secondary py-1.5 px-3 text-xs font-semibold shadow-xs"
             >
               <Download className="w-3.5 h-3.5 text-[#EA8500]" />
               <span>Export CSV</span>
@@ -520,7 +520,7 @@ export const CaseDetailPage: React.FC = () => {
             {/* Primary Action Button */}
             <button
               onClick={() => switchTab('review', 'C300')}
-              className="px-4 py-2 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white text-xs font-semibold inline-flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+              className="btn-primary py-2 px-4 text-xs font-semibold shadow-xs"
             >
               <UserCheck className="w-4 h-4" />
               <span>Review Evidence</span>

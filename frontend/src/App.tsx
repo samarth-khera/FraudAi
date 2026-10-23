@@ -9,6 +9,7 @@ import { CasesPage } from './pages/CasesPage';
 import { CaseDetailPage } from './pages/CaseDetailPage';
 import { ModelInsightsPage } from './pages/ModelInsightsPage';
 import { AuditPage } from './pages/AuditPage';
+import { GuidedInvestigationPage } from './pages/GuidedInvestigationPage';
 import { V2SearchPage } from './pages/v2/V2SearchPage';
 import { V2AccountDetailPage } from './pages/v2/V2AccountDetailPage';
 
@@ -16,8 +17,12 @@ export const App: React.FC = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Marketing Landing Page (Redesign coming in Phase 2) */}
+        {/* Marketing Landing Page */}
         <Route path="/" element={<LandingPage />} />
+
+        {/* Guided Investigation Experience */}
+        <Route path="/guided-investigation" element={<GuidedInvestigationPage />} />
+        <Route path="/demo" element={<GuidedInvestigationPage />} />
 
         {/* Workspace & Account Intelligence Hub (V2 & Unified Aliases) */}
         <Route path="/workspace" element={<V2SearchPage />} />
