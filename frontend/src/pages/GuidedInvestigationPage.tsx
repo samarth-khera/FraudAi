@@ -151,6 +151,22 @@ export const GuidedInvestigationPage: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Keyboard navigation for demo presenter: ArrowRight = next, ArrowLeft = prev
+  useEffect(() => {
+    const handleKeyNav = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
+
+      if (e.key === 'ArrowRight' && currentStep < 6) {
+        handleStepChange(currentStep + 1);
+      } else if (e.key === 'ArrowLeft' && currentStep > 1) {
+        handleStepChange(currentStep - 1);
+      }
+    };
+    window.addEventListener('keydown', handleKeyNav);
+    return () => window.removeEventListener('keydown', handleKeyNav);
+  }, [currentStep]);
+
   // Load real backend data for sample case FS-1042 and account ACC-000001
   useEffect(() => {
     let mounted = true;
@@ -289,6 +305,8 @@ export const GuidedInvestigationPage: React.FC = () => {
                 <button
                   key={s.id}
                   onClick={() => handleStepChange(s.index)}
+                  aria-current={isCurrent ? 'step' : undefined}
+                  aria-label={`Step ${s.index}: ${s.title}`}
                   className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
                     isCurrent
                       ? 'bg-[#FFF4E6] border-[#EA8500] ring-1 ring-[#EA8500]/30 shadow-xs'
@@ -354,6 +372,7 @@ export const GuidedInvestigationPage: React.FC = () => {
           <div className="rounded-xl border border-[#EAE3D6] bg-[#FAF7F2] overflow-hidden">
             <button
               onClick={() => setShowWhyItMatters(!showWhyItMatters)}
+              aria-expanded={showWhyItMatters}
               className="w-full px-4 py-2.5 flex items-center justify-between text-left cursor-pointer hover:bg-[#F2ECE1] transition-colors"
             >
               <div className="flex items-center gap-2 text-xs font-bold text-[#1A1714]">

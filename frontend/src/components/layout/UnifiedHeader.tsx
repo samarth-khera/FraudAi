@@ -213,6 +213,7 @@ export const UnifiedHeader: React.FC = () => {
               <Link
                 key={item.name}
                 to={item.path}
+                aria-current={active ? 'page' : undefined}
                 className={`relative px-2.5 2xl:px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer ${
                   active
                     ? 'text-[#EA8500] font-bold bg-[#FFF4E6] border border-[#FCD5B5] shadow-2xs'
@@ -335,6 +336,7 @@ export const UnifiedHeader: React.FC = () => {
                   <Link
                     key={item.name}
                     to={item.path}
+                    aria-current={active ? 'page' : undefined}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`flex items-start gap-3 p-2.5 rounded-2xl border transition-all ${
                       active
