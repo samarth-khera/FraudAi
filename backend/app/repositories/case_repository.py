@@ -60,6 +60,20 @@ class CaseRepository(Protocol):
         case_id: Optional[str] = None,
     ) -> list[Transaction]: ...
     def get_audit_events(self, case_id: str) -> list[AuditEvent]: ...
+    def list_global_audit_events(
+        self,
+        case_id: Optional[str] = None,
+        action: Optional[str] = None,
+        category: Optional[str] = None,
+        performed_by: Optional[str] = None,
+        entity_type: Optional[str] = None,
+        search: Optional[str] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        skip: int = 0,
+        limit: int = 50,
+        sort_order: str = "desc",
+    ) -> tuple[list[AuditEvent], int, dict[str, Any]]: ...
     def record_audit_event(
         self,
         case_id: str,
@@ -237,6 +251,87 @@ class InMemoryCaseRepository:
         if case_id not in self._cases:
             raise EntityNotFoundError("case_not_found", f"Case '{case_id}' not found.")
         return [e for e in self._audits if e.case_id == case_id]
+
+    def list_global_audit_events(
+        self,
+        case_id: Optional[str] = None,
+        action: Optional[str] = None,
+        category: Optional[str] = None,
+        performed_by: Optional[str] = None,
+        entity_type: Optional[str] = None,
+        search: Optional[str] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        skip: int = 0,
+        limit: int = 50,
+        sort_order: str = "desc",
+    ) -> tuple[list[AuditEvent], int, dict[str, Any]]:
+        filtered = list(self._audits)
+
+        if case_id:
+            filtered = [e for e in filtered if e.case_id.lower() == case_id.lower()]
+        if action:
+            filtered = [e for e in filtered if e.action.lower() == action.lower()]
+        if category:
+            cat = category.lower()
+            if cat in ("reviews", "review"):
+                filtered = [e for e in filtered if "review" in e.action.lower()]
+            elif cat in ("case_changes", "case"):
+                filtered = [e for e in filtered if "case" in e.action.lower() or "status" in e.action.lower()]
+            elif cat in ("traces", "trace"):
+                filtered = [e for e in filtered if "trace" in e.action.lower()]
+            elif cat in ("transactions", "tx"):
+                filtered = [e for e in filtered if "transaction" in e.action.lower()]
+        if performed_by:
+            filtered = [e for e in filtered if e.performed_by.lower() == performed_by.lower()]
+        if entity_type:
+            filtered = [e for e in filtered if e.entity_type.lower() == entity_type.lower()]
+        if start_date:
+            filtered = [e for e in filtered if e.timestamp >= start_date]
+        if end_date:
+            filtered = [e for e in filtered if e.timestamp <= end_date]
+        if search:
+            q = search.lower()
+            filtered = [
+                e for e in filtered
+                if q in e.case_id.lower()
+                or q in e.action.lower()
+                or q in e.performed_by.lower()
+                or q in e.entity_id.lower()
+                or (e.details and q in str(e.details).lower())
+            ]
+
+        # Sorting
+        filtered.sort(
+            key=lambda e: (e.timestamp, e.event_id or 0),
+            reverse=(sort_order.lower() == "desc"),
+        )
+
+        total_filtered = len(filtered)
+        paged_events = filtered[skip : skip + limit]
+
+        # Global metrics across all stored events
+        all_audits = self._audits
+        reviews_count = sum(1 for e in all_audits if "review" in e.action.lower())
+        case_changes_count = sum(1 for e in all_audits if "case" in e.action.lower() or "status" in e.action.lower())
+        trace_events_count = sum(1 for e in all_audits if "trace" in e.action.lower())
+        distinct_cases = len({e.case_id for e in all_audits if e.case_id})
+        distinct_actors = len({e.performed_by for e in all_audits if e.performed_by})
+        most_recent = max((e.timestamp for e in all_audits), default=None) if all_audits else None
+        earliest = min((e.timestamp for e in all_audits), default=None) if all_audits else None
+
+        summary = {
+            "total_events": len(all_audits),
+            "review_decisions_count": reviews_count,
+            "case_status_changes_count": case_changes_count,
+            "trace_events_count": trace_events_count,
+            "most_recent_timestamp": most_recent,
+            "earliest_timestamp": earliest,
+            "distinct_cases_count": distinct_cases,
+            "distinct_actors_count": distinct_actors,
+        }
+
+        return paged_events, total_filtered, summary
 
     def record_audit_event(
         self,

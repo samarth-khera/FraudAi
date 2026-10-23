@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import csv
+import io
+import json
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.db.models import utc_now
@@ -21,11 +24,14 @@ from app.schemas.case_management import (
     AccountAssessmentResponse,
     AccountReviewUpdateRequest,
     AuditEventResponse,
+    AuditIntegrityStatus,
+    AuditSummaryMetrics,
     AuditTrailResponse,
     CaseAccountAssessmentsResponse,
     CaseCreateRequest,
     CaseTransactionsAddRequest,
     CaseUpdateRequest,
+    GlobalAuditResponse,
 )
 from app.schemas.trace import (
     CaseListResponse,
@@ -300,6 +306,160 @@ def get_case_audit_trail(
         )
     except EntityNotFoundError as exc:
         raise HTTPException(status_code=404, detail={"code": exc.code, "message": exc.message})
+
+
+def _sanitize_csv_cell(value: Any) -> str:
+    if value is None:
+        return ""
+    s = str(value)
+    # Neutralize spreadsheet formula injection (=, +, -, @, \t, \r)
+    if s and s[0] in ("=", "+", "-", "@", "\t", "\r"):
+        return f"'{s}"
+    return s
+
+
+@router.get(
+    "/api/audit",
+    response_model=GlobalAuditResponse,
+    responses=_ERRORS,
+    tags=["audit"],
+)
+def get_global_audit_events(
+    case_id: Optional[str] = Query(None, description="Filter by case ID"),
+    action: Optional[str] = Query(None, description="Filter by exact action name"),
+    category: Optional[str] = Query(None, description="Filter by category (reviews, case_changes, traces, transactions)"),
+    performed_by: Optional[str] = Query(None, description="Filter by actor / reviewer identity"),
+    entity_type: Optional[str] = Query(None, description="Filter by entity type"),
+    search: Optional[str] = Query(None, description="Search across case_id, action, actor, entity_id, and details"),
+    start_date: Optional[datetime] = Query(None, description="Start date filter"),
+    end_date: Optional[datetime] = Query(None, description="End date filter"),
+    skip: int = Query(0, ge=0, description="Offset"),
+    limit: int = Query(50, ge=1, le=500, description="Page limit"),
+    sort_order: str = Query("desc", pattern="^(asc|desc)$", description="Sort order"),
+    repo: CaseRepository = Depends(get_repository),
+) -> GlobalAuditResponse:
+    """Retrieve global audit trail across all cases with server-side filtering, pagination, and integrity metrics."""
+    events, total_filtered, summary = repo.list_global_audit_events(
+        case_id=case_id,
+        action=action,
+        category=category,
+        performed_by=performed_by,
+        entity_type=entity_type,
+        search=search,
+        start_date=start_date,
+        end_date=end_date,
+        skip=skip,
+        limit=limit,
+        sort_order=sort_order,
+    )
+
+    integrity = AuditIntegrityStatus(
+        storage_backend="SQLite Relational (audit_events)",
+        append_only_enforced=True,
+        cryptographic_signatures=False,
+        server_timestamps=True,
+        last_verified_at=utc_now(),
+        integrity_disclosure=(
+            "Application-enforced append-only audit trail in SQLite. "
+            "Server-generated UTC timestamps. No cryptographic hash-chaining or WORM hardware."
+        ),
+    )
+
+    return GlobalAuditResponse(
+        total_count=total_filtered,
+        filtered_count=len(events),
+        skip=skip,
+        limit=limit,
+        events=[
+            AuditEventResponse(
+                event_id=e.event_id,
+                case_id=e.case_id,
+                timestamp=e.timestamp,
+                action=e.action,
+                performed_by=e.performed_by,
+                entity_type=e.entity_type,
+                entity_id=e.entity_id,
+                details=e.details,
+            )
+            for e in events
+        ],
+        summary=AuditSummaryMetrics(**summary),
+        integrity_status=integrity,
+    )
+
+
+@router.get(
+    "/api/audit/export.csv",
+    tags=["audit"],
+)
+def export_audit_events_csv(
+    case_id: Optional[str] = Query(None, description="Filter by case ID"),
+    action: Optional[str] = Query(None, description="Filter by exact action name"),
+    category: Optional[str] = Query(None, description="Filter by category"),
+    performed_by: Optional[str] = Query(None, description="Filter by actor / reviewer identity"),
+    entity_type: Optional[str] = Query(None, description="Filter by entity type"),
+    search: Optional[str] = Query(None, description="Search across fields"),
+    start_date: Optional[datetime] = Query(None, description="Start date filter"),
+    end_date: Optional[datetime] = Query(None, description="End date filter"),
+    limit: int = Query(5000, ge=1, le=10000, description="Export limit"),
+    sort_order: str = Query("desc", pattern="^(asc|desc)$", description="Sort order"),
+    repo: CaseRepository = Depends(get_repository),
+) -> Response:
+    """Stream an RFC-4180 compliant CSV export with formula injection mitigation."""
+    events, total_filtered, _ = repo.list_global_audit_events(
+        case_id=case_id,
+        action=action,
+        category=category,
+        performed_by=performed_by,
+        entity_type=entity_type,
+        search=search,
+        start_date=start_date,
+        end_date=end_date,
+        skip=0,
+        limit=limit,
+        sort_order=sort_order,
+    )
+
+    output = io.StringIO()
+    writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
+
+    # Header Row
+    writer.writerow([
+        "Event ID",
+        "Timestamp (UTC)",
+        "Case ID",
+        "Action",
+        "Performed By",
+        "Entity Type",
+        "Entity ID",
+        "Details JSON",
+    ])
+
+    for e in events:
+        details_str = json.dumps(e.details) if e.details else ""
+        writer.writerow([
+            _sanitize_csv_cell(e.event_id),
+            _sanitize_csv_cell(e.timestamp.isoformat() if e.timestamp else ""),
+            _sanitize_csv_cell(e.case_id),
+            _sanitize_csv_cell(e.action),
+            _sanitize_csv_cell(e.performed_by),
+            _sanitize_csv_cell(e.entity_type),
+            _sanitize_csv_cell(e.entity_id),
+            _sanitize_csv_cell(details_str),
+        ])
+
+    csv_data = output.getvalue()
+    date_str = utc_now().strftime("%Y%m%d_%H%M%S")
+    filename = f"fraudshield_audit_export_{date_str}.csv"
+
+    return Response(
+        content=csv_data,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-cache",
+        },
+    )
 
 
 # ---------------- Fund Tracing & Graph ----------------

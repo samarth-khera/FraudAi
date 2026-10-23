@@ -81,6 +81,39 @@ class AuditTrailResponse(BaseModel):
     events: list[AuditEventResponse]
 
 
+class AuditSummaryMetrics(BaseModel):
+    total_events: int
+    review_decisions_count: int
+    case_status_changes_count: int
+    trace_events_count: int
+    most_recent_timestamp: Optional[datetime] = None
+    earliest_timestamp: Optional[datetime] = None
+    distinct_cases_count: int
+    distinct_actors_count: int
+
+
+class AuditIntegrityStatus(BaseModel):
+    storage_backend: str = "SQLite Relational (audit_events)"
+    append_only_enforced: bool = True
+    cryptographic_signatures: bool = False
+    server_timestamps: bool = True
+    last_verified_at: datetime
+    integrity_disclosure: str = (
+        "Application-enforced append-only audit trail in SQLite. "
+        "Server-generated UTC timestamps. No cryptographic hash-chaining or WORM hardware."
+    )
+
+
+class GlobalAuditResponse(BaseModel):
+    total_count: int
+    filtered_count: int
+    skip: int
+    limit: int
+    events: list[AuditEventResponse]
+    summary: AuditSummaryMetrics
+    integrity_status: AuditIntegrityStatus
+
+
 # --------------------------------------------------------------------------
 # Evidence-Aware Downstream Account Assessment Schemas
 # --------------------------------------------------------------------------

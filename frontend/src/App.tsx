@@ -8,6 +8,7 @@ import { FundFlowPage } from './pages/FundFlowPage';
 import { CasesPage } from './pages/CasesPage';
 import { CaseDetailPage } from './pages/CaseDetailPage';
 import { ModelInsightsPage } from './pages/ModelInsightsPage';
+import { AuditPage } from './pages/AuditPage';
 import { V2SearchPage } from './pages/v2/V2SearchPage';
 import { V2AccountDetailPage } from './pages/v2/V2AccountDetailPage';
 
@@ -33,6 +34,7 @@ export const App: React.FC = () => {
           <Route path="cases" element={<CasesPage />} />
           <Route path="cases/:caseId" element={<CaseDetailPage />} />
           <Route path="model-insights" element={<ModelInsightsPage />} />
+          <Route path="audit" element={<AuditPage />} />
         </Route>
 
         {/* Top-Level Unified Route Aliases using AppLayout */}
@@ -41,7 +43,7 @@ export const App: React.FC = () => {
           <Route path="/cases" element={<CasesPage />} />
           <Route path="/cases/:caseId" element={<CaseDetailPage />} />
           <Route path="/insights" element={<ModelInsightsPage />} />
-          <Route path="/audit" element={<Navigate to="/app/cases/FS-1042?tab=audit" replace />} />
+          <Route path="/audit" element={<AuditPage />} />
         </Route>
 
         {/* Catch-all */}
