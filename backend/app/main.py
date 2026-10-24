@@ -52,11 +52,17 @@ def create_app() -> FastAPI:
     with SessionLocal() as db:
         seed_demo_data(db)
 
+    is_prod = os.getenv("ENVIRONMENT", "development").lower() == "production"
+    enable_docs = os.getenv("ENABLE_API_DOCS", "false" if is_prod else "true").lower() == "true"
+
     app = FastAPI(
         title="FraudShield AI - Backend",
         description="Synthetic fund-tracing demo and ML risk scoring backend. Connection to a "
                     "reported fraud is NOT a finding of guilt. All data is synthetic; not production-bank ready.",
         version="0.3.0",
+        docs_url="/docs" if enable_docs else None,
+        redoc_url="/redoc" if enable_docs else None,
+        openapi_url="/openapi.json" if enable_docs else None,
         lifespan=lifespan,
     )
 
@@ -69,12 +75,22 @@ def create_app() -> FastAPI:
         if o.strip()
     ]
     is_wildcard = "*" in allowed_origins
+
+    cors_headers = [
+        h.strip()
+        for h in os.getenv(
+            "CORS_ALLOWED_HEADERS",
+            "Content-Type,Authorization,X-API-Key,X-Reviewer-Id,X-Requested-With,Accept",
+        ).split(",")
+        if h.strip()
+    ]
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allowed_origins if not is_wildcard else ["*"],
         allow_credentials=not is_wildcard,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allow_headers=["*"],
+        allow_headers=cors_headers if not is_wildcard else ["*"],
     )
 
     @app.middleware("http")
