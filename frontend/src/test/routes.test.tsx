@@ -94,5 +94,96 @@ describe('Unified Platform Layout Shell', () => {
     expect(screen.getByText(/Automated account freezing is strictly prohibited/i)).toBeInTheDocument();
     expect(screen.getByText(/Ethical AI & Compliance Safeguard/i)).toBeInTheDocument();
   });
+
+  it('renders UnifiedHeader with v2-active engine status pill when model status is healthy', async () => {
+    const { v2Api } = await import('../services/v2Api');
+    vi.spyOn(v2Api, 'getModelsStatus').mockResolvedValueOnce({
+      account_model: {
+        available: true,
+        version: 'v2-account-1.0.0',
+        model_type: 'XGBClassifier',
+        features_count: 26,
+        trained_at: null,
+        test_metrics: null,
+        limitations: null,
+      },
+      paysim_benchmark: {
+        available: true,
+        version: 'v2-benchmark-1.0.0',
+        model_type: 'XGBClassifier',
+        features_count: 14,
+        trained_at: null,
+        test_metrics: null,
+        limitations: null,
+      },
+      overall_status: 'healthy',
+      inference_ready: true,
+      disclaimer: 'Advisory only',
+    });
+
+    const { UnifiedHeader } = await import('../components/layout/UnifiedHeader');
+    render(
+      <MemoryRouter>
+        <UnifiedHeader />
+      </MemoryRouter>
+    );
+
+    const activeBadge = await screen.findByText('v2-active');
+    expect(activeBadge).toBeInTheDocument();
+    expect(activeBadge.closest('a')).toHaveAttribute('href', '/insights');
+  });
+
+  it('renders UnifiedHeader with Degraded badge linking to /insights when inference_ready is false', async () => {
+    const { v2Api } = await import('../services/v2Api');
+    vi.spyOn(v2Api, 'getModelsStatus').mockResolvedValueOnce({
+      account_model: {
+        available: false,
+        version: null,
+        model_type: null,
+        features_count: null,
+        trained_at: null,
+        test_metrics: null,
+        limitations: null,
+      },
+      paysim_benchmark: {
+        available: false,
+        version: null,
+        model_type: null,
+        features_count: null,
+        trained_at: null,
+        test_metrics: null,
+        limitations: null,
+      },
+      overall_status: 'degraded_missing_account_model',
+      inference_ready: false,
+      disclaimer: 'Advisory only',
+    });
+
+    const { UnifiedHeader } = await import('../components/layout/UnifiedHeader');
+    render(
+      <MemoryRouter>
+        <UnifiedHeader />
+      </MemoryRouter>
+    );
+
+    const degradedBadge = await screen.findByText('Degraded');
+    expect(degradedBadge).toBeInTheDocument();
+    expect(degradedBadge.closest('a')).toHaveAttribute('href', '/insights');
+  });
+
+  it('renders UnifiedHeader with Offline badge when backend connection fails', async () => {
+    const { v2Api } = await import('../services/v2Api');
+    vi.spyOn(v2Api, 'getModelsStatus').mockRejectedValueOnce(new Error('Network error: connection refused'));
+
+    const { UnifiedHeader } = await import('../components/layout/UnifiedHeader');
+    render(
+      <MemoryRouter>
+        <UnifiedHeader />
+      </MemoryRouter>
+    );
+
+    const offlineBadge = await screen.findByText('Offline');
+    expect(offlineBadge).toBeInTheDocument();
+  });
 });
 

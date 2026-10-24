@@ -206,7 +206,7 @@ export const GuidedInvestigationPage: React.FC = () => {
     try {
       await api.updateAccountReview('FS-1042', 'ACC-000001', {
         review_state: 'review_completed',
-        evidence_quality: 'verified_forensic',
+        evidence_quality: 'corroborated',
         notes: reviewNotes,
         reviewer_id: 'guided_investigator',
         decision_reasons: [
