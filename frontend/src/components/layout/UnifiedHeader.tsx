@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   ArrowRight,
   ExternalLink,
+  Sparkles,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { v2Api } from '../../services/v2Api';
@@ -33,54 +34,47 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   {
-    name: 'Home',
+    name: 'Overview',
     path: '/',
     icon: Home,
     matchPaths: ['/'],
     exact: true,
-    description: 'Product overview & forensic architecture',
+    description: 'Product overview & investigative workflow',
   },
   {
-    name: 'Workspace',
-    path: '/workspace',
-    icon: LayoutGrid,
-    matchPaths: ['/workspace', '/v2', '/app/dashboard'],
-    description: 'Account search, triage queue & recent lookups',
+    name: 'Investigations',
+    path: '/cases',
+    icon: FolderGit2,
+    matchPaths: ['/cases', '/app/cases'],
+    description: 'Incident dossiers, triage & evidence tracking',
   },
   {
     name: 'Accounts',
-    path: '/v2/accounts/ACC-000001',
+    path: '/workspace',
     icon: Users,
-    matchPaths: ['/v2/accounts', '/accounts'],
-    description: 'Account 360° profile, live ML & TreeSHAP',
+    matchPaths: ['/workspace', '/v2', '/accounts', '/v2/accounts'],
+    description: 'Account search, 360° ledger facts & risk intelligence',
   },
   {
     name: 'Fund Flow',
-    path: '/app/fund-flow',
+    path: '/fund-flow',
     icon: Network,
-    matchPaths: ['/app/fund-flow', '/fund-flow'],
+    matchPaths: ['/fund-flow', '/app/fund-flow'],
     description: 'Interactive multi-hop money flow graph',
   },
   {
-    name: 'Cases',
-    path: '/app/cases',
-    icon: FolderGit2,
-    matchPaths: ['/app/cases', '/cases'],
-    description: 'Incident dossiers & evidence tracking',
-  },
-  {
-    name: 'Insights',
-    path: '/app/model-insights',
+    name: 'Model Insights',
+    path: '/insights',
     icon: LineChart,
-    matchPaths: ['/app/model-insights', '/insights', '/app/transaction-check'],
+    matchPaths: ['/insights', '/app/model-insights', '/app/transaction-check'],
     description: 'XGBoost models, TreeSHAP & PaySim evaluation',
   },
   {
-    name: 'Audit Trail',
-    path: '/app/cases/FS-1042?tab=audit',
+    name: 'Audit History',
+    path: '/audit',
     icon: FileCheck2,
-    matchPaths: ['/audit', 'tab=audit'],
-    description: 'Immutable human adjudication & review log',
+    matchPaths: ['/audit', '/app/audit', 'tab=audit'],
+    description: 'Recorded investigation events, decisions & provenance',
   },
 ];
 
@@ -132,11 +126,15 @@ export const UnifiedHeader: React.FC = () => {
     if (item.exact) {
       return currentPath === item.path;
     }
-    if (item.name === 'Audit Trail') {
-      return currentSearch.includes('tab=audit') || currentPath === '/audit';
+    if (item.name === 'Audit History') {
+      return (
+        currentSearch.includes('tab=audit') ||
+        currentPath === '/audit' ||
+        currentPath.startsWith('/app/audit')
+      );
     }
-    if (item.name === 'Cases' && currentSearch.includes('tab=audit')) {
-      return false; // Highlight Audit Trail instead
+    if (item.name === 'Investigations' && currentSearch.includes('tab=audit')) {
+      return false; // Highlight Audit History instead
     }
     return item.matchPaths.some((p) => currentPath.startsWith(p));
   };
@@ -215,6 +213,7 @@ export const UnifiedHeader: React.FC = () => {
               <Link
                 key={item.name}
                 to={item.path}
+                aria-current={active ? 'page' : undefined}
                 className={`relative px-2.5 2xl:px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer ${
                   active
                     ? 'text-[#EA8500] font-bold bg-[#FFF4E6] border border-[#FCD5B5] shadow-2xs'
@@ -276,14 +275,15 @@ export const UnifiedHeader: React.FC = () => {
             )}
           </div>
 
-          {/* Quick Jump Pill: FS-1042 Case */}
+          {/* Guided Tour Launcher CTA */}
           <Link
-            to="/app/cases/FS-1042"
-            className="hidden 2xl:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#FAF7F2] hover:bg-[#FFF4E6] text-[#6B655B] hover:text-[#EA8500] border border-[#EAE3D6] hover:border-[#FCD5B5] text-[11px] font-mono font-semibold transition-all shadow-2xs shrink-0"
-            title="Jump to Incident Case FS-1042"
+            to="/guided-investigation"
+            className="btn-primary py-1.5 px-3 rounded-xl text-xs font-bold shadow-xs flex items-center gap-1.5 shrink-0"
+            title="Start step-by-step interactive walkthrough of sample case FS-1042"
           >
-            <span>FS-1042</span>
-            <ArrowRight className="w-3 h-3 text-[#8C857B]" />
+            <Sparkles className="w-3.5 h-3.5 text-white" />
+            <span className="hidden sm:inline">Guided Tour</span>
+            <span className="text-[10px] bg-white/20 px-1.5 py-0.2 rounded-md font-mono">Demo</span>
           </Link>
 
           {/* Mobile Menu Toggle Button */}
@@ -336,6 +336,7 @@ export const UnifiedHeader: React.FC = () => {
                   <Link
                     key={item.name}
                     to={item.path}
+                    aria-current={active ? 'page' : undefined}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`flex items-start gap-3 p-2.5 rounded-2xl border transition-all ${
                       active
@@ -372,11 +373,19 @@ export const UnifiedHeader: React.FC = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Link
-                  to="/app/cases/FS-1042"
+                  to="/guided-investigation"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="px-2.5 py-1 rounded-lg bg-[#EA8500] text-white font-mono text-[11px] font-bold hover:bg-[#D27400] flex items-center gap-1"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  <span>Guided Tour</span>
+                </Link>
+                <Link
+                  to="/cases/FS-1042"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="px-2.5 py-1 rounded-lg bg-[#FAF7F2] border border-[#EAE3D6] font-mono text-[11px] font-bold text-[#1A1714] hover:bg-[#FFF4E6] hover:text-[#EA8500]"
                 >
-                  Case FS-1042
+                  FS-1042
                 </Link>
                 <Link
                   to="/v2/accounts/ACC-000001"

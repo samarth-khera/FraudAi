@@ -41,17 +41,28 @@ def _error(status: int, code: str, message: str, details=None) -> JSONResponse:
     return JSONResponse(status_code=status, content=body)
 
 
+import logging
+
+logger = logging.getLogger("fraudshield.api")
+
+
 def create_app() -> FastAPI:
     # Ensure database tables exist and seed demo data
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
         seed_demo_data(db)
 
+    is_prod = os.getenv("ENVIRONMENT", "development").lower() == "production"
+    enable_docs = os.getenv("ENABLE_API_DOCS", "false" if is_prod else "true").lower() == "true"
+
     app = FastAPI(
         title="FraudShield AI - Backend",
         description="Synthetic fund-tracing demo and ML risk scoring backend. Connection to a "
                     "reported fraud is NOT a finding of guilt. All data is synthetic; not production-bank ready.",
         version="0.3.0",
+        docs_url="/docs" if enable_docs else None,
+        redoc_url="/redoc" if enable_docs else None,
+        openapi_url="/openapi.json" if enable_docs else None,
         lifespan=lifespan,
     )
 
@@ -63,13 +74,34 @@ def create_app() -> FastAPI:
         ).split(",")
         if o.strip()
     ]
+    is_wildcard = "*" in allowed_origins
+
+    cors_headers = [
+        h.strip()
+        for h in os.getenv(
+            "CORS_ALLOWED_HEADERS",
+            "Content-Type,Authorization,X-API-Key,X-Reviewer-Id,X-Requested-With,Accept",
+        ).split(",")
+        if h.strip()
+    ]
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=allowed_origins if "*" not in allowed_origins else ["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_origins=allowed_origins if not is_wildcard else ["*"],
+        allow_credentials=not is_wildcard,
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=cors_headers if not is_wildcard else ["*"],
     )
+
+    @app.middleware("http")
+    async def add_security_headers(request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+        return response
 
     app.include_router(router)
     app.include_router(risk_router)
@@ -86,6 +118,15 @@ def create_app() -> FastAPI:
     async def validation_exc(_: Request, exc: RequestValidationError) -> JSONResponse:
         details = [{"loc": [str(x) for x in e["loc"]], "msg": e["msg"]} for e in exc.errors()]
         return _error(422, "validation_error", "Invalid request parameters.", details)
+
+    @app.exception_handler(Exception)
+    async def unhandled_exc(req: Request, exc: Exception) -> JSONResponse:
+        logger.error("Unhandled server error at %s: %s", req.url.path, exc, exc_info=True)
+        return _error(
+            500,
+            "internal_server_error",
+            "An unexpected error occurred while processing the request.",
+        )
 
     return app
 

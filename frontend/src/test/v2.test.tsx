@@ -6,7 +6,7 @@ import { V2ModelDivergenceAlert } from '../components/v2/V2ModelDivergenceAlert'
 import { V2TreeShapBreakdown } from '../components/v2/V2TreeShapBreakdown';
 import { V2SearchPage, normalizeAccountId } from '../pages/v2/V2SearchPage';
 import { V2AccountDetailPage } from '../pages/v2/V2AccountDetailPage';
-import { v2Api } from '../services/v2Api';
+import { v2Api, ApiError } from '../services/v2Api';
 import { V2FeatureContribution } from '../types/v2';
 
 // Mock v2Api
@@ -486,5 +486,28 @@ describe('V2AccountDetailPage Component', () => {
       expect(screen.getByText(/"Verified legitimate customer victim of APP scam."/i)).toBeInTheDocument();
     });
   });
+
+  it('renders helpful incident dossier link when account is not found in V2 core ledger', async () => {
+    vi.spyOn(v2Api, 'getAccount').mockRejectedValue(new ApiError(404, 'Account not found'));
+
+    render(
+      <MemoryRouter initialEntries={['/v2/accounts/A100']}>
+        <Routes>
+          <Route path="/v2/accounts/:accountId" element={<V2AccountDetailPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Account Not Found in Core Ledger/i)).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/If this identifier is an entity from an incident investigation network/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Open Incident Dossier \(FS-1042\)/i })).toHaveAttribute(
+      'href',
+      '/cases/FS-1042?tab=review&account=A100'
+    );
+  });
 });
+
 

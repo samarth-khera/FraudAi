@@ -114,6 +114,50 @@ export interface AuditTrailResponse {
   events: AuditEvent[];
 }
 
+export interface AuditSummaryMetrics {
+  total_events: number;
+  review_decisions_count: number;
+  case_status_changes_count: number;
+  trace_events_count: number;
+  most_recent_timestamp: string | null;
+  earliest_timestamp: string | null;
+  distinct_cases_count: number;
+  distinct_actors_count: number;
+}
+
+export interface AuditIntegrityStatus {
+  storage_backend: string;
+  append_only_enforced: boolean;
+  cryptographic_signatures: boolean;
+  server_timestamps: boolean;
+  last_verified_at: string;
+  integrity_disclosure: string;
+}
+
+export interface GlobalAuditResponse {
+  total_count: number;
+  filtered_count: number;
+  skip: number;
+  limit: number;
+  events: AuditEvent[];
+  summary: AuditSummaryMetrics;
+  integrity_status: AuditIntegrityStatus;
+}
+
+export interface AuditQueryParams {
+  case_id?: string;
+  action?: string;
+  category?: 'reviews' | 'case_changes' | 'traces' | 'transactions' | 'all';
+  performed_by?: string;
+  entity_type?: string;
+  search?: string;
+  start_date?: string;
+  end_date?: string;
+  skip?: number;
+  limit?: number;
+  sort_order?: 'desc' | 'asc';
+}
+
 export interface GraphNode {
   id: string;
   label: string;

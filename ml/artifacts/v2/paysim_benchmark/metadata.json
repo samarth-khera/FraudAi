@@ -44,6 +44,22 @@
     "false_negatives": 1,
     "true_positives": 1365
   },
+  "top_feature_importances": {
+    "amount_to_oldbalanceOrg_ratio": 0.3974,
+    "step_hour": 0.2255,
+    "type_PAYMENT": 0.1468,
+    "type_TRANSFER": 0.1026,
+    "amount": 0.0521,
+    "type_CASH_OUT": 0.0508,
+    "oldbalanceOrg": 0.0108,
+    "type_CASH_IN": 0.0075,
+    "oldbalanceDest": 0.0032,
+    "step": 0.0018,
+    "is_dest_zero_balance": 0.0015,
+    "is_origin_zero_balance": 0.0,
+    "step_day": 0.0,
+    "type_DEBIT": 0.0
+  },
   "training_time_seconds": 0.18,
   "total_elapsed_seconds": 4.93,
   "features": [
