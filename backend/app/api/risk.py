@@ -30,11 +30,11 @@ class RiskScoreRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    step: int = Field(ge=1, description="Hour index of the transaction (1 = first simulated hour).")
+    step: int = Field(ge=1, le=1_000_000, description="Hour index of the transaction (1 = first simulated hour).")
     type: RiskTransactionType
-    amount: float = Field(ge=0, allow_inf_nan=False)
-    oldbalanceOrg: float = Field(ge=0, allow_inf_nan=False, description="Sender balance BEFORE the transaction.")
-    oldbalanceDest: float = Field(ge=0, allow_inf_nan=False, description="Receiver balance BEFORE the transaction.")
+    amount: float = Field(ge=0, le=1_000_000_000, allow_inf_nan=False)
+    oldbalanceOrg: float = Field(ge=0, le=1_000_000_000, allow_inf_nan=False, description="Sender balance BEFORE the transaction.")
+    oldbalanceDest: float = Field(ge=0, le=1_000_000_000, allow_inf_nan=False, description="Receiver balance BEFORE the transaction.")
 
 
 class RiskScoreResponse(BaseModel):

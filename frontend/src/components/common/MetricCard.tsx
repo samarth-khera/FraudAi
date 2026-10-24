@@ -43,39 +43,39 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       case 'warning':
         return 'bg-amber-500';
       default:
-        return 'bg-[#0D9488]';
+        return 'bg-[#EA8500]';
     }
   };
 
   return (
     <div
-      className={`forensic-panel relative overflow-hidden p-4 sm:p-5 transition-colors hover:border-[#0D9488]/60 ${className}`}
+      className={`bg-white border border-[#EAE3D6] rounded-2xl relative overflow-hidden p-4 sm:p-5 transition-all shadow-sm hover:shadow-md hover:border-[#EA8500]/50 ${className}`}
     >
       <div className={`absolute top-0 left-0 right-0 h-0.5 ${getTopBarColor()}`} />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-[#64748B] mb-1">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-[#6B655B] mb-1">
             {title}
           </p>
-          <h3 className="text-2xl font-bold text-[#0B1322] font-mono tracking-tight tabular-nums">
+          <h3 className="text-2xl font-bold text-[#1A1714] font-mono tracking-tight tabular-nums">
             {value}
           </h3>
         </div>
-        <div className={`p-2 rounded-md border flex-shrink-0 ${iconBg}`}>
+        <div className={`p-2.5 rounded-xl border flex-shrink-0 ${iconBg}`}>
           {icon}
         </div>
       </div>
 
       {(change || subtitle) && (
-        <div className="mt-3 flex flex-wrap items-center gap-2 pt-2.5 border-t border-[#E2DFD7]/80 text-[11px]">
+        <div className="mt-3 flex flex-wrap items-center gap-2 pt-2.5 border-t border-[#EAE3D6]/80 text-[11px]">
           {change && (
             <span
-              className={`inline-flex items-center px-1.5 py-0.5 rounded font-mono font-semibold border ${getChangeColor()}`}
+              className={`inline-flex items-center px-1.5 py-0.5 rounded-md font-mono font-semibold border ${getChangeColor()}`}
             >
               {change}
             </span>
           )}
-          {subtitle && <span className="text-[#64748B] font-medium">{subtitle}</span>}
+          {subtitle && <span className="text-[#6B655B] font-medium">{subtitle}</span>}
         </div>
       )}
     </div>

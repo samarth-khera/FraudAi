@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Annotated, Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -22,20 +22,24 @@ from app.schemas.trace import TracedTransaction, TraceWarning
 
 
 class CaseCreateRequest(BaseModel):
-    case_id: str = Field(min_length=1, max_length=50, description="Unique case identifier.")
-    reported_origin_transaction_id: str = Field(min_length=1, max_length=50)
-    reported_amount: Money = Field(gt=0, description="Reported fraud amount.")
-    currency: str = Field(default="INR", max_length=10)
+    model_config = ConfigDict(extra="forbid")
+
+    case_id: str = Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_\-\.]+$", description="Unique case identifier.")
+    reported_origin_transaction_id: str = Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_\-\.]+$")
+    reported_amount: Money = Field(gt=0, le=1_000_000_000, description="Reported fraud amount.")
+    currency: str = Field(default="INR", min_length=3, max_length=10, pattern=r"^[A-Za-z]+$")
     reported_at: Optional[datetime] = None
     investigation_status: InvestigationStatus = InvestigationStatus.UNDER_INVESTIGATION
-    description: str = Field(min_length=1, description="Summary description of the reported case.")
-    created_by: str = Field(default="analyst_placeholder", description="Reviewer/system creating the case.")
+    description: str = Field(min_length=1, max_length=5000, description="Summary description of the reported case.")
+    created_by: str = Field(default="analyst_placeholder", min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_\-\. ]+$", description="Reviewer/system creating the case.")
 
 
 class CaseUpdateRequest(BaseModel):
-    description: Optional[str] = Field(default=None, min_length=1)
+    model_config = ConfigDict(extra="forbid")
+
+    description: Optional[str] = Field(default=None, min_length=1, max_length=5000)
     investigation_status: Optional[InvestigationStatus] = None
-    updated_by: str = Field(default="analyst_placeholder", description="Reviewer identity.")
+    updated_by: str = Field(default="analyst_placeholder", min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_\-\. ]+$", description="Reviewer identity.")
 
 
 class AccountReviewUpdateRequest(BaseModel):
@@ -43,14 +47,16 @@ class AccountReviewUpdateRequest(BaseModel):
 
     review_state: ReviewState
     evidence_quality: EvidenceQuality = EvidenceQuality.NOT_ASSESSED
-    notes: Optional[str] = None
-    reviewer_id: str = Field(default="analyst_placeholder", min_length=1, max_length=100, description="Reviewer identity.")
-    decision_reasons: list[str] = Field(
+    notes: Optional[str] = Field(default=None, max_length=5000)
+    reviewer_id: str = Field(default="analyst_placeholder", min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_\-\. ]+$", description="Reviewer identity.")
+    decision_reasons: list[Annotated[str, Field(min_length=1, max_length=500)]] = Field(
         default_factory=list,
+        max_length=30,
         description="Structured reasons for the human review decision.",
     )
-    supporting_transaction_ids: list[str] = Field(
+    supporting_transaction_ids: list[Annotated[str, Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_\-\.]+$")]] = Field(
         default_factory=list,
+        max_length=50,
         description="Transaction IDs cited by the reviewer in support of this assessment.",
     )
     additional_info_needed: bool = Field(
@@ -60,8 +66,10 @@ class AccountReviewUpdateRequest(BaseModel):
 
 
 class CaseTransactionsAddRequest(BaseModel):
-    transactions: list[Transaction] = Field(min_length=1)
-    added_by: str = Field(default="system", description="Reviewer/system identity adding transactions.")
+    model_config = ConfigDict(extra="forbid")
+
+    transactions: list[Transaction] = Field(min_length=1, max_length=500)
+    added_by: str = Field(default="system", min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_\-\. ]+$", description="Reviewer/system identity adding transactions.")
 
 
 class AuditEventResponse(BaseModel):
@@ -79,6 +87,40 @@ class AuditTrailResponse(BaseModel):
     case_id: str
     count: int
     events: list[AuditEventResponse]
+
+
+class AuditSummaryMetrics(BaseModel):
+    total_events: int
+    review_decisions_count: int
+    case_status_changes_count: int
+    trace_events_count: int
+    most_recent_timestamp: Optional[datetime] = None
+    earliest_timestamp: Optional[datetime] = None
+    distinct_cases_count: int
+    distinct_actors_count: int
+
+
+class AuditIntegrityStatus(BaseModel):
+    storage_backend: str = "SQLite Relational (audit_events)"
+    append_only_enforced: bool = True
+    database_cascade_protected: bool = True
+    cryptographic_signatures: bool = False
+    server_timestamps: bool = True
+    last_verified_at: datetime
+    integrity_disclosure: str = (
+        "Application-enforced append-only audit trail in SQLite with cascade-deletion protection. "
+        "Server-generated UTC timestamps. No cryptographic hash-chaining or WORM hardware."
+    )
+
+
+class GlobalAuditResponse(BaseModel):
+    total_count: int
+    filtered_count: int
+    skip: int
+    limit: int
+    events: list[AuditEventResponse]
+    summary: AuditSummaryMetrics
+    integrity_status: AuditIntegrityStatus
 
 
 # --------------------------------------------------------------------------

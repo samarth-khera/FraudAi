@@ -100,6 +100,19 @@ class V2MLInferenceService:
                 "Trained on synthetic banking network scenarios. Provides advisory decision-support only. "
                 "Downstream attribution must be verified by a human analyst."
             ),
+            feature_importances=acc_meta.get("top_feature_importances"),
+            dataset_info={
+                "source": acc_meta.get("dataset_source", "V2 Synthetic Banking Ledger (SQLite)"),
+                "strategy": acc_meta.get("scenario_split_strategy", {}).get("strategy"),
+                "train_accounts_count": acc_meta.get("scenario_split_strategy", {}).get("train_accounts_count"),
+                "test_accounts_count": acc_meta.get("scenario_split_strategy", {}).get("test_accounts_count"),
+                "test_suspicious_count": acc_meta.get("scenario_split_strategy", {}).get("test_suspicious_count"),
+                "test_normal_count": acc_meta.get("scenario_split_strategy", {}).get("test_normal_count"),
+                "held_out_test_scenarios": acc_meta.get("scenario_split_strategy", {}).get("held_out_test_scenarios"),
+            } if acc_meta else None,
+            baseline_comparison=acc_meta.get("baseline_comparison"),
+            leakage_protections=acc_meta.get("leakage_protections"),
+            features=acc_meta.get("features", FEATURE_NAMES) if acc_available else None,
         )
 
         # 2. PaySim benchmark status
@@ -122,6 +135,16 @@ class V2MLInferenceService:
             trained_at=paysim_meta.get("trained_at"),
             test_metrics=paysim_meta.get("held_out_test_metrics"),
             limitations=paysim_meta.get("domain_constraints"),
+            feature_importances=paysim_meta.get("top_feature_importances"),
+            dataset_info={
+                "source": "PaySim Academic Mobile Money Simulation (Kaggle)",
+                "dataset_path": paysim_meta.get("dataset_path"),
+                "chronological_split": paysim_meta.get("chronological_split"),
+                "class_distribution": paysim_meta.get("class_distribution"),
+            } if paysim_meta else None,
+            baseline_comparison=None,
+            leakage_protections=paysim_meta.get("excluded_features"),
+            features=paysim_meta.get("features"),
         )
 
         overall = "healthy" if acc_available else "degraded_missing_account_model"

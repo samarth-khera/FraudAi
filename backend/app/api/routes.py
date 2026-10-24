@@ -2,12 +2,31 @@
 
 from __future__ import annotations
 
+import csv
+import io
+import json
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, status
 from sqlalchemy.orm import Session
 
+CaseIdPath = Path(
+    ...,
+    min_length=1,
+    max_length=64,
+    pattern=r"^[A-Za-z0-9_\-\.]+$",
+    description="Unique case identifier.",
+)
+AccountIdPath = Path(
+    ...,
+    min_length=1,
+    max_length=64,
+    pattern=r"^[A-Za-z0-9_\-\.]+$",
+    description="Unique account identifier.",
+)
+
+from app.api.auth import AuthContext, verify_write_permission
 from app.db.models import utc_now
 from app.db.session import SessionLocal, get_db
 from app.models.domain import AccountReviewStatus, FraudCase, Transaction
@@ -21,11 +40,14 @@ from app.schemas.case_management import (
     AccountAssessmentResponse,
     AccountReviewUpdateRequest,
     AuditEventResponse,
+    AuditIntegrityStatus,
+    AuditSummaryMetrics,
     AuditTrailResponse,
     CaseAccountAssessmentsResponse,
     CaseCreateRequest,
     CaseTransactionsAddRequest,
     CaseUpdateRequest,
+    GlobalAuditResponse,
 )
 from app.schemas.trace import (
     CaseListResponse,
@@ -121,6 +143,7 @@ def list_cases(
 def create_case(
     req: CaseCreateRequest,
     repo: CaseRepository = Depends(get_repository),
+    auth: AuthContext = Depends(verify_write_permission),
 ) -> FraudCase:
     """Create a new fraud investigation case and record an append-only audit event."""
     case = FraudCase(
@@ -133,22 +156,26 @@ def create_case(
         description=req.description,
     )
     try:
-        return repo.create_case(case, initial_audit_user=req.created_by)
+        return repo.create_case(case, initial_audit_user=req.created_by, auth_context=auth)
     except DuplicateEntityError as exc:
         raise HTTPException(status_code=409, detail={"code": exc.code, "message": exc.message})
 
 
 @router.get("/api/cases/{case_id}", response_model=FraudCase, responses=_ERRORS, tags=["cases"])
-def get_case(case_id: str, repo: CaseRepository = Depends(get_repository)) -> FraudCase:
+def get_case(
+    case_id: str = CaseIdPath,
+    repo: CaseRepository = Depends(get_repository),
+) -> FraudCase:
     """Retrieve details for a specific case."""
     return _require_case(repo, case_id)
 
 
 @router.patch("/api/cases/{case_id}", response_model=FraudCase, responses=_ERRORS, tags=["cases"])
 def update_case(
-    case_id: str,
-    req: CaseUpdateRequest,
+    case_id: str = CaseIdPath,
+    req: CaseUpdateRequest = ...,
     repo: CaseRepository = Depends(get_repository),
+    auth: AuthContext = Depends(verify_write_permission),
 ) -> FraudCase:
     """Update case status or description. Appends an audit event."""
     try:
@@ -157,6 +184,7 @@ def update_case(
             status=req.investigation_status,
             description=req.description,
             user_id=req.updated_by,
+            auth_context=auth,
         )
     except EntityNotFoundError as exc:
         raise HTTPException(status_code=404, detail={"code": exc.code, "message": exc.message})
@@ -170,14 +198,15 @@ def update_case(
     tags=["cases"],
 )
 def add_case_transactions(
-    case_id: str,
-    req: CaseTransactionsAddRequest,
+    case_id: str = CaseIdPath,
+    req: CaseTransactionsAddRequest = ...,
     repo: CaseRepository = Depends(get_repository),
+    auth: AuthContext = Depends(verify_write_permission),
 ) -> list[Transaction]:
     """Add observed transactions to the case transaction store. Rejects conflicting duplicates."""
     _require_case(repo, case_id)
     try:
-        return repo.add_transactions(req.transactions, user_id=req.added_by, case_id=case_id)
+        return repo.add_transactions(req.transactions, user_id=req.added_by, case_id=case_id, auth_context=auth)
     except DuplicateEntityError as exc:
         raise HTTPException(status_code=409, detail={"code": exc.code, "message": exc.message})
 
@@ -189,10 +218,11 @@ def add_case_transactions(
     tags=["cases"],
 )
 def record_account_review(
-    case_id: str,
-    account_id: str,
-    req: AccountReviewUpdateRequest,
+    case_id: str = CaseIdPath,
+    account_id: str = AccountIdPath,
+    req: AccountReviewUpdateRequest = ...,
     repo: CaseRepository = Depends(get_repository),
+    auth: AuthContext = Depends(verify_write_permission),
 ) -> AccountReviewStatus:
     """Record an account review decision with reviewer identity and append-only audit event."""
     try:
@@ -206,6 +236,7 @@ def record_account_review(
             decision_reasons=req.decision_reasons,
             supporting_transaction_ids=req.supporting_transaction_ids,
             additional_info_needed=req.additional_info_needed,
+            auth_context=auth,
         )
     except EntityNotFoundError as exc:
         raise HTTPException(status_code=404, detail={"code": exc.code, "message": exc.message})
@@ -218,7 +249,7 @@ def record_account_review(
     tags=["cases"],
 )
 def list_case_account_assessments(
-    case_id: str,
+    case_id: str = CaseIdPath,
     max_depth: int = MaxDepth,
     repo: CaseRepository = Depends(get_repository),
 ) -> CaseAccountAssessmentsResponse:
@@ -244,8 +275,8 @@ def list_case_account_assessments(
     tags=["cases"],
 )
 def get_account_assessment(
-    case_id: str,
-    account_id: str,
+    case_id: str = CaseIdPath,
+    account_id: str = AccountIdPath,
     max_depth: int = MaxDepth,
     repo: CaseRepository = Depends(get_repository),
 ) -> AccountAssessmentResponse:
@@ -267,7 +298,6 @@ def get_account_assessment(
         raise HTTPException(status_code=409, detail={"code": exc.code, "message": exc.message})
 
 
-
 @router.get(
     "/api/cases/{case_id}/audit-trail",
     response_model=AuditTrailResponse,
@@ -275,7 +305,7 @@ def get_account_assessment(
     tags=["cases"],
 )
 def get_case_audit_trail(
-    case_id: str,
+    case_id: str = CaseIdPath,
     repo: CaseRepository = Depends(get_repository),
 ) -> AuditTrailResponse:
     """Retrieve the append-only audit trail for an investigation case."""
@@ -302,6 +332,165 @@ def get_case_audit_trail(
         raise HTTPException(status_code=404, detail={"code": exc.code, "message": exc.message})
 
 
+def _sanitize_csv_cell(value: Any) -> str:
+    if value is None:
+        return ""
+    s = str(value)
+    # Neutralize spreadsheet formula injection (=, +, -, @, |, %, \t, \r)
+    # Check both the raw string and stripped string to prevent whitespace-padded execution
+    stripped = s.lstrip()
+    if stripped and stripped[0] in ("=", "+", "-", "@", "|", "%", "\t", "\r"):
+        return f"'{s}"
+    return s
+
+
+@router.get(
+    "/api/audit",
+    response_model=GlobalAuditResponse,
+    responses=_ERRORS,
+    tags=["audit"],
+)
+def get_global_audit_events(
+    case_id: Optional[str] = Query(None, max_length=64, pattern=r"^[A-Za-z0-9_\-\.]+$", description="Filter by case ID"),
+    action: Optional[str] = Query(None, max_length=64, pattern=r"^[A-Za-z0-9_\-]+$", description="Filter by exact action name"),
+    category: Optional[str] = Query(None, max_length=32, pattern=r"^[A-Za-z0-9_]+$", description="Filter by category (reviews, case_changes, traces, transactions)"),
+    performed_by: Optional[str] = Query(None, max_length=100, description="Filter by actor / reviewer identity"),
+    entity_type: Optional[str] = Query(None, max_length=64, description="Filter by entity type"),
+    search: Optional[str] = Query(None, max_length=200, description="Search across case_id, action, actor, entity_id, and details"),
+    start_date: Optional[datetime] = Query(None, description="Start date filter"),
+    end_date: Optional[datetime] = Query(None, description="End date filter"),
+    skip: int = Query(0, ge=0, le=100000, description="Offset"),
+    limit: int = Query(50, ge=1, le=500, description="Page limit"),
+    sort_order: str = Query("desc", pattern="^(asc|desc)$", description="Sort order"),
+    repo: CaseRepository = Depends(get_repository),
+) -> GlobalAuditResponse:
+    """Retrieve global audit trail across all cases with server-side filtering, pagination, and integrity metrics."""
+    events, total_filtered, summary = repo.list_global_audit_events(
+        case_id=case_id,
+        action=action,
+        category=category,
+        performed_by=performed_by,
+        entity_type=entity_type,
+        search=search,
+        start_date=start_date,
+        end_date=end_date,
+        skip=skip,
+        limit=limit,
+        sort_order=sort_order,
+    )
+
+    integrity = AuditIntegrityStatus(
+        storage_backend="SQLite Relational (audit_events)",
+        append_only_enforced=True,
+        database_cascade_protected=True,
+        cryptographic_signatures=False,
+        server_timestamps=True,
+        last_verified_at=utc_now(),
+        integrity_disclosure=(
+            "Application-enforced append-only audit trail in SQLite with database cascade-deletion protection. "
+            "Server-generated UTC timestamps. No cryptographic hash-chaining or WORM hardware."
+        ),
+    )
+
+    return GlobalAuditResponse(
+        total_count=total_filtered,
+        filtered_count=len(events),
+        skip=skip,
+        limit=limit,
+        events=[
+            AuditEventResponse(
+                event_id=e.event_id,
+                case_id=e.case_id,
+                timestamp=e.timestamp,
+                action=e.action,
+                performed_by=e.performed_by,
+                entity_type=e.entity_type,
+                entity_id=e.entity_id,
+                details=e.details,
+            )
+            for e in events
+        ],
+        summary=AuditSummaryMetrics(**summary),
+        integrity_status=integrity,
+    )
+
+
+@router.get(
+    "/api/audit/export.csv",
+    tags=["audit"],
+)
+def export_audit_events_csv(
+    case_id: Optional[str] = Query(None, max_length=64, pattern=r"^[A-Za-z0-9_\-\.]+$", description="Filter by case ID"),
+    action: Optional[str] = Query(None, max_length=64, pattern=r"^[A-Za-z0-9_\-]+$", description="Filter by exact action name"),
+    category: Optional[str] = Query(None, max_length=32, pattern=r"^[A-Za-z0-9_]+$", description="Filter by category"),
+    performed_by: Optional[str] = Query(None, max_length=100, description="Filter by actor / reviewer identity"),
+    entity_type: Optional[str] = Query(None, max_length=64, description="Filter by entity type"),
+    search: Optional[str] = Query(None, max_length=200, description="Search across fields"),
+    start_date: Optional[datetime] = Query(None, description="Start date filter"),
+    end_date: Optional[datetime] = Query(None, description="End date filter"),
+    limit: int = Query(5000, ge=1, le=10000, description="Export limit"),
+    sort_order: str = Query("desc", pattern="^(asc|desc)$", description="Sort order"),
+    repo: CaseRepository = Depends(get_repository),
+) -> Response:
+    """Stream an RFC-4180 compliant CSV export with formula injection mitigation."""
+    events, total_filtered, _ = repo.list_global_audit_events(
+        case_id=case_id,
+        action=action,
+        category=category,
+        performed_by=performed_by,
+        entity_type=entity_type,
+        search=search,
+        start_date=start_date,
+        end_date=end_date,
+        skip=0,
+        limit=limit,
+        sort_order=sort_order,
+    )
+
+    output = io.StringIO()
+    writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
+
+    # Header Row
+    writer.writerow([
+        "Event ID",
+        "Timestamp (UTC)",
+        "Case ID",
+        "Action",
+        "Performed By",
+        "Entity Type",
+        "Entity ID",
+        "Details JSON",
+    ])
+
+    for e in events:
+        details_str = json.dumps(e.details) if e.details else ""
+        writer.writerow([
+            _sanitize_csv_cell(e.event_id),
+            _sanitize_csv_cell(e.timestamp.isoformat() if e.timestamp else ""),
+            _sanitize_csv_cell(e.case_id),
+            _sanitize_csv_cell(e.action),
+            _sanitize_csv_cell(e.performed_by),
+            _sanitize_csv_cell(e.entity_type),
+            _sanitize_csv_cell(e.entity_id),
+            _sanitize_csv_cell(details_str),
+        ])
+
+    csv_data = output.getvalue()
+    date_str = utc_now().strftime("%Y%m%d_%H%M%S")
+    filename = f"fraudshield_audit_export_{date_str}.csv"
+
+    return Response(
+        content=csv_data,
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
+
+
 # ---------------- Fund Tracing & Graph ----------------
 @router.get(
     "/api/cases/{case_id}/transactions",
@@ -310,7 +499,7 @@ def get_case_audit_trail(
     tags=["cases"],
 )
 def get_case_transactions(
-    case_id: str,
+    case_id: str = CaseIdPath,
     max_depth: int = MaxDepth,
     repo: CaseRepository = Depends(get_repository),
 ) -> TransactionListResponse:
@@ -331,7 +520,7 @@ def get_case_transactions(
     tags=["cases"],
 )
 def get_case_graph(
-    case_id: str,
+    case_id: str = CaseIdPath,
     max_depth: int = MaxDepth,
     repo: CaseRepository = Depends(get_repository),
 ) -> GraphResponse:
@@ -347,7 +536,7 @@ def get_case_graph(
     tags=["cases"],
 )
 def get_case_trace(
-    case_id: str,
+    case_id: str = CaseIdPath,
     max_depth: int = MaxDepth,
     repo: CaseRepository = Depends(get_repository),
 ) -> TraceResult:
