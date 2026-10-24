@@ -84,6 +84,8 @@ export const UnifiedHeader: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [modelStatus, setModelStatus] = useState<V2ModelStatusResponse | null>(null);
+  const [statusState, setStatusState] = useState<'checking' | 'healthy' | 'operational' | 'degraded' | 'offline'>('checking');
+  const [statusTooltip, setStatusTooltip] = useState<string>('Checking AI model status...');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Close mobile menu on location change or Escape key
@@ -101,23 +103,57 @@ export const UnifiedHeader: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Fetch model status once at header mount
+  // Fetch model status with truthful state mapping and automatic periodic check
   useEffect(() => {
     let mounted = true;
-    v2Api
-      .getModelsStatus()
-      .then((status) => {
-        if (mounted) setModelStatus(status);
-      })
-      .catch(() => {
-        if (mounted) setModelStatus(null);
-      });
+    let timerId: ReturnType<typeof setTimeout>;
+
+    const checkStatus = () => {
+      v2Api
+        .getModelsStatus()
+        .then((status) => {
+          if (!mounted) return;
+          setModelStatus(status);
+          if (status.inference_ready) {
+            if (status.overall_status === 'healthy') {
+              setStatusState('healthy');
+              setStatusTooltip(
+                `v2-account-1.0.0 inference ready (${status.account_model?.features_count ?? 26} features). PaySim benchmark online.`
+              );
+            } else {
+              setStatusState('operational');
+              setStatusTooltip(
+                `Account model inference ready. Optional benchmark status: ${status.overall_status}.`
+              );
+            }
+          } else {
+            setStatusState('degraded');
+            setStatusTooltip(
+              `AI model inference degraded: ${status.account_model?.available ? 'Benchmark offline' : 'Account model artifact missing'}. Falling back to rule heuristics.`
+            );
+          }
+          // Schedule next periodic check after 30s when healthy
+          timerId = setTimeout(checkStatus, 30000);
+        })
+        .catch((err) => {
+          if (!mounted) return;
+          setModelStatus(null);
+          setStatusState('offline');
+          setStatusTooltip(
+            `Backend API unreachable at :8000 (${err?.message || 'Connection refused'}). Retrying...`
+          );
+          // Retry more quickly (every 5s) if backend is offline/starting up
+          timerId = setTimeout(checkStatus, 5000);
+        });
+    };
+
+    checkStatus();
+
     return () => {
       mounted = false;
+      clearTimeout(timerId);
     };
   }, []);
-
-  const isModelReady = modelStatus?.inference_ready ?? false;
 
   const isItemActive = (item: NavItem): boolean => {
     const currentPath = location.pathname;
@@ -262,15 +298,52 @@ export const UnifiedHeader: React.FC = () => {
           <div className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] text-xs shadow-2xs shrink-0">
             <Cpu className="w-3.5 h-3.5 text-[#6B655B]" />
             <span className="text-[#6B655B] font-medium text-[11px] hidden 2xl:inline">Engine:</span>
-            {isModelReady ? (
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.2 rounded-full bg-[#EAF7EE] text-[#166534] border border-[#BBF7D0] font-bold font-mono text-[11px]">
+            {statusState === 'checking' && (
+              <span
+                className="inline-flex items-center gap-1.5 px-2 py-0.2 rounded-full bg-[#FAF7F2] text-[#8C857B] border border-[#EAE3D6] font-mono text-[11px]"
+                title={statusTooltip}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-[#8C857B] animate-pulse" />
+                checking
+              </span>
+            )}
+            {statusState === 'healthy' && (
+              <Link
+                to="/insights"
+                className="inline-flex items-center gap-1.5 px-2 py-0.2 rounded-full bg-[#EAF7EE] text-[#166534] border border-[#BBF7D0] font-bold font-mono text-[11px] hover:bg-[#DCFCE7] transition-colors cursor-pointer"
+                title={`${statusTooltip} (Click for Model Insights)`}
+              >
                 <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
                 v2-active
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded-full bg-[#FFF1F2] text-[#E11D48] border border-[#FFE4E6] font-bold text-[11px]">
+              </Link>
+            )}
+            {statusState === 'operational' && (
+              <Link
+                to="/insights"
+                className="inline-flex items-center gap-1.5 px-2 py-0.2 rounded-full bg-[#FFFBEB] text-[#92400E] border border-[#FDE68A] font-bold font-mono text-[11px] hover:bg-[#FEF3C7] transition-colors cursor-pointer"
+                title={`${statusTooltip} (Click for Model Insights)`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]" />
+                operational
+              </Link>
+            )}
+            {statusState === 'degraded' && (
+              <Link
+                to="/insights"
+                className="inline-flex items-center gap-1 px-2 py-0.2 rounded-full bg-[#FFF1F2] text-[#E11D48] border border-[#FFE4E6] font-bold text-[11px] hover:bg-[#FFE4E6] transition-colors cursor-pointer"
+                title={`${statusTooltip} (Click for Model Insights)`}
+              >
                 <AlertTriangle className="w-3 h-3" />
                 Degraded
+              </Link>
+            )}
+            {statusState === 'offline' && (
+              <span
+                className="inline-flex items-center gap-1 px-2 py-0.2 rounded-full bg-[#FFF1F2] text-[#E11D48] border border-[#FFE4E6] font-bold text-[11px]"
+                title={statusTooltip}
+              >
+                <AlertTriangle className="w-3 h-3" />
+                Offline
               </span>
             )}
           </div>
@@ -368,8 +441,28 @@ export const UnifiedHeader: React.FC = () => {
             {/* Mobile Footer Status & Shortcuts */}
             <div className="pt-2 border-t border-[#EAE3D6] flex flex-wrap items-center justify-between gap-3 text-xs text-[#6B655B]">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#22C55E]" />
-                <span className="font-mono text-[11px]">AI Model: v2-account-1.0.0</span>
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    statusState === 'healthy'
+                      ? 'bg-[#22C55E]'
+                      : statusState === 'operational'
+                      ? 'bg-[#F59E0B]'
+                      : statusState === 'checking'
+                      ? 'bg-[#8C857B] animate-pulse'
+                      : 'bg-[#E11D48]'
+                  }`}
+                />
+                <span className="font-mono text-[11px]" title={statusTooltip}>
+                  {statusState === 'healthy'
+                    ? `AI Model: ${modelStatus?.account_model?.version || 'v2-account-1.0.0'}`
+                    : statusState === 'operational'
+                    ? 'AI Model: Operational (Benchmark Offline)'
+                    : statusState === 'degraded'
+                    ? 'AI Model: Degraded (Rule Fallback)'
+                    : statusState === 'offline'
+                    ? 'Backend: Offline'
+                    : 'AI Model: Checking...'}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <Link

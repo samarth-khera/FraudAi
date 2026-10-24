@@ -892,10 +892,15 @@ export const V2SearchPage: React.FC = () => {
                     <div className="w-11 h-11 rounded-2xl bg-[#FFF4E6] border border-[#FCD5B5] flex items-center justify-center text-[#EA8500] shadow-2xs group-hover:scale-105 transition-transform duration-300">
                       <Cpu className="w-5 h-5" />
                     </div>
-                    {modelStatus?.inference_ready ? (
+                    {modelStatus === null ? (
+                      <span className="flex items-center gap-1.5 text-xs font-bold text-[#8C857B] bg-[#FAF7F2] px-3.5 py-1 rounded-full border border-[#EAE3D6]">
+                        <span className="w-2 h-2 rounded-full bg-[#8C857B] animate-pulse"></span>
+                        <span>CHECKING</span>
+                      </span>
+                    ) : modelStatus.inference_ready ? (
                       <span className="flex items-center gap-1.5 text-xs font-bold text-[#166534] bg-[#EAF7EE] px-3.5 py-1 rounded-full border border-[#BBF7D0]">
                         <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse"></span>
-                        <span>ONLINE</span>
+                        <span>{modelStatus.overall_status === 'healthy' ? 'ONLINE' : 'OPERATIONAL'}</span>
                       </span>
                     ) : (
                       <span className="flex items-center gap-1.5 text-xs font-bold text-[#BE123C] bg-[#FFF0F2] px-3.5 py-1 rounded-full border border-[#FECDD3]">
