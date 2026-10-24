@@ -51,7 +51,7 @@ class FraudCaseModel(Base):
         "AccountReviewStatusModel", back_populates="case", cascade="all, delete-orphan"
     )
     audit_events: Mapped[list["AuditEventModel"]] = relationship(
-        "AuditEventModel", back_populates="case", cascade="all, delete-orphan"
+        "AuditEventModel", back_populates="case", cascade="save-update, merge"
     )
     trace_paths: Mapped[list["CaseTracePathModel"]] = relationship(
         "CaseTracePathModel", back_populates="case", cascade="all, delete-orphan"
@@ -131,7 +131,7 @@ class AuditEventModel(Base):
 
     event_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     case_id: Mapped[str] = mapped_column(
-        String(50), ForeignKey("fraud_cases.case_id"), nullable=False, index=True
+        String(50), ForeignKey("fraud_cases.case_id", ondelete="RESTRICT"), nullable=False, index=True
     )
     timestamp: Mapped[datetime] = mapped_column(DateTime, default=utc_now, nullable=False, index=True)
     action: Mapped[str] = mapped_column(String(50), nullable=False)

@@ -8,6 +8,11 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy.orm import Session
 
+try:
+    from app.api.auth import AuthContext, verify_write_permission
+except ModuleNotFoundError:
+    from backend.app.api.auth import AuthContext, verify_write_permission
+
 logger = logging.getLogger("fraudshield.v2.api")
 
 V2AccountIdPath = Path(
@@ -219,6 +224,7 @@ def get_account_ml_assessment(
 def run_live_account_analysis(
     account_id: str = V2AccountIdPath,
     db: Session = Depends(get_v2_db),
+    auth: AuthContext = Depends(verify_write_permission),
 ) -> AccountLiveAnalysisResponse:
     try:
         analysis = AccountLiveAnalysisService.run_analysis(db, account_id)

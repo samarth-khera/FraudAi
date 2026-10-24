@@ -309,13 +309,12 @@ export const GuidedInvestigationPage: React.FC = () => {
                   onClick={() => handleStepChange(s.index)}
                   aria-current={isCurrent ? 'step' : undefined}
                   aria-label={`Step ${s.index}: ${s.title}`}
-                  className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
-                    isCurrent
+                  className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${isCurrent
                       ? 'bg-[#FFF4E6] border-[#EA8500] ring-1 ring-[#EA8500]/30 shadow-xs'
                       : isPast
-                      ? 'bg-[#FAF7F2] border-[#EAE3D6] hover:bg-white text-[#1A1714]'
-                      : 'bg-white/60 border-[#EAE3D6] text-[#8C857B] hover:bg-[#FAF7F2]'
-                  }`}
+                        ? 'bg-[#FAF7F2] border-[#EAE3D6] hover:bg-white text-[#1A1714]'
+                        : 'bg-white/60 border-[#EAE3D6] text-[#8C857B] hover:bg-[#FAF7F2]'
+                    }`}
                 >
                   <div className="flex items-center justify-between text-[11px] font-mono font-bold">
                     <span className={isCurrent ? 'text-[#EA8500]' : isPast ? 'text-[#166534]' : 'text-[#8C857B]'}>
@@ -844,11 +843,10 @@ export const GuidedInvestigationPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setSelectedVerdict('compromised_victim')}
-                        className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
-                          selectedVerdict === 'compromised_victim'
+                        className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${selectedVerdict === 'compromised_victim'
                             ? 'bg-[#FFF4E6] border-[#EA8500] ring-1 ring-[#EA8500]'
                             : 'bg-[#FAF7F2] border-[#EAE3D6] hover:bg-white'
-                        }`}
+                          }`}
                       >
                         <span className="block text-xs font-bold text-[#EA8500]">Compromised Victim</span>
                         <span className="text-[11px] text-[#6B655B] leading-tight block mt-0.5">
@@ -859,11 +857,10 @@ export const GuidedInvestigationPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setSelectedVerdict('innocent_counterparty')}
-                        className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
-                          selectedVerdict === 'innocent_counterparty'
+                        className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${selectedVerdict === 'innocent_counterparty'
                             ? 'bg-[#EAF7EE] border-[#166534] ring-1 ring-[#166534]'
                             : 'bg-[#FAF7F2] border-[#EAE3D6] hover:bg-white'
-                        }`}
+                          }`}
                       >
                         <span className="block text-xs font-bold text-[#166534]">Innocent Party</span>
                         <span className="text-[11px] text-[#6B655B] leading-tight block mt-0.5">
@@ -874,11 +871,10 @@ export const GuidedInvestigationPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setSelectedVerdict('suspicious_mule')}
-                        className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
-                          selectedVerdict === 'suspicious_mule'
+                        className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${selectedVerdict === 'suspicious_mule'
                             ? 'bg-rose-50 border-rose-600 ring-1 ring-rose-600'
                             : 'bg-[#FAF7F2] border-[#EAE3D6] hover:bg-white'
-                        }`}
+                          }`}
                       >
                         <span className="block text-xs font-bold text-rose-700">Suspicious Mule</span>
                         <span className="text-[11px] text-[#6B655B] leading-tight block mt-0.5">

@@ -26,6 +26,7 @@ AccountIdPath = Path(
     description="Unique account identifier.",
 )
 
+from app.api.auth import AuthContext, verify_write_permission
 from app.db.models import utc_now
 from app.db.session import SessionLocal, get_db
 from app.models.domain import AccountReviewStatus, FraudCase, Transaction
@@ -142,6 +143,7 @@ def list_cases(
 def create_case(
     req: CaseCreateRequest,
     repo: CaseRepository = Depends(get_repository),
+    auth: AuthContext = Depends(verify_write_permission),
 ) -> FraudCase:
     """Create a new fraud investigation case and record an append-only audit event."""
     case = FraudCase(
@@ -154,7 +156,7 @@ def create_case(
         description=req.description,
     )
     try:
-        return repo.create_case(case, initial_audit_user=req.created_by)
+        return repo.create_case(case, initial_audit_user=req.created_by, auth_context=auth)
     except DuplicateEntityError as exc:
         raise HTTPException(status_code=409, detail={"code": exc.code, "message": exc.message})
 
@@ -173,6 +175,7 @@ def update_case(
     case_id: str = CaseIdPath,
     req: CaseUpdateRequest = ...,
     repo: CaseRepository = Depends(get_repository),
+    auth: AuthContext = Depends(verify_write_permission),
 ) -> FraudCase:
     """Update case status or description. Appends an audit event."""
     try:
@@ -181,6 +184,7 @@ def update_case(
             status=req.investigation_status,
             description=req.description,
             user_id=req.updated_by,
+            auth_context=auth,
         )
     except EntityNotFoundError as exc:
         raise HTTPException(status_code=404, detail={"code": exc.code, "message": exc.message})
@@ -197,11 +201,12 @@ def add_case_transactions(
     case_id: str = CaseIdPath,
     req: CaseTransactionsAddRequest = ...,
     repo: CaseRepository = Depends(get_repository),
+    auth: AuthContext = Depends(verify_write_permission),
 ) -> list[Transaction]:
     """Add observed transactions to the case transaction store. Rejects conflicting duplicates."""
     _require_case(repo, case_id)
     try:
-        return repo.add_transactions(req.transactions, user_id=req.added_by, case_id=case_id)
+        return repo.add_transactions(req.transactions, user_id=req.added_by, case_id=case_id, auth_context=auth)
     except DuplicateEntityError as exc:
         raise HTTPException(status_code=409, detail={"code": exc.code, "message": exc.message})
 
@@ -217,6 +222,7 @@ def record_account_review(
     account_id: str = AccountIdPath,
     req: AccountReviewUpdateRequest = ...,
     repo: CaseRepository = Depends(get_repository),
+    auth: AuthContext = Depends(verify_write_permission),
 ) -> AccountReviewStatus:
     """Record an account review decision with reviewer identity and append-only audit event."""
     try:
@@ -230,6 +236,7 @@ def record_account_review(
             decision_reasons=req.decision_reasons,
             supporting_transaction_ids=req.supporting_transaction_ids,
             additional_info_needed=req.additional_info_needed,
+            auth_context=auth,
         )
     except EntityNotFoundError as exc:
         raise HTTPException(status_code=404, detail={"code": exc.code, "message": exc.message})
@@ -375,11 +382,12 @@ def get_global_audit_events(
     integrity = AuditIntegrityStatus(
         storage_backend="SQLite Relational (audit_events)",
         append_only_enforced=True,
+        database_cascade_protected=True,
         cryptographic_signatures=False,
         server_timestamps=True,
         last_verified_at=utc_now(),
         integrity_disclosure=(
-            "Application-enforced append-only audit trail in SQLite. "
+            "Application-enforced append-only audit trail in SQLite with database cascade-deletion protection. "
             "Server-generated UTC timestamps. No cryptographic hash-chaining or WORM hardware."
         ),
     )

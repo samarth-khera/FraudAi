@@ -33,13 +33,19 @@ class CaseRepository(Protocol):
     def get_transactions(self, case_id: Optional[str] = None) -> list[Transaction]: ...
     def get_accounts(self) -> list[Account]: ...
     def get_review_statuses(self, case_id: str) -> list[AccountReviewStatus]: ...
-    def create_case(self, case: FraudCase, initial_audit_user: str = "analyst_placeholder") -> FraudCase: ...
+    def create_case(
+        self,
+        case: FraudCase,
+        initial_audit_user: str = "analyst_placeholder",
+        auth_context: Optional[Any] = None,
+    ) -> FraudCase: ...
     def update_case(
         self,
         case_id: str,
         status: Optional[InvestigationStatus] = None,
         description: Optional[str] = None,
         user_id: str = "analyst_placeholder",
+        auth_context: Optional[Any] = None,
     ) -> FraudCase: ...
     def update_account_review(
         self,
@@ -52,12 +58,14 @@ class CaseRepository(Protocol):
         decision_reasons: Optional[list[str]] = None,
         supporting_transaction_ids: Optional[list[str]] = None,
         additional_info_needed: bool = False,
+        auth_context: Optional[Any] = None,
     ) -> AccountReviewStatus: ...
     def add_transactions(
         self,
         transactions: list[Transaction],
         user_id: str = "system",
         case_id: Optional[str] = None,
+        auth_context: Optional[Any] = None,
     ) -> list[Transaction]: ...
     def get_audit_events(self, case_id: str) -> list[AuditEvent]: ...
     def list_global_audit_events(

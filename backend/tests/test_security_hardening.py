@@ -231,3 +231,120 @@ def test_pii_masking_helpers():
     assert "****" in masked_tax
     assert masked_tax.startswith("SY")
     assert masked_tax.endswith("1P")
+
+
+# ------------------------------------------------------------------------------
+# 6. Case Scoping & Identifier Bounds
+# ------------------------------------------------------------------------------
+
+def test_review_account_out_of_scope_rejected(sec_client):
+    """Submitting a review for an account that does not exist or has no connection to the case returns 404."""
+    payload = {
+        "review_state": "under_review",
+        "notes": "Attempting cross-case modification of unrelated account",
+    }
+    # Unrelated account not in database or in case scope
+    res = sec_client.put("/api/cases/FS-1042/accounts/ACC_UNRELATED_9999/review", json=payload)
+    assert res.status_code == 404
+    err = res.json()["error"]
+    assert err["code"] in ("account_not_found", "account_not_in_case_scope")
+
+
+def test_review_decision_reasons_item_length_limit(sec_client):
+    """Items in decision_reasons exceeding 500 characters must be rejected with 422."""
+    payload = {
+        "review_state": "under_review",
+        "decision_reasons": ["A" * 600],  # Max length per item is 500
+    }
+    res = sec_client.put("/api/cases/FS-1042/accounts/C300/review", json=payload)
+    assert res.status_code == 422
+
+
+def test_review_supporting_tx_ids_pattern_validation(sec_client):
+    """Items in supporting_transaction_ids with invalid characters must be rejected with 422."""
+    payload = {
+        "review_state": "under_review",
+        "supporting_transaction_ids": ["TX INVALID SPACES"],
+    }
+    res = sec_client.put("/api/cases/FS-1042/accounts/C300/review", json=payload)
+    assert res.status_code == 422
+
+
+# ------------------------------------------------------------------------------
+# 7. Audit Trail Cascade-Deletion Protection & Immutability
+# ------------------------------------------------------------------------------
+
+def test_audit_trail_protected_from_cascade_deletion():
+    """Verify FraudCaseModel audit_events relationship does not cascade delete or orphan-delete historical audit events."""
+    from app.db.models import AuditEventModel, FraudCaseModel
+    rel = FraudCaseModel.audit_events.property
+    # Relationship cascade must NOT contain 'delete' or 'delete-orphan'
+    assert "delete" not in rel.cascade
+    assert "delete-orphan" not in rel.cascade
+
+
+def test_audit_integrity_status_metrics(sec_client):
+    """Verify /api/audit integrity status includes cascade-deletion protection and honest disclosure."""
+    res = sec_client.get("/api/audit")
+    assert res.status_code == 200
+    integrity = res.json()["integrity_status"]
+    assert integrity["append_only_enforced"] is True
+    assert integrity["database_cascade_protected"] is True
+    assert integrity["cryptographic_signatures"] is False
+    assert "cascade-deletion protection" in integrity["integrity_disclosure"]
+
+
+# ------------------------------------------------------------------------------
+# 8. API Key Authentication Enforcement & Reviewer Identity Attribution
+# ------------------------------------------------------------------------------
+
+def test_api_key_auth_enforced_when_configured(sec_client, monkeypatch):
+    """When ADMIN_API_KEY is configured, unauthenticated writes fail with 401; valid key succeeds."""
+    monkeypatch.setenv("ADMIN_API_KEY", "super-secret-admin-key-777")
+
+    payload = {
+        "review_state": "under_review",
+        "notes": "Testing key auth enforcement",
+    }
+
+    # Request without key must be rejected with 401
+    res_unauth = sec_client.put("/api/cases/FS-1042/accounts/C300/review", json=payload)
+    assert res_unauth.status_code == 401
+    assert res_unauth.json()["error"]["code"] == "unauthorized"
+
+    # Request with wrong key must be rejected with 401
+    res_wrong = sec_client.put(
+        "/api/cases/FS-1042/accounts/C300/review",
+        json=payload,
+        headers={"X-API-Key": "incorrect-key"},
+    )
+    assert res_wrong.status_code == 401
+
+    # Request with valid X-API-Key must succeed
+    res_ok = sec_client.put(
+        "/api/cases/FS-1042/accounts/C300/review",
+        json=payload,
+        headers={"X-API-Key": "super-secret-admin-key-777"},
+    )
+    assert res_ok.status_code == 200
+
+
+def test_reviewer_identity_audit_metadata(sec_client):
+    """Audit events explicitly record reviewer_identity_verified and auth_context in details."""
+    payload = {
+        "review_state": "under_review",
+        "reviewer_id": "investigator_carol",
+        "notes": "Testing reviewer identity attribution in audit trail",
+    }
+    res = sec_client.put("/api/cases/FS-1042/accounts/C300/review", json=payload)
+    assert res.status_code == 200
+
+    audit_res = sec_client.get("/api/cases/FS-1042/audit-trail")
+    assert audit_res.status_code == 200
+    events = audit_res.json()["events"]
+    latest_event = [e for e in events if e["performed_by"] == "investigator_carol"][-1]
+    details = latest_event["details"]
+    assert details["client_supplied_reviewer"] == "investigator_carol"
+    assert details["reviewer_identity_verified"] is False
+    assert details["auth_context"] == "local_development"
+

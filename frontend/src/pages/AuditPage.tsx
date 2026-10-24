@@ -308,8 +308,9 @@ export const AuditPage: React.FC = () => {
       const escapeCell = (val: any): string => {
         if (val === null || val === undefined) return '""';
         let s = String(val);
-        // Formula injection mitigation
-        if (s && ['=', '+', '-', '@', '\t', '\r'].includes(s[0])) {
+        // Formula injection mitigation (covers whitespace-padded execution and pipe/percent triggers)
+        const stripped = s.trimStart();
+        if (stripped && ['=', '+', '-', '@', '|', '%', '\t', '\r'].includes(stripped[0])) {
           s = `'${s}`;
         }
         return `"${s.replace(/"/g, '""')}"`;
