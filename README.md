@@ -1,214 +1,206 @@
 # FraudShield AI
 
-**Trace the flow. Protect the innocent.**
+**Follow reported money across connected accounts, then record what you decide.**
 
-FraudShield AI is an explainable decision-support platform for financial fraud investigators. When a victim reports a fraudulent transfer, stolen funds are rapidly split, layered, and forwarded across multi-hop intermediary accounts. Investigators must (a) follow the money through complex transaction networks, (b) understand *why* predictive models flagged specific transactions or accounts, (c) avoid wrongfully freezing or penalizing accounts that merely received funds without culpable knowledge, and (d) preserve an immutable, transparent audit trail of all human decisions.
+FraudShield AI is a workspace for fraud investigators. When a customer reports a fraudulent transfer, it shows
+where the money went next, which connected accounts may need attention and why, and keeps a history of every
+review decision.
 
-FraudShield AI strictly separates six concepts that are frequently conflated and never collapses them into an automated verdict:
+It supports an investigator’s judgement. It does **not** prove anyone’s intent, decide guilt, or freeze,
+block or flag any account by itself.
 
-1. **Transaction fraud-risk score**: Per-transaction risk estimation with exact local TreeSHAP log-odds explanations.
-2. **Account risk profile**: Account-level behavioral classification evaluating velocity, branching, and pass-through ratios.
-3. **Observed ledger movement**: Gross incoming and outgoing transaction volume across all recorded network legs.
-4. **Traceable fund exposure**: Lineage-bounded fund attribution that safeguards against double-counting downstream transfers.
-5. **Evidence quality & gaps**: Explicit distinction between verified documentary evidence and unverified graph connections.
-6. **Human investigation outcome**: Attributed review decisions by named investigators with cited transactions and audit provenance.
-
-> **Research Prototype Notice — Synthetic Demonstration Data:** Demo case `FS-1042` and account records are synthetic scenarios created for evaluation and demonstration. The system provides decision-support analysis only: it **never automatically freezes accounts, seizes funds, or declares legal guilt or innocence**.
+> **Everything here is synthetic demonstration data.** No real customers, banks or transactions are involved.
 
 ---
 
-## Major Capabilities
+## Who it is for
 
-- **Guided Investigation Tour (`/guided`):** Interactive 6-step end-to-end guided walkthrough designed for first-time evaluators to explore intake, fund tracing, account intelligence, explainable risk, adjudication, and audit logs.
-- **Interactive Fund Flow Explorer (`/fund-flow`, `/cases/:caseId`):** Cytoscape-powered topological fund-flow visualizer with hierarchical tree layout, pan/zoom canvas controls, path highlighting, cycle detection, and dual table list views.
-- **Investigation Case Dossiers (`/cases`, `/cases/:caseId`):** Multi-tab case management workspace featuring incident timelines, transaction registries with payment rail filters (UPI, IMPS, NEFT), linked account rosters, and adjudication panels.
-- **Account Intelligence & Evidence Dossier (`/app/account/:id`):** Granular account analysis comparing gross observed movement against lineage-bounded traceable exposure, behavioral signals, and explicit evidence gaps.
-- **Model Insights & Explainability Workspace (`/insights`, `/app/transaction-check`):** Model transparency hub displaying global feature importances, confusion matrices, evaluation limitations, and on-demand local TreeSHAP score decompositions (`base_value + Σφ = raw_margin`).
-- **Audit & Governance Workspace (`/audit`):** Append-only provenance ledger recording all human reviews, triage status changes, and case events with real-time JSON metadata export.
+- **Investigators** working a reported fraud: tracing funds, reviewing connected accounts, recording decisions.
+- **Reviewers and supervisors** checking what was decided, by whom, and on what evidence.
+- **Technical reviewers** who want to inspect the models and raw records (under **Tools**).
 
 ---
 
-## Two-Model Architecture & Provenance
+## The investigation workflow
 
-FraudShield AI operates two distinct model capabilities tailored to different stages of an inquiry:
+The site has two main destinations, **Home** and **Investigations**, plus a secondary **Tools** area.
 
-```mermaid
-flowchart TB
-    subgraph Data Layer
-        PAYSIM[(PaySim Synthetic Benchmark<br/>6.3M mobile money transfers)]
-        LEDGER[(Synthetic Case Ledger<br/>Multi-hop bank & UPI records)]
-    end
+Every case opens in the same four sections. The case ID stays at the top, and the section and selected account
+are kept in the page address, so refresh, back/forward and shared links all return to the same place.
 
-    subgraph Machine Learning Layer
-        M1[PaySim Transaction Benchmark<br/>Model ID: paysim-benchmark-1.0.0<br/>Algorithm: XGBoost Classifier<br/>Input: 12 leakage-safe transaction features<br/>Explainability: Exact TreeSHAP values]
-        M2[Account Risk Model<br/>Model ID: v2-account-1.0.0<br/>Algorithm: Tabular Gradient Boosting<br/>Input: Graph degree, velocity, pass-through ratio<br/>Output: Account risk tier & behavioral flags]
-    end
+| Section | Question it answers | What you see |
+|---|---|---|
+| **1. Summary** | What happened? | The complaint side by side with the recorded transfer (and whether they match), what the records show so far, and a list of what is **still unknown**. |
+| **2. Money flow** | Where did the money go? | A left-to-right diagram (or a plain list) of recorded transfers from the reporting customer. Select an account or a transfer to see amounts, payment method, time and hop. |
+| **3. Accounts & risk** | Which accounts need attention, and why? | For each account: the recorded facts, rule-based patterns (such as quick forwarding), automated risk checks with their reasons and limits, and missing evidence. |
+| **4. Review & history** | What has been decided? | Record a decision with your reasoning (you confirm it before it is saved), change the case status, and read the case history. |
 
-    subgraph Decision Support Layer
-        TRACER[NetworkX Fund-Flow Tracer<br/>Lineage-bounded fund tracking]
-        EVIDENCE[Evidence Evaluation Engine<br/>Separates ledger flow from guilt]
-        REVIEW[Human Review & Adjudication<br/>Named reviewer, cited TXs, reasons]
-    end
+### Starting the sample investigation
 
-    PAYSIM --> M1
-    LEDGER --> M2
-    LEDGER --> TRACER
-    TRACER --> EVIDENCE
-    M1 --> EVIDENCE
-    M2 --> EVIDENCE
-    EVIDENCE --> REVIEW
-```
+Open the site and choose **Start sample investigation**. That opens case **FS-2001**:
 
-### Model Distinction & Provenance:
-1. **PaySim Transaction Benchmark (`paysim-benchmark-1.0.0`):**
-   - **Provenance:** Trained on the open synthetic PaySim benchmark dataset simulating mobile money transfers.
-   - **Leakage Prevention:** Strictly excludes post-transaction balance fields (`newbalanceOrig`, `newbalanceDest`) and account identifiers (HTTP 422 on leakage attempts).
-   - **Explainability:** Computes exact TreeSHAP contributions where `base_value + Σφ = raw_margin` and `σ(raw_margin) = risk_score`.
-2. **Account-Level Model (`v2-account-1.0.0`):**
-   - **Provenance:** Trained on synthetic multi-hop ledger features.
-   - **Features:** Evaluates structural graph position, inbound/outbound volume asymmetry, pass-through velocity, and fan-out branching.
-   - **Safety Boundary:** Account risk classifications do not constitute proof of illicit intent and must be corroborated by external documentation.
+- A synthetic complaint: customer `ACC-000001` says a caller persuaded them to send **₹2,50,000** by IMPS to `ACC-000003`.
+- The records show `ACC-000003` sent ₹2,45,000 on to two accounts within 10 minutes, and both of those made ATM cash-outs shortly after.
+- Try this: open `ACC-000003` in **Accounts & risk**. The ledger rules score it **high (60/100)**, but the account model scores it **low (10%)**. Then open `ACC-000001`, the reporting customer, whom the model scores **76.5%**. The workspace explains why neither score is a finding.
+- Record a decision in **Review & history**, refresh the page, and check that it is still there in the history.
+
+A second sample, **FS-1042** (a ₹50,000 complaint), uses older case-only records. It has no account-level model
+results, and the workspace says so rather than inventing them.
 
 ---
 
-## Application Architecture
+## What the numbers mean
 
-```mermaid
-flowchart TB
-    subgraph Frontend [React 19 Frontend :5173]
-        UI[Vite + React 19 + TypeScript]
-        ROUTER[React Router v7 / Legacy Aliases]
-        STYLE[Tailwind CSS v4 + Design System]
-        CYTO[Cytoscape.js Fund-Flow Graph]
-        CHARTS[Recharts Data Visualizations]
-    end
+- **Reported loss** is what the complaint claims. It is a claim until checked.
+- **Recorded transfers** are facts from transaction records.
+- **Sum of all transfers** adds up every hop, so the same money is counted again at each step. It is always
+  shown separately from the loss and is never presented as the amount stolen.
+- **Fund attribution:** the records cannot show which rupees in later transfers came from the reported
+  payment (money can be mixed with other funds). Downstream accounts are therefore marked *unattributed*, not
+  assumed to hold stolen money.
+- **Receiving money in a case is not wrongdoing.** Missing data is not evidence either way.
 
-    subgraph Backend [FastAPI Backend :8000]
-        API[FastAPI REST Application]
-        TR[Fund Tracer Service · NetworkX]
-        AS[Account Assessment Service]
-        RS[Risk Scoring Service]
-        REPO[SQLAlchemy 2.0 Repository]
-    end
+### The automated risk checks
 
-    subgraph Storage & Inference
-        DB[(SQLite / PostgreSQL · Alembic Migrations)]
-        ART[(Model Artifacts · pipeline.joblib)]
-    end
+| Check | What it is | Where it applies |
+|---|---|---|
+| **Ledger rules** | Fixed, readable rules about timing, size and spread of transfers (0–100). | Accounts in the synthetic account ledger. |
+| **Account model** (`v2-account-1.0.0`) | An XGBoost model over 26 behaviour features. Shows the six inputs that moved the score most (TreeSHAP), explained in plain words. | Accounts in the synthetic account ledger only. |
+| **Rule-based patterns** | Observations from the case’s own transfers, such as forwarding within minutes or splitting payments. | Every case. |
 
-    UI -->|REST /api, /health| API
-    API --> TR
-    API --> AS
-    API --> RS
-    RS --> ART
-    API --> REPO --> DB
-```
+Both automated checks run on an account’s **whole ledger history** (including activity after the case),
+computed when you open the account.
 
-**Technology Stack:**
-- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS v4, Cytoscape.js, Recharts, Lucide Icons, Vitest, Testing Library.
-- **Backend:** FastAPI, Python 3.12, SQLAlchemy 2.0, Alembic, NetworkX, scikit-learn, XGBoost, SHAP, Pytest.
+**How good is the account model?** On held-out synthetic test accounts at its 50% threshold, it caught
+**33%** of suspicious accounts, and **50%** of the accounts it flagged were suspicious (ROC-AUC 0.99). The test
+set held only **6 suspicious accounts**, so these figures are rough. It misses cases and raises false alarms.
+The sample case’s scenario was held out of training, so its scores are out-of-sample.
+
+### What the PaySim benchmark does and does not prove
+
+The **PaySim benchmark** is a separate transaction-level model trained on a public mobile-money simulation
+(near-perfect scores on that simulation’s test split). It shows that the modelling pipeline works on a known
+public dataset. It says **nothing** about accounts or transfers in the sample cases: different data, different
+features, and the case records lack the balances it needs. It is available under
+**Tools → Transaction model check** for experimentation only, and is never applied to a case.
 
 ---
 
-## Local Setup & Quickstart
+## Where things are
 
-### Prerequisites
-- Python 3.12+
-- Node.js 20+ (Node 22 recommended)
+| Address | Page |
+|---|---|
+| `/` | Home |
+| `/cases` | Investigations: search and filter cases, see each one’s next action |
+| `/cases/:caseId?section=summary\|money-flow\|accounts\|review&account=…` | Case workspace |
+| `/tools` | Tools hub |
+| `/tools/model` | Model performance and evaluation (account model and PaySim benchmark) |
+| `/tools/audit` | Audit search and CSV export across all cases |
+| `/tools/accounts`, `/tools/accounts/:id` | Look up any synthetic-ledger account outside a case |
+| `/tools/fund-flow` | Fund-flow explorer for any account or case |
+| `/tools/transaction-model` | PaySim benchmark scoring for hypothetical transactions |
 
-### 1. Backend Setup
+Older addresses (`/guided-investigation`, `/demo`, `/app/*`, `/insights`, `/audit`, `/fund-flow`,
+`/workspace`, `/v2/...`, `/accounts/:id`) redirect to their new locations and keep their query strings.
+
+---
+
+## Running it locally
+
+**Prerequisites:** Python 3.12, Node.js 20+.
+
+### 1. Backend (API on port 8000)
+
 ```bash
 cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-alembic upgrade head          # Initializes SQLite database (fraudshield.db)
+alembic upgrade head
 uvicorn app.main:app --port 8000
 ```
-*Note: On first startup, sample case `FS-1042` and its synthetic transaction graph are automatically seeded.*
 
-### 2. Frontend Setup
+On startup the backend creates its tables and seeds both sample cases (FS-1042 and FS-2001). Seeding is
+idempotent and never overwrites recorded decisions.
+
+### 2. Frontend (site on port 5173)
+
 ```bash
 cd frontend
 npm install
-npm run dev                   # Starts dev server on http://localhost:5173
+npm run dev
 ```
-*The Vite frontend automatically proxies `/api` and `/health` requests to `http://localhost:8000`.*
 
-### 3. Running Without Model Binaries
-Model binaries are git-ignored (`ml/artifacts/`). If local binaries are not present, the backend cleanly handles prediction requests by returning HTTP 503 (`model_unavailable`), which the frontend displays as an honest indicator without crashing. To train the models locally, refer to [`ml/README.md`](ml/README.md).
+Open <http://localhost:5173>. The dev server forwards `/api` requests to the backend.
 
----
+### 3. Data and model files (not in git)
 
-## Presenter Demonstration Walkthrough
+The synthetic account ledger (`data/v2_fraudshield.db`) and model binaries (`*.joblib`) are git-ignored. Without them:
 
-Use sample case **`FS-1042`** for a complete, 7-step end-to-end demonstration:
+- FS-1042 still works fully. FS-2001’s summary, money flow and reviews still work, because its transfers are
+  stored with the case.
+- Account profiles and automated checks report **unavailable**. The header shows **Model unavailable** with
+  the reason, and no score is invented.
 
-| Step | Section / Route | Presenter Actions & Narrative |
-|---|---|---|
-| **1. Introduction** | `/guided` or Header `"Guided Investigation"` | **Explain the Problem:** State what FraudShield AI does. Clarify that in financial cybercrime, stolen funds disperse across multiple hops; investigators must avoid treating innocent merchants or intermediate recipients as co-conspirators. |
-| **2. Case Intake** | Step 1 (`/guided?step=1`) or `/cases/FS-1042` | **Inspect Reported Incident:** Review case `FS-1042` (reported ₹50,000 victim transfer). Highlight the explicit disclaimer separating the complainant's claim from ledger-verified transactions. |
-| **3. Fund Tracing** | Step 2 (`/guided?step=2`) or `/cases/FS-1042` (Tab: Fund Flow) | **Follow the Money:** Explore the interactive Cytoscape tree topology (`V001 -> A100 -> B200 -> C300`). Demonstrate zoom, pan, and switching between the graphical canvas and tabular transfer list. |
-| **4. Account Intelligence** | Step 3 (`/guided?step=3`) or `/app/account/C300` | **Examine Evidence vs. Movement:** Inspect downstream recipient `C300`. Show how gross observed movement (₹30,000) is distinguished from traceable exposure. Highlight explicit evidence gaps (e.g. missing merchant invoices). |
-| **5. Model Explanation** | Step 4 (`/guided?step=4`) or `/insights` | **Explain Model Predictions:** Demonstrate TreeSHAP local feature explanations for transaction `T001`. Explain how base log-odds and specific features (amount, transfer type) contributed to the risk score. |
-| **6. Human Review** | Step 5 (`/guided?step=5`) or `/cases/FS-1042` (Tab: Review & Audit) | **Record Review Decision:** Select account `C300`, set status to `under_review`, select reason *"Verified commercial invoice / merchant order"*, cite transaction `T003`, enter reviewer ID, and submit. |
-| **7. Audit Provenance** | Step 6 (`/guided?step=6`) or `/audit` | **Verify Audit Trail:** Open the Audit & Governance workspace. Confirm the recorded adjudication appears immediately with full timestamp, reviewer attribution, and cited transactions in the append-only log. |
+To rebuild them from the repository root:
 
----
+```bash
+backend/.venv/bin/python scripts/generate_synthetic_bank_data.py --seed 42
+backend/.venv/bin/python scripts/ingest_v2_data.py --input-dir data/v2_synthetic --batch-size 10000 --replace
+PYTHONPATH=backend:. backend/.venv/bin/python ml/v2/train_account_model.py
+PYTHONPATH=. backend/.venv/bin/python ml/v2/paysim_benchmark.py   # needs the PaySim CSV in data/raw/
+```
 
-## API Reference Overview
+### Running the tests
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `GET` | `/health` | Service health status and database connectivity |
-| `POST` | `/api/risk/score` | Compute transaction fraud-risk score with review recommendation |
-| `POST` | `/api/risk/explain` | Return exact TreeSHAP feature importance contributions |
-| `GET` | `/api/cases` | List all investigation cases with triage status |
-| `POST` | `/api/cases` | Create a new investigation case |
-| `GET` | `/api/cases/{id}` | Retrieve comprehensive case details |
-| `PATCH` | `/api/cases/{id}` | Update case triage status (`open`, `under_investigation`, `closed`) |
-| `GET` | `/api/cases/{id}/trace` | Retrieve multi-hop NetworkX fund trace with hop lineage |
-| `GET` | `/api/cases/{id}/graph` | Cytoscape graph nodes and edges for case topology |
-| `GET` | `/api/cases/{id}/transactions` | Traced transactions with rail filtering |
-| `GET` | `/api/cases/{id}/accounts` | Account assessments for all entities in a case |
-| `GET` | `/api/cases/{id}/accounts/{acct}/assessment` | Detailed evidence-aware account dossier |
-| `PUT` | `/api/cases/{id}/accounts/{acct}/review` | Record attributed human review decision (appends audit event) |
-| `GET` | `/api/cases/{id}/audit-trail` | Append-only audit provenance log for a case |
-| `GET` | `/api/audit-events` | Global audit events across all cases |
-
-Interactive Swagger API Documentation: `http://localhost:8000/docs`
+```bash
+backend/.venv/bin/python -m pytest backend/tests -q   # run from the repository root
+backend/.venv/bin/python -m pytest ml/tests -q
+cd frontend && npm test && npm run build
+```
 
 ---
 
-## Verification & Test Results
+## How the sample case FS-2001 was built
 
-All test suites and production builds have been verified:
+FS-2001 is generated by [`scripts/build_v2_sample_case.py`](scripts/build_v2_sample_case.py) from the synthetic
+account ledger:
 
-| Test Suite / Build | Environment / Command | Result |
-|---|---|---|
-| **Backend Integration & Unit Tests** | `backend/.venv/bin/pytest backend/tests -q` | **150 passed** |
-| **ML Inference & TreeSHAP Tests** | `backend/.venv/bin/pytest ml/tests -q` | **32 passed** |
-| **Total Python Test Suite** | `backend/.venv/bin/pytest backend/tests ml/tests -q` | **182 passed** |
-| **Frontend Unit & Component Tests** | `npm test -- --run` (in `frontend/`) | **79 passed** (10 test files) |
-| **Frontend TypeScript & Production Build** | `npm run build` (`tsc -b && vite build`) | **0 errors** (production bundle generated) |
-| **Accessibility & Keyboard Navigation** | WCAG 2.1 AA audits across `:focus-visible`, ARIA labels, tablists | **Verified** (no missing keys, full keyboard focus rings) |
+1. Start from one ledger transfer (`TXN-0062181`).
+2. For every account that received money in the case, include each outgoing transfer it made within
+   **6 hours** of receiving it, up to 4 hops.
 
----
+The rule never reads the ledger’s ground-truth columns (scenario tags, suspicious flags, account labels), so
+the case cannot leak the answer. Transaction and account IDs are the ledger’s own, which is the explicit link
+that lets the workspace show ledger profiles and model results for these accounts. A backend test checks
+that the stored fixture still matches the ledger and is reproducible by the rule. Only the complaint wording
+and report time were written for the demo.
 
-## Limitations & Ethical Safeguards
-
-- **Synthetic Data Benchmark:** All transactions and case records are synthetic. Real payment rails (UPI/IMPS/NEFT/RTGS) feature proprietary clearing windows and fraud topologies not fully captured by public simulations.
-- **Decision Support Exclusively:** FraudShield AI is designed for human investigators. It does not initiate automated account freezes, card cancellations, or fund recovery.
-- **Explicit Evidence Separation:** A high machine-learning score or topological graph connection does not constitute legal proof of fraud or illicit intent.
-- **Scenario Lineage vs. Commingled Funds:** Demo scenarios assume traceable funds follow explicit lineage tags. In real-world commingled accounts, attribution requires forensic accounting rules.
-- **Prototype Authentication:** The prototype uses free-text reviewer attribution for ease of demonstration. Production deployment requires single sign-on (SSO) and role-based access control (RBAC).
+Account roles in a case (reporting customer, first receiver, passed money on, last recorded receiver)
+describe position in the money flow only.
 
 ---
 
-## Deployment Guidelines (Optional)
+## Limitations
 
-FraudShield AI is pre-configured for containerized or serverless hosting:
-- **Frontend:** Build static assets (`npm run build`) and host on Cloudflare Pages, Vercel, or Netlify with SPA fallback routing.
-- **Backend:** Deploy FastAPI container to Fly.io, Render, or Google Cloud Run using `uvicorn app.main:app --host 0.0.0.0 --port 8000`. Set `CORS_ALLOWED_ORIGINS` to the frontend production domain and point `DATABASE_URL` to PostgreSQL.
+- **Synthetic data only.** Real payment systems, fraud patterns and customer behaviour differ.
+- **Small model test set.** The account model’s test results rest on 6 suspicious accounts.
+- **Reviewer identity is not verified.** Without an API key configured (`ADMIN_API_KEY`), the reviewer
+  name is whatever is typed. The history labels it as unverified. Production use would need sign-in and roles.
+- **Audit history is append-only in the application, not tamper-proof.** Events are stored in SQLite with
+  server timestamps. They are not cryptographically signed or hash-chained.
+- **Older local data.** A database used with earlier builds may contain a review of `ACC-000001` under FS-1042
+  (made through a since-removed shortcut that linked the two datasets). It is kept as recorded history. New
+  reviews are only accepted for accounts that are actually in the case.
+- **Case creation** is available through the API (`POST /api/cases`) but not in the interface, because a new
+  case also needs its transactions loaded.
+- **Large frontend bundle** (~1.8 MB before compression). Code splitting has not been done.
 
-See [`backend/README.md`](backend/README.md), [`frontend/README.md`](frontend/README.md), and [`ml/README.md`](ml/README.md) for module-specific details.
+---
+
+## Further documentation
+
+- [`backend/README.md`](backend/README.md): database schema and API details
+- [`ml/README.md`](ml/README.md) and [`docs/V2_ML_MODELS.md`](docs/V2_ML_MODELS.md): model training and evaluation
+- [`docs/PRODUCT_INVENTORY.md`](docs/PRODUCT_INVENTORY.md): what changed in the simplification and why
+- Interactive API docs: <http://localhost:8000/docs> (development only)
