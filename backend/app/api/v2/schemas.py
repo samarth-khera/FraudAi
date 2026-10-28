@@ -191,6 +191,7 @@ class ModelStatusResponse(BaseModel):
     paysim_benchmark: SingleModelInfo
     overall_status: str
     inference_ready: bool
+    status_detail: Optional[str] = None
     disclaimer: str
 
 

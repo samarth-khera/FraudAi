@@ -1,4 +1,4 @@
-"""Idempotent seed data loader for the synthetic demo scenario (FS-1042)."""
+"""Idempotent seed data loader for the synthetic demo cases (FS-1042, FS-2001)."""
 
 from __future__ import annotations
 
@@ -21,6 +21,7 @@ from app.db.models import (
 logger = logging.getLogger("fraudshield.db.seed")
 
 DEFAULT_FIXTURE_PATH = Path(__file__).resolve().parent.parent / "data" / "fs_1042.json"
+V2_SAMPLE_FIXTURE_PATH = Path(__file__).resolve().parent.parent / "data" / "fs_2001.json"
 
 
 def seed_demo_data(db: Session, fixture_path: Path = DEFAULT_FIXTURE_PATH) -> bool:
@@ -37,7 +38,11 @@ def seed_demo_data(db: Session, fixture_path: Path = DEFAULT_FIXTURE_PATH) -> bo
     # 1. Accounts
     for a in raw.get("accounts", []):
         existing_acc = db.query(AccountModel).filter_by(account_id=a["account_id"]).first()
-        if not existing_acc:
+        if existing_acc and existing_acc.role == "unknown" and existing_acc.label == existing_acc.account_id:
+            # Placeholder row created by an older build; give it the fixture's neutral metadata.
+            existing_acc.label = a.get("label", a["account_id"])
+            existing_acc.role = a.get("role", "unknown")
+        elif not existing_acc:
             db.add(
                 AccountModel(
                     account_id=a["account_id"],
@@ -103,7 +108,7 @@ def seed_demo_data(db: Session, fixture_path: Path = DEFAULT_FIXTURE_PATH) -> bo
                 timestamp=utc_now(),
             )
             audit.details = {
-                "source": "fs_1042.json",
+                "source": fixture_path.name,
                 "reported_amount": float(c["reported_amount"]),
                 "currency": c.get("currency", "INR"),
                 "reported_origin_transaction_id": c["reported_origin_transaction_id"],
@@ -134,3 +139,11 @@ def seed_demo_data(db: Session, fixture_path: Path = DEFAULT_FIXTURE_PATH) -> bo
     db.commit()
     logger.info("Database seeded successfully (new case seeded: %s)", seeded_any_case)
     return seeded_any_case
+
+
+def seed_all_demo_data(db: Session) -> bool:
+    """Seed every bundled sample case. Returns True if any case was newly created."""
+    seeded = False
+    for path in (DEFAULT_FIXTURE_PATH, V2_SAMPLE_FIXTURE_PATH):
+        seeded = seed_demo_data(db, path) or seeded
+    return seeded

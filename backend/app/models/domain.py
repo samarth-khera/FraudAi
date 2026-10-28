@@ -30,6 +30,7 @@ class TransactionType(str, Enum):
     IMPS = "IMPS"
     NEFT = "NEFT"
     RTGS = "RTGS"
+    ATM_CASH_OUT = "ATM_CASH_OUT"
     OTHER = "OTHER"
 
 
