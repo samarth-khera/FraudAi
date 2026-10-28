@@ -1047,7 +1047,7 @@ export const ModelInsightsPage: React.FC = () => {
                         type="text"
                         value={drillAccountId}
                         onChange={(e) => setDrillAccountId(e.target.value)}
-                        placeholder="Enter Account ID (e.g. ACC-000001 or C300)..."
+                        placeholder="Enter a synthetic-ledger account ID, e.g. ACC-000001"
                         className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] text-xs font-mono text-[#1A1714] focus:outline-none focus:border-[#EA8500]"
                       />
                     </div>
@@ -1103,7 +1103,7 @@ export const ModelInsightsPage: React.FC = () => {
                         </div>
                         <div className="text-right">
                           <Link
-                            to={`/accounts/${encodeURIComponent(drillAssessment.account_id)}`}
+                            to={`/tools/accounts/${encodeURIComponent(drillAssessment.account_id)}`}
                             className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#EA8500] hover:underline"
                           >
                             <span>Open 360° Profile</span>

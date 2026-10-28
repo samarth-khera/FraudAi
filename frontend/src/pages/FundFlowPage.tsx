@@ -32,11 +32,11 @@ import { FundFlowInspector } from '../components/fund-flow/FundFlowInspector';
 import { FundFlowListView } from '../components/fund-flow/FundFlowListView';
 
 const CURATED_DEMO_PRESETS = [
-  { id: 'ACC-000001', label: 'Aditi Joshi (Victim Demo)', mode: 'account' as const, note: 'Scam victim drain' },
-  { id: 'ACC-000002', label: 'Sara Bhat (Mule Demo)', mode: 'account' as const, note: 'Rapid pass-through (<12 min)' },
-  { id: 'ACC-000003', label: 'Ishan Reddy (Hop 2)', mode: 'account' as const, note: 'Connected recipient' },
-  { id: 'ACC-000010', label: 'Arjun Sengupta (Normal)', mode: 'account' as const, note: 'Everyday baseline' },
-  { id: 'FS-1042', label: 'Case FS-1042 (Disputed Origin)', mode: 'case' as const, note: 'Synthetic ₹50k fraud case' },
+  { id: 'ACC-000001', label: 'ACC-000001 (FS-2001 reporter)', mode: 'account' as const, note: 'All outgoing ledger transfers' },
+  { id: 'ACC-000003', label: 'ACC-000003 (FS-2001 first receiver)', mode: 'account' as const, note: 'All outgoing ledger transfers' },
+  { id: 'ACC-000004', label: 'ACC-000004 (not in a case)', mode: 'account' as const, note: 'For comparison' },
+  { id: 'FS-2001', label: 'Case FS-2001', mode: 'case' as const, note: 'Sample case · synthetic ledger' },
+  { id: 'FS-1042', label: 'Case FS-1042', mode: 'case' as const, note: 'Sample case · case records only' },
 ];
 
 export const FundFlowPage: React.FC = () => {
@@ -280,7 +280,7 @@ export const FundFlowPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-[#6B655B] text-[11px] leading-relaxed">
           <div className="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6]">
             <strong className="text-[#1A1714] block font-semibold mb-0.5">1. Nodes = Accounts</strong>
-            Cards represent accounts in the core ledger. Badges distinguish root victims, conduits, and downstream recipients.
+            Cards represent accounts in the core ledger. Badges show where each account sits relative to the starting account.
           </div>
           <div className="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6]">
             <strong className="text-[#1A1714] block font-semibold mb-0.5">2. Arrows = Transfers</strong>

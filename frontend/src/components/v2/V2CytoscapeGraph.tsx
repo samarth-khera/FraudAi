@@ -715,7 +715,7 @@ export const V2CytoscapeGraph: React.FC<V2CytoscapeGraphProps> = ({
               <div className="pt-2 border-t border-[#EAE3D6] flex flex-col gap-2">
                 <button
                   type="button"
-                  onClick={() => navigate(`/v2/accounts/${selectedNode.account_id}`)}
+                  onClick={() => navigate(`/tools/accounts/${selectedNode.account_id}`)}
                   className="w-full py-2 px-3 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
                 >
                   <span>Open Account 360° Profile</span>
@@ -759,7 +759,7 @@ export const V2CytoscapeGraph: React.FC<V2CytoscapeGraphProps> = ({
                   <span className="text-[#6B655B]">Origin Account:</span>
                   <button
                     type="button"
-                    onClick={() => navigate(`/v2/accounts/${selectedEdge.origin_account_id}`)}
+                    onClick={() => navigate(`/tools/accounts/${selectedEdge.origin_account_id}`)}
                     className="text-[#EA8500] hover:underline font-semibold flex items-center gap-0.5 cursor-pointer"
                   >
                     <span>{selectedEdge.origin_account_id}</span>
@@ -770,7 +770,7 @@ export const V2CytoscapeGraph: React.FC<V2CytoscapeGraphProps> = ({
                   <span className="text-[#6B655B]">Destination:</span>
                   <button
                     type="button"
-                    onClick={() => navigate(`/v2/accounts/${selectedEdge.destination_account_id}`)}
+                    onClick={() => navigate(`/tools/accounts/${selectedEdge.destination_account_id}`)}
                     className="text-[#EA8500] hover:underline font-semibold flex items-center gap-0.5 cursor-pointer"
                   >
                     <span>{selectedEdge.destination_account_id}</span>
@@ -843,7 +843,7 @@ export const V2CytoscapeGraph: React.FC<V2CytoscapeGraphProps> = ({
                       <button
                         onClick={(ev) => {
                           ev.stopPropagation();
-                          navigate(`/v2/accounts/${e.origin_account_id}`);
+                          navigate(`/tools/accounts/${e.origin_account_id}`);
                         }}
                         className="text-[#EA8500] hover:underline font-semibold cursor-pointer"
                       >
@@ -854,7 +854,7 @@ export const V2CytoscapeGraph: React.FC<V2CytoscapeGraphProps> = ({
                       <button
                         onClick={(ev) => {
                           ev.stopPropagation();
-                          navigate(`/v2/accounts/${e.destination_account_id}`);
+                          navigate(`/tools/accounts/${e.destination_account_id}`);
                         }}
                         className="text-[#EA8500] hover:underline font-semibold cursor-pointer"
                       >

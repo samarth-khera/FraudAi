@@ -94,9 +94,11 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
 
   if (selectedNode) {
     const isV2Account = selectedNode.id.startsWith('ACC-');
-    const accountUrl = isV2Account
-      ? `/v2/accounts/${selectedNode.id}`
-      : `/accounts/${selectedNode.id}`;
+    // Case accounts open inside their case; only account-mode traces come straight from the synthetic ledger.
+    const accountUrl =
+      mode === 'account'
+        ? `/tools/accounts/${encodeURIComponent(selectedNode.id)}`
+        : `/cases/${encodeURIComponent(caseId)}?section=accounts&account=${encodeURIComponent(selectedNode.id)}`;
 
     return (
       <div className="bg-white border border-[#EAE3D6] rounded-2xl p-5 shadow-xs text-xs space-y-4">
@@ -272,18 +274,18 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
           ) : (
             <>
               <Link
-                to={`/cases/${encodeURIComponent(caseId)}?tab=review&account=${encodeURIComponent(selectedNode.id)}`}
+                to={`/cases/${encodeURIComponent(caseId)}?section=review&account=${encodeURIComponent(selectedNode.id)}`}
                 className="w-full py-2.5 px-3 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
               >
-                <span>Adjudicate in Case Dossier ({caseId})</span>
+                <span>Record a decision in case {caseId}</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
 
               <Link
-                to={`/cases/${encodeURIComponent(caseId)}?tab=transactions&search=${encodeURIComponent(selectedNode.id)}`}
+                to={`/cases/${encodeURIComponent(caseId)}?section=accounts&account=${encodeURIComponent(selectedNode.id)}`}
                 className="w-full py-2 px-3 rounded-xl bg-white hover:bg-[#FAF7F2] text-[#1A1714] border border-[#EAE3D6] font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
-                <span>Filter Case Evidence</span>
+                <span>Account details in case</span>
                 <ExternalLink className="w-3.5 h-3.5 text-[#8C857B]" />
               </Link>
             </>
@@ -303,10 +305,10 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
 
           {mode === 'case' && (
             <Link
-              to={`/app/cases/${encodeURIComponent(caseId)}`}
+              to={`/cases/${encodeURIComponent(caseId)}`}
               className="w-full py-2 px-3 rounded-xl bg-[#FAF7F2] hover:bg-white text-[#6B655B] hover:text-[#1A1714] border border-[#EAE3D6] font-semibold flex items-center justify-center gap-1.5 transition-colors text-center"
             >
-              <span>View Case Dossier &amp; Record Review</span>
+              <span>Open case {caseId}</span>
             </Link>
           )}
         </div>
@@ -397,16 +399,6 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
           )}
         </div>
 
-        {/* Action Button */}
-        <div className="pt-2 border-t border-[#EAE3D6]">
-          <Link
-            to={`/app/transaction-check?txId=${encodeURIComponent(selectedEdge.id)}`}
-            className="w-full py-2.5 px-3 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs text-center"
-          >
-            <ShieldCheck className="w-4 h-4" />
-            <span>Score &amp; Explain in Risk Engine</span>
-          </Link>
-        </div>
       </div>
     );
   }
