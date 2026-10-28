@@ -189,7 +189,8 @@ describe('AuditPage Component', () => {
       expect(screen.getByText('ACCOUNT REVIEW RECORDED')).toBeInTheDocument();
       expect(screen.getByText(/Rapid pass-through of funds/i)).toBeInTheDocument();
       expect(screen.getByText('Open Case Dossier')).toBeInTheDocument();
-      expect(screen.getByText('360° Profile')).toBeInTheDocument();
+      // Account links open the account inside its own case, never a different dataset's profile page.
+      expect(screen.getByText('Account in case').closest('a')?.getAttribute('href')).toMatch(/^\/cases\/[^?]+\?section=accounts&account=/);
       expect(screen.getByText('Close Inspector')).toBeInTheDocument();
     });
 

@@ -839,7 +839,7 @@ export const AuditPage: React.FC = () => {
                       <td className="py-3.5 px-3.5 font-mono text-[11px]">
                         {accountId ? (
                           <Link
-                            to={`/accounts/${encodeURIComponent(accountId)}`}
+                            to={`/cases/${encodeURIComponent(event.case_id)}?section=accounts&account=${encodeURIComponent(accountId)}`}
                             onClick={(e) => e.stopPropagation()}
                             className="font-bold text-[#1A1714] hover:text-[#EA8500] hover:underline inline-flex items-center gap-1"
                           >
@@ -1066,10 +1066,10 @@ export const AuditPage: React.FC = () => {
 
                   {extractAccountId(selectedEvent) && (
                     <Link
-                      to={`/accounts/${encodeURIComponent(extractAccountId(selectedEvent)!)}`}
+                      to={`/cases/${encodeURIComponent(selectedEvent.case_id)}?section=accounts&account=${encodeURIComponent(extractAccountId(selectedEvent)!)}`}
                       className="p-3 rounded-xl bg-white border border-[#EAE3D6] hover:bg-[#FAF7F2] text-center font-semibold text-[#1A1714] flex items-center justify-center gap-1.5 transition-colors"
                     >
-                      <span>360° Profile</span>
+                      <span>Account in case</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   )}

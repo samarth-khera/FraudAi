@@ -129,7 +129,8 @@ export function adaptCaseTraceToUnified(
       statusLabel = 'Initial Receiver';
       statusVariant = 'investigation';
     } else if (n.review_state === 'review_completed') {
-      statusLabel = 'Cleared';
+      // A completed review is not a clearance or a finding of innocence.
+      statusLabel = 'Review completed';
       statusVariant = 'cleared';
     } else if (n.review_state === 'under_investigation') {
       statusLabel = 'Under Investigation';
