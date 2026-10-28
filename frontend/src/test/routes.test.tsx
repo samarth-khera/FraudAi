@@ -1,189 +1,154 @@
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { LandingPage } from '../pages/LandingPage';
-import { ModelInsightsPage } from '../pages/ModelInsightsPage';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter, useLocation } from 'react-router-dom';
+import { AppRoutes } from '../App';
+import { UnifiedHeader } from '../components/layout/UnifiedHeader';
+import { describeModelStatus } from '../lib/useModelStatus';
+import { api } from '../services/api';
+import { v2Api } from '../services/v2Api';
+import { V2ModelStatusResponse } from '../types/v2';
 
-describe('Page Rendering', () => {
-  it('renders LandingPage with headline and CTA buttons', () => {
-    render(
-      <MemoryRouter>
-        <LandingPage />
-      </MemoryRouter>
-    );
+const modelInfo = (available: boolean) => ({
+  available,
+  version: available ? 'v2-account-1.0.0' : null,
+  model_type: null,
+  features_count: null,
+  trained_at: null,
+  test_metrics: null,
+  limitations: null,
+});
 
-    expect(screen.getAllByText(/Follow the money/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Understand the risk/i)).toBeInTheDocument();
-    expect(screen.getByText(/Start Guided Investigation/i)).toBeInTheDocument();
-    expect(screen.getByText(/Explore the Workspace/i)).toBeInTheDocument();
-    expect(screen.getByText('Search Account')).toBeInTheDocument();
-  }, 15000);
+const status = (over: Partial<V2ModelStatusResponse>): V2ModelStatusResponse => ({
+  account_model: modelInfo(true),
+  paysim_benchmark: modelInfo(true),
+  overall_status: 'healthy',
+  inference_ready: true,
+  disclaimer: 'Advisory only',
+  ...over,
+});
 
-  it('renders GuidedInvestigationPage with step 1 and context', async () => {
-    const { GuidedInvestigationPage } = await import('../pages/GuidedInvestigationPage');
-    render(
-      <MemoryRouter>
-        <GuidedInvestigationPage />
-      </MemoryRouter>
-    );
+const LocationProbe: React.FC = () => {
+  const loc = useLocation();
+  return <div data-testid="location">{loc.pathname + loc.search}</div>;
+};
 
-    expect(screen.getByText('Interactive Guided Investigation')).toBeInTheDocument();
-    expect(screen.getByText('What happened?')).toBeInTheDocument();
-    expect(screen.getAllByText('Understand the Case').length).toBeGreaterThan(0);
-    expect(screen.getByText(/Proceed to Step 2/i)).toBeInTheDocument();
-  });
+function renderAt(path: string) {
+  return render(
+    <MemoryRouter initialEntries={[path]}>
+      <AppRoutes />
+      <LocationProbe />
+    </MemoryRouter>
+  );
+}
 
-  it('renders ModelInsightsPage with model registry and architecture tabs', async () => {
-    render(
-      <MemoryRouter>
-        <ModelInsightsPage />
-      </MemoryRouter>
-    );
+beforeEach(() => {
+  vi.restoreAllMocks();
+  vi.spyOn(v2Api, 'getModelsStatus').mockResolvedValue(status({}));
+  vi.spyOn(api, 'getCases').mockResolvedValue({ count: 0, total: 0, skip: 0, limit: 100, cases: [] });
+});
 
-    expect(screen.getByText('Model Insights')).toBeInTheDocument();
-    expect(screen.getByText('MODEL INTELLIGENCE')).toBeInTheDocument();
-    expect(screen.getByText('V2 Account-Level Fraud Model')).toBeInTheDocument();
-    expect(screen.getByText('Transaction-Level PaySim Benchmark')).toBeInTheDocument();
-    expect(screen.getByText('Model Comparison & Scope')).toBeInTheDocument();
-  });
-
-  it('renders AuditPage with governance header and summary metrics', async () => {
-    const { AuditPage } = await import('../pages/AuditPage');
-    render(
-      <MemoryRouter>
-        <AuditPage />
-      </MemoryRouter>
-    );
-
-    expect(screen.getByText('Audit & Governance')).toBeInTheDocument();
-    expect(screen.getByText('GOVERNANCE & PROVENANCE')).toBeInTheDocument();
-    expect(screen.getByText('Refresh Events')).toBeInTheDocument();
+describe('Home page', () => {
+  it('explains the product and offers the two starting actions', async () => {
+    renderAt('/');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/Follow reported money/i);
+    expect(screen.getByRole('link', { name: /Start sample investigation/i })).toHaveAttribute('href', '/cases/FS-2001');
+    expect(screen.getByRole('link', { name: /Open investigations/i })).toHaveAttribute('href', '/cases');
+    expect(screen.getByText(/is demonstration data/i)).toBeInTheDocument();
   });
 });
 
-describe('Unified Platform Layout Shell', () => {
-  it('renders UnifiedHeader with brand, status, and task-oriented navigation links', async () => {
-    const { UnifiedHeader } = await import('../components/layout/UnifiedHeader');
+describe('Main navigation', () => {
+  it('has exactly Home, Investigations and Tools', () => {
     render(
-      <MemoryRouter initialEntries={['/workspace']}>
+      <MemoryRouter initialEntries={['/cases']}>
         <UnifiedHeader />
       </MemoryRouter>
     );
-
-    expect(screen.getByText('FraudShield AI')).toBeInTheDocument();
-    expect(screen.getByText('Overview')).toBeInTheDocument();
-    expect(screen.getByText('Investigations')).toBeInTheDocument();
-    expect(screen.getByText('Accounts')).toBeInTheDocument();
-    expect(screen.getByText('Fund Flow')).toBeInTheDocument();
-    expect(screen.getByText('Model Insights')).toBeInTheDocument();
-    expect(screen.getByText('Audit History')).toBeInTheDocument();
-    expect(screen.getAllByText('Guided Tour').length).toBeGreaterThan(0);
+    const nav = screen.getByRole('navigation', { name: 'Main' });
+    const links = Array.from(nav.querySelectorAll('a')).map((a) => a.textContent?.trim());
+    expect(links).toEqual(['Home', 'Investigations', 'Tools']);
+    expect(screen.getByRole('link', { name: 'Investigations' })).toHaveAttribute('aria-current', 'page');
   });
 
-  it('renders AppLayout with UnifiedHeader, evidentiary safeguard protocol, and footer', async () => {
-    const { AppLayout } = await import('../components/layout/AppLayout');
+  it('marks Tools active on advanced pages', () => {
     render(
-      <MemoryRouter initialEntries={['/app/dashboard']}>
-        <AppLayout />
-      </MemoryRouter>
-    );
-
-    expect(screen.getByText('FraudShield AI')).toBeInTheDocument();
-    expect(screen.getByText(/Evidentiary Safeguard Protocol/i)).toBeInTheDocument();
-    expect(screen.getByText(/Automated account freezing is strictly prohibited/i)).toBeInTheDocument();
-    expect(screen.getByText(/Ethical AI & Compliance Safeguard/i)).toBeInTheDocument();
-  });
-
-  it('renders UnifiedHeader with v2-active engine status pill when model status is healthy', async () => {
-    const { v2Api } = await import('../services/v2Api');
-    vi.spyOn(v2Api, 'getModelsStatus').mockResolvedValueOnce({
-      account_model: {
-        available: true,
-        version: 'v2-account-1.0.0',
-        model_type: 'XGBClassifier',
-        features_count: 26,
-        trained_at: null,
-        test_metrics: null,
-        limitations: null,
-      },
-      paysim_benchmark: {
-        available: true,
-        version: 'v2-benchmark-1.0.0',
-        model_type: 'XGBClassifier',
-        features_count: 14,
-        trained_at: null,
-        test_metrics: null,
-        limitations: null,
-      },
-      overall_status: 'healthy',
-      inference_ready: true,
-      disclaimer: 'Advisory only',
-    });
-
-    const { UnifiedHeader } = await import('../components/layout/UnifiedHeader');
-    render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/tools/model']}>
         <UnifiedHeader />
       </MemoryRouter>
     );
-
-    const activeBadge = await screen.findByText('v2-active');
-    expect(activeBadge).toBeInTheDocument();
-    expect(activeBadge.closest('a')).toHaveAttribute('href', '/insights');
-  });
-
-  it('renders UnifiedHeader with Degraded badge linking to /insights when inference_ready is false', async () => {
-    const { v2Api } = await import('../services/v2Api');
-    vi.spyOn(v2Api, 'getModelsStatus').mockResolvedValueOnce({
-      account_model: {
-        available: false,
-        version: null,
-        model_type: null,
-        features_count: null,
-        trained_at: null,
-        test_metrics: null,
-        limitations: null,
-      },
-      paysim_benchmark: {
-        available: false,
-        version: null,
-        model_type: null,
-        features_count: null,
-        trained_at: null,
-        test_metrics: null,
-        limitations: null,
-      },
-      overall_status: 'degraded_missing_account_model',
-      inference_ready: false,
-      disclaimer: 'Advisory only',
-    });
-
-    const { UnifiedHeader } = await import('../components/layout/UnifiedHeader');
-    render(
-      <MemoryRouter>
-        <UnifiedHeader />
-      </MemoryRouter>
-    );
-
-    const degradedBadge = await screen.findByText('Degraded');
-    expect(degradedBadge).toBeInTheDocument();
-    expect(degradedBadge.closest('a')).toHaveAttribute('href', '/insights');
-  });
-
-  it('renders UnifiedHeader with Offline badge when backend connection fails', async () => {
-    const { v2Api } = await import('../services/v2Api');
-    vi.spyOn(v2Api, 'getModelsStatus').mockRejectedValueOnce(new Error('Network error: connection refused'));
-
-    const { UnifiedHeader } = await import('../components/layout/UnifiedHeader');
-    render(
-      <MemoryRouter>
-        <UnifiedHeader />
-      </MemoryRouter>
-    );
-
-    const offlineBadge = await screen.findByText('Offline');
-    expect(offlineBadge).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Tools' })).toHaveAttribute('aria-current', 'page');
   });
 });
 
+describe('Model status indicator', () => {
+  it('reports ready only when inference_ready is true', () => {
+    expect(describeModelStatus(status({}), false).state).toBe('ready');
+    // Artifacts present but not loadable: must not be shown as healthy.
+    const broken = describeModelStatus(
+      status({ inference_ready: false, overall_status: 'degraded_account_model_load_failed', status_detail: 'could not be loaded' }),
+      false
+    );
+    expect(broken.state).toBe('unavailable');
+    expect(broken.detail).toMatch(/could not be loaded/);
+    expect(broken.detail).toMatch(/model assessments will not be shown/);
+  });
+
+  it('distinguishes an unreachable server from an unavailable model', () => {
+    expect(describeModelStatus(null, true).state).toBe('server_unreachable');
+    expect(describeModelStatus(null, false).state).toBe('checking');
+  });
+
+  it('shows the real reason in the header popover', async () => {
+    vi.mocked(v2Api.getModelsStatus).mockResolvedValue(
+      status({ inference_ready: false, overall_status: 'degraded_missing_account_model', status_detail: 'The account risk model file is missing on the server.' })
+    );
+    render(
+      <MemoryRouter>
+        <UnifiedHeader />
+      </MemoryRouter>
+    );
+    const button = await screen.findByRole('button', { name: /Account model status: Model unavailable/i });
+    fireEvent.click(button);
+    expect(screen.getByRole('dialog')).toHaveTextContent(/model file is missing/i);
+    expect(screen.getByRole('link', { name: /Model performance details/i })).toHaveAttribute('href', '/tools/model');
+  });
+
+  it('shows server unreachable when the status request fails', async () => {
+    vi.mocked(v2Api.getModelsStatus).mockRejectedValue(new TypeError('Failed to fetch'));
+    render(
+      <MemoryRouter>
+        <UnifiedHeader />
+      </MemoryRouter>
+    );
+    expect(await screen.findByRole('button', { name: /Server unreachable/i })).toBeInTheDocument();
+  });
+});
+
+describe('Legacy routes', () => {
+  it.each([
+    ['/guided-investigation', '/cases/FS-2001'],
+    ['/demo', '/cases/FS-2001'],
+    ['/app/dashboard', '/cases/FS-1042'],
+    ['/app/cases/FS-1042', '/cases/FS-1042'],
+    ['/insights', '/tools/model'],
+    ['/app/model-insights', '/tools/model'],
+    ['/audit?case_id=FS-1042', '/tools/audit?case_id=FS-1042'],
+    ['/app/transaction-check', '/tools/transaction-model'],
+    ['/fund-flow?mode=case&id=FS-1042', '/tools/fund-flow?mode=case&id=FS-1042'],
+    ['/workspace', '/tools/accounts'],
+    ['/v2/accounts/ACC-000003', '/tools/accounts/ACC-000003'],
+    ['/accounts/ACC-000003', '/tools/accounts/ACC-000003'],
+  ])('redirects %s to %s', (from, to) => {
+    vi.spyOn(api, 'getCase').mockReturnValue(new Promise(() => {}));
+    vi.spyOn(v2Api, 'getAccount').mockReturnValue(new Promise(() => {}));
+    vi.spyOn(api, 'getGlobalAudit').mockReturnValue(new Promise(() => {}));
+    renderAt(from);
+    expect(screen.getByTestId('location')).toHaveTextContent(to);
+  });
+
+  it('shows a not-found page for unknown addresses', () => {
+    renderAt('/no-such-page');
+    expect(screen.getByRole('heading', { name: /Page not found/i })).toBeInTheDocument();
+  });
+});
