@@ -7,6 +7,7 @@ and computes calibrated risk probabilities with native TreeSHAP local explanatio
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -39,6 +40,8 @@ class ModelUnavailableException(Exception):
     pass
 
 
+logger = logging.getLogger("fraudshield.v2.ml")
+
 _REPO_ROOT = Path(__file__).resolve().parents[4]
 
 
@@ -60,8 +63,9 @@ class V2MLInferenceService:
 
         model_path = cls.ACCOUNT_ARTIFACTS_DIR / "model.joblib"
         if not model_path.exists():
+            logger.error("V2 account model binary not found at %s", model_path)
             raise ModelUnavailableException(
-                f"V2 Account ML model binary not found at {model_path}. Run training pipeline first."
+                "The account risk model file is missing on the server. Run the account model training pipeline."
             )
 
         try:
@@ -72,7 +76,10 @@ class V2MLInferenceService:
                     cls._account_metadata = json.load(f)
             return cls._account_model
         except Exception as e:
-            raise ModelUnavailableException(f"Failed to load V2 Account ML model: {e}")
+            logger.error("Failed to load V2 account model from %s: %s", model_path, e, exc_info=True)
+            raise ModelUnavailableException(
+                "The account risk model file exists but could not be loaded. Check the server logs."
+            )
 
     @classmethod
     def get_model_status(cls) -> ModelStatusResponse:
@@ -147,13 +154,33 @@ class V2MLInferenceService:
             features=paysim_meta.get("features"),
         )
 
-        overall = "healthy" if acc_available else "degraded_missing_account_model"
+        # Report readiness from an actual load attempt, not just file presence.
+        status_detail: Optional[str] = None
+        inference_ready = False
+        if acc_available:
+            try:
+                cls.load_account_model()
+                inference_ready = True
+            except ModelUnavailableException as e:
+                status_detail = str(e)
+        else:
+            status_detail = "The account risk model file is missing on the server."
+
+        if inference_ready:
+            overall = "healthy"
+        elif acc_available:
+            overall = "degraded_account_model_load_failed"
+        else:
+            overall = "degraded_missing_account_model"
+        if inference_ready and not paysim_available:
+            status_detail = "Account model ready. The PaySim benchmark artifact is missing, so its metrics are unavailable."
 
         return ModelStatusResponse(
             account_model=account_info,
             paysim_benchmark=paysim_info,
             overall_status=overall,
-            inference_ready=acc_available,
+            inference_ready=inference_ready,
+            status_detail=status_detail,
             disclaimer=(
                 "Models serve strictly as decision support. Performance metrics reflect synthetic held-out evaluation "
                 "and do not guarantee real-world banking accuracy. Automated freezing or punitive actions are strictly prohibited."
