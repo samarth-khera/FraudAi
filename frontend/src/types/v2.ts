@@ -128,6 +128,7 @@ export interface V2ModelStatusResponse {
   paysim_benchmark: V2SingleModelInfo;
   overall_status: string;
   inference_ready: boolean;
+  status_detail?: string | null;
   disclaimer: string;
 }
 
