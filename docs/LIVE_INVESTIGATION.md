@@ -68,10 +68,11 @@ every linked account and returns an evidence-referenced report. Nothing is preco
    - Recommendations are advisory. Nothing freezes, blocks or flags an account.
 10. **Explanation.**
     - `evidence_summary` answers the nine investigator questions from fixed templates and is labelled as not AI.
-    - `ai_analysis` comes from `app/services/v2/ai_analyst.py`. The provider receives a bounded, ID-only extract with
-      no names or contact details. The extract is framed as untrusted data, and the provider must return JSON claims
-      that cite IDs; claims citing unknown IDs are dropped and counted.
-    - **No provider is configured or bundled**, so live reports show `status: "not_configured"`.
+    - `ai_analysis` is an optional Google Gemini explanation, added after the deterministic report is complete. It
+      is off unless `GEMINI_ANALYST_ENABLED=true`, and by default it is sent only for the synthetic ledger. Gemini
+      receives a pseudonymised, bounded extract, and its answer is schema-validated and grounded against this report's
+      IDs. `ai_analysis.state` says what happened (`completed`, `disabled`, `not_configured`,
+      `skipped_privacy_policy` or `unavailable`). See [AI_ANALYST.md](AI_ANALYST.md).
 
 Ground-truth labels and scenario tags are never read. A test scrambles them and checks that the report is unchanged.
 

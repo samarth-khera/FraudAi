@@ -1,8 +1,8 @@
 {
- "investigation_id": "INV-D351C6CE17",
- "started_at": "2026-10-29T11:17:45.725671+00:00",
- "completed_at": "2026-10-29T11:17:45.756398+00:00",
- "duration_ms": 30,
+ "investigation_id": "INV-C302240D30",
+ "started_at": "2026-10-29T12:18:08.875552+00:00",
+ "completed_at": "2026-10-29T12:18:08.920821+00:00",
+ "duration_ms": 45,
  "request": {
   "account_id": "ACC-VIC",
   "start_date": null,
@@ -25,8 +25,8 @@
   "transactions_count": 14,
   "earliest_transaction_at": "2026-01-29T09:00:00",
   "data_as_of": "2026-02-01T09:40:00",
-  "snapshot_built_at": "2026-10-29T11:17:45.718152+00:00",
-  "queried_at": "2026-10-29T11:17:45.726586+00:00",
+  "snapshot_built_at": "2026-10-29T12:18:08.867198+00:00",
+  "queried_at": "2026-10-29T12:18:08.876559+00:00",
   "freshness_note": "Static synthetic snapshot regenerated from a fixed seed when the server is built. It is not a live feed: no new transactions arrive, and 'data as of' is the latest synthetic transaction time.",
   "disclosure": "Synthetic demo data. No real customers, accounts or bank transactions are involved."
  },
@@ -1726,11 +1726,18 @@
   }
  ],
  "ai_analysis": {
+  "state": "disabled",
   "status": "not_configured",
   "provider": null,
-  "message": "No AI provider is configured on this server, so no AI explanation was generated. The evidence summary in this report was produced by fixed templates from the computed findings.",
+  "model": null,
+  "message": "The AI analyst is turned off on this server. The evidence summary in this report was produced by fixed templates.",
+  "unavailable_reason": null,
+  "privacy_policy": "synthetic_only",
+  "pseudonymized": false,
+  "report": null,
   "sections": [],
-  "rejected_claims": 0
+  "rejected_claims": 0,
+  "latency_ms": null
  },
  "recommendations": [
   {

@@ -21,8 +21,9 @@ rm -rf data/v2_synthetic  # CSVs are only an intermediate step
 
 echo "== Verification"
 # Tests use temporary databases; they write, so run them outside the production write lock.
-ENVIRONMENT=development python -m pytest -q backend/tests/test_product_integrity.py backend/tests/test_v2_investigation.py ml/tests/test_account_model_audit.py
-(cd backend && ENVIRONMENT=production python - <<'PY'
+# The AI analyst is forced off here: the build must never call Gemini or spend quota (the tests mock it anyway).
+GEMINI_ANALYST_ENABLED=false ENVIRONMENT=development python -m pytest -q backend/tests/test_product_integrity.py backend/tests/test_v2_investigation.py backend/tests/test_v2_ai_analyst.py ml/tests/test_account_model_audit.py
+(cd backend && GEMINI_ANALYST_ENABLED=false ENVIRONMENT=production python - <<'PY'
 from fastapi.testclient import TestClient
 from app.main import create_app
 
@@ -37,6 +38,8 @@ assert c.get("/api/v2/accounts/ACC-000003/ml-assessment").json()["risk_score"] =
 inv = c.post("/api/v2/investigations", json={"account_id": "ACC-000001"})
 assert inv.status_code == 200, inv.text
 assert inv.json()["data_source"]["is_synthetic"] is True and inv.json()["model_available"] is True
+assert inv.json()["ai_analysis"]["state"] == "disabled", "build-time check must not call Gemini"
+import google.genai  # the AI analyst's SDK is installed
 print("startup check passed:", h["write_access"], s["account_model"]["version"])
 PY
 )
