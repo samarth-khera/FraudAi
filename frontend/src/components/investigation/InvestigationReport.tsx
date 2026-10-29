@@ -1,9 +1,9 @@
-import React, { Suspense, lazy, useMemo, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, ArrowDownLeft, ArrowUpRight, Bot, Database, FlaskConical, RotateCcw, ShieldAlert } from 'lucide-react';
 import { Pill } from '../ui/StateViews';
 import { formatDateTime, formatMoney } from '../../lib/format';
 import { featureInfo } from '../../lib/featureGlossary';
-import { AIState, AccountFinding, AnalystSection, InvestigationResponse, TraceEdge, TraceNode } from '../../types/investigation';
+import { AIState, AccountFinding, AnalystSection, ExplanationView, InvestigationResponse, TraceEdge, TraceNode } from '../../types/investigation';
 import { ACTION_LABEL, AI_STATE, BASIS, FLAG_LABEL, GRAPH_ROLE, KIND, ROLE_ASSESSMENT } from './labels';
 
 const InvestigationGraph = lazy(() => import('./InvestigationGraph'));
@@ -47,7 +47,12 @@ const Stat: React.FC<{ label: string; value: React.ReactNode; note?: string }> =
   </div>
 );
 
-export const InvestigationReport: React.FC<{ report: InvestigationResponse; onNew: () => void }> = ({ report, onNew }) => {
+export const InvestigationReport: React.FC<{
+  report: InvestigationResponse;
+  onNew: () => void;
+  /** Separately requested AI explanation; absent when the report carried its own ai_analysis. */
+  explanation?: ExplanationView | null;
+}> = ({ report, onNew, explanation = null }) => {
   const [selected, setSelected] = useState<Selection>(null);
   const synthetic = report.data_source.is_synthetic;
   const { victim, trace } = report;
@@ -420,7 +425,7 @@ export const InvestigationReport: React.FC<{ report: InvestigationResponse; onNe
 
       {/* ------------------------------------------------------------ explanation */}
       <Section id="analysis" title="Explanation" synthetic={synthetic}>
-        <AIStatus report={report} Refs={Refs} />
+        <AIStatus ai={explanation?.phase === 'done' ? explanation.analysis : report.ai_analysis} explanation={explanation} Refs={Refs} />
         <h3 className="mt-5 text-sm font-semibold text-[#1A1714]">Evidence summary</h3>
         <p className="text-xs text-[#6B655B]">Written by fixed templates from the findings above, not by an AI model.</p>
         <QA sections={report.evidence_summary} Refs={Refs} />
@@ -509,8 +514,51 @@ function aiState(ai: InvestigationResponse['ai_analysis']): AIState {
   return ai.status === 'generated' ? 'completed' : ai.status === 'not_configured' ? 'not_configured' : 'unavailable';
 }
 
-const AIStatus: React.FC<{ report: InvestigationResponse; Refs: RefsC }> = ({ report, Refs }) => {
-  const ai = report.ai_analysis;
+const AIPending: React.FC = () => {
+  const [seconds, setSeconds] = useState(0);
+  useEffect(() => {
+    const t0 = Date.now();
+    const id = window.setInterval(() => setSeconds(Math.floor((Date.now() - t0) / 1000)), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+  return (
+    <div role="status" aria-live="polite" className="rounded-2xl border border-[#EAE3D6] bg-[#FAF7F2] p-4" data-testid="ai-status" data-state="pending">
+      <h3 className="text-sm font-semibold flex items-center gap-2">
+        <span className="w-3.5 h-3.5 rounded-full border-2 border-[#EA8500] border-t-transparent animate-spin" aria-hidden="true" />
+        AI analyst: writing the explanation… {seconds > 0 && <span className="font-normal text-[#8C857B] tabular-nums">{seconds} s</span>}
+      </h3>
+      <p className="mt-1 text-sm text-[#6B655B]">
+        The report on this page is complete. Gemini can take a minute or more; its explanation will appear here, and
+        nothing above changes when it does.
+      </p>
+    </div>
+  );
+};
+
+const AIStatus: React.FC<{ ai: InvestigationResponse['ai_analysis']; explanation: ExplanationView | null; Refs: RefsC }> = ({
+  ai,
+  explanation,
+  Refs,
+}) => {
+  if (explanation?.phase === 'pending') return <AIPending />;
+  if (explanation?.phase === 'stale' || explanation?.phase === 'failed') {
+    return (
+      <div className="rounded-2xl border border-[#EAE3D6] bg-[#FAF7F2] p-4" data-testid="ai-status" data-state={explanation.phase}>
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="text-sm font-semibold flex items-center gap-1.5">
+            <Bot className="w-4 h-4" aria-hidden="true" />
+            AI analyst: unavailable
+          </h3>
+          <Pill tone="rose">{explanation.phase === 'stale' ? 'report changed' : 'request failed'}</Pill>
+        </div>
+        <p className="mt-1 text-sm text-[#6B655B]">
+          {explanation.phase === 'stale'
+            ? 'The explanation was for a different version of this report (the ledger changed in between), so it is not shown. Run the investigation again.'
+            : explanation.message}
+        </p>
+      </div>
+    );
+  }
   const state = aiState(ai);
   const r = state === 'completed' ? ai.report : null;
   const meta = AI_STATE[state];

@@ -270,7 +270,8 @@ def test_config_defaults_are_conservative(monkeypatch):
     monkeypatch.setenv("GEMINI_TIMEOUT_SECONDS", "9999")
     monkeypatch.setenv("GEMINI_MAX_OUTPUT_TOKENS", "not-a-number")
     c = AnalystConfig.from_env()
-    assert c.privacy_policy == "synthetic_only" and c.timeout_seconds == 60 and c.max_output_tokens == ai_analyst.DEFAULT_MAX_OUTPUT_TOKENS
+    assert c.privacy_policy == "synthetic_only" and c.timeout_seconds == ai_analyst.MAX_TIMEOUT_SECONDS == 300
+    assert c.max_output_tokens == ai_analyst.DEFAULT_MAX_OUTPUT_TOKENS
     assert FAKE_KEY not in repr(c)
 
 
@@ -595,3 +596,150 @@ def test_startup_survives_an_sdk_import_failure(ledger, monkeypatch, caplog):  #
 def test_preload_is_a_no_op_when_disabled(monkeypatch):
     monkeypatch.setattr(ai_analyst, "_gemini_module", lambda: (_ for _ in ()).throw(AssertionError("loaded while disabled")))
     assert ai_analyst.preload_provider() is False
+
+
+# ---------------------------------------------------------------- regression: unsupported thinking level (HTTP 400)
+def test_unsupported_thinking_level_is_reported_without_a_request(report, caplog):
+    """Production failure 2026-10-29: GEMINI_THINKING_LEVEL=minimal on gemini-3.8-flash -> Google HTTP 400."""
+    fake = FakeProvider(good_reply)
+    with caplog.at_level(logging.DEBUG):
+        ai = asyncio.run(ai_analyst.analyze(report, fake, cfg(model="gemini-3.8-flash", thinking_level="minimal")))
+    assert fake.calls == [], "a request that Google documents as invalid must not be sent"
+    assert (ai["state"], ai["status"], ai["unavailable_reason"], ai["report"]) == ("unavailable", "failed", "invalid_configuration", None)
+    assert "not supported by the configured model" in ai["message"] and "unaffected" in ai["message"]
+    assert "setting=thinking_level model=gemini-3.8-flash" in caplog.text and "reason=invalid_configuration" in caplog.text
+
+
+@pytest.mark.parametrize("model, level", [
+    ("gemini-3.8-flash", "low"), ("gemini-3.8-flash", "medium"), ("gemini-3.8-flash", "high"),
+    ("gemini-3.8-flash", None), ("gemini-3.6-flash", "minimal"),  # unlisted models pass through unchanged
+])
+def test_supported_or_unlisted_thinking_levels_are_sent(report, model, level):
+    fake = FakeProvider(good_reply)
+    ai = asyncio.run(ai_analyst.analyze(report, fake, cfg(model=model, thinking_level=level)))
+    assert len(fake.calls) == 1 and ai["state"] == "completed"
+
+
+def test_endpoint_with_minimal_thinking_keeps_the_investigation(ledger, gemini_on, monkeypatch):  # noqa: F811
+    client, _, _ = ledger
+    baseline = investigate(client).json()
+    fake = gemini_on(FakeProvider(good_reply))
+    monkeypatch.setenv("GEMINI_THINKING_LEVEL", "minimal")
+    body = investigate(client).json()
+    assert body["ai_analysis"]["unavailable_reason"] == "invalid_configuration" and fake.calls == []
+    assert deterministic(body) == deterministic(baseline)
+
+
+def test_provider_request_carries_the_configured_thinking_level_and_no_sampling_params(report, monkeypatch):
+    seen = {}
+
+    async def capture(**kwargs):
+        seen.update(kwargs)
+        return SimpleNamespace(prompt_feedback=None, candidates=[SimpleNamespace(finish_reason=SimpleNamespace(value="STOP"))],
+                               text=good_reply({"contents": kwargs["contents"]}))
+
+    monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+    p = GeminiProvider("gemini-3.8-flash", timeout_seconds=55, thinking_level="low")
+    p._client = SimpleNamespace(aio=SimpleNamespace(models=SimpleNamespace(generate_content=capture)))
+    ai = asyncio.run(run_analysis(report, p, model="gemini-3.8-flash", max_output_tokens=2048))
+    assert ai["state"] == "completed"
+    c = seen["config"]
+    assert getattr(c.thinking_config.thinking_level, "value", c.thinking_config.thinking_level).upper() == "LOW"
+    assert c.temperature is None and c.top_p is None and c.top_k is None
+    assert c.max_output_tokens == 2048 and c.response_mime_type == "application/json" and c.candidate_count == 1
+
+
+def test_http_400_is_request_rejected_with_its_status_logged(report, monkeypatch, caplog):
+    async def reject(**kwargs):
+        raise api_error(errors.ClientError, 400, "INVALID_ARGUMENT")
+
+    with caplog.at_level(logging.DEBUG):
+        ai = asyncio.run(run_analysis(report, stub_provider(monkeypatch, reject)))
+    assert ai["unavailable_reason"] == "request_rejected" and ai["status"] == "failed"
+    assert "reason=request_rejected http_status=400 error_type=none" in caplog.text
+    assert "secret detail" not in caplog.text and "secret detail" not in json.dumps(ai)
+
+
+def test_startup_warns_about_an_unsupported_thinking_level(monkeypatch, caplog):
+    monkeypatch.setenv("GEMINI_ANALYST_ENABLED", "true")
+    monkeypatch.setenv("GEMINI_THINKING_LEVEL", "minimal")
+    monkeypatch.setattr(ai_analyst, "_gemini_module", lambda: None)
+    with caplog.at_level(logging.WARNING):
+        assert ai_analyst.preload_provider() is True
+    assert "AI analyst configuration problem: setting=thinking_level model=gemini-3.8-flash" in caplog.text
+
+
+def test_startup_attaches_a_handler_so_analyst_info_lines_reach_the_server_log():
+    from fastapi.testclient import TestClient
+
+    from app.main import create_app
+
+    log = logging.getLogger("fraudshield.v2.ai_analyst")
+    with TestClient(create_app()):
+        assert log.handlers and log.isEnabledFor(logging.INFO)
+
+
+# ---------------------------------------------------------------- separate explanation (Standard-tier latency)
+def explain(client, **body):
+    return client.post("/api/v2/investigations/explanation", json={"account_id": "ACC-VIC", **body})
+
+
+def test_separate_mode_returns_the_report_without_calling_gemini(ledger, gemini_on):  # noqa: F811
+    client, _, _ = ledger
+    fake = gemini_on(FakeProvider(good_reply))
+    body = investigate(client, ai_explanation="separate").json()
+    ai = body["ai_analysis"]
+    assert (ai["state"], ai["status"], ai["report"], ai["provider"]) == ("deferred", "not_configured", None, None)
+    assert fake.calls == [], "the report must not wait for, or trigger, the AI call"
+    assert body["accounts"] and body["trace"]["edges"] and len(body["report_digest"]) == 24
+
+
+def test_explanation_endpoint_explains_the_same_report(ledger, gemini_on):  # noqa: F811
+    client, _, _ = ledger
+    report = investigate(client, ai_explanation="separate").json()
+    fake = gemini_on(FakeProvider(good_reply))
+    r = explain(client, ai_explanation="separate")
+    assert r.status_code == 200
+    body = r.json()
+    assert set(body) == {"account_id", "report_digest", "data_as_of", "duration_ms", "ai_analysis"}, "no evidence is echoed back"
+    assert body["report_digest"] == report["report_digest"] and body["account_id"] == "ACC-VIC"
+    ai = body["ai_analysis"]
+    assert ai["state"] == "completed" and len(fake.calls) == 1
+    known = {e["transaction_id"] for e in report["trace"]["edges"]} | {n["account_id"] for n in report["trace"]["nodes"]} | {f["finding_id"] for f in report["findings"]}
+    assert set(ai["report"]["evidence_references"]) <= known
+    for o in ai["report"]["key_observations"]:
+        assert set(o["evidence_ids"]) <= known
+
+
+def test_digest_is_stable_and_tracks_the_deterministic_content(ledger):  # noqa: F811
+    client, S, _ = ledger
+    a = investigate(client, ai_explanation="separate").json()["report_digest"]
+    assert investigate(client).json()["report_digest"] == a, "the AI mode is not part of the report"
+    assert investigate(client, ai_explanation="separate").json()["report_digest"] == a
+    assert investigate(client, ai_explanation="separate", max_depth=2).json()["report_digest"] != a
+    assert investigate(client, account_id="ACC-M1", ai_explanation="separate").json()["report_digest"] != a
+    from sqlalchemy import update
+    from app.db.v2.models import TransactionModel
+    with S() as db:  # a changed ledger gives a different digest, so a stale explanation is not shown
+        db.execute(update(TransactionModel).where(TransactionModel.transaction_id == "TXN-T0011").values(amount=129_000))
+        db.commit()
+    assert investigate(client, ai_explanation="separate").json()["report_digest"] != a
+
+
+def test_explanation_endpoint_reports_errors_and_ai_failures_honestly(ledger, gemini_on):  # noqa: F811
+    client, _, _ = ledger
+    assert explain(client, account_id="ACC-NOPE").status_code == 404
+    assert explain(client, account_id="bad id!").status_code == 422
+    disabled = explain(client).json()["ai_analysis"]
+    assert disabled["state"] == "disabled"
+    gemini_on(FakeProvider(raises=ProviderError("timeout", 504)))
+    r = explain(client)
+    assert r.status_code == 200 and r.json()["ai_analysis"]["unavailable_reason"] == "timeout"
+    assert "secret" not in r.text
+
+
+def test_timeout_setting_allows_minutes_but_stays_bounded(monkeypatch):
+    monkeypatch.setenv("GEMINI_TIMEOUT_SECONDS", "180")
+    assert AnalystConfig.from_env().timeout_seconds == 180
+    monkeypatch.setenv("GEMINI_TIMEOUT_SECONDS", "1")
+    assert AnalystConfig.from_env().timeout_seconds == 3

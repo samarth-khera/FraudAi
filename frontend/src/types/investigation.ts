@@ -10,6 +10,8 @@ export interface InvestigationRequest {
   onward_window_hours?: number;
   trace_scope?: 'flagged' | 'all';
   max_accounts_analyzed?: number;
+  /** 'separate': the report comes back without waiting for the AI analyst; fetch it from /investigations/explanation. */
+  ai_explanation?: 'inline' | 'separate';
 }
 
 export interface DataSourceInfo {
@@ -170,7 +172,7 @@ export interface AnalystSection {
   claims: { text: string; kind: ClaimKind; refs: string[] }[];
 }
 
-export type AIState = 'completed' | 'disabled' | 'not_configured' | 'skipped_privacy_policy' | 'unavailable';
+export type AIState = 'completed' | 'disabled' | 'not_configured' | 'skipped_privacy_policy' | 'unavailable' | 'deferred';
 export type ObservationBasis = 'observed' | 'rule' | 'model' | 'hypothesis' | 'limitation';
 
 /** Validated AI explanation; every ID in it exists in the same report. */
@@ -249,6 +251,24 @@ export interface InvestigationResponse {
   unknowns: string[];
   records_to_request: string[];
   ledger_rows_read: number;
+  /** Digest of the deterministic report; an explanation is shown only next to a report with the same digest. */
+  report_digest?: string;
   persisted: boolean;
   disclaimer: string;
 }
+
+/** POST /api/v2/investigations/explanation */
+export interface InvestigationExplanationResponse {
+  account_id: string;
+  report_digest: string;
+  data_as_of: string | null;
+  duration_ms: number;
+  ai_analysis: AIAnalysis;
+}
+
+/** Client-side state of the separately requested AI explanation. */
+export type ExplanationView =
+  | { phase: 'pending' }
+  | { phase: 'done'; analysis: AIAnalysis }
+  | { phase: 'stale' }
+  | { phase: 'failed'; message: string };

@@ -28,7 +28,7 @@ try:
         ModelStatusResponse,
         TraceGraphResponse,
     )
-    from app.api.v2.investigation_schemas import DataSourceInfo, InvestigationRequest, InvestigationResponse
+    from app.api.v2.investigation_schemas import DataSourceInfo, InvestigationExplanationResponse, InvestigationRequest, InvestigationResponse
     from app.db.v2.session import get_v2_db
     from app.services.v2 import data_source
     from app.services.v2.investigation import AccountNotFound, InvestigationService
@@ -47,7 +47,7 @@ except ModuleNotFoundError:
         ModelStatusResponse,
         TraceGraphResponse,
     )
-    from backend.app.api.v2.investigation_schemas import DataSourceInfo, InvestigationRequest, InvestigationResponse
+    from backend.app.api.v2.investigation_schemas import DataSourceInfo, InvestigationExplanationResponse, InvestigationRequest, InvestigationResponse
     from backend.app.db.v2.session import get_v2_db
     from backend.app.services.v2 import data_source
     from backend.app.services.v2.investigation import AccountNotFound, InvestigationService
@@ -291,8 +291,26 @@ def get_data_source(db: Session = Depends(get_v2_db)) -> DataSourceInfo:
     ),
 )
 async def run_investigation(req: InvestigationRequest, db: Session = Depends(get_v2_db)) -> InvestigationResponse:
+    return await _investigation_call(InvestigationService.run_async, db, req)
+
+
+@router.post(
+    "/investigations/explanation",
+    response_model=InvestigationExplanationResponse,
+    summary="AI Explanation for an Investigation",
+    description=(
+        "Recomputes the same deterministic investigation on the server and runs the AI analyst on it (the evidence is "
+        "never taken from the browser). Use with ai_explanation='separate' so the report is not held up by the AI; show "
+        "the result only next to a report with the same report_digest. Stores nothing."
+    ),
+)
+async def explain_investigation(req: InvestigationRequest, db: Session = Depends(get_v2_db)) -> InvestigationExplanationResponse:
+    return await _investigation_call(InvestigationService.explain_async, db, req)
+
+
+async def _investigation_call(fn, db: Session, req: InvestigationRequest):
     try:
-        return await InvestigationService.run_async(db, req)
+        return await fn(db, req)
     except AccountNotFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
