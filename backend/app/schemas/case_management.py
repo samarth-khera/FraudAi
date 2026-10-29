@@ -6,7 +6,9 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Annotated, Any, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field
+
+from app.api.auth import reject_reserved_actor
 
 from app.models.domain import (
     AccountReviewStatus,
@@ -20,6 +22,10 @@ from app.models.domain import (
 )
 from app.schemas.trace import TracedTransaction, TraceWarning
 
+# A self-reported person or tool name. Never an authenticated identity; names the application uses for
+# its own audit entries (e.g. system_seeder) are rejected.
+ActorName = Annotated[str, AfterValidator(reject_reserved_actor)]
+
 
 class CaseCreateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -31,7 +37,7 @@ class CaseCreateRequest(BaseModel):
     reported_at: Optional[datetime] = None
     investigation_status: InvestigationStatus = InvestigationStatus.UNDER_INVESTIGATION
     description: str = Field(min_length=1, max_length=5000, description="Summary description of the reported case.")
-    created_by: str = Field(default="analyst_placeholder", min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_\-\. ]+$", description="Reviewer/system creating the case.")
+    created_by: ActorName = Field(default="analyst_placeholder", min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_\-\. ]+$", description="Reviewer/system creating the case.")
 
 
 class CaseUpdateRequest(BaseModel):
@@ -39,7 +45,7 @@ class CaseUpdateRequest(BaseModel):
 
     description: Optional[str] = Field(default=None, min_length=1, max_length=5000)
     investigation_status: Optional[InvestigationStatus] = None
-    updated_by: str = Field(default="analyst_placeholder", min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_\-\. ]+$", description="Reviewer identity.")
+    updated_by: ActorName = Field(default="analyst_placeholder", min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_\-\. ]+$", description="Self-reported reviewer name; not verified.")
 
 
 class AccountReviewUpdateRequest(BaseModel):
@@ -48,7 +54,7 @@ class AccountReviewUpdateRequest(BaseModel):
     review_state: ReviewState
     evidence_quality: EvidenceQuality = EvidenceQuality.NOT_ASSESSED
     notes: Optional[str] = Field(default=None, max_length=5000)
-    reviewer_id: str = Field(default="analyst_placeholder", min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_\-\. ]+$", description="Reviewer identity.")
+    reviewer_id: ActorName = Field(default="analyst_placeholder", min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_\-\. ]+$", description="Self-reported reviewer name; not verified.")
     decision_reasons: list[Annotated[str, Field(min_length=1, max_length=500)]] = Field(
         default_factory=list,
         max_length=30,
@@ -69,7 +75,7 @@ class CaseTransactionsAddRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     transactions: list[Transaction] = Field(min_length=1, max_length=500)
-    added_by: str = Field(default="system", min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_\-\. ]+$", description="Reviewer/system identity adding transactions.")
+    added_by: ActorName = Field(default="system", min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_\-\. ]+$", description="Reviewer/system identity adding transactions.")
 
 
 class AuditEventResponse(BaseModel):
@@ -106,7 +112,9 @@ class AuditIntegrityStatus(BaseModel):
     database_cascade_protected: bool = True
     cryptographic_signatures: bool = False
     server_timestamps: bool = True
-    last_verified_at: datetime
+    last_verified_at: datetime = Field(
+        description="Time this response was generated. No integrity check is performed; the name is historical."
+    )
     integrity_disclosure: str = (
         "Application-enforced append-only audit trail in SQLite with cascade-deletion protection. "
         "Server-generated UTC timestamps. No cryptographic hash-chaining or WORM hardware."

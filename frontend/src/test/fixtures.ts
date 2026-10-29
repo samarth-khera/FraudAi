@@ -257,8 +257,8 @@ export const PROFILE: V2AccountProfileResponse = {
 
 export const RULES: V2AccountAssessmentResponse = {
   account_id: 'ACC-000003',
-  risk_score: 62,
-  risk_level: 'elevated',
+  risk_score: 60,
+  risk_level: 'high',
   signals: {} as any,
   reason_codes: [],
   evidence_gaps: [],
@@ -273,7 +273,7 @@ export const ML: V2AccountMLAssessmentResponse = {
   risk_level: 'low',
   predicted_probability: 0.101,
   predicted_class: 'legitimate',
-  model_version: 'v2-account-1.0.0',
+  model_version: 'v2-account-2.0.0',
   model_type: 'XGBClassifier',
   top_contributions: [
     { feature_name: 'max_amount', feature_value: 250000, contribution_score: 3.65, impact_direction: 'increases_risk' },

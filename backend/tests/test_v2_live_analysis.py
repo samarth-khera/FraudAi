@@ -242,3 +242,73 @@ def test_live_analysis_dynamic_update_on_new_ledger_record(test_v2_db, client: T
     assert snapshot2["transactions_examined"] == 11
     assert snapshot2["total_sent"] == 256000.0
     assert resp2.json()["analysis_id"] != resp1.json()["analysis_id"]
+
+
+def test_divergence_compares_review_suggestions_not_score_points(client: TestClient):
+    """Rule points (0-100) and the model score (0-1 shown as %) are different scales; compare review suggestions."""
+    data = client.post("/api/v2/accounts/ACC-VICTIM/analyze").json()
+    ml, rules, div = data["ml_assessment"], data["rule_assessment"], data["divergence"]
+    model_suggests = ml["predicted_class"] == "suspicious"
+    rules_suggest = rules["risk_level"] in ("high", "critical")
+    assert div["divergence_detected"] == (model_suggests != rules_suggest)
+    assert "/100" not in div["interpretation"]
+    assert data["human_review_recommended"] == (
+        model_suggests or rules_suggest or bool(rules["signals"]["rapid_pass_through"])
+    )
+    for action in data["recommended_actions"]:
+        assert "TreeSHAP driver is peak transaction amount" not in action["supporting_evidence"]
+
+
+def test_live_analysis_exposes_explicit_review_fields_and_deprecated_aliases(client: TestClient):
+    data = client.post("/api/v2/accounts/ACC-VICTIM/analyze").json()
+    div = data["divergence"]
+    assert div["checks_disagree"] == (div["model_suggests_review"] != div["rule_suggests_review"])
+    assert div["divergence_detected"] == div["checks_disagree"]  # deprecated alias, same value
+    assert div["model_review_threshold"] == V2MLInferenceService.decision_threshold()
+    assert div["model_score_unit"] == "percent_0_100_uncalibrated"
+    assert div["rule_score_unit"] == "points_0_100"
+    # Deprecated field keeps its historical arithmetic so existing callers see no silent change.
+    assert div["score_delta"] == round(abs(div["ml_score"] - div["rule_score"]), 1)
+    assert data["human_review_recommended"] == bool(data["human_review_basis"])
+
+
+@pytest.mark.parametrize(
+    "predicted_class, expect_model, expect_disagree",
+    [("suspicious", True, None), ("legitimate", False, None)],
+)
+def test_live_analysis_review_decision_follows_model_class_not_score_gap(client: TestClient, predicted_class, expect_model, expect_disagree):
+    real = V2MLInferenceService.assess_account
+
+    def forced(db, account_id):
+        a = real(db, account_id)
+        # Scores just either side of the served threshold, expressed through the class the service assigns.
+        thr = V2MLInferenceService.decision_threshold()
+        prob = thr if predicted_class == "suspicious" else max(0.0, thr - 0.0001)
+        cls, level = V2MLInferenceService.classify(prob)
+        assert cls == predicted_class
+        return a.model_copy(update={"predicted_probability": prob, "risk_score": round(prob * 100, 1),
+                                    "predicted_class": cls, "risk_level": level})
+
+    from unittest.mock import patch
+
+    with patch.object(V2MLInferenceService, "assess_account", side_effect=forced):
+        data = client.post("/api/v2/accounts/ACC-VICTIM/analyze").json()
+    div = data["divergence"]
+    assert div["model_suggests_review"] is expect_model
+    assert div["checks_disagree"] == (expect_model != div["rule_suggests_review"])
+    assert ("model_at_or_above_threshold" in data["human_review_basis"]) is expect_model
+
+
+def test_live_analysis_reports_model_unavailable_without_a_result(client: TestClient):
+    from unittest.mock import patch
+
+    from app.services.v2.ml_service import ModelUnavailableException
+
+    with patch.object(V2MLInferenceService, "load_account_model",
+                      side_effect=ModelUnavailableException("The account risk model file is missing on the server.")):
+        r = client.post("/api/v2/accounts/ACC-VICTIM/analyze")
+    assert r.status_code == 503
+    body = r.json()
+    assert body["error"]["code"] == "model_unavailable"
+    assert "analysis_id" not in body and "ml_assessment" not in body
+    assert "/" not in body["error"]["message"], "no filesystem paths in user-facing errors"

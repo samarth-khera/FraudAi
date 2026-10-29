@@ -63,6 +63,8 @@ import { V2MoneyFlowComparison } from '../../components/v2/V2MoneyFlowComparison
 import { V2NextStepsRecommendation } from '../../components/v2/V2NextStepsRecommendation';
 import { V2BankingHeroHeader } from '../../components/v2/V2BankingHeroHeader';
 import { V2ModelDivergenceAlert } from '../../components/v2/V2ModelDivergenceAlert';
+import { useModelStatus } from '../../lib/useModelStatus';
+import { MODEL_SCORE_LABEL, MODEL_SCORE_MEANING, formatModelScore, modelLevelBands, thresholdPercent } from '../../lib/modelScore';
 
 
 export const V2AccountDetailPage: React.FC = () => {
@@ -71,6 +73,9 @@ export const V2AccountDetailPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const pageContainerRef = useRef<HTMLDivElement>(null);
   const adjudicationRef = useRef<HTMLDivElement>(null);
+  const modelInfo = useModelStatus().status?.account_model;
+  const modelThresholdLabel = thresholdPercent(modelInfo);
+  const modelBands = modelLevelBands(modelInfo);
   const tabsRef = useRef<HTMLDivElement>(null);
 
   // Core Ledger Facts
@@ -403,7 +408,7 @@ export const V2AccountDetailPage: React.FC = () => {
             </span>
             <span className="text-[#8C857B]">→</span>
             <span className="px-2.5 py-1 rounded-lg bg-[#FAF7F2] border border-[#EAE3D6] text-[#1A1714]">
-              3. Statistical ML Probability
+              3. Model score (machine learning)
             </span>
             <span className="text-[#8C857B]">→</span>
             <span className="px-2.5 py-1 rounded-lg bg-[#FFF4E6] border border-[#FCD5B5] text-[#EA8500] font-bold">
@@ -523,8 +528,8 @@ export const V2AccountDetailPage: React.FC = () => {
                           <Cpu className="w-4 h-4" />
                         </div>
                         <div>
-                          <span className="text-xs font-bold text-[#1A1714] block">ML Statistical Assessment</span>
-                          <span className="text-[10px] text-[#6B655B] font-mono">26 runtime ledger features</span>
+                          <span className="text-xs font-bold text-[#1A1714] block">{MODEL_SCORE_LABEL} (machine learning)</span>
+                          <span className="text-[10px] text-[#6B655B] font-mono">{liveAnalysis.ml_assessment.model_version} · 26 ledger features</span>
                         </div>
                       </div>
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
@@ -540,13 +545,15 @@ export const V2AccountDetailPage: React.FC = () => {
 
                     <div className="flex items-baseline gap-2">
                       <span className="text-4xl font-black text-[#1A1714] font-mono">
-                        {liveAnalysis.ml_assessment.risk_score.toFixed(1)}
-                      </span>
-                      <span className="text-sm font-medium text-[#6B655B] font-mono">/ 100</span>
-                      <span className="ml-auto text-xs font-mono text-[#6B655B]">
-                        Class: <strong className="uppercase text-[#1A1714]">{liveAnalysis.ml_assessment.predicted_class}</strong>
+                        {formatModelScore(liveAnalysis.ml_assessment.risk_score)}
                       </span>
                     </div>
+                    <p className="text-xs font-medium text-[#1A1714]">
+                      {liveAnalysis.ml_assessment.predicted_class === 'suspicious'
+                        ? `At or above the ${modelThresholdLabel ?? 'review'} review threshold: suggested for review, not confirmed fraud.`
+                        : `Below the ${modelThresholdLabel ?? 'review'} review threshold. This does not clear the account.`}
+                    </p>
+                    <p className="text-[11px] text-[#6B655B] leading-relaxed">{MODEL_SCORE_MEANING}</p>
 
                     {/* Calibrated Meter */}
                     <div className="w-full bg-white rounded-full h-2.5 overflow-hidden border border-[#EAE3D6]">
@@ -562,12 +569,13 @@ export const V2AccountDetailPage: React.FC = () => {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between text-[10px] text-[#8C857B] font-mono">
-                      <span>Low (0-29)</span>
-                      <span>Elevated (30-69)</span>
-                      <span>High (70-89)</span>
-                      <span>Critical (90+)</span>
-                    </div>
+                    {modelBands && (
+                      <div className="flex flex-wrap items-center justify-between gap-x-2 text-[10px] text-[#8C857B] font-mono">
+                        {modelBands.map((b) => (
+                          <span key={b}>{b}</span>
+                        ))}
+                      </div>
+                    )}
 
                     <p className="text-xs text-[#6B655B] leading-relaxed pt-1 border-t border-[#EAE3D6]/60">
                       Statistical pattern model evaluating multi-dimensional transfer velocity, burst volume, and balance depletion dynamics.
@@ -601,7 +609,7 @@ export const V2AccountDetailPage: React.FC = () => {
                       <span className="text-4xl font-black text-[#1A1714] font-mono">
                         {liveAnalysis.rule_assessment.risk_score.toFixed(1)}
                       </span>
-                      <span className="text-sm font-medium text-[#6B655B] font-mono">/ 100</span>
+                      <span className="text-sm font-medium text-[#6B655B] font-mono">points of 100</span>
                       <span className="ml-auto text-xs font-mono text-[#6B655B]">
                         Uncertainty: <strong className="uppercase text-[#1A1714]">{liveAnalysis.rule_assessment.uncertainty_rating}</strong>
                       </span>
@@ -644,7 +652,7 @@ export const V2AccountDetailPage: React.FC = () => {
                   </div>
                   <p className="text-sm text-[#443E38] leading-relaxed">
                     {liveAnalysis.divergence?.interpretation ||
-                      `The ML model estimated a risk score of ${liveAnalysis.ml_assessment.risk_score.toFixed(1)}/100 (${liveAnalysis.ml_assessment.risk_level}), while deterministic rule checks evaluated a baseline of ${liveAnalysis.rule_assessment.risk_score.toFixed(1)}/100 (${liveAnalysis.rule_assessment.risk_level}). Assessment evaluated ${liveAnalysis.ledger_snapshot.transactions_examined} ledger movements. Neither score constitutes proof of fraud; follow recommended investigative steps before taking any action.`}
+                      `The model score is ${formatModelScore(liveAnalysis.ml_assessment.risk_score)} (${liveAnalysis.ml_assessment.risk_level}); the fixed rules gave ${liveAnalysis.rule_assessment.risk_score.toFixed(0)} points of 100 (${liveAnalysis.rule_assessment.risk_level}). The two use different scales. Assessment evaluated ${liveAnalysis.ledger_snapshot.transactions_examined} ledger movements. Neither score constitutes proof of fraud; follow recommended investigative steps before taking any action.`}
                   </p>
                 </div>
 
@@ -653,8 +661,10 @@ export const V2AccountDetailPage: React.FC = () => {
                   accountId={accountId || ''}
                   mlRiskScore={liveAnalysis.ml_assessment.risk_score}
                   mlRiskLevel={liveAnalysis.ml_assessment.risk_level}
+                  modelSuggestsReview={liveAnalysis.ml_assessment.predicted_class === 'suspicious'}
                   ruleRiskScore={liveAnalysis.rule_assessment.risk_score}
                   ruleRiskLevel={liveAnalysis.rule_assessment.risk_level}
+                  modelThresholdLabel={modelThresholdLabel}
                   interpretation={liveAnalysis.divergence?.interpretation}
                   suggestedFocus={liveAnalysis.divergence?.suggested_focus}
                 />

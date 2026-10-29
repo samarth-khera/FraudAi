@@ -1,0 +1,31 @@
+{
+  "_note": "Model binaries are not committed (see .gitignore). They are published as assets of the GitHub release below and verified by SHA-256 at build time.",
+  "release_tag": "models-2026-10-29",
+  "base_url": "https://github.com/samarth-khera/FraudAi/releases/download/models-2026-10-29",
+  "files": [
+    {
+      "path": "ml/artifacts/model_v1/pipeline.joblib",
+      "asset": "model_v1__pipeline.joblib",
+      "sha256": "9deab29ed378334ff66935093fcb01d8ff4a43c57fa3435cc416cdbf7da2aff9",
+      "bytes": 166538
+    },
+    {
+      "path": "ml/artifacts/v2/paysim_benchmark/model.joblib",
+      "asset": "v2__paysim_benchmark__model.joblib",
+      "sha256": "f2d8fab933d2cea71484627f119ea23e5ba7897d704904a7bf0f25df7434bdd7",
+      "bytes": 173358
+    },
+    {
+      "path": "ml/artifacts/v2/account_model_v2/model.joblib",
+      "asset": "v2__account_model_v2__model.joblib",
+      "sha256": "7594d045677ee736ffc4f67596bb4ab7414609506b80d7b47dd74775aae2b3d2",
+      "bytes": 1102985
+    },
+    {
+      "path": "ml/artifacts/v2/account_model/model.joblib",
+      "asset": "v2__account_model__model.joblib",
+      "sha256": "66cef15e0948158ee3db97756bb27a203ed256762148586f971f8af26105ffa6",
+      "bytes": 140735
+    }
+  ]
+}

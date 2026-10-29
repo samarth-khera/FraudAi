@@ -36,6 +36,30 @@ except ModuleNotFoundError:
     from backend.app.services.v2.risk_assessment import AccountRiskAssessor
 
 
+def compare_review_suggestions(model_predicted_class: str, rule_risk_level: str, rapid_pass_through: bool) -> dict:
+    """Compare the two checks by their own review points, never by subtracting their scores.
+
+    The rule score is points out of 100; the model score is an uncalibrated 0-1 output shown as a percentage.
+    The model's review point is applied upstream (predicted_class uses the served threshold); the rules'
+    review point is "high" or above, matching the rule assessor's own recommendation text.
+    """
+    model_suggests = model_predicted_class == "suspicious"
+    rules_suggest = rule_risk_level in ("high", "critical")
+    basis = []
+    if model_suggests:
+        basis.append("model_at_or_above_threshold")
+    if rules_suggest:
+        basis.append("rules_high_or_above")
+    if rapid_pass_through:
+        basis.append("rapid_pass_through_observed")
+    return {
+        "model_suggests_review": model_suggests,
+        "rule_suggests_review": rules_suggest,
+        "checks_disagree": model_suggests != rules_suggest,
+        "human_review_basis": basis,
+    }
+
+
 class AccountLiveAnalysisService:
     """Orchestrates on-demand real-time forensic analysis of an account."""
 
@@ -88,46 +112,46 @@ class AccountLiveAnalysisService:
         if not ml_assessment:
             return None
 
-        # 4. Check for model-rule divergence
+        # 4. Compare the two checks on their own terms (see compare_review_suggestions).
         ml_score = ml_assessment.risk_score
         rule_score = rule_assessment.risk_score
-        score_delta = round(abs(ml_score - rule_score), 1)
-        divergence_detected = score_delta >= 30.0
+        review = compare_review_suggestions(
+            ml_assessment.predicted_class, rule_assessment.risk_level, bool(rule_assessment.signals.rapid_pass_through)
+        )
+        model_suggests_review = review["model_suggests_review"]
+        rules_suggest_review = review["rule_suggests_review"]
 
-        if divergence_detected:
-            if ml_score >= 70.0 and rule_score <= 35.0:
-                divergence_interp = (
-                    "Compromised Victim / Outlier Drain Disparity: The statistical ML model flagged elevated risk "
-                    f"({ml_score:.1f}/100) driven by high single-transaction volume or severe balance depletion, whereas "
-                    f"rule heuristics detect standard retail counterparties with a low baseline score ({rule_score:.1f}/100). "
-                    "This pattern frequently occurs when an innocent customer is victimized by unauthorized account takeover or an APP scam."
-                )
-                suggested_focus = "Investigate unauthorized debit and verify customer authorization rather than presuming perpetrator guilt."
-            elif rule_score >= 70.0 and ml_score <= 35.0:
-                divergence_interp = (
-                    "Heuristic Structural Alert: Rule-based heuristics flagged rapid pass-through or cyclic transfers "
-                    f"({rule_score:.1f}/100), but aggregate feature averages remained below the statistical ML threshold "
-                    f"({ml_score:.1f}/100)."
-                )
-                suggested_focus = "Inspect counterparty relationship topology and rapid fund forwarding."
-            else:
-                divergence_interp = (
-                    f"Moderate Score Divergence ({score_delta:.1f} pts): ML and heuristic algorithms evaluate different dimensions "
-                    "of the transaction history."
-                )
-                suggested_focus = "Review both TreeSHAP contributors and rule signal details."
-        else:
+        if model_suggests_review and not rules_suggest_review:
             divergence_interp = (
-                f"Evaluation Alignment: Machine learning ({ml_score:.1f}/100) and rule heuristics ({rule_score:.1f}/100) "
-                "are directionally consistent."
+                "The account model suggests review but the fixed rules do not. The model weighs the account's whole "
+                "behaviour pattern; the rules look for specific signals such as quick forwarding. Neither is "
+                "automatically right. A large unusual payment out of an account can also be a sign of a scam victim."
             )
-            suggested_focus = "Proceed with findings according to shared risk level."
+            suggested_focus = "Look at the transactions and the model's listed factors before deciding anything."
+        elif rules_suggest_review and not model_suggests_review:
+            divergence_interp = (
+                "The fixed rules suggest review but the account model does not. The rules found specific signals; "
+                "the model scored the account's overall behaviour below its review threshold. A score below the "
+                "threshold does not clear the account."
+            )
+            suggested_focus = "Check the rule signals against the actual transfers and counterparties."
+        elif model_suggests_review:
+            divergence_interp = "Both the fixed rules and the account model suggest review."
+            suggested_focus = "Review the transfers and evidence; agreement between the checks is not proof."
+        else:
+            divergence_interp = "Neither the fixed rules nor the account model suggests review."
+            suggested_focus = "This does not clear the account; consider the case evidence."
 
         divergence_info = ModelDivergenceInfo(
-            divergence_detected=divergence_detected,
+            model_suggests_review=model_suggests_review,
+            rule_suggests_review=rules_suggest_review,
+            checks_disagree=review["checks_disagree"],
+            model_review_threshold=V2MLInferenceService.decision_threshold(),
             ml_score=ml_score,
             rule_score=rule_score,
-            score_delta=score_delta,
+            divergence_detected=review["checks_disagree"],
+            # Deprecated; same arithmetic as before so existing callers see no change in value.
+            score_delta=round(abs(ml_score - rule_score), 1),
             interpretation=divergence_interp,
             suggested_focus=suggested_focus,
         )
@@ -175,22 +199,29 @@ class AccountLiveAnalysisService:
             )
             action_idx += 1
 
-        # C. Divergence / Victim Protection
-        if divergence_detected and ml_score >= 70.0 and rule_score <= 35.0:
+        # C. Model suggests review but the rules do not (a pattern seen when a customer is drained by a scam)
+        if model_suggests_review and not rules_suggest_review:
+            top = ml_assessment.top_contributions[0] if ml_assessment.top_contributions else None
+            top_text = (
+                f"The input with the largest effect on the model score was {top.feature_name} "
+                f"({'raised' if top.impact_direction == 'increases_risk' else 'lowered'} the score)."
+                if top
+                else "No model explanation was available for this result."
+            )
             recommended_actions.append(
                 RecommendedAction(
                     action_id=f"ACT-00{action_idx}",
-                    title="Reconcile Model-Rule Divergence: Potential Victim Protection Review",
+                    title="Check whether the account holder could be a victim",
                     priority="high_priority",
                     action_type="divergence_reconciliation",
                     rationale=(
-                        f"Statistical model risk ({ml_score:.1f}/100) diverges by {score_delta:.1f} points from rule baseline ({rule_score:.1f}/100). "
-                        "When elevated ML risk is driven solely by a sudden large drain on an established retail account, the customer is likely "
-                        "a victim of deception (APP scam) or unauthorized takeover."
+                        "The account model suggests review but the fixed rules do not. When this is driven by a sudden "
+                        "large payment out of an established account, the holder may have been deceived or had the "
+                        "account taken over."
                     ),
-                    supporting_evidence=f"ML score: {ml_score:.1f}; Rule score: {rule_score:.1f}; dominant TreeSHAP driver is peak transaction amount.",
-                    suggested_records="Conduct empathetic out-of-band contact with the account holder to verify if they authorized the transfer or were coerced.",
-                    remaining_uncertainty="Whether the account holder acted under deceptive inducement or voluntarily made an intentional transfer.",
+                    supporting_evidence=f"Model score {ml_score:.1f}% (at or above its review threshold); rule score {rule_score:.1f}/100. {top_text}",
+                    suggested_records="Contact the account holder out of band to confirm whether they authorised the transfer.",
+                    remaining_uncertainty="Whether the holder acted under deception or made the transfer intentionally.",
                 )
             )
             action_idx += 1
@@ -274,12 +305,6 @@ class AccountLiveAnalysisService:
             )
         )
 
-        human_review = (
-            ml_score >= 70.0
-            or rule_score >= 56.0
-            or divergence_detected
-            or signals.rapid_pass_through
-        )
 
         now_utc = datetime.now(timezone.utc).isoformat()
         run_id = f"RUN-{uuid.uuid4().hex[:8].upper()}"
@@ -295,7 +320,8 @@ class AccountLiveAnalysisService:
             divergence=divergence_info,
             recommended_actions=recommended_actions,
             evidence_gaps=rule_assessment.evidence_gaps,
-            human_review_recommended=human_review,
+            human_review_recommended=bool(review["human_review_basis"]),
+            human_review_basis=review["human_review_basis"],
             disclaimer=(
                 "Advisory Decision Support Only. Results reflect on-demand real-time computation of observable ledger features "
                 "and trained machine learning inference. Machine learning risk estimates and rule signals provide indicators "
