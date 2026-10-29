@@ -10,7 +10,7 @@ interface V2MoneyFlowVisualProps {
   className?: string;
 }
 
-// Authentic fallback data from ACC-000001 (Victim demo) for instant initial render without layout shift
+// Placeholder layout for ACC-000001 shown only until the live trace loads; replaced (or cleared on failure).
 const INITIAL_NODES: V2GraphNode[] = [
   {
     account_id: 'ACC-000001',
@@ -102,12 +102,14 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
   const [selectedDestId, setSelectedDestId] = useState<string>('ACC-000414');
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
 
   // Fetch real forensic trace data for selected root demo account
   useEffect(() => {
     let active = true;
     setLoading(true);
+    setLoadFailed(false);
 
     try {
       const tracePromise = v2Api.getTrace?.({
@@ -136,7 +138,11 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
             }
           })
           .catch(() => {
-            // Keep authentic initial fallback demo dataset if backend unreachable
+            // Never leave placeholder data on screen as if it were live.
+            if (!active) return;
+            setNodes([]);
+            setEdges([]);
+            setLoadFailed(true);
           })
           .finally(() => {
             if (active) setLoading(false);
@@ -304,9 +310,9 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
                 ? 'bg-white text-[#EA8500] font-bold shadow-xs border border-[#FCD5B5]'
                 : 'text-[#6B655B] hover:text-[#1A1714]'
             }`}
-            title="Inspect Scam Victim Demo Flow"
+            title="Outgoing transfers of ACC-000001"
           >
-            Victim
+            ACC-000001
           </button>
           <button
             type="button"
@@ -316,9 +322,9 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
                 ? 'bg-white text-[#EA8500] font-bold shadow-xs border border-[#FCD5B5]'
                 : 'text-[#6B655B] hover:text-[#1A1714]'
             }`}
-            title="Inspect Money Mule Demo Flow"
+            title="Outgoing transfers of ACC-000002"
           >
-            Mule
+            ACC-000002
           </button>
         </div>
       </div>
@@ -491,6 +497,12 @@ export const V2MoneyFlowVisual: React.FC<V2MoneyFlowVisualProps> = ({
             );
           })}
         </svg>
+
+        {loadFailed && (
+          <div role="alert" className="absolute inset-0 flex items-center justify-center bg-[#FAF7F2]/95 p-4 text-center text-xs text-[#6B655B]">
+            Live money flow could not be loaded from the server, so nothing is shown here.
+          </div>
+        )}
 
         {/* Floating Instruction Overlay Badge */}
         <div className="absolute top-2.5 left-3 bg-[#FFFFFF]/95 backdrop-blur-xs border border-[#EAE3D6] px-2.5 py-0.5 rounded-full text-[10px] text-[#6B655B] font-mono shadow-xs">

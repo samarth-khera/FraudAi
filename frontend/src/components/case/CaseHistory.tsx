@@ -15,19 +15,28 @@ const SYSTEM_ACTORS: Record<string, string> = {
 export const ActorLine: React.FC<{ event: AuditEvent }> = ({ event }) => {
   const system = SYSTEM_ACTORS[event.performed_by];
   if (system) return <span>{system}</span>;
-  const verified = event.details?.reviewer_identity_verified;
+  const d = event.details ?? {};
+  // Older events stored reviewer_identity_verified=true when an API key was present. A key authorises the
+  // request; it never proves who typed the name, so names are always shown as self-reported.
+  const legacyKeyFlag = d.reviewer_identity_verified === true || d.actor_identity_verified === true;
+  const requestAuthenticated = d.request_authenticated === true || legacyKeyFlag;
+  const knownSelfReported =
+    d.reviewer_name_source === 'self_reported' ||
+    typeof d.reviewer_identity_verified === 'boolean' ||
+    typeof d.actor_identity_verified === 'boolean';
   return (
     <span className="inline-flex flex-wrap items-center gap-1.5">
       <UserRound className="w-3.5 h-3.5" aria-hidden="true" />
       <span className="font-semibold text-[#1A1714]">{event.performed_by}</span>
-      {verified === true ? (
-        <span className="inline-flex items-center gap-1 text-[#166534]">
-          <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" /> identity verified by API key
-        </span>
-      ) : verified === false ? (
+      {knownSelfReported ? (
         <span>· name typed by the reviewer, not verified</span>
       ) : (
         <span>· identity verification not recorded</span>
+      )}
+      {requestAuthenticated && (
+        <span className="inline-flex items-center gap-1">
+          <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" /> request authorised with the server’s API key
+        </span>
       )}
     </span>
   );

@@ -1,97 +1,75 @@
 import React from 'react';
-import { AlertTriangle, UserCheck, Shield, Scale } from 'lucide-react';
+import { AlertTriangle, UserCheck } from 'lucide-react';
+import { COMPARISON_TEXT, compareChecks, formatModelScore, ruleSuggestsReview } from '../../lib/modelScore';
 
 interface V2ModelDivergenceAlertProps {
   accountId: string;
   mlRiskScore: number;
   mlRiskLevel: string;
+  /** From the backend's predicted_class, which applies the served review threshold. */
+  modelSuggestsReview: boolean;
   ruleRiskScore: number;
   ruleRiskLevel: string;
+  modelThresholdLabel?: string | null;
   interpretation?: string;
   suggestedFocus?: string;
 }
 
+/**
+ * Shown only when exactly one of the two checks suggests review. The two scores use different scales
+ * (model: 0-100% score; rules: points of 100), so they are compared by their review suggestions, never
+ * by subtracting the numbers.
+ */
 export const V2ModelDivergenceAlert: React.FC<V2ModelDivergenceAlertProps> = ({
   accountId,
   mlRiskScore,
   mlRiskLevel,
+  modelSuggestsReview,
   ruleRiskScore,
   ruleRiskLevel,
+  modelThresholdLabel,
   interpretation,
   suggestedFocus,
 }) => {
-  // Divergence check: ML score and Rule baseline differ significantly (delta >= 30 pts or elevated ML with low rule)
-  const scoreDelta = Math.abs(mlRiskScore - ruleRiskScore);
-  const isDivergent = scoreDelta >= 30.0 || (mlRiskScore >= 60.0 && ruleRiskScore <= 35.0);
-
-  if (!isDivergent) return null;
+  const comparison = compareChecks(modelSuggestsReview, ruleSuggestsReview(ruleRiskLevel));
+  if (comparison === 'both' || comparison === 'neither') return null;
 
   return (
-    <div className="rounded-2xl border-2 border-[#FCD5B5] bg-[#FFF8EE] p-6 shadow-sm text-[#1A1714] space-y-4">
-      <div className="flex items-start gap-4">
-        <div className="w-11 h-11 rounded-2xl bg-[#FFF4E6] border border-[#FCD5B5] flex items-center justify-center text-[#EA8500] shrink-0 mt-0.5 shadow-2xs">
-          <AlertTriangle className="w-5 h-5" />
-        </div>
-        <div className="flex-1 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#C05621] bg-[#FFF4E6] px-2.5 py-0.5 rounded-full border border-[#FCD5B5]">
-                  AUDIT REQUIRED
-                </span>
-                <span className="text-[11px] text-[#6B655B] font-mono">
-                  Model Score Divergence: Compromised Victim Pattern Detected
-                </span>
-              </div>
-              <h3 className="text-lg font-bold text-[#1A1714] mt-1 font-display">
-                The AI and the rule checks disagree
-              </h3>
-            </div>
-
-            {/* Side-by-side Score Comparison */}
-            <div className="flex items-center gap-2.5 font-mono text-xs">
-              <div className="px-3 py-1.5 rounded-xl bg-[#FFF0F2] text-[#BE123C] border border-[#FECDD3] font-bold flex items-center gap-1.5 shadow-2xs">
-                <span className="w-2 h-2 rounded-full bg-[#E11D48]"></span>
-                <span>ML Score: {mlRiskScore.toFixed(1)}/100</span>
-                <span className="text-[10px] uppercase font-normal opacity-80">({mlRiskLevel})</span>
-              </div>
-              <div className="px-3 py-1.5 rounded-xl bg-[#EAF7EE] text-[#166534] border border-[#BBF7D0] font-bold flex items-center gap-1.5 shadow-2xs">
-                <span className="w-2 h-2 rounded-full bg-[#22C55E]"></span>
-                <span>Rule Baseline: {ruleRiskScore.toFixed(1)}/100</span>
-                <span className="text-[10px] uppercase font-normal opacity-80">({ruleRiskLevel})</span>
-              </div>
-            </div>
+    <div
+      role="note"
+      aria-label={`The two checks disagree about ${accountId}`}
+      className="rounded-2xl border border-[#FCD5B5] bg-[#FFF8EE] p-5 text-[#1A1714] space-y-3"
+    >
+      <div className="flex items-start gap-3">
+        <span className="w-9 h-9 rounded-xl bg-[#FFF4E6] border border-[#FCD5B5] flex items-center justify-center text-[#EA8500] shrink-0">
+          <AlertTriangle className="w-4 h-4" aria-hidden="true" />
+        </span>
+        <div className="space-y-2 min-w-0">
+          <h3 className="font-bold font-display">The model and the fixed rules disagree about review</h3>
+          <div className="flex flex-wrap gap-2 font-mono text-xs">
+            <span className="px-2.5 py-1 rounded-lg bg-white border border-[#EAE3D6]">
+              Model score {formatModelScore(mlRiskScore)} ({mlRiskLevel}) ·{' '}
+              {modelSuggestsReview ? 'suggests review' : `below ${modelThresholdLabel ?? 'its'} threshold`}
+            </span>
+            <span className="px-2.5 py-1 rounded-lg bg-white border border-[#EAE3D6]">
+              Rule score {Math.round(ruleRiskScore)} points of 100 ({ruleRiskLevel}) ·{' '}
+              {ruleSuggestsReview(ruleRiskLevel) ? 'suggests review' : 'does not suggest review'}
+            </span>
           </div>
-
-          <p className="text-sm text-[#443E38] leading-relaxed">
-            {interpretation || 'The AI noticed an unusually large transaction and a major change in account balance. The rule checks found fewer suspicious behaviour patterns. This needs a closer look; neither score proves that the account holder committed fraud. Anomalous balance drain can indicate victim impact rather than perpetrator behaviour.'}
+          <p className="text-sm text-[#443E38] leading-relaxed">{interpretation || COMPARISON_TEXT[comparison]}</p>
+          <p className="text-xs text-[#6B655B]">
+            The two scores use different scales, so their numbers should not be subtracted or compared directly.
           </p>
-
           {suggestedFocus && (
-            <div className="p-3 rounded-xl bg-white/80 border border-[#FCD5B5] text-xs text-[#6B655B] leading-relaxed">
-              <strong className="text-[#C05621] font-semibold">Recommended Investigative Focus: </strong>
-              <span>{suggestedFocus}</span>
-            </div>
+            <p className="text-xs text-[#6B655B]">
+              <strong className="text-[#C05621]">Next: </strong>
+              {suggestedFocus}
+            </p>
           )}
-
-          {/* Operational Safeguards Card */}
-          <div className="bg-white rounded-xl border border-[#EAE3D6] p-4 text-xs space-y-2.5 shadow-2xs">
-            <div className="flex items-center gap-2 font-bold text-[#1A1714]">
-              <UserCheck className="w-4 h-4 text-[#166534]" />
-              <span>Innocent Account Protection & Safeguards:</span>
-            </div>
-            <ul className="text-[#6B655B] pl-5 space-y-1.5 text-xs list-disc leading-relaxed">
-              <li>
-                <strong className="text-[#1A1714]">Anomalous Balance Drain Analysis:</strong> In an Authorized Push Payment (APP) scam, the victim's account is depleted by an attacker. TreeSHAP confirms <code className="font-mono text-[11px] bg-[#FAF7F2] px-1.5 py-0.5 rounded border border-[#EAE3D6] text-[#1A1714]">max_amount</code> (+3.91) and <code className="font-mono text-[11px] bg-[#FAF7F2] px-1.5 py-0.5 rounded border border-[#EAE3D6] text-[#1A1714]">initial_balance</code> (+1.14) as the primary statistical drivers.
-              </li>
-              <li>
-                <strong className="text-[#1A1714]">Mandatory Evidence Review:</strong> This alert recommends manual evidence review. Always trace downstream recipient hops to identify destination money mules and cashing-out terminals.
-              </li>
-              <li>
-                <strong className="text-[#DC2626]">Strict Prohibition on Automated Action:</strong> Automated freezing, blocking, service denial, or reporting of this customer based on model outputs is strictly prohibited by institutional compliance rules.
-              </li>
-            </ul>
-          </div>
+          <p className="flex items-start gap-1.5 text-xs text-[#6B655B]">
+            <UserCheck className="w-3.5 h-3.5 mt-0.5 shrink-0 text-[#166534]" aria-hidden="true" />
+            Nothing happens automatically. No account is frozen, blocked or reported because of these scores.
+          </p>
         </div>
       </div>
     </div>

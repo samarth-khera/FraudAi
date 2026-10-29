@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, ClipboardCheck, Loader2 } from 'lucide-react';
-import { api } from '../../services/api';
+import { api, WriteAccessMode } from '../../services/api';
 import { AccountAssessmentResponse, AccountReviewStatus } from '../../types/api';
 import {
   EVIDENCE_QUALITY_OPTIONS,
@@ -292,6 +292,31 @@ const ReviewForm: React.FC<{
   );
 };
 
+const WRITE_ACCESS_TEXT: Record<WriteAccessMode, { tone: string; text: string }> = {
+  open_local_development: {
+    tone: 'border-[#EAE3D6] bg-[#FAF7F2] text-[#6B655B]',
+    text: 'This is a local server with no API key, so anyone who can reach it can record decisions. Reviewer names are typed, not verified.',
+  },
+  api_key_required: {
+    tone: 'border-[#FDE68A] bg-[#FFFBEB] text-[#92400E]',
+    text: 'This server requires an API key for changes. This browser app does not send one, so saving will be refused; use an API client that holds the key. Reviewer names are still typed, not verified.',
+  },
+  disabled_no_key_configured: {
+    tone: 'border-[#FECDD3] bg-[#FFF0F2] text-[#881337]',
+    text: 'Changes are disabled on this server because it runs in production mode without an API key.',
+  },
+};
+
+const WriteAccessNotice: React.FC<{ mode: WriteAccessMode | null }> = ({ mode }) => {
+  if (!mode || !WRITE_ACCESS_TEXT[mode]) return null;
+  const { tone, text } = WRITE_ACCESS_TEXT[mode];
+  return (
+    <p data-testid="write-access-notice" className={`mt-3 rounded-xl border p-3 text-xs leading-relaxed ${tone}`}>
+      {text}
+    </p>
+  );
+};
+
 export const ReviewHistorySection: React.FC<Props> = ({ data, selectedAccountId, onSelectAccount, onRecorded }) => {
   const [historyKey, setHistoryKey] = useState(0);
   const [saved, setSaved] = useState<{ accountId: string; state: string } | null>(null);
@@ -302,6 +327,18 @@ export const ReviewHistorySection: React.FC<Props> = ({ data, selectedAccountId,
     if (saved && saved.accountId !== selectedAccountId) setSaved(null);
   }, [selectedAccountId, saved]);
 
+  const [writeAccess, setWriteAccess] = useState<WriteAccessMode | null>(null);
+  useEffect(() => {
+    let active = true;
+    api
+      .getHealth()
+      .then((h) => active && setWriteAccess(h.write_access ?? null))
+      .catch(() => active && setWriteAccess(null));
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-[#EAE3D6] bg-white p-5 sm:p-6" aria-labelledby="review-heading">
@@ -309,6 +346,7 @@ export const ReviewHistorySection: React.FC<Props> = ({ data, selectedAccountId,
         <p className="mt-1 text-sm text-[#6B655B]">
           Decisions are yours. FraudShield records them with your reasoning; it never decides or acts on its own.
         </p>
+        <WriteAccessNotice mode={writeAccess} />
 
         {!data.assessments ? (
           <div className="mt-4">

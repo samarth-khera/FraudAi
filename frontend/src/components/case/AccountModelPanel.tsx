@@ -10,6 +10,19 @@ import {
 } from '../../types/v2';
 import { featureInfo } from '../../lib/featureGlossary';
 import { formatDateTime, formatTime } from '../../lib/format';
+import {
+  COMPARISON_TEXT,
+  MODEL_SCORE_LABEL,
+  MODEL_SCORE_MEANING,
+  RULE_SCORE_LABEL,
+  RULE_SCORE_MEANING,
+  accountEvaluation,
+  compareChecks,
+  formatModelScore,
+  pct,
+  plainShare,
+  ruleSuggestsReview,
+} from '../../lib/modelScore';
 import { describeError } from '../../lib/errors';
 import { ErrorState, LoadingState, Pill } from '../ui/StateViews';
 
@@ -34,7 +47,6 @@ const settle = <T,>(p: Promise<T>): Promise<Result<T>> =>
 const LEVEL_TONE = { low: 'green', elevated: 'amber', high: 'orange', critical: 'rose' } as const;
 const LEVEL_LABEL = { low: 'Low', elevated: 'Elevated', high: 'High', critical: 'Very high' } as const;
 
-const pct = (v: unknown) => (typeof v === 'number' ? `${Math.round(v * 100)}%` : '—');
 
 export const AccountModelPanel: React.FC<Props> = ({ accountId, isReportingCustomer }) => {
   const [data, setData] = useState<PanelData | null>(null);
@@ -67,14 +79,12 @@ export const AccountModelPanel: React.FC<Props> = ({ accountId, isReportingCusto
 
   const profile = data.profile.value;
   const status = data.status.ok ? data.status.value : null;
-  const metrics = status?.account_model?.test_metrics as Record<string, number> | null | undefined;
-  const testSuspicious = status?.account_model?.dataset_info?.test_suspicious_count as number | undefined;
-  const testNormal = status?.account_model?.dataset_info?.test_normal_count as number | undefined;
-  const threshold = status?.account_model?.decision_threshold ?? (typeof metrics?.threshold === 'number' ? metrics.threshold : null);
-  const ops = status?.account_model?.operational_notes;
+  const evaluation = accountEvaluation(status);
   const rules = data.rules.ok ? data.rules.value : null;
   const model = data.model.ok ? data.model.value : null;
-  const disagree = rules && model ? Math.abs(rules.risk_score - model.risk_score) >= 30 : false;
+  // The backend applies the served threshold; the UI only explains it.
+  const modelSuggests = model ? model.predicted_class === 'suspicious' : false;
+  const comparison = rules && model ? compareChecks(modelSuggests, ruleSuggestsReview(rules.risk_level)) : null;
   const maxContribution = Math.max(0.0001, ...(model?.top_contributions ?? []).map((c) => Math.abs(c.contribution_score)));
 
   return (
@@ -104,37 +114,45 @@ export const AccountModelPanel: React.FC<Props> = ({ accountId, isReportingCusto
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-xl border border-[#EAE3D6] p-4">
+        <div className="rounded-xl border border-[#EAE3D6] p-4" data-testid="rule-score-card">
           <p className="flex items-center gap-1.5 text-xs font-semibold text-[#6B655B]">
-            <Scale className="w-3.5 h-3.5" aria-hidden="true" /> Ledger rules
+            <Scale className="w-3.5 h-3.5" aria-hidden="true" /> {RULE_SCORE_LABEL} <span className="font-normal">· fixed rules</span>
           </p>
           {rules ? (
             <>
               <p className="mt-1 flex items-baseline gap-2">
                 <span className="text-2xl font-bold">{Math.round(rules.risk_score)}</span>
-                <span className="text-xs text-[#6B655B]">/ 100</span>
+                <span className="text-xs text-[#6B655B]">points of 100</span>
                 <Pill tone={LEVEL_TONE[rules.risk_level]}>{LEVEL_LABEL[rules.risk_level]}</Pill>
               </p>
-              <p className="mt-1 text-xs text-[#6B655B]">Fixed, readable rules about timing, size and spread of transfers.</p>
+              <p className="mt-1 text-xs font-medium text-[#1A1714]">
+                {ruleSuggestsReview(rules.risk_level) ? 'Suggests review' : 'Does not suggest review'}
+              </p>
+              <p className="mt-1 text-xs text-[#6B655B]">{RULE_SCORE_MEANING}</p>
             </>
           ) : (
             <p className="mt-1 text-sm text-[#6B655B]">{describeError(data.rules.ok ? null : data.rules.error, 'Rule check unavailable.')}</p>
           )}
         </div>
-        <div className="rounded-xl border border-[#EAE3D6] p-4">
+        <div className="rounded-xl border border-[#EAE3D6] p-4" data-testid="model-score-card">
           <p className="flex items-center gap-1.5 text-xs font-semibold text-[#6B655B]">
-            <Cpu className="w-3.5 h-3.5" aria-hidden="true" /> Account model {model && <span className="font-mono font-normal">{model.model_version}</span>}
+            <Cpu className="w-3.5 h-3.5" aria-hidden="true" /> {MODEL_SCORE_LABEL} <span className="font-normal">· machine learning</span>
+            {model && <span className="font-mono font-normal">{model.model_version}</span>}
           </p>
           {model ? (
             <>
               <p className="mt-1 flex items-baseline gap-2">
-                <span className="text-2xl font-bold">{Math.round(model.risk_score)}%</span>
+                <span className="text-2xl font-bold">{formatModelScore(model.risk_score)}</span>
                 <Pill tone={LEVEL_TONE[model.risk_level]}>{LEVEL_LABEL[model.risk_level]}</Pill>
               </p>
+              <p className="mt-1 text-xs font-medium text-[#1A1714]">
+                {modelSuggests
+                  ? `At or above the ${evaluation.thresholdLabel ?? 'review'} review threshold: suggested for review, not confirmed fraud.`
+                  : `Below the ${evaluation.thresholdLabel ?? 'review'} review threshold. This does not clear the account.`}
+              </p>
               <p className="mt-1 text-xs text-[#6B655B]">
-                How closely this account’s behaviour resembles suspicious accounts in the synthetic training data. A
-                score, not a verified probability.
-                {threshold !== null && ` Accounts at ${Math.round(threshold * 100)}% or more are suggested for review.`}
+                {MODEL_SCORE_MEANING} Shown on a 0–100% scale: higher means the account behaves more like the suspicious
+                accounts the model learned from.
               </p>
             </>
           ) : (
@@ -145,9 +163,17 @@ export const AccountModelPanel: React.FC<Props> = ({ accountId, isReportingCusto
         </div>
       </div>
 
-      {disagree && (
-        <p className="rounded-xl border border-[#FDE68A] bg-[#FFFBEB] p-3 text-xs text-[#92400E] leading-relaxed">
-          The two checks disagree by more than 30 points. Neither is authoritative; look at the underlying transfers above.
+      {comparison && (
+        <p
+          data-testid="checks-comparison"
+          className={`rounded-xl border p-3 text-xs leading-relaxed ${
+            comparison === 'model_only' || comparison === 'rules_only'
+              ? 'border-[#FDE68A] bg-[#FFFBEB] text-[#92400E]'
+              : 'border-[#EAE3D6] bg-[#FAF7F2] text-[#6B655B]'
+          }`}
+        >
+          {COMPARISON_TEXT[comparison]} The two scores use different scales, so their numbers should not be compared
+          directly.
         </p>
       )}
       {isReportingCustomer && model && (
@@ -201,37 +227,42 @@ export const AccountModelPanel: React.FC<Props> = ({ accountId, isReportingCusto
         </section>
       )}
 
-      <section className="rounded-xl border border-[#EAE3D6] bg-[#FAF7F2] p-4 text-xs text-[#6B655B] space-y-2 leading-relaxed">
+      <section
+        data-testid="model-limits"
+        className="rounded-xl border border-[#EAE3D6] bg-[#FAF7F2] p-4 text-xs text-[#6B655B] space-y-2 leading-relaxed"
+      >
         <p className="flex items-center gap-1.5 font-semibold text-[#1A1714]">
           <Info className="w-3.5 h-3.5" aria-hidden="true" /> About these results
         </p>
         <p>
           Computed at {formatTime(data.loadedAt)} from this account’s whole ledger history, including activity before and
-          after this case’s transfers, not only the transfers in this case.
+          after this case’s transfers.
         </p>
-        {metrics && (
-          <p>
-            On held-out synthetic test accounts
-            {testSuspicious !== undefined && testNormal !== undefined
-              ? ` (${testSuspicious} suspicious, ${testNormal.toLocaleString('en-IN')} ordinary)`
-              : testSuspicious !== undefined
-              ? ` (only ${testSuspicious} suspicious)`
-              : ''}
-            , at its {threshold !== null ? `${Math.round(threshold * 100)}%` : 'review'} threshold the model caught{' '}
-            {pct(metrics.recall)} of suspicious accounts, and {pct(metrics.precision)} of the accounts it flagged were
-            suspicious. It misses cases and raises false alarms.
-          </p>
-        )}
-        {ops?.demo_ledger_flag_rate_ordinary !== undefined && (
-          <p>
-            In this app’s own ledger, where suspicious accounts are rare, it also flags about{' '}
-            {pct(ops.demo_ledger_flag_rate_ordinary)} of ordinary accounts, so most flags there are false alarms.
-          </p>
-        )}
         <p>
-          Trained and tested only on synthetic data. A high score is a reason to look closer, never a finding, and a low
-          score does not clear an account.
+          In synthetic testing the model found {plainShare(evaluation.recall)} of suspicious accounts, and{' '}
+          {plainShare(evaluation.precision)} of the accounts it flagged were suspicious. It misses cases and raises false
+          alarms. A high score does not show intent; a low score does not show innocence.
         </p>
+        <details className="group">
+          <summary className="cursor-pointer font-semibold text-[#B45309] hover:text-[#EA8500]">How was this measured?</summary>
+          <ul className="mt-2 list-disc pl-5 space-y-1">
+            <li>
+              Test set: {evaluation.positives ?? '—'} suspicious and {evaluation.negatives?.toLocaleString('en-IN') ?? '—'}{' '}
+              ordinary synthetic accounts the model never trained on.
+            </li>
+            <li>
+              At the {evaluation.thresholdLabel ?? '—'} review threshold: found {pct(evaluation.recall)} of suspicious
+              accounts (recall); {pct(evaluation.precision)} of flags were suspicious (precision).
+            </li>
+            {evaluation.demoFlagRate !== null && (
+              <li>
+                In this app’s own ledger, where suspicious accounts are rare, it flags about {pct(evaluation.demoFlagRate)}{' '}
+                of ordinary accounts, so most flags there are false alarms.
+              </li>
+            )}
+            <li>These are results on synthetic data. They do not show how the model would perform on real bank accounts.</li>
+          </ul>
+        </details>
         <Link to="/tools/model" className="inline-block font-semibold text-[#B45309] hover:text-[#EA8500]">
           Full model evaluation →
         </Link>

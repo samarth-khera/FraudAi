@@ -196,8 +196,13 @@ describe('ModelInsightsPage Component', () => {
     expect(screen.getByText('1,992')).toBeInTheDocument(); // TN
     expect(screen.getByText('True Negatives')).toBeInTheDocument();
     expect(screen.getByText('False Positives')).toBeInTheDocument();
-    expect(screen.getByText('Missed Fraud')).toBeInTheDocument();
-    expect(screen.getByText('Correctly Flagged')).toBeInTheDocument();
+    expect(screen.getByText('Labelled suspicious, missed')).toBeInTheDocument();
+    expect(screen.getByText('Labelled suspicious, flagged')).toBeInTheDocument();
+    // Synthetic labels are not "fraud" and a true negative is not a clearance.
+    expect(screen.queryByText('Missed Fraud')).toBeNull();
+    expect(screen.queryByText('Legitimate Cleared')).toBeNull();
+    // False-alarm rate is computed from the served counts, not hardcoded.
+    expect(screen.queryByText(/FPR: 0\.10%/)).toBeNull();
   });
 
   it('renders global feature importance ranked list', async () => {
@@ -282,8 +287,9 @@ describe('ModelInsightsPage Component', () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText('76.5 / 100')).toBeInTheDocument();
-        expect(screen.getByText('SUSPICIOUS')).toBeInTheDocument();
+        expect(screen.getByText('76.5%')).toBeInTheDocument();
+        expect(screen.getByText('Suggested for review')).toBeInTheDocument();
+        expect(screen.queryByText('76.5 / 100')).toBeNull();
         expect(screen.getByText('+3.9147')).toBeInTheDocument();
         expect(screen.getAllByText('+ INCREASES RISK').length).toBeGreaterThan(0);
         expect(screen.getAllByText('- DECREASES RISK').length).toBeGreaterThan(0);
@@ -322,5 +328,50 @@ describe('ModelInsightsPage Component', () => {
       expect(screen.getByText('Model Registry Communication Issue')).toBeInTheDocument();
       expect(screen.getByText('Network connection timeout')).toBeInTheDocument();
     });
+  });
+
+  it('shows each model\'s served threshold and keeps the PaySim benchmark separate', async () => {
+    vi.mocked(v2Api.getModelsStatus).mockResolvedValue({
+      ...mockModelStatusResponse,
+      account_model: {
+        ...mockModelStatusResponse.account_model,
+        version: 'v2-account-2.0.0',
+        decision_threshold: 0.1752,
+        test_metrics: { ...mockModelStatusResponse.account_model.test_metrics, threshold: 0.1752, ci95: { pr_auc: [0.2888, 0.4734] } },
+        dataset_info: { test_suspicious_count: 260, test_normal_count: 3919 },
+      },
+      paysim_benchmark: { ...mockModelStatusResponse.paysim_benchmark, decision_threshold: 0.65 },
+    });
+    render(
+      <MemoryRouter>
+        <ModelInsightsPage />
+      </MemoryRouter>
+    );
+    const threshold = await screen.findByTestId('served-threshold');
+    expect(threshold).toHaveTextContent('0.1752');
+    expect(screen.getByText(/Scores at or above this \(17\.5% on the percentage scale\) are suggested for human review\. It is not a chance of fraud\./)).toBeInTheDocument();
+    expect(screen.getByText('Favours recall (F2)')).toBeInTheDocument();
+    expect(screen.queryByText(/High Precision Focus/)).toBeNull();
+    expect(screen.queryByText(/Calibrated on validation split/)).toBeNull();
+    expect(screen.getByTestId('evaluation-scope-note')).toHaveTextContent(
+      '260 suspicious and 3,919 ordinary synthetic test accounts'
+    );
+    expect(screen.getByTestId('evaluation-scope-note')).toHaveTextContent('interval (0.29–0.47)');
+    expect(screen.getByTestId('evaluation-scope-note')).toHaveTextContent('not guarantees');
+
+    fireEvent.click(screen.getByText('Transaction-Level PaySim Benchmark'));
+    await waitFor(() => expect(screen.getByTestId('served-threshold')).toHaveTextContent('0.65'));
+    expect(screen.getByTestId('evaluation-scope-note')).toHaveTextContent(
+      'they say nothing about the account model or about investigations'
+    );
+  });
+
+  it('never shows a hardcoded threshold when the served model reports none', async () => {
+    render(
+      <MemoryRouter>
+        <ModelInsightsPage />
+      </MemoryRouter>
+    );
+    expect(await screen.findByTestId('served-threshold')).toHaveTextContent('Unavailable');
   });
 });

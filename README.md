@@ -41,7 +41,7 @@ Open the site and choose **Start sample investigation**. That opens case **FS-20
 
 - A synthetic complaint: customer `ACC-000001` says a caller persuaded them to send **₹2,50,000** by IMPS to `ACC-000003`.
 - The records show `ACC-000003` sent ₹2,45,000 on to two accounts within 10 minutes, and both of those made ATM cash-outs shortly after.
-- Try this: open `ACC-000003` in **Accounts & risk**. The ledger rules score it **60/100 (high)** and the account model **71% (high)**. Then open `ACC-000002`: rules 60/100, model **18% (elevated)**, just over the model’s 18% review threshold. The workspace explains why neither score is a finding.
+- Try this: open `ACC-000003` in **Accounts & risk**. The fixed rules give it **60 points of 100 (high)** and the account model a **model score of 71.3% (high)**. Then open `ACC-000002`: rules 60 points, model score **18.2% (elevated)**, just over the model’s **17.5%** review threshold. The workspace explains why neither score is a finding.
 - Record a decision in **Review & history**, refresh the page, and check that it is still there in the history.
 
 See [Presenting the demo](#presenting-the-demo) for a step-by-step script.
@@ -78,8 +78,9 @@ computed when you open the account.
 on 26 suspicious accounts and tested on 6, and had in fact missed every money-forwarding account it was tested on.
 
 The current version was tested on a separate synthetic ledger it never trained on: **260 suspicious and 3,919
-ordinary accounts**, including two kinds of suspicious behaviour it never saw in training. A score of **18% or
-more** means “suggested for review”; that threshold was chosen on separate validation data. At that threshold:
+ordinary accounts**, including two kinds of suspicious behaviour it never saw in training. A model score of
+**17.5% or more** (0.1752 on the model’s 0–1 scale) means “suggested for review”; that threshold was chosen on
+separate validation data. At that threshold:
 
 - it caught about **half** of the suspicious accounts (53%, 139 of 260);
 - about **one in three** of its flags were suspicious (33%); the rest were legitimate accounts that behave
@@ -95,6 +96,12 @@ scenario, so the model tells you nothing about corporate accounts.
 
 In plain terms: use the score as one prompt among several. A high score is never a finding, and a low score
 never clears an account.
+
+**Reading the two scores.** The **rule score** is points out of 100 from fixed rules; “high” (56+) or above
+suggests review. The **model score** is a percentage from the machine-learning model; at or above its review
+threshold it suggests review. They use different scales, so the workspace compares whether each one suggests
+review, never the difference between the numbers. When they disagree, neither is automatically right: look at
+the transfers and the model’s listed factors.
 
 ### What the PaySim benchmark does and does not prove
 
@@ -211,8 +218,10 @@ describe position in the money flow only.
   some behaviour families are still small (9–11 accounts), the synthetic suspicious rate (~6%) is far above real
   life, and the account-level features cannot see who the counterparties are. See
   [`docs/ACCOUNT_MODEL_AUDIT.md`](docs/ACCOUNT_MODEL_AUDIT.md).
-- **Reviewer identity is not verified.** Without an API key configured (`ADMIN_API_KEY`), the reviewer
-  name is whatever is typed. The history labels it as unverified. Production use would need sign-in and roles.
+- **Reviewer identity is never verified.** Reviewer names are typed by the user and recorded as self-reported.
+  An API key (`ADMIN_API_KEY`) only controls whether changes are accepted; it does not prove who typed the
+  name. Without a key the server accepts changes from anyone who can reach it, so run it locally only. See
+  [`backend/README.md`](backend/README.md#write-access-and-reviewer-identity).
 - **Audit history is append-only in the application, not tamper-proof.** Events are stored in SQLite with
   server timestamps. They are not cryptographically signed or hash-chained.
 - **Older local data.** A database used with earlier builds may contain reviews of `ACC-000001` under FS-1042
@@ -242,11 +251,11 @@ disagree, and a review decision.
 3. **Money flow:** show the five transfers from left to right. Explain that the *sum of all transfers*
    (₹7,36,000) counts the same money at each hop and is not the loss. Click `ACC-000003`.
 4. **Open account details** (Accounts & risk): `ACC-000003` forwarded ₹2,45,000 within 10 minutes. The ledger
-   rules score it **60/100 (high)**; the account model scores it **71% (high)**. Read the “Why the model gave
+   rules give it **60 points of 100 (high)**; the model score is **71.3% (high)**. Read the “Why the model gave
    this score” factors and the “About these results” limits aloud, especially that most flags on this ledger
    are false alarms.
-5. Click `ACC-000002`: rules 60/100, model **18% (elevated)**, barely over the review threshold. Then click
-   `ACC-000001`, the reporting customer: model **7% (low)**. Use these to explain that the score is a prompt
+5. Click `ACC-000002`: rules 60 points, model score **18.2% (elevated)**, barely over the 17.5% review threshold.
+   Then click `ACC-000001`, the reporting customer: model score **7.2% (low)**. Use these to explain that the score is a prompt
    to look closer, not a verdict either way.
 6. **Review & history:** choose `ACC-000003`, pick a decision, write your reasoning, type your name, click
    **Review before saving**, then **Save decision**. The green message appears only after the server confirms.
@@ -271,11 +280,40 @@ Reviews are permanent history, so earlier test runs remain visible. In the curre
 | FS-1042 | ACC-000001 | `test_investigator`, `SecAnalyst01` | Legacy reviews from the removed cross-dataset shortcut. Shown with a **Legacy record** label. |
 | FS-2001 | ACC-000002 | `chrome_verification` | Browser verification review (“keep under review”), 28 Oct 2026. |
 | FS-2001 | ACC-000003 | `acceptance_check` | Acceptance-test review, 29 Oct 2026. A live demo adds a newer decision on top. |
+| FS-2001 | ACC-000003 | `trust_check` | Score-clarity browser check (“escalate for investigation”), 29 Oct 2026. |
+| FS-2001 | ACC-000012 | `hardening_check` | Write-access browser check (“keep under review”), 29 Oct 2026. |
 
 To present from a clean history, stop the backend, move `backend/fraudshield.db` somewhere safe (keep it;
 it is the record), and start the backend again: it recreates the database with only the two sample cases.
 
 ---
+
+## Deployment (Render + Vercel)
+
+The public deployment is a **read-only demo** on free plans:
+
+| Part | Where | How it is built |
+|---|---|---|
+| Backend (FastAPI) | Render web service `fraudshield-api` from [`render.yaml`](render.yaml) | `scripts/render_build.sh`: pinned dependencies, model binaries fetched from the `models-2026-10-29` GitHub release and verified by SHA-256 ([`deploy/model_artifacts.json`](deploy/model_artifacts.json)), the synthetic ledger regenerated from seed 42, integrity tests and a startup check. |
+| Frontend (Vite) | Vercel project with root directory `frontend/` | `npm run build`, SPA fallback in [`frontend/vercel.json`](frontend/vercel.json). |
+
+Environment variables:
+
+| Where | Variable | Value |
+|---|---|---|
+| Render | `ENVIRONMENT` | `production` (set by the Blueprint): write endpoints are refused because no API key is configured |
+| Render | `ENABLE_API_DOCS` | `false` |
+| Render | `CORS_ALLOWED_ORIGINS` | the Vercel production URL, e.g. `https://<project>.vercel.app` |
+| Render | `PYTHON_VERSION` | `3.12.4` |
+| Vercel | `VITE_API_URL` | the Render URL, e.g. `https://fraudshield-api.onrender.com` (the build fails without it) |
+
+Why read-only: a Render web service's disk is wiped on every deploy and restart, and the app has no safe way to
+let the public write (the browser app must never receive the API key). The ledger and models are rebuilt at build
+time and the case database is re-seeded at start, so nothing needs to persist. Recording decisions in a public
+deployment would need a persistent database (Render Postgres or a paid disk) plus real user authentication.
+
+Free-plan limits: the backend sleeps after about 15 minutes without traffic and takes roughly a minute to wake;
+the header shows “Server unreachable” until it does.
 
 ## Further documentation
 

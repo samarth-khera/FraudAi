@@ -151,17 +151,56 @@ describe('CaseWorkspacePage', () => {
     expect(await screen.findByText('What the case records show')).toBeInTheDocument();
     expect(screen.getByText('8 min after receiving')).toBeInTheDocument();
     expect(screen.getByText('Rapid Outbound Forwarding Observed')).toBeInTheDocument();
-    expect(await screen.findByText('10%')).toBeInTheDocument();
-    expect(screen.getByText('62')).toBeInTheDocument();
-    expect(screen.getByText(/The two checks disagree/)).toBeInTheDocument();
+    const modelCard = await screen.findByTestId('model-score-card');
+    const ruleCard = screen.getByTestId('rule-score-card');
+    // Model output is labelled as a score with its version and the served threshold, not as a probability.
+    expect(within(modelCard).getByText(/Model score/)).toBeInTheDocument();
+    expect(within(modelCard).getByText('v2-account-2.0.0')).toBeInTheDocument();
+    expect(within(modelCard).getByText('10.1%')).toBeInTheDocument();
+    expect(within(modelCard).getByText('Below the 17.5% review threshold. This does not clear the account.')).toBeInTheDocument();
+    expect(within(modelCard).getByText(/not a verified probability of fraud or proof of criminal activity/)).toBeInTheDocument();
+    expect(within(modelCard).queryByText(/probability of/i, { selector: 'span' })).toBeNull();
+    // Rules are points, reported separately, with their own review point.
+    expect(within(ruleCard).getByText('60')).toBeInTheDocument();
+    expect(within(ruleCard).getByText('points of 100')).toBeInTheDocument();
+    expect(within(ruleCard).getByText('Suggests review')).toBeInTheDocument();
+    // Disagreement is about review suggestions, never a subtraction of incompatible scales.
+    const comparison = screen.getByTestId('checks-comparison');
+    expect(comparison).toHaveTextContent('The rules suggest review but the model does not');
+    expect(comparison).toHaveTextContent('should not be compared directly');
+    expect(screen.queryByText(/points\. Neither/)).toBeNull();
     expect(screen.getByText(/Largest transaction:/)).toBeInTheDocument();
     expect(screen.getAllByText('Raised score').length).toBeGreaterThan(0);
-    // Limits come from the served model's metadata, not hardcoded numbers.
-    expect(screen.getByText(/260 suspicious, 3,919 ordinary/)).toBeInTheDocument();
-    expect(screen.getByText(/at its 18% threshold the model caught\s+53% of suspicious/)).toBeInTheDocument();
-    expect(screen.getByText(/Accounts at 18% or more are suggested for review/)).toBeInTheDocument();
-    expect(screen.getByText(/flags about\s+5% of ordinary accounts/)).toBeInTheDocument();
+    // Limits sit next to the score and come from the served metadata.
+    const limits = screen.getByTestId('model-limits');
+    expect(limits).toHaveTextContent('found about half of suspicious accounts, and about 1 in 3 of the accounts it flagged were suspicious');
+    expect(limits).toHaveTextContent('A high score does not show intent; a low score does not show innocence.');
+    fireEvent.click(within(limits).getByText('How was this measured?'));
+    expect(limits).toHaveTextContent('260 suspicious and 3,919 ordinary');
+    expect(limits).toHaveTextContent('At the 17.5% review threshold: found 53% of suspicious accounts (recall); 33% of flags were suspicious (precision)');
+    expect(limits).toHaveTextContent('flags about 5% of ordinary accounts');
+    expect(limits).toHaveTextContent('do not show how the model would perform on real bank accounts');
     expect(v2Api.getMLAssessment).toHaveBeenCalledWith('ACC-000003');
+  });
+
+  it('states "suggested for review, not confirmed fraud" when the score meets the served threshold', async () => {
+    mockCaseApis();
+    vi.mocked(v2Api.getMLAssessment).mockResolvedValue({
+      ...ML,
+      risk_score: 71.3,
+      risk_level: 'high',
+      predicted_probability: 0.713,
+      predicted_class: 'suspicious',
+      model_version: 'v2-account-2.0.0',
+    });
+    renderCase('/cases/FS-2001?section=accounts&account=ACC-000003');
+    const modelCard = await screen.findByTestId('model-score-card');
+    expect(within(modelCard).getByText('71.3%')).toBeInTheDocument();
+    expect(within(modelCard).getByText('v2-account-2.0.0')).toBeInTheDocument();
+    expect(
+      within(modelCard).getByText('At or above the 17.5% review threshold: suggested for review, not confirmed fraud.')
+    ).toBeInTheDocument();
+    expect(screen.getByTestId('checks-comparison')).toHaveTextContent('Both checks suggest review. Agreement is not proof');
   });
 
   it('never calls the account model for case-only datasets', async () => {
@@ -179,6 +218,12 @@ describe('CaseWorkspacePage', () => {
     renderCase('/cases/FS-2001?section=accounts&account=ACC-000003');
     expect(await screen.findByText(/model file is missing/)).toBeInTheDocument();
     expect(screen.queryByText('Why the model gave this score')).not.toBeInTheDocument();
+    // No fallback score and no review suggestion are invented; the rule result is still shown separately.
+    const modelCard = screen.getByTestId('model-score-card');
+    expect(within(modelCard).queryByText(/\d+%/)).toBeNull();
+    expect(within(modelCard).queryByText(/review threshold/)).toBeNull();
+    expect(within(screen.getByTestId('rule-score-card')).getByText('60')).toBeInTheDocument();
+    expect(screen.queryByTestId('checks-comparison')).toBeNull();
   });
 
   it('records a decision only after confirmation and a real server response', async () => {
@@ -264,6 +309,41 @@ describe('CaseWorkspacePage', () => {
     expect(screen.getByText(/identity verification not recorded/)).toBeInTheDocument();
     // In-scope reviews are not flagged.
     expect(screen.queryByText(/Legacy record: ACC-000002/)).not.toBeInTheDocument();
+  });
+
+  it('never shows a typed reviewer name as verified, even when the request used the API key', async () => {
+    mockCaseApis();
+    const audit = makeAudit();
+    audit.events.push(
+      {
+        event_id: 5, case_id: 'FS-2001', timestamp: '2026-10-29T11:00:00', action: 'account_review_recorded',
+        performed_by: 'key_holder', entity_type: 'account_review', entity_id: 'FS-2001:ACC-000005',
+        details: { account_id: 'ACC-000005', new_review_state: 'under_review', reviewer_name_source: 'self_reported',
+                   reviewer_identity_verified: false, request_authenticated: true, auth_method: 'api_key' },
+      },
+      {
+        event_id: 6, case_id: 'FS-2001', timestamp: '2026-10-20T11:00:00', action: 'account_review_recorded',
+        performed_by: 'legacy_key_holder', entity_type: 'account_review', entity_id: 'FS-2001:ACC-000005',
+        details: { account_id: 'ACC-000005', new_review_state: 'under_review', reviewer_identity_verified: true },
+      }
+    );
+    vi.mocked(api.getCaseAuditTrail).mockResolvedValue(audit);
+    renderCase('/cases/FS-2001?section=review');
+    await screen.findByText('key_holder');
+    expect(screen.getAllByText(/request authorised with the server’s API key/).length).toBe(2);
+    expect(screen.queryByText(/identity verified/i)).toBeNull();
+    expect(screen.getAllByText(/name typed by the reviewer, not verified/).length).toBeGreaterThanOrEqual(3);
+  });
+
+  it.each([
+    ['open_local_development', /local server with no API key.*Reviewer names are typed, not verified/],
+    ['api_key_required', /requires an API key for changes\. This browser app does not send one/],
+    ['disabled_no_key_configured', /Changes are disabled on this server/],
+  ] as const)('tells the reviewer how writes are protected (%s)', async (mode, text) => {
+    mockCaseApis();
+    vi.spyOn(api, 'getHealth').mockResolvedValue({ status: 'ok', service: 's', phase: 'p', write_access: mode });
+    renderCase('/cases/FS-2001?section=review');
+    expect(await screen.findByTestId('write-access-notice')).toHaveTextContent(text);
   });
 
   it('shows a clear history error with retry', async () => {

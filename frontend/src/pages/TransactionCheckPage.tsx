@@ -525,8 +525,8 @@ export const TransactionCheckPage: React.FC = () => {
                           </div>
                           <div className="mt-1 leading-relaxed">
                             {result.review_recommended
-                              ? 'Statistical risk signal exceeds the validation-calibrated threshold. This is a prioritization signal for human review, not proof of fraud.'
-                              : 'Statistical risk score is below the calibrated review threshold. Automated action taken: none.'}
+                              ? 'The benchmark score is at or above its threshold (chosen on validation data). This is a prompt for review, not proof of fraud.'
+                              : 'The benchmark score is below its threshold. That does not show the transaction is legitimate. Automated action taken: none.'}
                           </div>
                         </div>
                       </div>
@@ -765,7 +765,7 @@ export const TransactionCheckPage: React.FC = () => {
                       <span className="font-bold text-[#0B1322]">₹{formData.oldbalanceDest.toLocaleString()}</span>
                     </div>
                     <div className="p-3 rounded bg-[#FAF9F6] border border-[#E2DFD7]">
-                      <span className="text-[10px] text-[#64748B] block">Calibrated Threshold</span>
+                      <span className="text-[10px] text-[#64748B] block">Review threshold</span>
                       <span className="font-bold text-amber-800">0.9983 (99.83%)</span>
                     </div>
                   </div>

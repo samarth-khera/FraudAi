@@ -407,7 +407,7 @@ export const AuditPage: React.FC = () => {
         <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
           {lastRefreshed && (
             <div className="text-right hidden sm:block">
-              <span className="text-[10px] text-[#8C857B] font-mono block">Last Verified</span>
+              <span className="text-[10px] text-[#8C857B] font-mono block">Last refreshed</span>
               <span className="font-mono text-xs font-semibold text-[#1A1714]">
                 {lastRefreshed.toLocaleTimeString()}
               </span>
@@ -1186,7 +1186,7 @@ export const AuditPage: React.FC = () => {
 
               {/* Drawer Footer */}
               <div className="p-4 border-t border-[#EAE3D6] bg-[#FAF7F2] flex items-center justify-between text-xs">
-                <span className="text-[#8C857B]">Immutable Log Verification</span>
+                <span className="text-[#8C857B]">Append-only through the app; not tamper-proof</span>
                 <button
                   onClick={() => setSelectedEvent(null)}
                   className="px-4 py-2 rounded-xl bg-[#1A1714] text-white font-semibold"

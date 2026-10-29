@@ -4,6 +4,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { V2ModelDivergenceAlert } from '../components/v2/V2ModelDivergenceAlert';
 import { V2TreeShapBreakdown } from '../components/v2/V2TreeShapBreakdown';
+import { V2MoneyFlowVisual } from '../components/v2/V2MoneyFlowVisual';
 import { V2SearchPage, normalizeAccountId } from '../pages/v2/V2SearchPage';
 import { V2AccountDetailPage } from '../pages/v2/V2AccountDetailPage';
 import { v2Api, ApiError } from '../services/v2Api';
@@ -55,37 +56,40 @@ describe('normalizeAccountId helper', () => {
 });
 
 describe('V2ModelDivergenceAlert Component', () => {
-  it('renders divergence alert for victim account ACC-000001 with high ML score and low rule score', () => {
+  it('compares review suggestions, not incompatible numbers, and invents no explanation', () => {
     render(
       <V2ModelDivergenceAlert
         accountId="ACC-000001"
         mlRiskScore={76.5}
         mlRiskLevel="high"
+        modelSuggestsReview
         ruleRiskScore={25.0}
         ruleRiskLevel="low"
+        modelThresholdLabel="17.5%"
       />
     );
 
-    expect(screen.getByText(/Model Score Divergence: Compromised Victim Pattern Detected/i)).toBeInTheDocument();
-    expect(screen.getByText(/AUDIT REQUIRED/i)).toBeInTheDocument();
-    expect(screen.getByText(/ML Score: 76.5\/100/i)).toBeInTheDocument();
-    expect(screen.getByText(/Rule Baseline: 25.0\/100/i)).toBeInTheDocument();
-    expect(screen.getByText(/Anomalous balance drain can indicate victim impact rather than perpetrator behaviour/i)).toBeInTheDocument();
-    expect(screen.getByText(/Automated freezing, blocking, service denial, or reporting of this customer based on model outputs is strictly prohibited/i)).toBeInTheDocument();
+    expect(screen.getByText('The model and the fixed rules disagree about review')).toBeInTheDocument();
+    expect(screen.getByText(/Model score 76\.5% \(high\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Rule score 25 points of 100 \(low\)/)).toBeInTheDocument();
+    expect(screen.getByText(/should not be subtracted or compared directly/)).toBeInTheDocument();
+    expect(screen.getByText(/No account is frozen, blocked or reported/)).toBeInTheDocument();
+    // No fabricated pattern labels or hardcoded TreeSHAP values.
+    expect(screen.queryByText(/Compromised Victim Pattern Detected/i)).toBeNull();
+    expect(screen.queryByText(/\+3\.91/)).toBeNull();
+    expect(screen.queryByText(/\/100/)).toBeNull();
   });
 
-  it('does NOT render when scores are consistent and non-divergent', () => {
-    const { container } = render(
-      <V2ModelDivergenceAlert
-        accountId="ACC-NORMAL"
-        mlRiskScore={20.0}
-        mlRiskLevel="low"
-        ruleRiskScore={15.0}
-        ruleRiskLevel="low"
-      />
+  it('does NOT render when both checks agree, whatever the numbers', () => {
+    const both = render(
+      <V2ModelDivergenceAlert accountId="A" mlRiskScore={20} mlRiskLevel="elevated" modelSuggestsReview ruleRiskScore={90} ruleRiskLevel="critical" />
     );
-
-    expect(container.firstChild).toBeNull();
+    expect(both.container.firstChild).toBeNull();
+    both.unmount();
+    const neither = render(
+      <V2ModelDivergenceAlert accountId="B" mlRiskScore={5} mlRiskLevel="low" modelSuggestsReview={false} ruleRiskScore={50} ruleRiskLevel="elevated" />
+    );
+    expect(neither.container.firstChild).toBeNull();
   });
 });
 
@@ -157,9 +161,13 @@ describe('V2SearchPage Component', () => {
     expect(screen.getByText(/Ground-Truth Reference Notice/i)).toBeInTheDocument();
 
     // Verify sample accounts are present
-    expect(screen.getByText('ACC-000001')).toBeInTheDocument();
+    expect(screen.getAllByText('ACC-000001').length).toBeGreaterThan(0);
     expect(screen.getByText('Aditi Joshi')).toBeInTheDocument();
-    expect(screen.getByText('ACC-000002')).toBeInTheDocument();
+    expect(screen.getAllByText('ACC-000002').length).toBeGreaterThan(0);
+    // The money-flow toggles name accounts, not training labels.
+    expect(screen.getByRole('button', { name: 'ACC-000002' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Mule' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Victim' })).toBeNull();
     expect(screen.getByText('Sara Bhat')).toBeInTheDocument();
 
     // Verify Model status loads
@@ -426,7 +434,8 @@ describe('V2AccountDetailPage Component', () => {
     expect(screen.getByText(/Forensic Evidence Hierarchy & Separation of Concepts/i)).toBeInTheDocument();
     expect(screen.getByText(/1. Observed Ledger Facts/i)).toBeInTheDocument();
     expect(screen.getByText(/2. Rule-Based Signals/i)).toBeInTheDocument();
-    expect(screen.getByText(/3. Statistical ML Probability/i)).toBeInTheDocument();
+    expect(screen.getByText(/3\. Model score \(machine learning\)/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Probability/)).toBeNull();
 
     // Verify Honest Initial State: pending analysis, no precomputed prediction
     expect(screen.getByText(/Account Analysis Pending for Current Session/i)).toBeInTheDocument();
@@ -457,8 +466,13 @@ describe('V2AccountDetailPage Component', () => {
     });
 
     expect(screen.getByText(/RUN-TEST-001/i)).toBeInTheDocument();
-    expect(screen.getByText(/ML Risk Estimate/i)).toBeInTheDocument();
-    expect(screen.getByText(/Rule Behavioral Baseline/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Model score \(machine learning\)/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Rule score \(fixed rules\)/)).toBeInTheDocument();
+    expect(screen.queryByText(/Raw Probability/)).toBeNull();
+    expect(screen.getAllByText(/suggested for review, not confirmed fraud/).length).toBeGreaterThan(0);
+    // The deprecated score_delta (51.5 = model % minus rule points) is never displayed.
+    expect(screen.queryByText(/51\.5/)).toBeNull();
+    expect(screen.queryByText(/pt delta|points? (difference|gap)/i)).toBeNull();
     expect(screen.getByText(/What Should the Investigator Do Next\?/i)).toBeInTheDocument();
     expect(screen.getByText(/Review High-Value Outlier Transfer of ₹250,000.00/i)).toBeInTheDocument();
   });
@@ -506,3 +520,16 @@ describe('V2AccountDetailPage Component', () => {
 });
 
 
+
+describe('V2MoneyFlowVisual', () => {
+  it('clears placeholder accounts and says so when the live trace fails', async () => {
+    vi.mocked(v2Api.getTrace).mockRejectedValue(new ApiError(503, 'unavailable', 'down'));
+    render(
+      <MemoryRouter>
+        <V2MoneyFlowVisual />
+      </MemoryRouter>
+    );
+    expect(await screen.findByText(/Live money flow could not be loaded/)).toBeInTheDocument();
+    expect(screen.queryByText('FreshMart Express')).toBeNull();
+  });
+});
