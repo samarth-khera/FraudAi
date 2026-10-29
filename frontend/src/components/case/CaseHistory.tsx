@@ -33,7 +33,7 @@ export const ActorLine: React.FC<{ event: AuditEvent }> = ({ event }) => {
   );
 };
 
-const EventDetails: React.FC<{ event: AuditEvent }> = ({ event }) => {
+const EventDetails: React.FC<{ event: AuditEvent; caseAccountIds?: string[] }> = ({ event, caseAccountIds }) => {
   const d = event.details ?? {};
   if (event.action === 'account_review_recorded') {
     const from = d.old_review_state ? REVIEW_STATE_LABELS[d.old_review_state] ?? d.old_review_state : 'none';
@@ -54,6 +54,12 @@ const EventDetails: React.FC<{ event: AuditEvent }> = ({ event }) => {
           </p>
         )}
         {d.additional_info_needed && <p className="text-xs font-semibold text-[#B45309]">More information requested</p>}
+        {caseAccountIds && d.account_id && !caseAccountIds.includes(d.account_id) && (
+          <p className="rounded-lg border border-[#FDE68A] bg-[#FFFBEB] p-2.5 text-xs text-[#92400E] leading-relaxed">
+            Legacy record: {d.account_id} is not part of this case’s recorded transfers. An earlier version of FraudShield
+            wrongly allowed this review. It is kept unchanged as history and does not connect the account to this case.
+          </p>
+        )}
       </div>
     );
   }
@@ -74,7 +80,11 @@ const EventDetails: React.FC<{ event: AuditEvent }> = ({ event }) => {
   return null;
 };
 
-export const CaseHistory: React.FC<{ caseId: string; refreshKey: number }> = ({ caseId, refreshKey }) => {
+export const CaseHistory: React.FC<{ caseId: string; refreshKey: number; caseAccountIds?: string[] }> = ({
+  caseId,
+  refreshKey,
+  caseAccountIds,
+}) => {
   const [events, setEvents] = useState<AuditEvent[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showSystem, setShowSystem] = useState(false);
@@ -138,7 +148,7 @@ export const CaseHistory: React.FC<{ caseId: string; refreshKey: number }> = ({ 
                 <p className="mt-0.5 text-xs text-[#6B655B]">
                   <ActorLine event={e} />
                 </p>
-                <EventDetails event={e} />
+                <EventDetails event={e} caseAccountIds={caseAccountIds} />
               </li>
             ))}
           </ol>

@@ -378,7 +378,11 @@ export const ReviewHistorySection: React.FC<Props> = ({ data, selectedAccountId,
         }}
       />
 
-      <CaseHistory caseId={data.caseData.case_id} refreshKey={historyKey} />
+      <CaseHistory
+        caseId={data.caseData.case_id}
+        refreshKey={historyKey}
+        caseAccountIds={data.assessments ? data.assessments.assessments.map((x) => x.account_id) : undefined}
+      />
     </div>
   );
 };
