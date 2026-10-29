@@ -15,8 +15,9 @@ import {
   Transaction,
   TransactionListResponse,
 } from '../types/api';
+import { API_BASE_URL } from './apiBase';
 
-const BASE_URL = import.meta.env.VITE_API_URL || '';
+const BASE_URL = API_BASE_URL;
 
 /** How the server protects write endpoints (GET /health). This browser app never sends an API key. */
 export type WriteAccessMode = 'api_key_required' | 'open_local_development' | 'disabled_no_key_configured';
