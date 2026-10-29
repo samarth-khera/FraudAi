@@ -18,7 +18,7 @@ works; check `ai_analysis.state` on a real investigation afterwards.
 | `GEMINI_API_KEY` | yes | none | set (secret; never in a `VITE_` variable) |
 | `GEMINI_ANALYST_ENABLED` | yes | off (only `true` turns it on) | `true` |
 | `GEMINI_MODEL` | no | `gemini-3.8-flash` | not set (default) |
-| `GEMINI_TIMEOUT_SECONDS` | no | `25` (bounded 3–300) | `55`; **raise to `180`** (see Latency) |
+| `GEMINI_TIMEOUT_SECONDS` | no | `25` (bounded 3–300) | `180` (see Latency) |
 | `GEMINI_MAX_OUTPUT_TOKENS` | no | `4096` (bounded 512–8192) | `2048` |
 | `GEMINI_THINKING_LEVEL` | no | `low`; empty sends no thinking setting | `low` |
 | `GEMINI_PRIVACY_POLICY` | no | `synthetic_only` | not set (default) |
@@ -45,6 +45,24 @@ On 2026-10-29 a valid production request (thinking `low`) reached the 55 s deadl
 
 API clients that omit `ai_explanation` get the previous behaviour (`"inline"`: the response waits for the AI).
 
+A client calling the explanation endpoint must wait longer than `GEMINI_TIMEOUT_SECONDS` + 2 s (the server's hard
+bound). If the client gives up first, the server's Gemini call keeps running. On 2026-10-29, a client with a 120 s cap
+gave up and sent the same request again at once, so two Gemini calls overlapped. The browser UI has no client cap.
+
+**Production results on 2026-10-29** (`ACC-000001`, synthetic ledger, `gemini-3.8-flash`, thinking `low`):
+
+| Time (UTC) | Timeout | Result | Latency |
+|---|---|---|---|
+| 13:38 | 55 s | HTTP 400: thinking level `minimal` is unsupported (fixed: setting changed to `low`, now guarded in code) | 1.6 s |
+| 14:02 | 55 s | HTTP 504 `DEADLINE_EXCEEDED`: no answer within the deadline | 54.9 s |
+| 15:08:58 | 180 s | HTTP 504 `DEADLINE_EXCEEDED`: no answer within the deadline | 181.4 s |
+| 15:10:58 | 180 s | HTTP 503 `UNAVAILABLE` (Google: "temporarily overloaded or down") | 12.9 s |
+
+The request is valid: Google accepted its format (no 400), and its size is modest (about 17,000 characters of data,
+a 939-character schema with only basic keywords, at most 2,048 output tokens). The 503 and both deadlines are Google
+capacity results on the free Standard tier. They are not caused by the request, so no code change can make Gemini
+answer. These runs logged only the HTTP status. Google's status, message and request ID are logged now (see below).
+
 **Output budget.** `max_output_tokens` includes the model's thinking tokens. If the budget runs out, the analyst
 reports `truncated_output`; then raise `GEMINI_MAX_OUTPUT_TOKENS` (4096 is the code default) rather than lowering
 the thinking level further.
@@ -69,7 +87,7 @@ If Google retires the model, the analyst reports `unavailable` with reason `mode
 | `disabled` | `GEMINI_ANALYST_ENABLED` is not `true`. |
 | `not_configured` | Enabled, but no `GEMINI_API_KEY`. |
 | `skipped_privacy_policy` | The ledger is not verified as the synthetic demo ledger, and no opt-in is set. Nothing was sent. |
-| `unavailable` | The call or its output failed. `unavailable_reason` says how: `timeout`, `rate_limited` (429 / quota), `auth_failed`, `request_rejected`, `model_not_found`, `upstream_error`, `blocked`, `empty_output`, `truncated_output`, `malformed_output`, `invalid_output`, `policy_violation` or `invalid_configuration` (a setting the model is documented to reject; no request sent). |
+| `unavailable` | The call or its output failed. `unavailable_reason` says how: `timeout`, `rate_limited` (429 / quota), `auth_failed` (401, 403, or a 400 whose `ErrorInfo` says the key is invalid), `request_rejected` (other 4xx), `model_not_found`, `service_unavailable` (503: Google overloaded or down; try later), `upstream_error` (other 5xx or network), `blocked`, `empty_output`, `truncated_output`, `malformed_output`, `invalid_output`, `policy_violation` or `invalid_configuration` (a setting the model is documented to reject; no request sent). |
 | `deferred` | Only with `ai_explanation: "separate"`: the explanation comes from `POST /api/v2/investigations/explanation`. Nothing was sent. |
 
 The legacy `status` field (`generated` / `not_configured` / `failed` / `rejected`) is still sent for older clients.
@@ -104,10 +122,20 @@ Gemini API free-tier data handling differs from paid-tier handling, so the defau
   - server-generated finding text, with IDs replaced and timestamps redacted
 - The prompt marks the data as untrusted and states the rules: no guilt, no freezing, no new facts, cite IDs.
   `<` and `>` are escaped so text inside the data cannot close the data block.
-- **What is logged:** the state or reason code, the provider's numeric HTTP status (for example
-  `reason=timeout http_status=504`), the exception class name for unexpected failures, the model and the latency.
-  The prompt, payload, provider text, exception messages and key are never logged. A 504 (`DEADLINE_EXCEEDED`)
-  means Gemini stopped at the deadline the SDK sends from `GEMINI_TIMEOUT_SECONDS`, so it is reported as `timeout`.
+- **What is logged:** one line per failure, for example
+  `AI analyst unavailable: reason=service_unavailable http_status=503 error_type=none latency_ms=12862
+  provider_status=UNAVAILABLE request_id=… provider_message="The model is overloaded. Please try again later."`
+  - Always: the reason code, the numeric HTTP status, the exception class name (for unexpected failures only) and
+    the latency.
+  - When Google sends them: its status (`UNAVAILABLE`, `RESOURCE_EXHAUSTED`, …) and `ErrorInfo` reason (for example
+    `API_KEY_INVALID`), a request-ID header, the `RetryInfo` delay, the first `QuotaFailure` quota ID, and the
+    message. All are stripped to identifier characters, except the message.
+  - The message is cut to 160 characters on one line. Quoted values, the configured key, key-like and other long
+    opaque strings, and account and transfer IDs are removed or masked.
+  - Never logged: the prompt, the payload, a raw response body, exception messages or the key. None of these
+    diagnostics reach the browser, which gets the reason code and a fixed message.
+  - A 504 (`DEADLINE_EXCEEDED`) means Gemini stopped at the deadline the SDK sends from `GEMINI_TIMEOUT_SECONDS`,
+    so it is reported as `timeout`.
 - **Startup:** when the analyst is enabled, the SDK is imported at startup so the first investigation does not pay
   for it. This is only an import: no key is needed, no request is made, and a failure there never stops the server.
 
@@ -148,6 +176,10 @@ Gemini API free-tier data handling differs from paid-tier handling, so the defau
   4. Send exactly one request: `POST /api/v2/investigations/explanation` with body
      `{"account_id": "ACC-000001", "ai_explanation": "separate"}`. Alternatively, run `ACC-000001` once from
      `/investigate`, which makes the same single call after showing the report.
-  5. Read `ai_analysis.state`, `unavailable_reason`, `model` and `latency_ms`. The log line is
-     `AI analyst completed: …` or `AI analyst unavailable: reason=… http_status=… error_type=… latency_ms=…`.
-  6. Do not retry automatically. Fix the reported cause first. On `rate_limited` (429), stop until the quota resets.
+  5. Use a client timeout longer than `GEMINI_TIMEOUT_SECONDS` + 2 s, for example 240 s for 180.
+  6. Read `ai_analysis.state`, `unavailable_reason`, `model` and `latency_ms`. The log line is
+     `AI analyst completed: …` or `AI analyst unavailable: reason=… http_status=… … provider_status=…`.
+  7. Do not retry automatically. Fix the reported cause first:
+     - On `rate_limited` (429), stop until the quota resets.
+     - On `service_unavailable` (503) or `timeout`, wait for Google's capacity to recover before one new attempt.
+       Do not loop.
