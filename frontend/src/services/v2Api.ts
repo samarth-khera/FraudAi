@@ -10,7 +10,7 @@ import {
   V2ModelStatusResponse,
   V2TraceGraphResponse,
 } from '../types/v2';
-import { DataSourceInfo, InvestigationRequest, InvestigationResponse } from '../types/investigation';
+import { DataSourceInfo, InvestigationExplanationResponse, InvestigationRequest, InvestigationResponse } from '../types/investigation';
 import { API_BASE_URL } from './apiBase';
 
 const BASE_URL = `${API_BASE_URL}/api/v2`;
@@ -161,6 +161,19 @@ export const v2Api = {
       signal,
     });
     return handleResponse<InvestigationResponse>(res);
+  },
+
+  /**
+   * AI explanation for the same investigation, recomputed on the server. Can take a minute or more.
+   */
+  async explainInvestigation(body: InvestigationRequest, signal?: AbortSignal): Promise<InvestigationExplanationResponse> {
+    const res = await fetch(`${BASE_URL}/investigations/explanation`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal,
+    });
+    return handleResponse<InvestigationExplanationResponse>(res);
   },
 
   /**

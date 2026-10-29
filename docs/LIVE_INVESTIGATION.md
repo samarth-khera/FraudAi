@@ -72,7 +72,9 @@ every linked account and returns an evidence-referenced report. Nothing is preco
       is off unless `GEMINI_ANALYST_ENABLED=true`, and by default it is sent only for the synthetic ledger. Gemini
       receives a pseudonymised, bounded extract, and its answer is schema-validated and grounded against this report's
       IDs. `ai_analysis.state` says what happened (`completed`, `disabled`, `not_configured`,
-      `skipped_privacy_policy` or `unavailable`). See [AI_ANALYST.md](AI_ANALYST.md).
+      `skipped_privacy_policy`, `unavailable` or `deferred`). The UI requests the report with
+      `ai_explanation: "separate"` and fetches the explanation from `POST /api/v2/investigations/explanation`, so
+      a slow model never delays the report. See [AI_ANALYST.md](AI_ANALYST.md).
 
 Ground-truth labels and scenario tags are never read. A test scrambles them and checks that the report is unchanged.
 
