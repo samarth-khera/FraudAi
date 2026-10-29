@@ -49,17 +49,18 @@ beforeEach(() => {
 });
 
 describe('Home page', () => {
-  it('explains the product and offers the two starting actions', async () => {
+  it('explains the product and leads with a live investigation', async () => {
     renderAt('/');
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/Follow reported money/i);
-    expect(screen.getByRole('link', { name: /Start sample investigation/i })).toHaveAttribute('href', '/cases/FS-2001');
+    expect(screen.getByRole('link', { name: /Investigate an account/i })).toHaveAttribute('href', '/investigate');
+    expect(screen.getByRole('link', { name: /Open sample case/i })).toHaveAttribute('href', '/cases/FS-2001');
     expect(screen.getByRole('link', { name: /Open investigations/i })).toHaveAttribute('href', '/cases');
-    expect(screen.getByText(/is demonstration data/i)).toBeInTheDocument();
+    expect(screen.getByText(/Investigations run on a synthetic account ledger/i)).toBeInTheDocument();
   });
 });
 
 describe('Main navigation', () => {
-  it('has exactly Home, Investigations and Tools', () => {
+  it('has exactly Home, Investigate, Investigations and Tools', () => {
     render(
       <MemoryRouter initialEntries={['/cases']}>
         <UnifiedHeader />
@@ -67,7 +68,7 @@ describe('Main navigation', () => {
     );
     const nav = screen.getByRole('navigation', { name: 'Main' });
     const links = Array.from(nav.querySelectorAll('a')).map((a) => a.textContent?.trim());
-    expect(links).toEqual(['Home', 'Investigations', 'Tools']);
+    expect(links).toEqual(['Home', 'Investigate', 'Investigations', 'Tools']);
     expect(screen.getByRole('link', { name: 'Investigations' })).toHaveAttribute('aria-current', 'page');
   });
 
