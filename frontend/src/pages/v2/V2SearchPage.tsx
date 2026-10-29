@@ -24,6 +24,7 @@ import { V2ModelStatusResponse } from '../../types/v2';
 import { V2Header } from '../../components/v2/V2Header';
 import { V2Footer } from '../../components/v2/V2Footer';
 import { V2MoneyFlowVisual } from '../../components/v2/V2MoneyFlowVisual';
+import { normalizeAccountId } from '../../lib/accountId';
 
 if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
   gsap.registerPlugin(ScrollTrigger);
@@ -95,18 +96,7 @@ const SAMPLE_ACCOUNTS: SampleCase[] = [
   },
 ];
 
-export function normalizeAccountId(raw: string): string {
-  const trimmed = raw.trim();
-  if (!trimmed) return '';
-  if (/^\d{1,6}$/.test(trimmed)) {
-    return `ACC-${trimmed.padStart(6, '0')}`;
-  }
-  if (/^acc-\d{1,6}$/i.test(trimmed)) {
-    const numPart = trimmed.replace(/^acc-/i, '');
-    return `ACC-${numPart.padStart(6, '0')}`;
-  }
-  return trimmed.toUpperCase();
-}
+export { normalizeAccountId };
 
 export const V2SearchPage: React.FC = () => {
   const navigate = useNavigate();
