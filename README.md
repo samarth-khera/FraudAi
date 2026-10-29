@@ -288,6 +288,33 @@ it is the record), and start the backend again: it recreates the database with o
 
 ---
 
+## Deployment (Render + Vercel)
+
+The public deployment is a **read-only demo** on free plans:
+
+| Part | Where | How it is built |
+|---|---|---|
+| Backend (FastAPI) | Render web service `fraudshield-api` from [`render.yaml`](render.yaml) | `scripts/render_build.sh`: pinned dependencies, model binaries fetched from the `models-2026-10-29` GitHub release and verified by SHA-256 ([`deploy/model_artifacts.json`](deploy/model_artifacts.json)), the synthetic ledger regenerated from seed 42, integrity tests and a startup check. |
+| Frontend (Vite) | Vercel project with root directory `frontend/` | `npm run build`, SPA fallback in [`frontend/vercel.json`](frontend/vercel.json). |
+
+Environment variables:
+
+| Where | Variable | Value |
+|---|---|---|
+| Render | `ENVIRONMENT` | `production` (set by the Blueprint): write endpoints are refused because no API key is configured |
+| Render | `ENABLE_API_DOCS` | `false` |
+| Render | `CORS_ALLOWED_ORIGINS` | the Vercel production URL, e.g. `https://<project>.vercel.app` |
+| Render | `PYTHON_VERSION` | `3.12.4` |
+| Vercel | `VITE_API_URL` | the Render URL, e.g. `https://fraudshield-api.onrender.com` (the build fails without it) |
+
+Why read-only: a Render web service's disk is wiped on every deploy and restart, and the app has no safe way to
+let the public write (the browser app must never receive the API key). The ledger and models are rebuilt at build
+time and the case database is re-seeded at start, so nothing needs to persist. Recording decisions in a public
+deployment would need a persistent database (Render Postgres or a paid disk) plus real user authentication.
+
+Free-plan limits: the backend sleeps after about 15 minutes without traffic and takes roughly a minute to wake;
+the header shows “Server unreachable” until it does.
+
 ## Further documentation
 
 - [`backend/README.md`](backend/README.md): database schema and API details
