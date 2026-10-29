@@ -2,6 +2,15 @@ import React, { useState } from 'react';
 import { Shield, Cpu, HelpCircle, AlertTriangle, ChevronDown, ChevronUp, Scale, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { V2AccountAssessmentResponse, V2AccountMLAssessmentResponse, V2ModelDivergenceInfo } from '../../types/v2';
+import { useModelStatus } from '../../lib/useModelStatus';
+import {
+  MODEL_SCORE_LABEL,
+  MODEL_SCORE_MEANING,
+  RULE_SCORE_LABEL,
+  formatModelScore,
+  modelLevelBands,
+  thresholdPercent,
+} from '../../lib/modelScore';
 
 interface V2RiskComparisonMetersProps {
   mlAssessment: V2AccountMLAssessmentResponse;
@@ -25,6 +34,10 @@ export const V2RiskComparisonMeters: React.FC<V2RiskComparisonMetersProps> = ({
   divergence,
 }) => {
   const [activeScoreDetail, setActiveScoreDetail] = useState<'ml' | 'rule' | null>(null);
+  const modelInfo = useModelStatus().status?.account_model;
+  const thresholdLabel = thresholdPercent(modelInfo);
+  const bands = modelLevelBands(modelInfo);
+  const modelSuggests = mlAssessment.predicted_class === 'suspicious';
 
   const getRiskColor = (level: string) => {
     switch (level.toLowerCase()) {
@@ -60,7 +73,7 @@ export const V2RiskComparisonMeters: React.FC<V2RiskComparisonMetersProps> = ({
                 <Cpu className="w-4 h-4" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-[#1A1714]">ML Risk Estimate</h4>
+                <h4 className="text-sm font-bold text-[#1A1714]">{MODEL_SCORE_LABEL} (machine learning)</h4>
                 <p className="text-[11px] text-[#6B655B]">Model {mlAssessment.model_version}</p>
               </div>
             </div>
@@ -71,10 +84,14 @@ export const V2RiskComparisonMeters: React.FC<V2RiskComparisonMetersProps> = ({
 
           <div className="flex items-baseline gap-2 mb-2">
             <span className="text-3xl font-extrabold text-[#1A1714] font-mono">
-              {mlAssessment.risk_score.toFixed(1)}
+              {formatModelScore(mlAssessment.risk_score)}
             </span>
-            <span className="text-xs font-medium text-[#6B655B]">/ 100</span>
           </div>
+          <p className="text-xs font-medium text-[#1A1714] mb-2">
+            {modelSuggests
+              ? `At or above the ${thresholdLabel ?? 'review'} review threshold: suggested for review, not confirmed fraud.`
+              : `Below the ${thresholdLabel ?? 'review'} review threshold. This does not clear the account.`}
+          </p>
 
           {/* Meter Bar */}
           <div className="w-full bg-[#FAF7F2] rounded-full h-2.5 overflow-hidden border border-[#EAE3D6] mb-2">
@@ -84,17 +101,18 @@ export const V2RiskComparisonMeters: React.FC<V2RiskComparisonMetersProps> = ({
             />
           </div>
 
-          <div className="flex items-center justify-between text-[11px] text-[#8C857B]">
-            <span>Low (0-29)</span>
-            <span>Elevated (30-69)</span>
-            <span>High (70-89)</span>
-            <span>Critical (90+)</span>
-          </div>
+          {bands && (
+            <div className="flex flex-wrap items-center justify-between gap-x-2 text-[11px] text-[#8C857B]">
+              {bands.map((b) => (
+                <span key={b}>{b}</span>
+              ))}
+            </div>
+          )}
 
           <div className="mt-3 pt-3 border-t border-[#FAF7F2] flex items-center justify-between text-xs text-[#6B655B]">
             <span className="flex items-center gap-1">
               <HelpCircle className="w-3.5 h-3.5 text-[#EA8500]" />
-              <span>Statistical pattern classifier</span>
+              <span>Learned from synthetic examples</span>
             </span>
             <span className="text-[#EA8500] font-medium flex items-center gap-0.5">
               {activeScoreDetail === 'ml' ? 'Hide details' : 'Inspect inputs'}
@@ -116,7 +134,7 @@ export const V2RiskComparisonMeters: React.FC<V2RiskComparisonMetersProps> = ({
                 <Scale className="w-4 h-4" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-[#1A1714]">Rule Behavioral Baseline</h4>
+                <h4 className="text-sm font-bold text-[#1A1714]">{RULE_SCORE_LABEL} (fixed rules)</h4>
                 <p className="text-[11px] text-[#6B655B]">Deterministic ledger heuristics</p>
               </div>
             </div>
@@ -129,7 +147,7 @@ export const V2RiskComparisonMeters: React.FC<V2RiskComparisonMetersProps> = ({
             <span className="text-3xl font-extrabold text-[#1A1714] font-mono">
               {ruleAssessment.risk_score.toFixed(1)}
             </span>
-            <span className="text-xs font-medium text-[#6B655B]">/ 100</span>
+            <span className="text-xs font-medium text-[#6B655B]">points of 100</span>
           </div>
 
           {/* Meter Bar */}
@@ -185,12 +203,12 @@ export const V2RiskComparisonMeters: React.FC<V2RiskComparisonMetersProps> = ({
               </button>
             </div>
             <p className="text-[#6B655B] mb-2 leading-relaxed">
-              The model evaluates 26 runtime features extracted directly from ledger activity (e.g. amount spikes, velocity, flow-through ratios, dormancy).
-              It computes non-linear interaction terms to predict the probability that the account matches high-risk laundering or takeover patterns.
+              The model reads 26 features from the account’s ledger activity (amount spikes, velocity, flow-through, dormancy and
+              others) and produces a score. {MODEL_SCORE_MEANING}
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-[#EAE3D6]">
               <div>
-                <span className="text-[#8C857B] block text-[10px] uppercase font-mono">Raw Probability</span>
+                <span className="text-[#8C857B] block text-[10px] uppercase font-mono">Unrounded score</span>
                 <span className="font-mono font-bold text-[#1A1714]">{(mlAssessment.predicted_probability * 100).toFixed(2)}%</span>
               </div>
               <div>
@@ -198,8 +216,8 @@ export const V2RiskComparisonMeters: React.FC<V2RiskComparisonMetersProps> = ({
                 <span className="font-mono font-bold text-[#1A1714]">{mlAssessment.model_type}</span>
               </div>
               <div>
-                <span className="text-[#8C857B] block text-[10px] uppercase font-mono">Prediction Class</span>
-                <span className="font-mono font-bold uppercase text-[#1A1714]">{mlAssessment.predicted_class}</span>
+                <span className="text-[#8C857B] block text-[10px] uppercase font-mono">Review suggestion</span>
+                <span className="font-mono font-bold text-[#1A1714]">{modelSuggests ? 'Suggested' : 'Below threshold'}</span>
               </div>
               <div>
                 <span className="text-[#8C857B] block text-[10px] uppercase font-mono">TreeSHAP Drivers</span>
@@ -232,7 +250,7 @@ export const V2RiskComparisonMeters: React.FC<V2RiskComparisonMetersProps> = ({
               </button>
             </div>
             <p className="text-[#6B655B] mb-2 leading-relaxed">
-              The rule engine applies deterministic compliance thresholds to observable ledger movements. Every point added or deducted is tied to a verifiable transaction fact.
+              Fixed rules add points for observable ledger signals; each point is tied to a transaction fact. “High” (56+) or above suggests review.
             </p>
             <div className="space-y-1.5 pt-2 border-t border-[#EAE3D6]">
               {ruleAssessment.reason_codes.map((rc, idx) => (
@@ -255,7 +273,7 @@ export const V2RiskComparisonMeters: React.FC<V2RiskComparisonMetersProps> = ({
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="font-bold text-[#C05621] uppercase tracking-wide text-[11px]">
-                Score Divergence Detected ({divergence.score_delta} pt delta)
+                The two checks disagree about review
               </span>
             </div>
             <p className="text-[#6B655B] leading-relaxed">

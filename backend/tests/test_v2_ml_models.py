@@ -249,3 +249,10 @@ def test_separation_of_ml_and_rule_baseline(client: TestClient):
     assert "top_contributions" in ml_data
     assert "predicted_probability" in ml_data
     assert rule_data["account_id"] == ml_data["account_id"] == "ACC-000001"
+
+
+def test_paysim_threshold_is_served_from_its_own_metadata(client: TestClient):
+    paysim_meta = json.loads((V2MLInferenceService.PAYSIM_ARTIFACTS_DIR / "metadata.json").read_text())
+    body = client.get("/api/v2/models/status").json()
+    assert body["paysim_benchmark"]["decision_threshold"] == paysim_meta["selected_threshold"]
+    assert body["paysim_benchmark"]["decision_threshold"] != body["account_model"]["decision_threshold"]

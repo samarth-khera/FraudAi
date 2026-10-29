@@ -205,7 +205,7 @@ Can say:
 - The account model ranks synthetic suspicious accounts above ordinary ones better than the rules or the
   previous model, on a held-out test of 260 suspicious accounts from 63 scenario instances, including two
   behaviour families it never trained on.
-- A score at or above 18% means "suggested for review", nothing more.
+- A model score at or above 17.5% (threshold 0.1752) means "suggested for review", nothing more.
 
 Must not say:
 
@@ -235,3 +235,17 @@ the account model.
 - The demo-generator label defects in §3 remain in the demo ledger (left as is so the demo ledger and FS-2001
   stay reproducible). They no longer influence training.
 - The new model binary is git-ignored like all model binaries; a fresh clone must run the two commands above.
+
+## 11. Score presentation (follow-up, 29 Oct 2026)
+
+- Shown as **"Model score"** to one decimal (for example 71.3%), with the model version and the served threshold
+  (17.5%) also to one decimal, so a score just above the threshold never displays the same number as the threshold.
+  The wording is defined once in `frontend/src/lib/modelScore.ts`.
+- The rule score is shown as **points of 100**. The two checks are compared by whether each suggests review (rules:
+  "high" or above; model: at or above its threshold), never by subtracting the numbers. The live-analysis API's
+  `divergence_detected` and human-review flag use the same rule; `score_delta` is kept only for API compatibility.
+- Removed: a divergence banner that showed a fixed "Compromised Victim Pattern Detected" heading and hardcoded
+  TreeSHAP values from the old model; a recommendation claiming "dominant TreeSHAP driver is peak transaction amount"
+  for every account; "Raw Probability", "Statistical ML Probability" and "/100" labels on the model score; a
+  hardcoded "FPR: 0.10%"; and a "0.50" threshold fallback. The PaySim tab showed 0.50 because its real threshold
+  (0.65) was never served; it now is.

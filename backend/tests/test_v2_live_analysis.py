@@ -242,3 +242,18 @@ def test_live_analysis_dynamic_update_on_new_ledger_record(test_v2_db, client: T
     assert snapshot2["transactions_examined"] == 11
     assert snapshot2["total_sent"] == 256000.0
     assert resp2.json()["analysis_id"] != resp1.json()["analysis_id"]
+
+
+def test_divergence_compares_review_suggestions_not_score_points(client: TestClient):
+    """Rule points (0-100) and the model score (0-1 shown as %) are different scales; compare review suggestions."""
+    data = client.post("/api/v2/accounts/ACC-VICTIM/analyze").json()
+    ml, rules, div = data["ml_assessment"], data["rule_assessment"], data["divergence"]
+    model_suggests = ml["predicted_class"] == "suspicious"
+    rules_suggest = rules["risk_level"] in ("high", "critical")
+    assert div["divergence_detected"] == (model_suggests != rules_suggest)
+    assert "/100" not in div["interpretation"]
+    assert data["human_review_recommended"] == (
+        model_suggests or rules_suggest or bool(rules["signals"]["rapid_pass_through"])
+    )
+    for action in data["recommended_actions"]:
+        assert "TreeSHAP driver is peak transaction amount" not in action["supporting_evidence"]
