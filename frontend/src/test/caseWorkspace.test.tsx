@@ -239,6 +239,29 @@ describe('CaseWorkspacePage', () => {
     expect(screen.getByText(/not cryptographically signed/)).toBeInTheDocument();
   });
 
+  it('labels a recorded review of an account outside the case as a legacy record without hiding it', async () => {
+    mockCaseApis();
+    const audit = makeAudit();
+    audit.events.push({
+      event_id: 4,
+      case_id: 'FS-2001',
+      timestamp: '2026-10-23T19:37:45',
+      action: 'account_review_recorded',
+      performed_by: 'SecAnalyst01',
+      entity_type: 'account_review',
+      entity_id: 'FS-2001:A100',
+      details: { account_id: 'A100', old_review_state: null, new_review_state: 'review_completed', notes: 'Old review' },
+    });
+    vi.mocked(api.getCaseAuditTrail).mockResolvedValue(audit);
+    renderCase('/cases/FS-2001?section=review');
+    expect(await screen.findByText(/Legacy record: A100 is not part of this case/)).toBeInTheDocument();
+    expect(screen.getByText('Old review')).toBeInTheDocument();
+    // Older events have no verification flag; that is stated, not guessed.
+    expect(screen.getByText(/identity verification not recorded/)).toBeInTheDocument();
+    // In-scope reviews are not flagged.
+    expect(screen.queryByText(/Legacy record: ACC-000002/)).not.toBeInTheDocument();
+  });
+
   it('shows a clear history error with retry', async () => {
     mockCaseApis();
     vi.mocked(api.getCaseAuditTrail).mockRejectedValue(new ApiError('Network request failed', 'network_error'));

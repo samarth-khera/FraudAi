@@ -1,16 +1,45 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams, Link } from 'react-router-dom';
 import { AppLayout } from './components/layout/AppLayout';
 import { HomePage, SAMPLE_CASE_ID } from './pages/HomePage';
 import { InvestigationsPage } from './pages/InvestigationsPage';
 import { CaseWorkspacePage } from './pages/CaseWorkspacePage';
 import { ToolsPage } from './pages/ToolsPage';
-import { TransactionCheckPage } from './pages/TransactionCheckPage';
-import { FundFlowPage } from './pages/FundFlowPage';
-import { ModelInsightsPage } from './pages/ModelInsightsPage';
-import { AuditPage } from './pages/AuditPage';
-import { V2SearchPage } from './pages/v2/V2SearchPage';
-import { V2AccountDetailPage } from './pages/v2/V2AccountDetailPage';
+import { LoadingState } from './components/ui/StateViews';
+
+// Tools pages carry the heavy charting/graph libraries (cytoscape, recharts); load them on demand
+// so the main investigation journey does not download them.
+const TransactionCheckPage = lazy(() => import('./pages/TransactionCheckPage').then((m) => ({ default: m.TransactionCheckPage })));
+const FundFlowPage = lazy(() => import('./pages/FundFlowPage').then((m) => ({ default: m.FundFlowPage })));
+const ModelInsightsPage = lazy(() => import('./pages/ModelInsightsPage').then((m) => ({ default: m.ModelInsightsPage })));
+const AuditPage = lazy(() => import('./pages/AuditPage').then((m) => ({ default: m.AuditPage })));
+const V2SearchPage = lazy(() => import('./pages/v2/V2SearchPage').then((m) => ({ default: m.V2SearchPage })));
+const V2AccountDetailPage = lazy(() => import('./pages/v2/V2AccountDetailPage').then((m) => ({ default: m.V2AccountDetailPage })));
+
+class ChunkErrorBoundary extends React.Component<{ children: React.ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    if (!this.state.failed) return this.props.children;
+    return (
+      <div role="alert" className="max-w-xl space-y-3 py-10 px-4 mx-auto">
+        <h1 className="font-display text-xl font-bold">This page could not be loaded</h1>
+        <p className="text-sm text-[#6B655B]">Part of the application failed to download. Reload the page to try again.</p>
+        <button type="button" className="btn-primary" onClick={() => window.location.reload()}>
+          Reload
+        </button>
+      </div>
+    );
+  }
+}
+
+const Lazy: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <ChunkErrorBoundary>
+    <Suspense fallback={<LoadingState label="Loading…" />}>{children}</Suspense>
+  </ChunkErrorBoundary>
+);
 
 /** Redirect that keeps the query string, so old bookmarks such as /audit?case_id=X keep their filters. */
 const Redirect: React.FC<{ to: string | ((params: Record<string, string | undefined>) => string) }> = ({ to }) => {
@@ -40,16 +69,16 @@ export const AppRoutes: React.FC = () => (
       <Route path="/cases" element={<InvestigationsPage />} />
       <Route path="/cases/:caseId" element={<CaseWorkspacePage />} />
       <Route path="/tools" element={<ToolsPage />} />
-      <Route path="/tools/model" element={<ModelInsightsPage />} />
-      <Route path="/tools/audit" element={<AuditPage />} />
-      <Route path="/tools/fund-flow" element={<FundFlowPage />} />
-      <Route path="/tools/transaction-model" element={<TransactionCheckPage />} />
+      <Route path="/tools/model" element={<Lazy><ModelInsightsPage /></Lazy>} />
+      <Route path="/tools/audit" element={<Lazy><AuditPage /></Lazy>} />
+      <Route path="/tools/fund-flow" element={<Lazy><FundFlowPage /></Lazy>} />
+      <Route path="/tools/transaction-model" element={<Lazy><TransactionCheckPage /></Lazy>} />
       <Route path="*" element={<NotFoundPage />} />
     </Route>
 
     {/* Account lookup pages render their own header and footer. */}
-    <Route path="/tools/accounts" element={<V2SearchPage />} />
-    <Route path="/tools/accounts/:accountId" element={<V2AccountDetailPage />} />
+    <Route path="/tools/accounts" element={<Lazy><V2SearchPage /></Lazy>} />
+    <Route path="/tools/accounts/:accountId" element={<Lazy><V2AccountDetailPage /></Lazy>} />
 
     {/* Legacy routes kept as redirects. */}
     <Route path="/guided-investigation" element={<Redirect to={`/cases/${SAMPLE_CASE_ID}`} />} />

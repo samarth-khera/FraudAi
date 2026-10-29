@@ -2,8 +2,18 @@
 
 from __future__ import annotations
 
+import atexit
+import os
+import tempfile
 from datetime import datetime, timedelta
 from decimal import Decimal
+
+# Point the case database at a throwaway file before the app is imported, so test runs never
+# write audit events or reviews into the local demo database (backend/fraudshield.db).
+_TEST_DB_FD, _TEST_DB_PATH = tempfile.mkstemp(prefix="fraudshield_test_", suffix=".db")
+os.close(_TEST_DB_FD)
+os.environ["DATABASE_URL"] = f"sqlite:///{_TEST_DB_PATH}"
+atexit.register(lambda: os.path.exists(_TEST_DB_PATH) and os.remove(_TEST_DB_PATH))
 
 import pytest
 from fastapi.testclient import TestClient
