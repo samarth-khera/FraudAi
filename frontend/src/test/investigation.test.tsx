@@ -19,7 +19,7 @@ vi.mock('../components/investigation/InvestigationGraph', () => ({
 }));
 
 vi.mock('../services/v2Api', () => ({
-  v2Api: { runInvestigation: vi.fn(), getModelsStatus: vi.fn(() => new Promise(() => {})) },
+  v2Api: { runInvestigation: vi.fn(), explainInvestigation: vi.fn(), getModelsStatus: vi.fn(() => new Promise(() => {})) },
   ApiError: class ApiError extends Error {
     status: number;
     code: string;
@@ -33,6 +33,7 @@ vi.mock('../services/v2Api', () => ({
 
 const REPORT = fixture as unknown as InvestigationResponse;
 const run = vi.mocked(v2Api.runInvestigation);
+const explain = vi.mocked(v2Api.explainInvestigation);
 
 const LocationProbe: React.FC = () => {
   const loc = useLocation();
@@ -65,6 +66,7 @@ function deferred<T>() {
 
 beforeEach(() => {
   run.mockReset();
+  explain.mockReset();
 });
 
 describe('form validation', () => {
@@ -306,5 +308,92 @@ describe('routing', () => {
     expect(await screen.findByLabelText('Victim account ID')).toHaveValue('ACC-000001');
     expect(screen.getAllByRole('link', { name: 'Investigate' })[0]).toHaveAttribute('aria-current', 'page');
     await waitFor(() => expect(run).not.toHaveBeenCalled());
+  });
+});
+
+describe('separately requested AI explanation', () => {
+  const DEFERRED: InvestigationResponse = {
+    ...REPORT,
+    ai_analysis: { ...REPORT.ai_analysis, state: 'deferred', status: 'not_configured', message: 'Requested separately.' },
+  };
+  const drain = REPORT.victim.flagged_transfers[0].transaction_id;
+  const COMPLETED = {
+    ...REPORT.ai_analysis, state: 'completed' as const, status: 'generated' as const, provider: 'gemini', model: 'gemini-3.8-flash',
+    message: 'Written by Google Gemini (gemini-3.8-flash).', sections: [],
+    report: {
+      summary: 'ACC-VIC made one unusual transfer.', key_observations: [{ text: 'It drained the balance.', basis: 'observed' as const, evidence_ids: [drain] }],
+      evidence_references: [drain], reasoning_and_limitations: ['Balances mix funds.'],
+      recommended_manual_checks: [{ text: 'Confirm authorisation.', evidence_ids: [drain] }], confidence_note: 'No device records.',
+    },
+  };
+
+  async function startDeferred() {
+    run.mockResolvedValueOnce(DEFERRED);
+    renderPage();
+    submit('ACC-VIC');
+    await screen.findByTestId('investigation-report');
+  }
+
+  it('shows the report at once, then the explanation for the same report', async () => {
+    const d = deferred<import('../types/investigation').InvestigationExplanationResponse>();
+    explain.mockReturnValueOnce(d.promise);
+    await startDeferred();
+    expect(run.mock.calls[0][0]).toMatchObject({ account_id: 'ACC-VIC', ai_explanation: 'separate' });
+    expect(explain).toHaveBeenCalledWith(expect.objectContaining({ account_id: 'ACC-VIC', ai_explanation: 'separate' }), expect.any(AbortSignal));
+    const pending = screen.getByTestId('ai-status');
+    expect(pending).toHaveAttribute('data-state', 'pending');
+    expect(pending).toHaveTextContent('writing the explanation');
+    expect(pending.textContent).not.toMatch(/%/);
+    for (const f of REPORT.findings) expect(document.getElementById(`finding-${f.finding_id}`)).toBeInTheDocument();
+
+    d.resolve({ account_id: 'ACC-VIC', report_digest: REPORT.report_digest!, data_as_of: null, duration_ms: 1, ai_analysis: COMPLETED });
+    await waitFor(() => expect(screen.getByTestId('ai-status')).toHaveAttribute('data-state', 'completed'));
+    expect(screen.getByText('AI-generated · gemini-3.8-flash')).toBeInTheDocument();
+    expect(screen.getByTestId('ai-status')).toHaveTextContent('ACC-VIC made one unusual transfer.');
+  });
+
+  it('does not show an explanation of a different report', async () => {
+    explain.mockResolvedValueOnce({ account_id: 'ACC-VIC', report_digest: 'something-else', data_as_of: null, duration_ms: 1, ai_analysis: COMPLETED });
+    await startDeferred();
+    await waitFor(() => expect(screen.getByTestId('ai-status')).toHaveAttribute('data-state', 'stale'));
+    expect(screen.getByTestId('ai-status')).toHaveTextContent('different version of this report');
+    expect(screen.queryByText(/AI-generated/)).toBeNull();
+  });
+
+  it('reports a failed explanation request without touching the report', async () => {
+    explain.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    await startDeferred();
+    await waitFor(() => expect(screen.getByTestId('ai-status')).toHaveAttribute('data-state', 'failed'));
+    expect(screen.getByTestId('ai-status')).toHaveTextContent('could not be reached for the AI explanation');
+    expect(screen.queryByText(/AI-generated/)).toBeNull();
+    for (const f of REPORT.findings) expect(document.getElementById(`finding-${f.finding_id}`)).toBeInTheDocument();
+  });
+
+  it('shows an unavailable explanation as unavailable', async () => {
+    explain.mockResolvedValueOnce({ account_id: 'ACC-VIC', report_digest: REPORT.report_digest!, data_as_of: null, duration_ms: 1,
+      ai_analysis: { ...REPORT.ai_analysis, state: 'unavailable', status: 'failed', unavailable_reason: 'timeout', report: null,
+        message: 'The AI provider did not answer within the time limit. The investigation results are unaffected.' } });
+    await startDeferred();
+    await waitFor(() => expect(screen.getByTestId('ai-status')).toHaveAttribute('data-state', 'unavailable'));
+    expect(screen.getByTestId('ai-status')).toHaveTextContent('did not answer within the time limit');
+    expect(screen.queryByText(/AI-generated/)).toBeNull();
+  });
+
+  it('abandons a pending explanation when a new investigation starts', async () => {
+    let signal: AbortSignal | undefined;
+    explain.mockImplementationOnce((_b, s) => { signal = s; return new Promise(() => {}); });
+    await startDeferred();
+    fireEvent.click(screen.getByRole('button', { name: /New investigation/ }));
+    expect(signal?.aborted).toBe(true);
+    expect(screen.queryByTestId('investigation-report')).toBeNull();
+  });
+
+  it('does not request an explanation when the report already carries one', async () => {
+    run.mockResolvedValueOnce(REPORT);
+    renderPage();
+    submit('ACC-VIC');
+    await screen.findByTestId('investigation-report');
+    expect(explain).not.toHaveBeenCalled();
+    expect(screen.getByTestId('ai-status')).toHaveAttribute('data-state', 'disabled');
   });
 });

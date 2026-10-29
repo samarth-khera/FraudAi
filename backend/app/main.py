@@ -37,6 +37,14 @@ async def lifespan(_: FastAPI):
     # rest of the API (case tracing) keeps working; /api/risk/score then returns 503.
     get_risk_service().load()
     log_write_access_mode()
+    # The analyst's INFO lines (SDK loaded, completed + latency) are safe diagnostics but uvicorn only shows
+    # WARNING+ from application loggers; give this one logger its own handler. Messages never contain content.
+    ai_log = logging.getLogger("fraudshield.v2.ai_analyst")
+    if not ai_log.handlers:
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter("%(message)s"))
+        ai_log.addHandler(handler)
+        ai_log.setLevel(logging.INFO)
     # Optional AI analyst: import its SDK now (only when enabled) so the first investigation is not slowed by it.
     # No key is needed and no Gemini request is made.
     preload_ai_analyst()
