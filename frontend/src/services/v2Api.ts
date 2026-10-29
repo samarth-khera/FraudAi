@@ -10,8 +10,9 @@ import {
   V2ModelStatusResponse,
   V2TraceGraphResponse,
 } from '../types/v2';
+import { API_BASE_URL } from './apiBase';
 
-const BASE_URL = '/api/v2';
+const BASE_URL = `${API_BASE_URL}/api/v2`;
 
 export class ApiError extends Error {
   code: string;
