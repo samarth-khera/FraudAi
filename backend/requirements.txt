@@ -15,3 +15,5 @@ SQLAlchemy==2.1.5
 alembic==1.20.0
 pytest==9.1.1
 httpx==0.28.1
+# AI analyst (official Google GenAI SDK; replaces the deprecated google-generativeai package)
+google-genai==2.32.0

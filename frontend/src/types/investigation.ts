@@ -170,12 +170,34 @@ export interface AnalystSection {
   claims: { text: string; kind: ClaimKind; refs: string[] }[];
 }
 
+export type AIState = 'completed' | 'disabled' | 'not_configured' | 'skipped_privacy_policy' | 'unavailable';
+export type ObservationBasis = 'observed' | 'rule' | 'model' | 'hypothesis' | 'limitation';
+
+/** Validated AI explanation; every ID in it exists in the same report. */
+export interface AIReport {
+  summary: string;
+  key_observations: { text: string; basis: ObservationBasis; evidence_ids: string[] }[];
+  evidence_references: string[];
+  reasoning_and_limitations: string[];
+  recommended_manual_checks: { text: string; evidence_ids: string[] }[];
+  confidence_note: string;
+}
+
 export interface AIAnalysis {
+  /** Absent only on servers older than the Gemini analyst; derive it from `status` there. */
+  state?: AIState;
+  /** @deprecated Legacy summary of `state`. */
   status: 'generated' | 'not_configured' | 'failed' | 'rejected';
   provider: string | null;
+  model?: string | null;
   message: string;
+  unavailable_reason?: string | null;
+  privacy_policy?: string | null;
+  pseudonymized?: boolean;
+  report?: AIReport | null;
   sections: AnalystSection[];
   rejected_claims: number;
+  latency_ms?: number | null;
 }
 
 export interface Recommendation {

@@ -72,3 +72,11 @@ def custom_client():
 
     yield _make
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def _no_live_gemini(monkeypatch):
+    """Tests never reach Gemini: the analyst is off and no key is visible unless a test opts in with a fake provider."""
+    for name in ("GEMINI_ANALYST_ENABLED", "GEMINI_API_KEY", "GEMINI_MODEL", "GEMINI_PRIVACY_POLICY",
+                 "GEMINI_TIMEOUT_SECONDS", "GEMINI_MAX_OUTPUT_TOKENS", "GEMINI_THINKING_LEVEL"):
+        monkeypatch.delenv(name, raising=False)
