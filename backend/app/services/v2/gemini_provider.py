@@ -86,7 +86,7 @@ class GeminiProvider:
             response_mime_type="application/json",
             response_json_schema=response_json_schema,
             max_output_tokens=max_output_tokens,
-            temperature=0.2,
+            # No temperature/top_p/top_k: Gemini 3.6+ models ignore them and Google advises omitting them.
             candidate_count=1,
             thinking_config=types.ThinkingConfig(thinking_level=self.thinking_level) if self.thinking_level else None,
         )

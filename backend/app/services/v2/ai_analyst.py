@@ -52,6 +52,10 @@ DEFAULT_MODEL = "gemini-3.8-flash"
 DEFAULT_TIMEOUT_SECONDS = 25.0
 DEFAULT_MAX_OUTPUT_TOKENS = 4096
 DEFAULT_THINKING_LEVEL = "low"
+# thinking_level values Google documents per model (ai.google.dev/gemini-api/docs/thinking, checked 2026-10-29).
+# An unsupported level is rejected with HTTP 400 ("minimal" on gemini-3.8-flash caused the production failure),
+# so such a configuration is reported without spending a request. Models not listed are passed through unchanged.
+SUPPORTED_THINKING_LEVELS = {"gemini-3.8-flash": ("low", "medium", "high")}
 PRIVACY_SYNTHETIC_ONLY = "synthetic_only"
 PRIVACY_ALLOW_NON_SYNTHETIC = "allow_non_synthetic"
 
@@ -94,6 +98,14 @@ class AnalystConfig:
             thinking_level=thinking if thinking in ("minimal", "low", "medium", "high") else None,
             privacy_policy=policy,
         )
+
+
+def config_problem(config: AnalystConfig) -> Optional[str]:
+    """Name of a setting the configured model is documented not to accept, or None."""
+    allowed = SUPPORTED_THINKING_LEVELS.get(config.model)
+    if allowed and config.thinking_level and config.thinking_level not in allowed:
+        return "thinking_level"
+    return None
 
 
 class Provider(Protocol):
@@ -437,6 +449,7 @@ UNAVAILABLE_MESSAGES = {
     "malformed_output": "The AI provider's answer was not valid JSON.",
     "invalid_output": "The AI explanation did not pass validation (missing fields, or references to records that are not in this investigation).",
     "policy_violation": "The AI explanation was discarded because it asserted guilt or directed an account restriction.",
+    "invalid_configuration": "The server's AI settings are not supported by the configured model, so no request was sent.",
 }
 
 
@@ -472,8 +485,12 @@ def preload_provider() -> bool:
     Only an import: no client, no key needed, no request. Never raises; on failure the analyst reports
     `unavailable` per request as before. Returns whether the module is loaded.
     """
-    if not AnalystConfig.from_env().enabled:
+    config = AnalystConfig.from_env()
+    if not config.enabled:
         return False
+    problem = config_problem(config)
+    if problem:
+        logger.warning("AI analyst configuration problem: setting=%s model=%s", problem, config.model)
     started = time.perf_counter()
     try:
         _gemini_module()
@@ -515,6 +532,11 @@ async def analyze(report: dict, provider: Optional[Provider] = None, config: Opt
             config, provider=name, unavailable_reason=reason, pseudonymized=True,
             latency_ms=int((time.perf_counter() - started) * 1000),
         )
+
+    problem = config_problem(config)
+    if problem:
+        logger.warning("AI analyst configuration problem: setting=%s model=%s (no request sent)", problem, config.model)
+        return unavailable("invalid_configuration")
 
     try:
         if provider is None:

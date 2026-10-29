@@ -13,15 +13,30 @@ Code: `backend/app/services/v2/ai_analyst.py` (policy, payload, validation) and
 Set these on the `fraudshield-api` service (Environment tab). Adding a variable does not prove the integration
 works; check `ai_analysis.state` on a real investigation afterwards.
 
-| Variable | Required | Value |
-|---|---|---|
-| `GEMINI_API_KEY` | yes | Secret; already set. Never put it in a `VITE_` variable. |
-| `GEMINI_ANALYST_ENABLED` | yes | `true` to turn the analyst on. Anything else means off. |
-| `GEMINI_MODEL` | no | Default `gemini-3.8-flash` |
-| `GEMINI_TIMEOUT_SECONDS` | no | Default `25` (bounded 3–60) |
-| `GEMINI_MAX_OUTPUT_TOKENS` | no | Default `4096` (bounded 512–8192) |
-| `GEMINI_THINKING_LEVEL` | no | Default `low`; empty sends no thinking setting |
-| `GEMINI_PRIVACY_POLICY` | no | Default `synthetic_only`; see below |
+| Variable | Required | Code default | Production (Render, 2026-10-29) |
+|---|---|---|---|
+| `GEMINI_API_KEY` | yes | none | set (secret; never in a `VITE_` variable) |
+| `GEMINI_ANALYST_ENABLED` | yes | off (only `true` turns it on) | `true` |
+| `GEMINI_MODEL` | no | `gemini-3.8-flash` | not set (default) |
+| `GEMINI_TIMEOUT_SECONDS` | no | `25` (bounded 3–60) | `55` |
+| `GEMINI_MAX_OUTPUT_TOKENS` | no | `4096` (bounded 512–8192) | `2048` |
+| `GEMINI_THINKING_LEVEL` | no | `low`; empty sends no thinking setting | `low` |
+| `GEMINI_PRIVACY_POLICY` | no | `synthetic_only` | not set (default) |
+
+**Thinking level must suit the model.** `gemini-3.8-flash` accepts only `low`, `medium` and `high`. Google
+documents that `minimal` "is not supported and returns an error" (HTTP 400). That exact setting caused the
+2026-10-29 production failure. The server now refuses a level the configured model is documented not to accept:
+it logs `AI analyst configuration problem: setting=thinking_level` at startup and reports
+`unavailable / invalid_configuration` without spending a request. Models without a documented list are passed
+through unchanged.
+
+**Output budget.** `max_output_tokens` includes the model's thinking tokens. If the budget runs out, the analyst
+reports `truncated_output`; then raise `GEMINI_MAX_OUTPUT_TOKENS` (4096 is the code default) rather than lowering
+the thinking level further.
+
+**Sampling parameters.** No `temperature`, `top_p` or `top_k` is sent: Gemini 3.6+ models ignore them, and Google
+advises omitting them. The call uses `generateContent` with `response_mime_type` and `response_json_schema`;
+Google documents `generateContent` as "fully supported" alongside the newer Interactions API.
 
 **Model choice.** Google's model list (checked 2026-10-29) recommends `gemini-3.8-flash` as the stable Flash model
 for new projects:
@@ -39,7 +54,7 @@ If Google retires the model, the analyst reports `unavailable` with reason `mode
 | `disabled` | `GEMINI_ANALYST_ENABLED` is not `true`. |
 | `not_configured` | Enabled, but no `GEMINI_API_KEY`. |
 | `skipped_privacy_policy` | The ledger is not verified as the synthetic demo ledger, and no opt-in is set. Nothing was sent. |
-| `unavailable` | The call or its output failed. `unavailable_reason` says how: `timeout`, `rate_limited` (429 / quota), `auth_failed`, `request_rejected`, `model_not_found`, `upstream_error`, `blocked`, `empty_output`, `truncated_output`, `malformed_output`, `invalid_output` or `policy_violation`. |
+| `unavailable` | The call or its output failed. `unavailable_reason` says how: `timeout`, `rate_limited` (429 / quota), `auth_failed`, `request_rejected`, `model_not_found`, `upstream_error`, `blocked`, `empty_output`, `truncated_output`, `malformed_output`, `invalid_output`, `policy_violation` or `invalid_configuration` (a setting the model is documented to reject; no request sent). |
 
 The legacy `status` field (`generated` / `not_configured` / `failed` / `rejected`) is still sent for older clients.
 
@@ -109,5 +124,13 @@ Gemini API free-tier data handling differs from paid-tier handling, so the defau
 
   It prints the state, reason, model and latency, and exits 0 only when the state is `completed`.
 
-- **Checking the deployment.** Run one investigation on the live site, then read the Explanation section, or
-  `ai_analysis.state` / `unavailable_reason` in the API response.
+- **Production smoke test** (one request; spends quota):
+  1. Check that the newest Render deploy is `live`, not just built, and that `GET /health` returns 200.
+  2. Check that `GET /api/v2/data-source` reports `source_kind: synthetic_demo_ledger`, `is_synthetic: true` and
+     `real_bank_data: false`.
+  3. Check that the Render logs show no `AI analyst configuration problem` line for the current instance.
+  4. Send exactly one request:
+     `POST /api/v2/investigations` with body `{"account_id": "ACC-000001"}`, or run it once from `/investigate`.
+  5. Read `ai_analysis.state`, `unavailable_reason`, `model` and `latency_ms`. The log line is
+     `AI analyst completed: …` or `AI analyst unavailable: reason=… http_status=… error_type=… latency_ms=…`.
+  6. Do not retry automatically. Fix the reported cause first. On `rate_limited` (429), stop until the quota resets.
