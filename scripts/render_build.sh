@@ -21,7 +21,7 @@ rm -rf data/v2_synthetic  # CSVs are only an intermediate step
 
 echo "== Verification"
 # Tests use temporary databases; they write, so run them outside the production write lock.
-ENVIRONMENT=development python -m pytest -q backend/tests/test_product_integrity.py ml/tests/test_account_model_audit.py
+ENVIRONMENT=development python -m pytest -q backend/tests/test_product_integrity.py backend/tests/test_v2_investigation.py ml/tests/test_account_model_audit.py
 (cd backend && ENVIRONMENT=production python - <<'PY'
 from fastapi.testclient import TestClient
 from app.main import create_app
@@ -34,6 +34,9 @@ assert s["inference_ready"] is True, s.get("status_detail")
 assert s["account_model"]["version"] == "v2-account-2.0.0", s["account_model"]["version"]
 assert c.get("/api/cases/FS-2001").status_code == 200
 assert c.get("/api/v2/accounts/ACC-000003/ml-assessment").json()["risk_score"] == 71.3
+inv = c.post("/api/v2/investigations", json={"account_id": "ACC-000001"})
+assert inv.status_code == 200, inv.text
+assert inv.json()["data_source"]["is_synthetic"] is True and inv.json()["model_available"] is True
 print("startup check passed:", h["write_access"], s["account_model"]["version"])
 PY
 )

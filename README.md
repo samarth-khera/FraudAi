@@ -23,7 +23,19 @@ block or flag any account by itself.
 
 ## The investigation workflow
 
-The site has two main destinations, **Home** and **Investigations**, plus a secondary **Tools** area.
+The site has three main destinations, **Home**, **Investigate** and **Investigations**, plus a secondary **Tools** area.
+
+### Live investigation (Investigate)
+
+Enter a victim account ID (for example `ACC-000001`, or just `1`) and press **Start Investigation**. The server
+queries the ledger at that moment and returns a report. It contains the account's transfers that are unusual for it,
+the money flow traced in both directions with time order respected, and each linked account assessed on its own
+records by the rules and the model. It also gives a balance-based exposure range, findings labelled
+*observed / rule / model / limit* that cite transaction IDs, and advisory next steps. Click a graph node or edge for
+its evidence. Nothing is precomputed or stored, and the report says plainly that the data is synthetic and that no
+AI provider is configured. Details: [docs/LIVE_INVESTIGATION.md](docs/LIVE_INVESTIGATION.md).
+
+### Case workspace (Investigations)
 
 Every case opens in the same four sections. The case ID stays at the top, and the section and selected account
 are kept in the page address, so refresh, back/forward and shared links all return to the same place.
@@ -37,7 +49,7 @@ are kept in the page address, so refresh, back/forward and shared links all retu
 
 ### Starting the sample investigation
 
-Open the site and choose **Start sample investigation**. That opens case **FS-2001**:
+Open the site and choose **Open sample case**. That opens case **FS-2001**:
 
 - A synthetic complaint: customer `ACC-000001` says a caller persuaded them to send **₹2,50,000** by IMPS to `ACC-000003`.
 - The records show `ACC-000003` sent ₹2,45,000 on to two accounts within 10 minutes, and both of those made ATM cash-outs shortly after.
@@ -245,7 +257,7 @@ show **Model ready**. If it shows **Model unavailable** or **Server unreachable*
 transfer). It shows every part of the workspace: recorded facts, rule patterns, two automated checks that
 disagree, and a review decision.
 
-1. **Home:** read the one-paragraph explanation, then click **Start sample investigation**.
+1. **Home:** read the one-paragraph explanation, then click **Open sample case**.
 2. **Summary:** point out the complaint (₹2,50,000) next to the recorded transfer, the “matches” check, and the
    **Still unknown** list.
 3. **Money flow:** show the five transfers from left to right. Explain that the *sum of all transfers*
@@ -318,6 +330,7 @@ the header shows “Server unreachable” until it does.
 ## Further documentation
 
 - [`backend/README.md`](backend/README.md): database schema and API details
+- [`docs/LIVE_INVESTIGATION.md`](docs/LIVE_INVESTIGATION.md): how a live investigation is computed, its data source and limits
 - [`ml/README.md`](ml/README.md) and [`docs/V2_ML_MODELS.md`](docs/V2_ML_MODELS.md): model training and evaluation
 - [`docs/PRODUCT_INVENTORY.md`](docs/PRODUCT_INVENTORY.md): what changed in the simplification and why
 - Interactive API docs: <http://localhost:8000/docs> (development only)

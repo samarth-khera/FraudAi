@@ -1,0 +1,35 @@
+{
+  "log": [
+    "browser: Google Chrome 156.0.8078.49",
+    "ok: home CTA opens the investigation entry screen",
+    "ok: no report and no investigation request before the user starts",
+    "loading state shown while the request ran",
+    "ok: one POST /api/v2/investigations for ACC-000001 (normalised from \"1\")",
+    "ok: sticky synthetic-data banner",
+    "ok: data source shown (FraudShield synthetic demo ledger (generator seed 42), as of 2026-03-31T23:58:38)",
+    "ok: TXN flags rendered (balance drain)",
+    "ok: ACC-000003 scores match the account APIs (71.3%, 60/100)",
+    "ok: ACC-000003 labelled possible intermediary",
+    "ok: clicking a graph node shows that account’s assessment",
+    "ok: clicking a graph edge shows the supporting transaction and its parent",
+    "ok: AI analyst disclosed as not run",
+    "ok: second account triggered a second request",
+    "ok: report now shows ACC-000006",
+    "ok: ACC-000006 burst-to-new-recipients flags",
+    "ok: refreshing a shared link prefills the form and does not run it",
+    "ok: refresh explains reports are not stored",
+    "ok: unknown account → clear not-found, no report",
+    "ok: review write still refused (503) while investigations run",
+    "ok: laptop: report has no horizontal page overflow",
+    "ok: mobile: report has no horizontal page overflow",
+    "API origins: http://localhost:5173"
+  ],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+  ],
+  "bad": [
+    "POST /api/v2/investigations :: 404",
+    "PUT /api/cases/FS-2001/accounts/ACC-000003/review :: 503"
+  ]
+}
