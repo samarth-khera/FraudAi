@@ -5,7 +5,7 @@ import { InvestigationForm } from '../components/investigation/InvestigationForm
 import { DEFAULT_FORM, FormValues } from '../components/investigation/formModel';
 import { InvestigationReport } from '../components/investigation/InvestigationReport';
 import { v2Api } from '../services/v2Api';
-import { InvestigationRequest, InvestigationResponse } from '../types/investigation';
+import { ExplanationView, InvestigationRequest, InvestigationResponse } from '../types/investigation';
 
 /** Form settings live in the URL so a link can be shared; the investigation itself only runs on an explicit click. */
 function formFromParams(p: URLSearchParams): FormValues {
@@ -56,6 +56,7 @@ export const InvestigatePage: React.FC = () => {
   const [form, setForm] = useState<FormValues>(() => formFromParams(params));
   const [running, setRunning] = useState<InvestigationRequest | null>(null);
   const [report, setReport] = useState<InvestigationResponse | null>(null);
+  const [explanation, setExplanation] = useState<ExplanationView | null>(null);
   const [error, setError] = useState<{ title: string; message: string } | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
@@ -77,23 +78,47 @@ export const InvestigatePage: React.FC = () => {
     setFromLink(false);
     setElapsed(0);
     setReport(null);
+    setExplanation(null);
     setError(null);
     setRunning(request);
     setParams(paramsFromRequest(request), { replace: true });
+    // The report is returned without waiting for the AI analyst, which can take minutes; the explanation follows.
+    const body: InvestigationRequest = { ...request, ai_explanation: 'separate' };
+    let result: InvestigationResponse;
     try {
-      const result = await v2Api.runInvestigation(request, controller.signal);
-      if (!controller.signal.aborted) setReport(result);
+      result = await v2Api.runInvestigation(body, controller.signal);
+      if (controller.signal.aborted) return;
+      setReport(result);
     } catch (err) {
       if ((err as { name?: string })?.name === 'AbortError' || controller.signal.aborted) return;
       setError(investigationError(err));
+      return;
     } finally {
       if (abortRef.current === controller) setRunning(null);
+    }
+    if (result.ai_analysis.state !== 'deferred') return;
+    setExplanation({ phase: 'pending' });
+    try {
+      const ex = await v2Api.explainInvestigation(body, controller.signal);
+      if (controller.signal.aborted) return;
+      // Only show an explanation of exactly this report (the ledger could have changed in between).
+      setExplanation(ex.report_digest === result.report_digest ? { phase: 'done', analysis: ex.ai_analysis } : { phase: 'stale' });
+    } catch (err) {
+      if ((err as { name?: string })?.name === 'AbortError' || controller.signal.aborted) return;
+      setExplanation({
+        phase: 'failed',
+        message:
+          err instanceof TypeError
+            ? 'The server could not be reached for the AI explanation. The report above is complete.'
+            : 'The AI explanation request failed. The report above is complete.',
+      });
     }
   };
 
   const newInvestigation = () => {
     abortRef.current?.abort();
     setReport(null);
+    setExplanation(null);
     setError(null);
     setRunning(null);
     setForm(DEFAULT_FORM);
@@ -104,7 +129,7 @@ export const InvestigatePage: React.FC = () => {
   if (report) {
     return (
       <div className="pb-10">
-        <InvestigationReport report={report} onNew={newInvestigation} />
+        <InvestigationReport report={report} onNew={newInvestigation} explanation={explanation} />
       </div>
     );
   }
@@ -140,8 +165,7 @@ export const InvestigatePage: React.FC = () => {
             </p>
             <p className="mt-1 text-sm text-[#6B655B]">
               The server is querying the ledger and running the checks. The report appears when it has finished.
-              {elapsed >= 8 && ' When the AI analyst is enabled it adds several seconds after the checks finish.'}
-              {elapsed >= 20 && ' If the free server was asleep, the first request can take about a minute.'}
+              {elapsed >= 10 && ' If the free server was asleep, the first request can take about a minute.'}
             </p>
           </div>
         </div>

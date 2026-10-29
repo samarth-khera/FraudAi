@@ -50,6 +50,7 @@ QUESTIONS = [
 
 DEFAULT_MODEL = "gemini-3.8-flash"
 DEFAULT_TIMEOUT_SECONDS = 25.0
+MAX_TIMEOUT_SECONDS = 300.0
 DEFAULT_MAX_OUTPUT_TOKENS = 4096
 DEFAULT_THINKING_LEVEL = "low"
 # thinking_level values Google documents per model (ai.google.dev/gemini-api/docs/thinking, checked 2026-10-29).
@@ -93,7 +94,8 @@ class AnalystConfig:
             enabled=(os.environ.get("GEMINI_ANALYST_ENABLED", "false").strip().lower() == "true"),
             api_key_present=bool(os.environ.get("GEMINI_API_KEY", "").strip()),
             model=(os.environ.get("GEMINI_MODEL") or DEFAULT_MODEL).strip(),
-            timeout_seconds=number("GEMINI_TIMEOUT_SECONDS", DEFAULT_TIMEOUT_SECONDS, 3, 60),
+            # Standard-tier latency is documented as "seconds to minutes" (Google's own server default is 600 s).
+            timeout_seconds=number("GEMINI_TIMEOUT_SECONDS", DEFAULT_TIMEOUT_SECONDS, 3, MAX_TIMEOUT_SECONDS),
             max_output_tokens=int(number("GEMINI_MAX_OUTPUT_TOKENS", DEFAULT_MAX_OUTPUT_TOKENS, 512, 8192)),
             thinking_level=thinking if thinking in ("minimal", "low", "medium", "high") else None,
             privacy_policy=policy,
@@ -429,6 +431,7 @@ def validate_and_ground(raw: Optional[str], allowed: set[str], ps: Pseudonymizer
 
 # ---------------------------------------------------------------- orchestration
 _LEGACY_STATUS = {
+    "deferred": "not_configured",
     "completed": "generated",
     "disabled": "not_configured",
     "not_configured": "not_configured",
@@ -468,6 +471,16 @@ def _result(state: str, message: str, config: AnalystConfig, **extra: Any) -> di
         "sections": extra.get("sections", []),
         "rejected_claims": extra.get("rejected_claims", 0),
         "latency_ms": extra.get("latency_ms"),
+    }
+
+
+def deferred() -> dict:
+    """ai_analysis for a report whose explanation is requested separately. No configuration is read and nothing is sent."""
+    return {
+        "state": "deferred", "status": "not_configured", "provider": None, "model": None,
+        "message": "The AI explanation is requested separately so this report is not held up by it.",
+        "unavailable_reason": None, "privacy_policy": None, "pseudonymized": False, "report": None, "sections": [],
+        "rejected_claims": 0, "latency_ms": None,
     }
 
 

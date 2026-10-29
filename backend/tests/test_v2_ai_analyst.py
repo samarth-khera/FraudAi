@@ -270,7 +270,8 @@ def test_config_defaults_are_conservative(monkeypatch):
     monkeypatch.setenv("GEMINI_TIMEOUT_SECONDS", "9999")
     monkeypatch.setenv("GEMINI_MAX_OUTPUT_TOKENS", "not-a-number")
     c = AnalystConfig.from_env()
-    assert c.privacy_policy == "synthetic_only" and c.timeout_seconds == 60 and c.max_output_tokens == ai_analyst.DEFAULT_MAX_OUTPUT_TOKENS
+    assert c.privacy_policy == "synthetic_only" and c.timeout_seconds == ai_analyst.MAX_TIMEOUT_SECONDS == 300
+    assert c.max_output_tokens == ai_analyst.DEFAULT_MAX_OUTPUT_TOKENS
     assert FAKE_KEY not in repr(c)
 
 
@@ -676,3 +677,69 @@ def test_startup_attaches_a_handler_so_analyst_info_lines_reach_the_server_log()
     log = logging.getLogger("fraudshield.v2.ai_analyst")
     with TestClient(create_app()):
         assert log.handlers and log.isEnabledFor(logging.INFO)
+
+
+# ---------------------------------------------------------------- separate explanation (Standard-tier latency)
+def explain(client, **body):
+    return client.post("/api/v2/investigations/explanation", json={"account_id": "ACC-VIC", **body})
+
+
+def test_separate_mode_returns_the_report_without_calling_gemini(ledger, gemini_on):  # noqa: F811
+    client, _, _ = ledger
+    fake = gemini_on(FakeProvider(good_reply))
+    body = investigate(client, ai_explanation="separate").json()
+    ai = body["ai_analysis"]
+    assert (ai["state"], ai["status"], ai["report"], ai["provider"]) == ("deferred", "not_configured", None, None)
+    assert fake.calls == [], "the report must not wait for, or trigger, the AI call"
+    assert body["accounts"] and body["trace"]["edges"] and len(body["report_digest"]) == 24
+
+
+def test_explanation_endpoint_explains_the_same_report(ledger, gemini_on):  # noqa: F811
+    client, _, _ = ledger
+    report = investigate(client, ai_explanation="separate").json()
+    fake = gemini_on(FakeProvider(good_reply))
+    r = explain(client, ai_explanation="separate")
+    assert r.status_code == 200
+    body = r.json()
+    assert set(body) == {"account_id", "report_digest", "data_as_of", "duration_ms", "ai_analysis"}, "no evidence is echoed back"
+    assert body["report_digest"] == report["report_digest"] and body["account_id"] == "ACC-VIC"
+    ai = body["ai_analysis"]
+    assert ai["state"] == "completed" and len(fake.calls) == 1
+    known = {e["transaction_id"] for e in report["trace"]["edges"]} | {n["account_id"] for n in report["trace"]["nodes"]} | {f["finding_id"] for f in report["findings"]}
+    assert set(ai["report"]["evidence_references"]) <= known
+    for o in ai["report"]["key_observations"]:
+        assert set(o["evidence_ids"]) <= known
+
+
+def test_digest_is_stable_and_tracks_the_deterministic_content(ledger):  # noqa: F811
+    client, S, _ = ledger
+    a = investigate(client, ai_explanation="separate").json()["report_digest"]
+    assert investigate(client).json()["report_digest"] == a, "the AI mode is not part of the report"
+    assert investigate(client, ai_explanation="separate").json()["report_digest"] == a
+    assert investigate(client, ai_explanation="separate", max_depth=2).json()["report_digest"] != a
+    assert investigate(client, account_id="ACC-M1", ai_explanation="separate").json()["report_digest"] != a
+    from sqlalchemy import update
+    from app.db.v2.models import TransactionModel
+    with S() as db:  # a changed ledger gives a different digest, so a stale explanation is not shown
+        db.execute(update(TransactionModel).where(TransactionModel.transaction_id == "TXN-T0011").values(amount=129_000))
+        db.commit()
+    assert investigate(client, ai_explanation="separate").json()["report_digest"] != a
+
+
+def test_explanation_endpoint_reports_errors_and_ai_failures_honestly(ledger, gemini_on):  # noqa: F811
+    client, _, _ = ledger
+    assert explain(client, account_id="ACC-NOPE").status_code == 404
+    assert explain(client, account_id="bad id!").status_code == 422
+    disabled = explain(client).json()["ai_analysis"]
+    assert disabled["state"] == "disabled"
+    gemini_on(FakeProvider(raises=ProviderError("timeout", 504)))
+    r = explain(client)
+    assert r.status_code == 200 and r.json()["ai_analysis"]["unavailable_reason"] == "timeout"
+    assert "secret" not in r.text
+
+
+def test_timeout_setting_allows_minutes_but_stays_bounded(monkeypatch):
+    monkeypatch.setenv("GEMINI_TIMEOUT_SECONDS", "180")
+    assert AnalystConfig.from_env().timeout_seconds == 180
+    monkeypatch.setenv("GEMINI_TIMEOUT_SECONDS", "1")
+    assert AnalystConfig.from_env().timeout_seconds == 3
