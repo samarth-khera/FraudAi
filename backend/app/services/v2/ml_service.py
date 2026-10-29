@@ -225,10 +225,19 @@ class V2MLInferenceService:
         return "critical"
 
     @classmethod
-    def assess_account(cls, db: Session, account_id: str) -> Optional[AccountMLAssessmentResponse]:
-        """Calculates ML model risk assessment with local TreeSHAP explanations."""
+    def assess_account(
+        cls, db: Session, account_id: str, rule_assessment: Any = None, account: Any = None
+    ) -> Optional[AccountMLAssessmentResponse]:
+        """Calculates ML model risk assessment with local TreeSHAP explanations.
+
+        Callers that already computed the account's rule assessment (and loaded its row) can pass both to avoid
+        recomputing the same signals; the features are identical either way.
+        """
         # 1. Extract observable features
-        features = AccountFeatureBuilder.extract_features(db, account_id)
+        if rule_assessment is not None and account is not None:
+            features = AccountFeatureBuilder.features_from_assessment(account, rule_assessment)
+        else:
+            features = AccountFeatureBuilder.extract_features(db, account_id)
         if features is None:
             return None
 

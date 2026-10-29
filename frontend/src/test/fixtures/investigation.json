@@ -1,0 +1,1833 @@
+{
+ "investigation_id": "INV-D351C6CE17",
+ "started_at": "2026-10-29T11:17:45.725671+00:00",
+ "completed_at": "2026-10-29T11:17:45.756398+00:00",
+ "duration_ms": 30,
+ "request": {
+  "account_id": "ACC-VIC",
+  "start_date": null,
+  "end_date": null,
+  "max_depth": 3,
+  "max_nodes": 200,
+  "onward_window_hours": 72.0,
+  "trace_scope": "flagged",
+  "max_accounts_analyzed": 25
+ },
+ "data_source": {
+  "source_kind": "synthetic_demo_ledger",
+  "source_name": "FraudShield synthetic demo ledger (generator seed 42)",
+  "is_synthetic": true,
+  "real_bank_data": false,
+  "authorization_reference": null,
+  "database_backend": "sqlite",
+  "database_label": "test-ledger.db",
+  "accounts_count": 7,
+  "transactions_count": 14,
+  "earliest_transaction_at": "2026-01-29T09:00:00",
+  "data_as_of": "2026-02-01T09:40:00",
+  "snapshot_built_at": "2026-10-29T11:17:45.718152+00:00",
+  "queried_at": "2026-10-29T11:17:45.726586+00:00",
+  "freshness_note": "Static synthetic snapshot regenerated from a fixed seed when the server is built. It is not a live feed: no new transactions arrive, and 'data as of' is the latest synthetic transaction time.",
+  "disclosure": "Synthetic demo data. No real customers, accounts or bank transactions are involved."
+ },
+ "model_version": "v2-account-2.0.0",
+ "model_review_threshold": 0.1752,
+ "model_available": true,
+ "model_unavailable_reason": null,
+ "victim": {
+  "account_id": "ACC-VIC",
+  "customer_name": "Name ACC-VIC",
+  "customer_type": "retail",
+  "kyc_tier": "tier_2_verified",
+  "account_status": "active",
+  "account_opened_at": "2024-12-28T09:00:00",
+  "current_balance": 91200.0,
+  "period_start": null,
+  "period_end": null,
+  "transactions_in_period": 10,
+  "transactions_all_time": 10,
+  "incoming_count": 1,
+  "incoming_total": 60000.0,
+  "outgoing_count": 9,
+  "outgoing_total": 268800.0,
+  "median_outgoing_amount": 2400.0,
+  "largest_earlier_outgoing_before_first_flag": 2700.0,
+  "first_transaction_at": "2026-01-29T09:00:00",
+  "last_transaction_at": "2026-02-01T09:00:00",
+  "top_senders": [
+   {
+    "account_id": "ACC-EMP",
+    "transfers": 1,
+    "total_amount": 60000.0,
+    "first_at": "2026-01-29T09:00:00",
+    "last_at": "2026-01-29T09:00:00"
+   }
+  ],
+  "top_recipients": [
+   {
+    "account_id": "ACC-M1",
+    "transfers": 1,
+    "total_amount": 250000.0,
+    "first_at": "2026-02-01T09:00:00",
+    "last_at": "2026-02-01T09:00:00"
+   },
+   {
+    "account_id": "ACC-SHOP",
+    "transfers": 8,
+    "total_amount": 18800.0,
+    "first_at": "2026-01-30T09:00:00",
+    "last_at": "2026-01-30T16:00:00"
+   }
+  ],
+  "flagged_transfers": [
+   {
+    "transaction_id": "TXN-T0010",
+    "timestamp": "2026-02-01T09:00:00",
+    "origin_account_id": "ACC-VIC",
+    "destination_account_id": "ACC-M1",
+    "amount": 250000.0,
+    "currency": "INR",
+    "channel": "IMPS",
+    "status": "COMPLETED",
+    "origin_balance_before": 341200.0,
+    "origin_balance_after": 91200.0,
+    "dest_balance_before": 2000.0,
+    "dest_balance_after": 252000.0,
+    "direction": "downstream",
+    "hop": 1,
+    "evidence_type": "observed_direct",
+    "parent_transaction_id": null,
+    "minutes_from_parent": null,
+    "is_cycle": false,
+    "converges": false,
+    "flags": [
+     {
+      "code": "AMOUNT_ABOVE_OWN_HISTORY",
+      "explanation": "\u20b92,50,000 is 92.6x the largest of the account's 8 earlier outgoing transfers (\u20b92,700)."
+     },
+     {
+      "code": "BALANCE_DRAIN",
+      "explanation": "Moved 73% of the \u20b93,41,200 balance held just before it."
+     }
+    ]
+   }
+  ]
+ },
+ "trace": {
+  "nodes": [
+   {
+    "account_id": "ACC-VIC",
+    "customer_name": "Name ACC-VIC",
+    "customer_type": "retail",
+    "kyc_tier": "tier_2_verified",
+    "account_status": "active",
+    "current_balance": 91200.0,
+    "hop_distance": 0,
+    "graph_role": "investigated_account",
+    "is_root": true
+   },
+   {
+    "account_id": "ACC-M1",
+    "customer_name": "Name ACC-M1",
+    "customer_type": "retail",
+    "kyc_tier": "tier_1_basic",
+    "account_status": "active",
+    "current_balance": 107000.0,
+    "hop_distance": 1,
+    "graph_role": "direct_recipient",
+    "is_root": false
+   },
+   {
+    "account_id": "ACC-EMP",
+    "customer_name": "Name ACC-EMP",
+    "customer_type": "corporate",
+    "kyc_tier": "tier_2_verified",
+    "account_status": "active",
+    "current_balance": 4940000.0,
+    "hop_distance": 1,
+    "graph_role": "direct_sender",
+    "is_root": false
+   },
+   {
+    "account_id": "ACC-M2A",
+    "customer_name": "Name ACC-M2A",
+    "customer_type": "student",
+    "kyc_tier": "tier_1_basic",
+    "account_status": "active",
+    "current_balance": 3000.0,
+    "hop_distance": 2,
+    "graph_role": "onward_recipient",
+    "is_root": false
+   },
+   {
+    "account_id": "ACC-M2B",
+    "customer_name": "Name ACC-M2B",
+    "customer_type": "student",
+    "kyc_tier": "tier_1_basic",
+    "account_status": "active",
+    "current_balance": 16000.0,
+    "hop_distance": 2,
+    "graph_role": "onward_recipient",
+    "is_root": false
+   },
+   {
+    "account_id": "ACC-ATM",
+    "customer_name": "Name ACC-ATM",
+    "customer_type": "sme",
+    "kyc_tier": "tier_2_verified",
+    "account_status": "active",
+    "current_balance": 138000.0,
+    "hop_distance": 3,
+    "graph_role": "onward_recipient",
+    "is_root": false
+   }
+  ],
+  "edges": [
+   {
+    "transaction_id": "TXN-T0001",
+    "timestamp": "2026-01-29T09:00:00",
+    "origin_account_id": "ACC-EMP",
+    "destination_account_id": "ACC-VIC",
+    "amount": 60000.0,
+    "currency": "INR",
+    "channel": "NEFT",
+    "status": "COMPLETED",
+    "origin_balance_before": 5000000.0,
+    "origin_balance_after": 4940000.0,
+    "dest_balance_before": 300000.0,
+    "dest_balance_after": 360000.0,
+    "direction": "upstream",
+    "hop": 1,
+    "evidence_type": "observed_direct",
+    "parent_transaction_id": null,
+    "minutes_from_parent": null,
+    "is_cycle": false,
+    "converges": false,
+    "flags": []
+   },
+   {
+    "transaction_id": "TXN-T0010",
+    "timestamp": "2026-02-01T09:00:00",
+    "origin_account_id": "ACC-VIC",
+    "destination_account_id": "ACC-M1",
+    "amount": 250000.0,
+    "currency": "INR",
+    "channel": "IMPS",
+    "status": "COMPLETED",
+    "origin_balance_before": 341200.0,
+    "origin_balance_after": 91200.0,
+    "dest_balance_before": 2000.0,
+    "dest_balance_after": 252000.0,
+    "direction": "downstream",
+    "hop": 1,
+    "evidence_type": "observed_direct",
+    "parent_transaction_id": null,
+    "minutes_from_parent": null,
+    "is_cycle": false,
+    "converges": false,
+    "flags": [
+     {
+      "code": "AMOUNT_ABOVE_OWN_HISTORY",
+      "explanation": "\u20b92,50,000 is 92.6x the largest of the account's 8 earlier outgoing transfers (\u20b92,700)."
+     },
+     {
+      "code": "BALANCE_DRAIN",
+      "explanation": "Moved 73% of the \u20b93,41,200 balance held just before it."
+     }
+    ]
+   },
+   {
+    "transaction_id": "TXN-T0011",
+    "timestamp": "2026-02-01T09:08:00",
+    "origin_account_id": "ACC-M1",
+    "destination_account_id": "ACC-M2A",
+    "amount": 130000.0,
+    "currency": "INR",
+    "channel": "UPI",
+    "status": "COMPLETED",
+    "origin_balance_before": 252000.0,
+    "origin_balance_after": 122000.0,
+    "dest_balance_before": 1000.0,
+    "dest_balance_after": 131000.0,
+    "direction": "downstream",
+    "hop": 2,
+    "evidence_type": "inferred_related",
+    "parent_transaction_id": "TXN-T0010",
+    "minutes_from_parent": 8.0,
+    "is_cycle": false,
+    "converges": false,
+    "flags": []
+   },
+   {
+    "transaction_id": "TXN-T0012",
+    "timestamp": "2026-02-01T09:10:00",
+    "origin_account_id": "ACC-M1",
+    "destination_account_id": "ACC-M2B",
+    "amount": 115000.0,
+    "currency": "INR",
+    "channel": "UPI",
+    "status": "COMPLETED",
+    "origin_balance_before": 122000.0,
+    "origin_balance_after": 7000.0,
+    "dest_balance_before": 1000.0,
+    "dest_balance_after": 116000.0,
+    "direction": "downstream",
+    "hop": 2,
+    "evidence_type": "inferred_related",
+    "parent_transaction_id": "TXN-T0010",
+    "minutes_from_parent": 10.0,
+    "is_cycle": false,
+    "converges": false,
+    "flags": []
+   },
+   {
+    "transaction_id": "TXN-T0013",
+    "timestamp": "2026-02-01T09:25:00",
+    "origin_account_id": "ACC-M2A",
+    "destination_account_id": "ACC-ATM",
+    "amount": 128000.0,
+    "currency": "INR",
+    "channel": "ATM_CASH_OUT",
+    "status": "COMPLETED",
+    "origin_balance_before": 131000.0,
+    "origin_balance_after": 3000.0,
+    "dest_balance_before": 10000.0,
+    "dest_balance_after": 138000.0,
+    "direction": "downstream",
+    "hop": 3,
+    "evidence_type": "inferred_related",
+    "parent_transaction_id": "TXN-T0011",
+    "minutes_from_parent": 17.0,
+    "is_cycle": false,
+    "converges": false,
+    "flags": []
+   },
+   {
+    "transaction_id": "TXN-T0014",
+    "timestamp": "2026-02-01T09:40:00",
+    "origin_account_id": "ACC-M2B",
+    "destination_account_id": "ACC-M1",
+    "amount": 100000.0,
+    "currency": "INR",
+    "channel": "UPI",
+    "status": "COMPLETED",
+    "origin_balance_before": 116000.0,
+    "origin_balance_after": 16000.0,
+    "dest_balance_before": 7000.0,
+    "dest_balance_after": 107000.0,
+    "direction": "downstream",
+    "hop": 3,
+    "evidence_type": "inferred_related",
+    "parent_transaction_id": "TXN-T0012",
+    "minutes_from_parent": 30.0,
+    "is_cycle": true,
+    "converges": false,
+    "flags": []
+   }
+  ],
+  "downstream_seed_transaction_ids": [
+   "TXN-T0010"
+  ],
+  "upstream_seed_transaction_ids": [
+   "TXN-T0001"
+  ],
+  "seed_selection": "Traced the 1 outgoing transfer(s) flagged as unusual. Traced back 1 incoming transfer(s) received within 72 h before a flagged outgoing transfer.",
+  "max_depth_reached": 3,
+  "cycles_detected": 1,
+  "is_truncated": true,
+  "truncation_notes": [
+   "The depth limit of 3 hop(s) was reached; 1 account(s) at that depth were not followed further."
+  ],
+  "transactions_read": 4
+ },
+ "accounts": [
+  {
+   "account_id": "ACC-VIC",
+   "customer_name": "Name ACC-VIC",
+   "customer_type": "retail",
+   "kyc_tier": "tier_2_verified",
+   "graph_role": "investigated_account",
+   "hop_distance": 0,
+   "role_assessment": "victim_candidate",
+   "role_basis": [
+    "Sent 1 transfer(s) flagged as unusual against its own history, \u20b92,50,000 in total."
+   ],
+   "analyzed": true,
+   "not_analyzed_reason": null,
+   "rule_assessment": {
+    "account_id": "ACC-VIC",
+    "risk_score": 55.0,
+    "risk_level": "elevated",
+    "signals": {
+     "total_transactions": 10,
+     "velocity_24h_count": 1,
+     "velocity_7d_count": 10,
+     "velocity_30d_count": 10,
+     "flow_through_ratio": 4.48,
+     "rapid_pass_through": false,
+     "median_dwell_minutes": null,
+     "max_amount": 250000.0,
+     "avg_amount": 32880.0,
+     "amount_spike_ratio": 7.6,
+     "unique_counterparties": 3,
+     "counterparty_diversity_ratio": 0.3,
+     "fan_in_ratio": 0.1,
+     "fan_out_ratio": 0.9,
+     "dormancy_gap_days": 397.0,
+     "dormant_awakening_detected": true,
+     "cycle_detected": false
+    },
+    "reason_codes": [
+     "UNUSUAL_AMOUNT_SPIKE: Maximum transaction (250000.00) is 7.6x higher than average.",
+     "FAN_OUT_DISPERSAL: High-frequency outbound dispersal to multiple recipients (fan-out ratio 0.90).",
+     "DORMANT_ACCOUNT_AWAKENED: Account inactive for 397.0 days before sudden high-value activity."
+    ],
+    "evidence_gaps": [
+     "DEVICE_TELEMETRY_UNAVAILABLE: Session IP, device fingerprint, and MAC addresses are not captured in current core banking data.",
+     "EXTERNAL_PERIMETER_BLINDSPOT: Downstream transactions terminating at ATM or external banks cannot be verified."
+    ],
+    "uncertainty_rating": "low",
+    "recommendation": "standard_triage_queue: Monitor for recurring anomalous velocity or pass-through patterns.",
+    "disclaimer": "Decision support only. Heuristic behavioral risk scores evaluate mathematical anomalies in transaction timing and velocity. They do not constitute legal proof of culpability or intent. Automated punitive actions or account freezing are strictly prohibited."
+   },
+   "model_assessment": {
+    "account_id": "ACC-VIC",
+    "risk_score": 25.0,
+    "risk_level": "elevated",
+    "predicted_probability": 0.2496,
+    "predicted_class": "suspicious",
+    "model_version": "v2-account-2.0.0",
+    "model_type": "XGBClassifier",
+    "top_contributions": [
+     {
+      "feature_name": "avg_amount",
+      "feature_value": 32880.0,
+      "contribution_score": 1.4234,
+      "impact_direction": "increases_risk"
+     },
+     {
+      "feature_name": "fan_out_ratio",
+      "feature_value": 0.9,
+      "contribution_score": -0.9272,
+      "impact_direction": "decreases_risk"
+     },
+     {
+      "feature_name": "initial_balance",
+      "feature_value": 300000.0,
+      "contribution_score": -0.8752,
+      "impact_direction": "decreases_risk"
+     },
+     {
+      "feature_name": "max_amount",
+      "feature_value": 250000.0,
+      "contribution_score": 0.6699,
+      "impact_direction": "increases_risk"
+     },
+     {
+      "feature_name": "counterparty_diversity_ratio",
+      "feature_value": 0.3,
+      "contribution_score": 0.6655,
+      "impact_direction": "increases_risk"
+     },
+     {
+      "feature_name": "fan_in_ratio",
+      "feature_value": 0.1,
+      "contribution_score": -0.4299,
+      "impact_direction": "decreases_risk"
+     }
+    ],
+    "observable_features": {
+     "customer_type_retail": 1.0,
+     "customer_type_student": 0.0,
+     "customer_type_sme": 0.0,
+     "customer_type_corporate": 0.0,
+     "kyc_tier_level": 2.0,
+     "initial_balance": 300000.0,
+     "current_balance": 91200.0,
+     "balance_ratio": 0.304,
+     "total_transactions": 10.0,
+     "velocity_24h_count": 1.0,
+     "velocity_7d_count": 10.0,
+     "velocity_30d_count": 10.0,
+     "flow_through_ratio": 4.48,
+     "rapid_pass_through": 0.0,
+     "median_dwell_minutes": -1.0,
+     "has_dwell_time": 0.0,
+     "max_amount": 250000.0,
+     "avg_amount": 32880.0,
+     "amount_spike_ratio": 7.6,
+     "unique_counterparties": 3.0,
+     "counterparty_diversity_ratio": 0.3,
+     "fan_in_ratio": 0.1,
+     "fan_out_ratio": 0.9,
+     "dormancy_gap_days": 397.0,
+     "dormant_awakening_detected": 1.0,
+     "cycle_detected": 0.0
+    },
+    "disclaimer": "Decision support only. Model trained exclusively on synthetic financial network scenarios. High model risk scores do NOT constitute legal proof of guilt or real-world fraud accuracy. Automated account freezing, denial of service, or punitive action is strictly prohibited."
+   },
+   "model_unavailable_reason": null,
+   "model_suggests_review": true,
+   "rule_suggests_review": false,
+   "checks_disagree": true,
+   "disagreement_note": "The model suggests review but the fixed rules do not.",
+   "traced_in_amount": 60000.0,
+   "traced_out_amount": 250000.0,
+   "evidence_transaction_ids": [
+    "TXN-T0001",
+    "TXN-T0010"
+   ],
+   "alternative_explanations": [
+    "The holder may have made these payments knowingly and for legitimate reasons; the ledger records the payment, not whether it was authorised or induced by deception.",
+    "The account was opened 397 days before its first traced transfer, so it was not opened just for this flow.",
+    "The model flags it but the rules do not; a large unusual payment out can also be the mark of a scam victim rather than a perpetrator."
+   ],
+   "missing_evidence": [
+    "Device, IP and login records for these transfers (not held in the ledger)."
+   ],
+   "next_steps": [
+    "Contact the account holder through a verified channel to confirm whether they authorised TXN-T0010.",
+    "Request authentication and session logs for the flagged transfers."
+   ]
+  },
+  {
+   "account_id": "ACC-M1",
+   "customer_name": "Name ACC-M1",
+   "customer_type": "retail",
+   "kyc_tier": "tier_1_basic",
+   "graph_role": "direct_recipient",
+   "hop_distance": 1,
+   "role_assessment": "possible_intermediary",
+   "role_basis": [
+    "Received \u20b92,50,000 in traced transfers and, judging by its balance, at least \u20b92,43,000 of it had moved on within 72 h (lowest balance in that time \u20b97,000).",
+    "Received \u20b92,50,000 through traced transfers (1 hop(s) from ACC-VIC).",
+    "Model score 28.3% is at or above the review threshold of 17.5%."
+   ],
+   "analyzed": true,
+   "not_analyzed_reason": null,
+   "rule_assessment": {
+    "account_id": "ACC-M1",
+    "risk_score": 45.0,
+    "risk_level": "elevated",
+    "signals": {
+     "total_transactions": 4,
+     "velocity_24h_count": 4,
+     "velocity_7d_count": 4,
+     "velocity_30d_count": 4,
+     "flow_through_ratio": 0.7,
+     "rapid_pass_through": true,
+     "median_dwell_minutes": 8.0,
+     "max_amount": 250000.0,
+     "avg_amount": 148750.0,
+     "amount_spike_ratio": 1.68,
+     "unique_counterparties": 3,
+     "counterparty_diversity_ratio": 0.75,
+     "fan_in_ratio": 0.5,
+     "fan_out_ratio": 0.5,
+     "dormancy_gap_days": null,
+     "dormant_awakening_detected": false,
+     "cycle_detected": false
+    },
+    "reason_codes": [
+     "RAPID_PASS_THROUGH: Inbound funds offloaded within 30 minutes (median dwell 8.0 min)."
+    ],
+    "evidence_gaps": [
+     "DEVICE_TELEMETRY_UNAVAILABLE: Session IP, device fingerprint, and MAC addresses are not captured in current core banking data.",
+     "EXTERNAL_PERIMETER_BLINDSPOT: Downstream transactions terminating at ATM or external banks cannot be verified.",
+     "UNVERIFIED_KYC: Account possesses only Tier 1 Basic unverified due diligence."
+    ],
+    "uncertainty_rating": "medium",
+    "recommendation": "standard_triage_queue: Monitor for recurring anomalous velocity or pass-through patterns.",
+    "disclaimer": "Decision support only. Heuristic behavioral risk scores evaluate mathematical anomalies in transaction timing and velocity. They do not constitute legal proof of culpability or intent. Automated punitive actions or account freezing are strictly prohibited."
+   },
+   "model_assessment": {
+    "account_id": "ACC-M1",
+    "risk_score": 28.3,
+    "risk_level": "elevated",
+    "predicted_probability": 0.2828,
+    "predicted_class": "suspicious",
+    "model_version": "v2-account-2.0.0",
+    "model_type": "XGBClassifier",
+    "top_contributions": [
+     {
+      "feature_name": "avg_amount",
+      "feature_value": 148750.0,
+      "contribution_score": 1.3702,
+      "impact_direction": "increases_risk"
+     },
+     {
+      "feature_name": "amount_spike_ratio",
+      "feature_value": 1.68,
+      "contribution_score": -0.8147,
+      "impact_direction": "decreases_risk"
+     },
+     {
+      "feature_name": "counterparty_diversity_ratio",
+      "feature_value": 0.75,
+      "contribution_score": 0.6455,
+      "impact_direction": "increases_risk"
+     },
+     {
+      "feature_name": "flow_through_ratio",
+      "feature_value": 0.7,
+      "contribution_score": 0.5141,
+      "impact_direction": "increases_risk"
+     },
+     {
+      "feature_name": "velocity_30d_count",
+      "feature_value": 4.0,
+      "contribution_score": -0.48,
+      "impact_direction": "decreases_risk"
+     },
+     {
+      "feature_name": "balance_ratio",
+      "feature_value": 53.4733,
+      "contribution_score": -0.3977,
+      "impact_direction": "decreases_risk"
+     }
+    ],
+    "observable_features": {
+     "customer_type_retail": 1.0,
+     "customer_type_student": 0.0,
+     "customer_type_sme": 0.0,
+     "customer_type_corporate": 0.0,
+     "kyc_tier_level": 1.0,
+     "initial_balance": 2000.0,
+     "current_balance": 107000.0,
+     "balance_ratio": 53.4733,
+     "total_transactions": 4.0,
+     "velocity_24h_count": 4.0,
+     "velocity_7d_count": 4.0,
+     "velocity_30d_count": 4.0,
+     "flow_through_ratio": 0.7,
+     "rapid_pass_through": 1.0,
+     "median_dwell_minutes": 8.0,
+     "has_dwell_time": 1.0,
+     "max_amount": 250000.0,
+     "avg_amount": 148750.0,
+     "amount_spike_ratio": 1.68,
+     "unique_counterparties": 3.0,
+     "counterparty_diversity_ratio": 0.75,
+     "fan_in_ratio": 0.5,
+     "fan_out_ratio": 0.5,
+     "dormancy_gap_days": 0.0,
+     "dormant_awakening_detected": 0.0,
+     "cycle_detected": 0.0
+    },
+    "disclaimer": "Decision support only. Model trained exclusively on synthetic financial network scenarios. High model risk scores do NOT constitute legal proof of guilt or real-world fraud accuracy. Automated account freezing, denial of service, or punitive action is strictly prohibited."
+   },
+   "model_unavailable_reason": null,
+   "model_suggests_review": true,
+   "rule_suggests_review": false,
+   "checks_disagree": true,
+   "disagreement_note": "The model suggests review but the fixed rules do not.",
+   "traced_in_amount": 250000.0,
+   "traced_out_amount": 245000.0,
+   "evidence_transaction_ids": [
+    "TXN-T0010",
+    "TXN-T0011",
+    "TXN-T0012"
+   ],
+   "alternative_explanations": [
+    "Receiving or sending money is not wrongdoing: the holder may have been paid for goods or services, or been deceived into moving funds for someone else.",
+    "Fast onward payments can be ordinary (paying suppliers or family) or made by a holder who is themself following a scammer's instructions.",
+    "The model flags it but the rules do not; a large unusual payment out can also be the mark of a scam victim rather than a perpetrator."
+   ],
+   "missing_evidence": [
+    "Device, IP and login records for these transfers (not held in the ledger).",
+    "KYC is basic tier: the holder's identity is not fully verified."
+   ],
+   "next_steps": [
+    "Review KYC and account-opening records, and the purpose of TXN-T0010, TXN-T0011, TXN-T0012.",
+    "Consider escalating for a decision on protective restrictions through the institution's authorised process. Nothing is restricted automatically."
+   ]
+  },
+  {
+   "account_id": "ACC-M2A",
+   "customer_name": "Name ACC-M2A",
+   "customer_type": "student",
+   "kyc_tier": "tier_1_basic",
+   "graph_role": "onward_recipient",
+   "hop_distance": 2,
+   "role_assessment": "possible_intermediary",
+   "role_basis": [
+    "Received \u20b91,30,000 in traced transfers and, judging by its balance, at least \u20b91,27,000 of it had moved on within 72 h (lowest balance in that time \u20b93,000).",
+    "Received \u20b91,30,000 through traced transfers (2 hop(s) from ACC-VIC).",
+    "Fixed rules score it 65/100 (high)."
+   ],
+   "analyzed": true,
+   "not_analyzed_reason": null,
+   "rule_assessment": {
+    "account_id": "ACC-M2A",
+    "risk_score": 65.0,
+    "risk_level": "high",
+    "signals": {
+     "total_transactions": 2,
+     "velocity_24h_count": 2,
+     "velocity_7d_count": 2,
+     "velocity_30d_count": 2,
+     "flow_through_ratio": 0.9846,
+     "rapid_pass_through": true,
+     "median_dwell_minutes": 17.0,
+     "max_amount": 130000.0,
+     "avg_amount": 129000.0,
+     "amount_spike_ratio": 1.01,
+     "unique_counterparties": 2,
+     "counterparty_diversity_ratio": 1.0,
+     "fan_in_ratio": 0.5,
+     "fan_out_ratio": 0.5,
+     "dormancy_gap_days": null,
+     "dormant_awakening_detected": false,
+     "cycle_detected": false
+    },
+    "reason_codes": [
+     "RAPID_PASS_THROUGH: Inbound funds offloaded within 30 minutes (median dwell 17.0 min).",
+     "HIGH_FLOW_THROUGH: Account retains < 10% of total inflows (flow-through ratio 0.98).",
+     "LIMITED_HISTORY: Low transaction count increases baseline uncertainty."
+    ],
+    "evidence_gaps": [
+     "DEVICE_TELEMETRY_UNAVAILABLE: Session IP, device fingerprint, and MAC addresses are not captured in current core banking data.",
+     "EXTERNAL_PERIMETER_BLINDSPOT: Downstream transactions terminating at ATM or external banks cannot be verified.",
+     "UNVERIFIED_KYC: Account possesses only Tier 1 Basic unverified due diligence."
+    ],
+    "uncertainty_rating": "high",
+    "recommendation": "enhanced_compliance_review: Perform manual inspection of counterparties and fund origins.",
+    "disclaimer": "Decision support only. Heuristic behavioral risk scores evaluate mathematical anomalies in transaction timing and velocity. They do not constitute legal proof of culpability or intent. Automated punitive actions or account freezing are strictly prohibited."
+   },
+   "model_assessment": {
+    "account_id": "ACC-M2A",
+    "risk_score": 9.1,
+    "risk_level": "low",
+    "predicted_probability": 0.0913,
+    "predicted_class": "legitimate",
+    "model_version": "v2-account-2.0.0",
+    "model_type": "XGBClassifier",
+    "top_contributions": [
+     {
+      "feature_name": "avg_amount",
+      "feature_value": 129000.0,
+      "contribution_score": 1.2218,
+      "impact_direction": "increases_risk"
+     },
+     {
+      "feature_name": "amount_spike_ratio",
+      "feature_value": 1.01,
+      "contribution_score": -0.9552,
+      "impact_direction": "decreases_risk"
+     },
+     {
+      "feature_name": "flow_through_ratio",
+      "feature_value": 0.9846,
+      "contribution_score": 0.5176,
+      "impact_direction": "increases_risk"
+     },
+     {
+      "feature_name": "velocity_30d_count",
+      "feature_value": 2.0,
+      "contribution_score": -0.4734,
+      "impact_direction": "decreases_risk"
+     },
+     {
+      "feature_name": "balance_ratio",
+      "feature_value": 2.997,
+      "contribution_score": -0.4154,
+      "impact_direction": "decreases_risk"
+     },
+     {
+      "feature_name": "customer_type_retail",
+      "feature_value": 0.0,
+      "contribution_score": -0.3027,
+      "impact_direction": "decreases_risk"
+     }
+    ],
+    "observable_features": {
+     "customer_type_retail": 0.0,
+     "customer_type_student": 1.0,
+     "customer_type_sme": 0.0,
+     "customer_type_corporate": 0.0,
+     "kyc_tier_level": 1.0,
+     "initial_balance": 1000.0,
+     "current_balance": 3000.0,
+     "balance_ratio": 2.997,
+     "total_transactions": 2.0,
+     "velocity_24h_count": 2.0,
+     "velocity_7d_count": 2.0,
+     "velocity_30d_count": 2.0,
+     "flow_through_ratio": 0.9846,
+     "rapid_pass_through": 1.0,
+     "median_dwell_minutes": 17.0,
+     "has_dwell_time": 1.0,
+     "max_amount": 130000.0,
+     "avg_amount": 129000.0,
+     "amount_spike_ratio": 1.01,
+     "unique_counterparties": 2.0,
+     "counterparty_diversity_ratio": 1.0,
+     "fan_in_ratio": 0.5,
+     "fan_out_ratio": 0.5,
+     "dormancy_gap_days": 0.0,
+     "dormant_awakening_detected": 0.0,
+     "cycle_detected": 0.0
+    },
+    "disclaimer": "Decision support only. Model trained exclusively on synthetic financial network scenarios. High model risk scores do NOT constitute legal proof of guilt or real-world fraud accuracy. Automated account freezing, denial of service, or punitive action is strictly prohibited."
+   },
+   "model_unavailable_reason": null,
+   "model_suggests_review": false,
+   "rule_suggests_review": true,
+   "checks_disagree": true,
+   "disagreement_note": "The fixed rules suggest review but the model scores it below its threshold, which does not clear it.",
+   "traced_in_amount": 130000.0,
+   "traced_out_amount": 128000.0,
+   "evidence_transaction_ids": [
+    "TXN-T0011",
+    "TXN-T0013"
+   ],
+   "alternative_explanations": [
+    "Receiving or sending money is not wrongdoing: the holder may have been paid for goods or services, or been deceived into moving funds for someone else.",
+    "Fast onward payments can be ordinary (paying suppliers or family) or made by a holder who is themself following a scammer's instructions."
+   ],
+   "missing_evidence": [
+    "Device, IP and login records for these transfers (not held in the ledger).",
+    "KYC is basic tier: the holder's identity is not fully verified.",
+    "ATM or cash-terminal records (location, camera footage): the ledger cannot follow cash.",
+    "Only 2 transaction(s) on record: scores are less reliable."
+   ],
+   "next_steps": [
+    "Review KYC and account-opening records, and the purpose of TXN-T0011, TXN-T0013.",
+    "Consider escalating for a decision on protective restrictions through the institution's authorised process. Nothing is restricted automatically."
+   ]
+  },
+  {
+   "account_id": "ACC-M2B",
+   "customer_name": "Name ACC-M2B",
+   "customer_type": "student",
+   "kyc_tier": "tier_1_basic",
+   "graph_role": "onward_recipient",
+   "hop_distance": 2,
+   "role_assessment": "possible_intermediary",
+   "role_basis": [
+    "Received \u20b91,15,000 in traced transfers and, judging by its balance, at least \u20b999,000 of it had moved on within 72 h (lowest balance in that time \u20b916,000).",
+    "Received \u20b91,15,000 through traced transfers (2 hop(s) from ACC-VIC)."
+   ],
+   "analyzed": true,
+   "not_analyzed_reason": null,
+   "rule_assessment": {
+    "account_id": "ACC-M2B",
+    "risk_score": 45.0,
+    "risk_level": "elevated",
+    "signals": {
+     "total_transactions": 2,
+     "velocity_24h_count": 2,
+     "velocity_7d_count": 2,
+     "velocity_30d_count": 2,
+     "flow_through_ratio": 0.8696,
+     "rapid_pass_through": true,
+     "median_dwell_minutes": 30.0,
+     "max_amount": 115000.0,
+     "avg_amount": 107500.0,
+     "amount_spike_ratio": 1.07,
+     "unique_counterparties": 1,
+     "counterparty_diversity_ratio": 0.5,
+     "fan_in_ratio": 0.5,
+     "fan_out_ratio": 0.5,
+     "dormancy_gap_days": null,
+     "dormant_awakening_detected": false,
+     "cycle_detected": false
+    },
+    "reason_codes": [
+     "RAPID_PASS_THROUGH: Inbound funds offloaded within 30 minutes (median dwell 30.0 min).",
+     "LIMITED_HISTORY: Low transaction count increases baseline uncertainty."
+    ],
+    "evidence_gaps": [
+     "DEVICE_TELEMETRY_UNAVAILABLE: Session IP, device fingerprint, and MAC addresses are not captured in current core banking data.",
+     "EXTERNAL_PERIMETER_BLINDSPOT: Downstream transactions terminating at ATM or external banks cannot be verified.",
+     "UNVERIFIED_KYC: Account possesses only Tier 1 Basic unverified due diligence."
+    ],
+    "uncertainty_rating": "high",
+    "recommendation": "standard_triage_queue: Monitor for recurring anomalous velocity or pass-through patterns.",
+    "disclaimer": "Decision support only. Heuristic behavioral risk scores evaluate mathematical anomalies in transaction timing and velocity. They do not constitute legal proof of culpability or intent. Automated punitive actions or account freezing are strictly prohibited."
+   },
+   "model_assessment": {
+    "account_id": "ACC-M2B",
+    "risk_score": 17.3,
+    "risk_level": "low",
+    "predicted_probability": 0.1725,
+    "predicted_class": "legitimate",
+    "model_version": "v2-account-2.0.0",
+    "model_type": "XGBClassifier",
+    "top_contributions": [
+     {
+      "feature_name": "avg_amount",
+      "feature_value": 107500.0,
+      "contribution_score": 0.9896,
+      "impact_direction": "increases_risk"
+     },
+     {
+      "feature_name": "amount_spike_ratio",
+      "feature_value": 1.07,
+      "contribution_score": -0.9706,
+      "impact_direction": "decreases_risk"
+     },
+     {
+      "feature_name": "counterparty_diversity_ratio",
+      "feature_value": 0.5,
+      "contribution_score": 0.8092,
+      "impact_direction": "increases_risk"
+     },
+     {
+      "feature_name": "velocity_30d_count",
+      "feature_value": 2.0,
+      "contribution_score": -0.6122,
+      "impact_direction": "decreases_risk"
+     },
+     {
+      "feature_name": "customer_type_retail",
+      "feature_value": 0.0,
+      "contribution_score": -0.4037,
+      "impact_direction": "decreases_risk"
+     },
+     {
+      "feature_name": "flow_through_ratio",
+      "feature_value": 0.8696,
+      "contribution_score": 0.3325,
+      "impact_direction": "increases_risk"
+     }
+    ],
+    "observable_features": {
+     "customer_type_retail": 0.0,
+     "customer_type_student": 1.0,
+     "customer_type_sme": 0.0,
+     "customer_type_corporate": 0.0,
+     "kyc_tier_level": 1.0,
+     "initial_balance": 1000.0,
+     "current_balance": 16000.0,
+     "balance_ratio": 15.984,
+     "total_transactions": 2.0,
+     "velocity_24h_count": 2.0,
+     "velocity_7d_count": 2.0,
+     "velocity_30d_count": 2.0,
+     "flow_through_ratio": 0.8696,
+     "rapid_pass_through": 1.0,
+     "median_dwell_minutes": 30.0,
+     "has_dwell_time": 1.0,
+     "max_amount": 115000.0,
+     "avg_amount": 107500.0,
+     "amount_spike_ratio": 1.07,
+     "unique_counterparties": 1.0,
+     "counterparty_diversity_ratio": 0.5,
+     "fan_in_ratio": 0.5,
+     "fan_out_ratio": 0.5,
+     "dormancy_gap_days": 0.0,
+     "dormant_awakening_detected": 0.0,
+     "cycle_detected": 0.0
+    },
+    "disclaimer": "Decision support only. Model trained exclusively on synthetic financial network scenarios. High model risk scores do NOT constitute legal proof of guilt or real-world fraud accuracy. Automated account freezing, denial of service, or punitive action is strictly prohibited."
+   },
+   "model_unavailable_reason": null,
+   "model_suggests_review": false,
+   "rule_suggests_review": false,
+   "checks_disagree": false,
+   "disagreement_note": null,
+   "traced_in_amount": 115000.0,
+   "traced_out_amount": 0.0,
+   "evidence_transaction_ids": [
+    "TXN-T0012"
+   ],
+   "alternative_explanations": [
+    "Receiving or sending money is not wrongdoing: the holder may have been paid for goods or services, or been deceived into moving funds for someone else.",
+    "Fast onward payments can be ordinary (paying suppliers or family) or made by a holder who is themself following a scammer's instructions."
+   ],
+   "missing_evidence": [
+    "Device, IP and login records for these transfers (not held in the ledger).",
+    "KYC is basic tier: the holder's identity is not fully verified.",
+    "Only 2 transaction(s) on record: scores are less reliable."
+   ],
+   "next_steps": [
+    "Review KYC and account-opening records, and the purpose of TXN-T0012.",
+    "Consider escalating for a decision on protective restrictions through the institution's authorised process. Nothing is restricted automatically."
+   ]
+  },
+  {
+   "account_id": "ACC-ATM",
+   "customer_name": "Name ACC-ATM",
+   "customer_type": "sme",
+   "kyc_tier": "tier_2_verified",
+   "graph_role": "onward_recipient",
+   "hop_distance": 3,
+   "role_assessment": "insufficient_evidence",
+   "role_basis": [
+    "Received \u20b91,28,000 through traced transfers (3 hop(s) from ACC-VIC).",
+    "Neither check suggests review and no strong onward movement was observed."
+   ],
+   "analyzed": true,
+   "not_analyzed_reason": null,
+   "rule_assessment": {
+    "account_id": "ACC-ATM",
+    "risk_score": 25.0,
+    "risk_level": "low",
+    "signals": {
+     "total_transactions": 1,
+     "velocity_24h_count": 1,
+     "velocity_7d_count": 1,
+     "velocity_30d_count": 1,
+     "flow_through_ratio": 0.0,
+     "rapid_pass_through": false,
+     "median_dwell_minutes": null,
+     "max_amount": 128000.0,
+     "avg_amount": 128000.0,
+     "amount_spike_ratio": 1.0,
+     "unique_counterparties": 1,
+     "counterparty_diversity_ratio": 1.0,
+     "fan_in_ratio": 1.0,
+     "fan_out_ratio": 0.0,
+     "dormancy_gap_days": 400.0,
+     "dormant_awakening_detected": true,
+     "cycle_detected": false
+    },
+    "reason_codes": [
+     "DORMANT_ACCOUNT_AWAKENED: Account inactive for 400.0 days before sudden high-value activity.",
+     "LIMITED_HISTORY: Low transaction count increases baseline uncertainty."
+    ],
+    "evidence_gaps": [
+     "DEVICE_TELEMETRY_UNAVAILABLE: Session IP, device fingerprint, and MAC addresses are not captured in current core banking data.",
+     "EXTERNAL_PERIMETER_BLINDSPOT: Downstream transactions terminating at ATM or external banks cannot be verified."
+    ],
+    "uncertainty_rating": "high",
+    "recommendation": "routine_monitoring: Consistent with standard personal or commercial customer baseline.",
+    "disclaimer": "Decision support only. Heuristic behavioral risk scores evaluate mathematical anomalies in transaction timing and velocity. They do not constitute legal proof of culpability or intent. Automated punitive actions or account freezing are strictly prohibited."
+   },
+   "model_assessment": {
+    "account_id": "ACC-ATM",
+    "risk_score": 4.0,
+    "risk_level": "low",
+    "predicted_probability": 0.0405,
+    "predicted_class": "legitimate",
+    "model_version": "v2-account-2.0.0",
+    "model_type": "XGBClassifier",
+    "top_contributions": [
+     {
+      "feature_name": "flow_through_ratio",
+      "feature_value": 0.0,
+      "contribution_score": -2.5129,
+      "impact_direction": "decreases_risk"
+     },
+     {
+      "feature_name": "avg_amount",
+      "feature_value": 128000.0,
+      "contribution_score": 1.5987,
+      "impact_direction": "increases_risk"
+     },
+     {
+      "feature_name": "max_amount",
+      "feature_value": 128000.0,
+      "contribution_score": 0.9249,
+      "impact_direction": "increases_risk"
+     },
+     {
+      "feature_name": "amount_spike_ratio",
+      "feature_value": 1.0,
+      "contribution_score": -0.6692,
+      "impact_direction": "decreases_risk"
+     },
+     {
+      "feature_name": "velocity_30d_count",
+      "feature_value": 1.0,
+      "contribution_score": -0.4306,
+      "impact_direction": "decreases_risk"
+     },
+     {
+      "feature_name": "unique_counterparties",
+      "feature_value": 1.0,
+      "contribution_score": -0.3262,
+      "impact_direction": "decreases_risk"
+     }
+    ],
+    "observable_features": {
+     "customer_type_retail": 0.0,
+     "customer_type_student": 0.0,
+     "customer_type_sme": 1.0,
+     "customer_type_corporate": 0.0,
+     "kyc_tier_level": 2.0,
+     "initial_balance": 10000.0,
+     "current_balance": 138000.0,
+     "balance_ratio": 13.7986,
+     "total_transactions": 1.0,
+     "velocity_24h_count": 1.0,
+     "velocity_7d_count": 1.0,
+     "velocity_30d_count": 1.0,
+     "flow_through_ratio": 0.0,
+     "rapid_pass_through": 0.0,
+     "median_dwell_minutes": -1.0,
+     "has_dwell_time": 0.0,
+     "max_amount": 128000.0,
+     "avg_amount": 128000.0,
+     "amount_spike_ratio": 1.0,
+     "unique_counterparties": 1.0,
+     "counterparty_diversity_ratio": 1.0,
+     "fan_in_ratio": 1.0,
+     "fan_out_ratio": 0.0,
+     "dormancy_gap_days": 400.0,
+     "dormant_awakening_detected": 1.0,
+     "cycle_detected": 0.0
+    },
+    "disclaimer": "Decision support only. Model trained exclusively on synthetic financial network scenarios. High model risk scores do NOT constitute legal proof of guilt or real-world fraud accuracy. Automated account freezing, denial of service, or punitive action is strictly prohibited."
+   },
+   "model_unavailable_reason": null,
+   "model_suggests_review": false,
+   "rule_suggests_review": false,
+   "checks_disagree": false,
+   "disagreement_note": null,
+   "traced_in_amount": 128000.0,
+   "traced_out_amount": 0.0,
+   "evidence_transaction_ids": [
+    "TXN-T0013"
+   ],
+   "alternative_explanations": [
+    "Receiving or sending money is not wrongdoing: the holder may have been paid for goods or services, or been deceived into moving funds for someone else.",
+    "It is a sme account; businesses routinely receive and pay out funds.",
+    "The account was opened 400 days before its first traced transfer, so it was not opened just for this flow."
+   ],
+   "missing_evidence": [
+    "Device, IP and login records for these transfers (not held in the ledger).",
+    "ATM or cash-terminal records (location, camera footage): the ledger cannot follow cash.",
+    "Only 1 transaction(s) on record: scores are less reliable."
+   ],
+   "next_steps": [
+    "No action is suggested from this evidence alone; keep it in the case file."
+   ]
+  },
+  {
+   "account_id": "ACC-EMP",
+   "customer_name": "Name ACC-EMP",
+   "customer_type": "corporate",
+   "kyc_tier": "tier_2_verified",
+   "graph_role": "direct_sender",
+   "hop_distance": 1,
+   "role_assessment": "insufficient_evidence",
+   "role_basis": [
+    "Sent \u20b960,000 into the traced flow (1 hop(s) before ACC-VIC).",
+    "Neither check suggests review and no strong onward movement was observed."
+   ],
+   "analyzed": true,
+   "not_analyzed_reason": null,
+   "rule_assessment": {
+    "account_id": "ACC-EMP",
+    "risk_score": 25.0,
+    "risk_level": "low",
+    "signals": {
+     "total_transactions": 1,
+     "velocity_24h_count": 1,
+     "velocity_7d_count": 1,
+     "velocity_30d_count": 1,
+     "flow_through_ratio": 0.0,
+     "rapid_pass_through": false,
+     "median_dwell_minutes": null,
+     "max_amount": 60000.0,
+     "avg_amount": 60000.0,
+     "amount_spike_ratio": 1.0,
+     "unique_counterparties": 1,
+     "counterparty_diversity_ratio": 1.0,
+     "fan_in_ratio": 0.0,
+     "fan_out_ratio": 1.0,
+     "dormancy_gap_days": 397.0,
+     "dormant_awakening_detected": true,
+     "cycle_detected": false
+    },
+    "reason_codes": [
+     "DORMANT_ACCOUNT_AWAKENED: Account inactive for 397.0 days before sudden high-value activity.",
+     "LIMITED_HISTORY: Low transaction count increases baseline uncertainty."
+    ],
+    "evidence_gaps": [
+     "DEVICE_TELEMETRY_UNAVAILABLE: Session IP, device fingerprint, and MAC addresses are not captured in current core banking data.",
+     "EXTERNAL_PERIMETER_BLINDSPOT: Downstream transactions terminating at ATM or external banks cannot be verified."
+    ],
+    "uncertainty_rating": "high",
+    "recommendation": "routine_monitoring: Consistent with standard personal or commercial customer baseline.",
+    "disclaimer": "Decision support only. Heuristic behavioral risk scores evaluate mathematical anomalies in transaction timing and velocity. They do not constitute legal proof of culpability or intent. Automated punitive actions or account freezing are strictly prohibited."
+   },
+   "model_assessment": {
+    "account_id": "ACC-EMP",
+    "risk_score": 0.4,
+    "risk_level": "low",
+    "predicted_probability": 0.004,
+    "predicted_class": "legitimate",
+    "model_version": "v2-account-2.0.0",
+    "model_type": "XGBClassifier",
+    "top_contributions": [
+     {
+      "feature_name": "flow_through_ratio",
+      "feature_value": 0.0,
+      "contribution_score": -2.2164,
+      "impact_direction": "decreases_risk"
+     },
+     {
+      "feature_name": "fan_out_ratio",
+      "feature_value": 1.0,
+      "contribution_score": -1.142,
+      "impact_direction": "decreases_risk"
+     },
+     {
+      "feature_name": "avg_amount",
+      "feature_value": 60000.0,
+      "contribution_score": 1.0956,
+      "impact_direction": "increases_risk"
+     },
+     {
+      "feature_name": "fan_in_ratio",
+      "feature_value": 0.0,
+      "contribution_score": -0.6446,
+      "impact_direction": "decreases_risk"
+     },
+     {
+      "feature_name": "amount_spike_ratio",
+      "feature_value": 1.0,
+      "contribution_score": -0.6065,
+      "impact_direction": "decreases_risk"
+     },
+     {
+      "feature_name": "initial_balance",
+      "feature_value": 5000000.0,
+      "contribution_score": 0.4939,
+      "impact_direction": "increases_risk"
+     }
+    ],
+    "observable_features": {
+     "customer_type_retail": 0.0,
+     "customer_type_student": 0.0,
+     "customer_type_sme": 0.0,
+     "customer_type_corporate": 1.0,
+     "kyc_tier_level": 2.0,
+     "initial_balance": 5000000.0,
+     "current_balance": 4940000.0,
+     "balance_ratio": 0.988,
+     "total_transactions": 1.0,
+     "velocity_24h_count": 1.0,
+     "velocity_7d_count": 1.0,
+     "velocity_30d_count": 1.0,
+     "flow_through_ratio": 0.0,
+     "rapid_pass_through": 0.0,
+     "median_dwell_minutes": -1.0,
+     "has_dwell_time": 0.0,
+     "max_amount": 60000.0,
+     "avg_amount": 60000.0,
+     "amount_spike_ratio": 1.0,
+     "unique_counterparties": 1.0,
+     "counterparty_diversity_ratio": 1.0,
+     "fan_in_ratio": 0.0,
+     "fan_out_ratio": 1.0,
+     "dormancy_gap_days": 397.0,
+     "dormant_awakening_detected": 1.0,
+     "cycle_detected": 0.0
+    },
+    "disclaimer": "Decision support only. Model trained exclusively on synthetic financial network scenarios. High model risk scores do NOT constitute legal proof of guilt or real-world fraud accuracy. Automated account freezing, denial of service, or punitive action is strictly prohibited."
+   },
+   "model_unavailable_reason": null,
+   "model_suggests_review": false,
+   "rule_suggests_review": false,
+   "checks_disagree": false,
+   "disagreement_note": null,
+   "traced_in_amount": 0.0,
+   "traced_out_amount": 60000.0,
+   "evidence_transaction_ids": [
+    "TXN-T0001"
+   ],
+   "alternative_explanations": [
+    "Receiving or sending money is not wrongdoing: the holder may have been paid for goods or services, or been deceived into moving funds for someone else.",
+    "It is a corporate account; businesses routinely receive and pay out funds.",
+    "The account was opened 397 days before its first traced transfer, so it was not opened just for this flow."
+   ],
+   "missing_evidence": [
+    "Device, IP and login records for these transfers (not held in the ledger).",
+    "Only 1 transaction(s) on record: scores are less reliable."
+   ],
+   "next_steps": [
+    "No action is suggested from this evidence alone; keep it in the case file."
+   ]
+  }
+ ],
+ "findings": [
+  {
+   "finding_id": "F-001",
+   "kind": "limitation",
+   "subject_account_id": null,
+   "statement": "Every record in this investigation comes from the synthetic demo ledger; no real customer or bank transaction is involved.",
+   "evidence": {
+    "transaction_ids": [],
+    "account_ids": []
+   }
+  },
+  {
+   "finding_id": "F-002",
+   "kind": "observed",
+   "subject_account_id": "ACC-VIC",
+   "statement": "ACC-VIC sent \u20b92,50,000 to ACC-M1 via IMPS at 2026-02-01T09:00:00.",
+   "evidence": {
+    "transaction_ids": [
+     "TXN-T0010"
+    ],
+    "account_ids": [
+     "ACC-VIC",
+     "ACC-M1"
+    ]
+   }
+  },
+  {
+   "finding_id": "F-003",
+   "kind": "rule",
+   "subject_account_id": "ACC-VIC",
+   "statement": "TXN-T0010 is flagged: \u20b92,50,000 is 92.6x the largest of the account's 8 earlier outgoing transfers (\u20b92,700). Moved 73% of the \u20b93,41,200 balance held just before it.",
+   "evidence": {
+    "transaction_ids": [
+     "TXN-T0010"
+    ],
+    "account_ids": [
+     "ACC-VIC"
+    ]
+   }
+  },
+  {
+   "finding_id": "F-004",
+   "kind": "observed",
+   "subject_account_id": "ACC-M1",
+   "statement": "After receiving \u20b92,50,000, ACC-M1 sent \u20b92,45,000 in 2 transfer(s), the first 0.1 h later. Whether this was the same money is inferred, not proven.",
+   "evidence": {
+    "transaction_ids": [
+     "TXN-T0010",
+     "TXN-T0011",
+     "TXN-T0012"
+    ],
+    "account_ids": [
+     "ACC-M1",
+     "ACC-M2A",
+     "ACC-M2B"
+    ]
+   }
+  },
+  {
+   "finding_id": "F-005",
+   "kind": "observed",
+   "subject_account_id": "ACC-M2A",
+   "statement": "After receiving \u20b91,30,000, ACC-M2A sent \u20b91,28,000 in 1 transfer(s), the first 0.3 h later. Whether this was the same money is inferred, not proven.",
+   "evidence": {
+    "transaction_ids": [
+     "TXN-T0011",
+     "TXN-T0013"
+    ],
+    "account_ids": [
+     "ACC-ATM",
+     "ACC-M2A"
+    ]
+   }
+  },
+  {
+   "finding_id": "F-006",
+   "kind": "observed",
+   "subject_account_id": "ACC-M2A",
+   "statement": "\u20b91,28,000 left ACC-M2A as an ATM cash-out (TXN-T0013); the ledger cannot follow cash further.",
+   "evidence": {
+    "transaction_ids": [
+     "TXN-T0013"
+    ],
+    "account_ids": [
+     "ACC-M2A",
+     "ACC-ATM"
+    ]
+   }
+  },
+  {
+   "finding_id": "F-007",
+   "kind": "observed",
+   "subject_account_id": "ACC-M1",
+   "statement": "TXN-T0014 moves \u20b91,00,000 back to ACC-M1, which is already on the traced path: a cycle.",
+   "evidence": {
+    "transaction_ids": [
+     "TXN-T0014"
+    ],
+    "account_ids": [
+     "ACC-M2B",
+     "ACC-M1"
+    ]
+   }
+  },
+  {
+   "finding_id": "F-008",
+   "kind": "model",
+   "subject_account_id": "ACC-VIC",
+   "statement": "Model score for ACC-VIC is 25.0%, at or above the review threshold of 17.5%. Largest factor: avg_amount (raises the score).",
+   "evidence": {
+    "transaction_ids": [
+     "TXN-T0001",
+     "TXN-T0010"
+    ],
+    "account_ids": [
+     "ACC-VIC"
+    ]
+   }
+  },
+  {
+   "finding_id": "F-009",
+   "kind": "model",
+   "subject_account_id": "ACC-VIC",
+   "statement": "ACC-VIC: The model suggests review but the fixed rules do not.",
+   "evidence": {
+    "transaction_ids": [],
+    "account_ids": [
+     "ACC-VIC"
+    ]
+   }
+  },
+  {
+   "finding_id": "F-010",
+   "kind": "model",
+   "subject_account_id": "ACC-M1",
+   "statement": "Model score for ACC-M1 is 28.3%, at or above the review threshold of 17.5%. Largest factor: avg_amount (raises the score).",
+   "evidence": {
+    "transaction_ids": [
+     "TXN-T0010",
+     "TXN-T0011",
+     "TXN-T0012"
+    ],
+    "account_ids": [
+     "ACC-M1"
+    ]
+   }
+  },
+  {
+   "finding_id": "F-011",
+   "kind": "model",
+   "subject_account_id": "ACC-M1",
+   "statement": "ACC-M1: The model suggests review but the fixed rules do not.",
+   "evidence": {
+    "transaction_ids": [],
+    "account_ids": [
+     "ACC-M1"
+    ]
+   }
+  },
+  {
+   "finding_id": "F-012",
+   "kind": "rule",
+   "subject_account_id": "ACC-M2A",
+   "statement": "Fixed rules score ACC-M2A 65/100 (high): RAPID_PASS_THROUGH; HIGH_FLOW_THROUGH; LIMITED_HISTORY.",
+   "evidence": {
+    "transaction_ids": [
+     "TXN-T0011",
+     "TXN-T0013"
+    ],
+    "account_ids": [
+     "ACC-M2A"
+    ]
+   }
+  },
+  {
+   "finding_id": "F-013",
+   "kind": "model",
+   "subject_account_id": "ACC-M2A",
+   "statement": "ACC-M2A: The fixed rules suggest review but the model scores it below its threshold, which does not clear it.",
+   "evidence": {
+    "transaction_ids": [],
+    "account_ids": [
+     "ACC-M2A"
+    ]
+   }
+  },
+  {
+   "finding_id": "F-014",
+   "kind": "limitation",
+   "subject_account_id": null,
+   "statement": "The depth limit of 3 hop(s) was reached; 1 account(s) at that depth were not followed further.",
+   "evidence": {
+    "transaction_ids": [],
+    "account_ids": []
+   }
+  }
+ ],
+ "exposure": {
+  "flagged_outgoing_total": 250000.0,
+  "traced_outgoing_total": 250000.0,
+  "observed_downstream_total": 723000.0,
+  "per_account": [
+   {
+    "account_id": "ACC-M1",
+    "hop": 1,
+    "traced_in_amount": 250000.0,
+    "outgoing_in_window": 245000.0,
+    "forwarded_min": 243000.0,
+    "forwarded_max": 245000.0,
+    "lowest_balance_in_window": 7000.0
+   },
+   {
+    "account_id": "ACC-M2A",
+    "hop": 2,
+    "traced_in_amount": 130000.0,
+    "outgoing_in_window": 128000.0,
+    "forwarded_min": 127000.0,
+    "forwarded_max": 128000.0,
+    "lowest_balance_in_window": 3000.0
+   },
+   {
+    "account_id": "ACC-M2B",
+    "hop": 2,
+    "traced_in_amount": 115000.0,
+    "outgoing_in_window": 100000.0,
+    "forwarded_min": 99000.0,
+    "forwarded_max": 100000.0,
+    "lowest_balance_in_window": 16000.0
+   },
+   {
+    "account_id": "ACC-ATM",
+    "hop": 3,
+    "traced_in_amount": 128000.0,
+    "outgoing_in_window": 0.0,
+    "forwarded_min": 0.0,
+    "forwarded_max": 0.0,
+    "lowest_balance_in_window": 138000.0
+   }
+  ],
+  "method": "For each account that received traced funds, its own balance is followed from the first traced receipt to 72 h later. Lower bound (lowest intermediate balance): traced funds are assumed to stay in the account until its balance falls below them. Upper bound: no more than was received, and no more than actually left the account. Ranges are per account and must not be added across hops.",
+  "limitations": [
+   "The observed downstream total counts the same money each time it moves; it is not a loss figure.",
+   "Balances combine funds from many sources; no method can prove which rupees were the victim's.",
+   "Exposure is computed for up to 60 downstream accounts."
+  ]
+ },
+ "evidence_summary": [
+  {
+   "question": "What happened to the account, based on the observed ledger?",
+   "claims": [
+    {
+     "text": "ACC-VIC made 1 outgoing transfer(s) flagged as unusual, \u20b92,50,000 in total.",
+     "kind": "rule",
+     "refs": [
+      "TXN-T0010"
+     ]
+    }
+   ]
+  },
+  {
+   "question": "Which incoming and outgoing transactions are relevant?",
+   "claims": [
+    {
+     "text": "TXN-T0001: \u20b960,000 from ACC-EMP via NEFT.",
+     "kind": "observed",
+     "refs": [
+      "TXN-T0001"
+     ]
+    },
+    {
+     "text": "TXN-T0010: \u20b92,50,000 to ACC-M1 via IMPS.",
+     "kind": "observed",
+     "refs": [
+      "TXN-T0010"
+     ]
+    }
+   ]
+  },
+  {
+   "question": "Which accounts received the funds directly?",
+   "claims": [
+    {
+     "text": "ACC-M1 received \u20b92,50,000 directly from ACC-VIC.",
+     "kind": "observed",
+     "refs": [
+      "ACC-M1",
+      "TXN-T0010"
+     ]
+    }
+   ]
+  },
+  {
+   "question": "Where were the funds subsequently transferred?",
+   "claims": [
+    {
+     "text": "After receiving \u20b92,50,000, ACC-M1 sent \u20b92,45,000 in 2 transfer(s), the first 0.1 h later. Whether this was the same money is inferred, not proven.",
+     "kind": "observed",
+     "refs": [
+      "TXN-T0010",
+      "TXN-T0011",
+      "TXN-T0012"
+     ]
+    },
+    {
+     "text": "After receiving \u20b91,30,000, ACC-M2A sent \u20b91,28,000 in 1 transfer(s), the first 0.3 h later. Whether this was the same money is inferred, not proven.",
+     "kind": "observed",
+     "refs": [
+      "TXN-T0011",
+      "TXN-T0013"
+     ]
+    }
+   ]
+  },
+  {
+   "question": "Which accounts show suspicious patterns, and what evidence supports that?",
+   "claims": [
+    {
+     "text": "ACC-M1 (possible intermediary): Received \u20b92,50,000 in traced transfers and, judging by its balance, at least \u20b92,43,000 of it had moved on within 72 h (lowest balance in that time \u20b97,000). Received \u20b92,50,000 through traced transfers (1 hop(s) from ACC-VIC). Model score 28.3% is at or above the review threshold of 17.5%.",
+     "kind": "rule",
+     "refs": [
+      "ACC-M1",
+      "TXN-T0010",
+      "TXN-T0011",
+      "TXN-T0012"
+     ]
+    },
+    {
+     "text": "ACC-M2A (possible intermediary): Received \u20b91,30,000 in traced transfers and, judging by its balance, at least \u20b91,27,000 of it had moved on within 72 h (lowest balance in that time \u20b93,000). Received \u20b91,30,000 through traced transfers (2 hop(s) from ACC-VIC). Fixed rules score it 65/100 (high).",
+     "kind": "rule",
+     "refs": [
+      "ACC-M2A",
+      "TXN-T0011",
+      "TXN-T0013"
+     ]
+    },
+    {
+     "text": "ACC-M2B (possible intermediary): Received \u20b91,15,000 in traced transfers and, judging by its balance, at least \u20b999,000 of it had moved on within 72 h (lowest balance in that time \u20b916,000). Received \u20b91,15,000 through traced transfers (2 hop(s) from ACC-VIC).",
+     "kind": "rule",
+     "refs": [
+      "ACC-M2B",
+      "TXN-T0012"
+     ]
+    }
+   ]
+  },
+  {
+   "question": "Does the model agree with the forensic rules?",
+   "claims": [
+    {
+     "text": "ACC-VIC: The model suggests review but the fixed rules do not.",
+     "kind": "model",
+     "refs": [
+      "ACC-VIC"
+     ]
+    },
+    {
+     "text": "ACC-M1: The model suggests review but the fixed rules do not.",
+     "kind": "model",
+     "refs": [
+      "ACC-M1"
+     ]
+    },
+    {
+     "text": "ACC-M2A: The fixed rules suggest review but the model scores it below its threshold, which does not clear it.",
+     "kind": "model",
+     "refs": [
+      "ACC-M2A"
+     ]
+    }
+   ]
+  },
+  {
+   "question": "What is still unknown?",
+   "claims": [
+    {
+     "text": "Whether the flagged transfers were authorised by the account holder: the ledger records payments, not intent.",
+     "kind": "limitation",
+     "refs": []
+    },
+    {
+     "text": "Which part of a recipient's later transfers carried this money: balances mix funds, so onward links are inferred from timing and balances, not proven.",
+     "kind": "limitation",
+     "refs": []
+    },
+    {
+     "text": "Activity outside this ledger: accounts at other institutions, cash after withdrawal, and transfers beyond the trace limits.",
+     "kind": "limitation",
+     "refs": []
+    },
+    {
+     "text": "Device, login, communication and complaint records, none of which are in the ledger.",
+     "kind": "limitation",
+     "refs": []
+    },
+    {
+     "text": "The depth limit of 3 hop(s) was reached; 1 account(s) at that depth were not followed further.",
+     "kind": "limitation",
+     "refs": []
+    }
+   ]
+  },
+  {
+   "question": "Which additional records should an investigator obtain?",
+   "claims": [
+    {
+     "text": "Authentication, device and IP logs for the flagged transfers.",
+     "kind": "limitation",
+     "refs": []
+    },
+    {
+     "text": "The account holder's statement or complaint, if one exists.",
+     "kind": "limitation",
+     "refs": []
+    },
+    {
+     "text": "KYC and account-opening documents for accounts assessed as possible intermediaries.",
+     "kind": "limitation",
+     "refs": []
+    },
+    {
+     "text": "Beneficiary-bank statements for accounts at the end of the trace.",
+     "kind": "limitation",
+     "refs": []
+    },
+    {
+     "text": "ATM / cash-terminal records for the cash-out transfers.",
+     "kind": "limitation",
+     "refs": []
+    }
+   ]
+  },
+  {
+   "question": "What should an authorized investigator consider next?",
+   "claims": [
+    {
+     "text": "Confirm with the holder of ACC-VIC, through a verified channel, whether the flagged transfers were authorised.",
+     "kind": "interpretation",
+     "refs": [
+      "TXN-T0001",
+      "TXN-T0010",
+      "ACC-VIC"
+     ]
+    },
+    {
+     "text": "Consider escalating ACC-M1 for an authorised decision on protective restrictions, after reviewing its KYC and the onward transfers.",
+     "kind": "interpretation",
+     "refs": [
+      "TXN-T0010",
+      "TXN-T0011",
+      "TXN-T0012",
+      "ACC-M1"
+     ]
+    },
+    {
+     "text": "Consider escalating ACC-M2A for an authorised decision on protective restrictions, after reviewing its KYC and the onward transfers.",
+     "kind": "interpretation",
+     "refs": [
+      "TXN-T0011",
+      "TXN-T0013",
+      "ACC-M2A"
+     ]
+    },
+    {
+     "text": "Consider escalating ACC-M2B for an authorised decision on protective restrictions, after reviewing its KYC and the onward transfers.",
+     "kind": "interpretation",
+     "refs": [
+      "TXN-T0012",
+      "ACC-M2B"
+     ]
+    },
+    {
+     "text": "Obtain device/login records for the flagged transfers and beneficiary-bank statements for accounts at the end of the trace.",
+     "kind": "interpretation",
+     "refs": [
+      "TXN-T0010",
+      "ACC-VIC"
+     ]
+    }
+   ]
+  }
+ ],
+ "ai_analysis": {
+  "status": "not_configured",
+  "provider": null,
+  "message": "No AI provider is configured on this server, so no AI explanation was generated. The evidence summary in this report was produced by fixed templates from the computed findings.",
+  "sections": [],
+  "rejected_claims": 0
+ },
+ "recommendations": [
+  {
+   "recommendation_id": "R-001",
+   "account_id": "ACC-VIC",
+   "action": "contact_account_holder",
+   "statement": "Confirm with the holder of ACC-VIC, through a verified channel, whether the flagged transfers were authorised.",
+   "evidence": {
+    "transaction_ids": [
+     "TXN-T0001",
+     "TXN-T0010"
+    ],
+    "account_ids": [
+     "ACC-VIC"
+    ]
+   },
+   "uncertainty": "The ledger cannot show intent, authorisation or deception."
+  },
+  {
+   "recommendation_id": "R-002",
+   "account_id": "ACC-M1",
+   "action": "consider_escalation",
+   "statement": "Consider escalating ACC-M1 for an authorised decision on protective restrictions, after reviewing its KYC and the onward transfers.",
+   "evidence": {
+    "transaction_ids": [
+     "TXN-T0010",
+     "TXN-T0011",
+     "TXN-T0012"
+    ],
+    "account_ids": [
+     "ACC-M1"
+    ]
+   },
+   "uncertainty": "Fast onward movement is consistent with a mule account but also with ordinary payments or a deceived holder."
+  },
+  {
+   "recommendation_id": "R-003",
+   "account_id": "ACC-M2A",
+   "action": "consider_escalation",
+   "statement": "Consider escalating ACC-M2A for an authorised decision on protective restrictions, after reviewing its KYC and the onward transfers.",
+   "evidence": {
+    "transaction_ids": [
+     "TXN-T0011",
+     "TXN-T0013"
+    ],
+    "account_ids": [
+     "ACC-M2A"
+    ]
+   },
+   "uncertainty": "Fast onward movement is consistent with a mule account but also with ordinary payments or a deceived holder."
+  },
+  {
+   "recommendation_id": "R-004",
+   "account_id": "ACC-M2B",
+   "action": "consider_escalation",
+   "statement": "Consider escalating ACC-M2B for an authorised decision on protective restrictions, after reviewing its KYC and the onward transfers.",
+   "evidence": {
+    "transaction_ids": [
+     "TXN-T0012"
+    ],
+    "account_ids": [
+     "ACC-M2B"
+    ]
+   },
+   "uncertainty": "Fast onward movement is consistent with a mule account but also with ordinary payments or a deceived holder."
+  },
+  {
+   "recommendation_id": "R-005",
+   "account_id": null,
+   "action": "obtain_records",
+   "statement": "Obtain device/login records for the flagged transfers and beneficiary-bank statements for accounts at the end of the trace.",
+   "evidence": {
+    "transaction_ids": [
+     "TXN-T0010"
+    ],
+    "account_ids": [
+     "ACC-VIC"
+    ]
+   },
+   "uncertainty": "Without them, account takeover and the final destination of funds cannot be established."
+  }
+ ],
+ "unknowns": [
+  "Whether the flagged transfers were authorised by the account holder: the ledger records payments, not intent.",
+  "Which part of a recipient's later transfers carried this money: balances mix funds, so onward links are inferred from timing and balances, not proven.",
+  "Activity outside this ledger: accounts at other institutions, cash after withdrawal, and transfers beyond the trace limits.",
+  "Device, login, communication and complaint records, none of which are in the ledger.",
+  "The depth limit of 3 hop(s) was reached; 1 account(s) at that depth were not followed further."
+ ],
+ "records_to_request": [
+  "Authentication, device and IP logs for the flagged transfers.",
+  "The account holder's statement or complaint, if one exists.",
+  "KYC and account-opening documents for accounts assessed as possible intermediaries.",
+  "Beneficiary-bank statements for accounts at the end of the trace.",
+  "ATM / cash-terminal records for the cash-out transfers."
+ ],
+ "ledger_rows_read": 43,
+ "persisted": false,
+ "disclaimer": "Decision support only. Findings describe recorded transfers and automated checks; they are not proof of fraud, intent or guilt. No account is frozen, blocked or flagged by this report: any restriction requires an authorised institution process with documented grounds. All data is synthetic."
+}

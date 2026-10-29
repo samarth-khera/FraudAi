@@ -15,6 +15,7 @@ const TOOL_PREFIXES = ['/tools', '/insights', '/audit', '/fund-flow', '/workspac
 
 export const NAV_ITEMS: NavItem[] = [
   { name: 'Home', path: '/', matches: (p) => p === '/' },
+  { name: 'Investigate', path: '/investigate', matches: (p) => p.startsWith('/investigate') },
   { name: 'Investigations', path: '/cases', matches: (p) => p.startsWith('/cases') || p.startsWith('/app/cases') },
   { name: 'Tools', path: '/tools', matches: (p) => TOOL_PREFIXES.some((t) => p === t || p.startsWith(`${t}/`)), secondary: true },
 ];
