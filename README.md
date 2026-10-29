@@ -32,8 +32,10 @@ queries the ledger at that moment and returns a report. It contains the account'
 the money flow traced in both directions with time order respected, and each linked account assessed on its own
 records by the rules and the model. It also gives a balance-based exposure range, findings labelled
 *observed / rule / model / limit* that cite transaction IDs, and advisory next steps. Click a graph node or edge for
-its evidence. Nothing is precomputed or stored, and the report says plainly that the data is synthetic and that no
-AI provider is configured. Details: [docs/LIVE_INVESTIGATION.md](docs/LIVE_INVESTIGATION.md).
+its evidence. Nothing is precomputed or stored, and the report says plainly that the data is synthetic. When enabled on the
+server, a Google Gemini explanation is added after the checks finish. It is labelled as AI-generated, cites the
+report's own records and never changes a score, and the report states plainly when it did not run.
+Details: [docs/LIVE_INVESTIGATION.md](docs/LIVE_INVESTIGATION.md) and [docs/AI_ANALYST.md](docs/AI_ANALYST.md).
 
 ### Case workspace (Investigations)
 
@@ -317,6 +319,8 @@ Environment variables:
 | Render | `ENABLE_API_DOCS` | `false` |
 | Render | `CORS_ALLOWED_ORIGINS` | the Vercel production URL, e.g. `https://<project>.vercel.app` |
 | Render | `PYTHON_VERSION` | `3.12.4` |
+| Render | `GEMINI_API_KEY` | secret, for the optional AI analyst (never a `VITE_` variable) |
+| Render | `GEMINI_ANALYST_ENABLED` | `true` to turn the AI analyst on (off otherwise); model, timeout and privacy settings in [docs/AI_ANALYST.md](docs/AI_ANALYST.md) |
 | Vercel | `VITE_API_URL` | the Render URL, e.g. `https://fraudshield-api.onrender.com` (the build fails without it) |
 
 Why read-only: a Render web service's disk is wiped on every deploy and restart, and the app has no safe way to
@@ -331,6 +335,7 @@ the header shows “Server unreachable” until it does.
 
 - [`backend/README.md`](backend/README.md): database schema and API details
 - [`docs/LIVE_INVESTIGATION.md`](docs/LIVE_INVESTIGATION.md): how a live investigation is computed, its data source and limits
+- [`docs/AI_ANALYST.md`](docs/AI_ANALYST.md): the Gemini AI analyst: configuration, privacy policy, states, quota and smoke test
 - [`ml/README.md`](ml/README.md) and [`docs/V2_ML_MODELS.md`](docs/V2_ML_MODELS.md): model training and evaluation
 - [`docs/PRODUCT_INVENTORY.md`](docs/PRODUCT_INVENTORY.md): what changed in the simplification and why
 - Interactive API docs: <http://localhost:8000/docs> (development only)

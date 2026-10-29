@@ -144,12 +144,12 @@ export const InvestigationGraph: React.FC<{
   }, [selected]);
 
   return (
-    <div className="relative">
+    <div className="relative min-w-0">
       <div
         ref={ref}
         role="img"
         aria-label={`Money-flow graph: ${nodes.length} accounts and ${edges.length} transfers. Use the account and transfer lists below for keyboard access.`}
-        className="h-[420px] sm:h-[520px] w-full rounded-2xl border border-[#EAE3D6] bg-[#FCFBF8]"
+        className="h-[420px] sm:h-[520px] w-full overflow-hidden rounded-2xl border border-[#EAE3D6] bg-[#FCFBF8]"
         data-testid="investigation-graph"
       />
       <button

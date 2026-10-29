@@ -2,7 +2,7 @@
  * Plain-language labels for investigation results. Role labels describe what the records show about an account's
  * position in the traced money flow; none of them is a finding of guilt.
  */
-import { ClaimKind, FindingKind, GraphRole, RoleAssessment } from '../../types/investigation';
+import { AIState, ClaimKind, FindingKind, GraphRole, ObservationBasis, RoleAssessment } from '../../types/investigation';
 
 type Tone = 'neutral' | 'orange' | 'green' | 'blue' | 'rose' | 'amber';
 
@@ -70,4 +70,20 @@ export const ACTION_LABEL: Record<string, string> = {
   consider_escalation: 'Consider escalation',
   obtain_records: 'Obtain records',
   contact_account_holder: 'Contact account holder',
+};
+
+export const AI_STATE: Record<AIState, { title: string; tone: Tone }> = {
+  completed: { title: 'AI analyst', tone: 'blue' },
+  disabled: { title: 'AI analyst: turned off', tone: 'neutral' },
+  not_configured: { title: 'AI analyst: not configured', tone: 'neutral' },
+  skipped_privacy_policy: { title: 'AI analyst: skipped by privacy policy', tone: 'amber' },
+  unavailable: { title: 'AI analyst: unavailable', tone: 'rose' },
+};
+
+export const BASIS: Record<ObservationBasis, { label: string; tone: Tone }> = {
+  observed: { label: 'Cites ledger record', tone: 'green' },
+  rule: { label: 'Cites rule result', tone: 'orange' },
+  model: { label: 'Cites model output', tone: 'blue' },
+  hypothesis: { label: 'Hypothesis', tone: 'amber' },
+  limitation: { label: 'Limitation', tone: 'neutral' },
 };

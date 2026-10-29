@@ -184,23 +184,81 @@ describe('findings report', () => {
     for (const s of REPORT.evidence_summary) expect(screen.getAllByText(s.question).length).toBeGreaterThan(0);
   });
 
-  it('says plainly that the AI analyst did not run', async () => {
+  it('says plainly when the AI analyst is turned off', async () => {
     await showReport();
     const ai = screen.getByTestId('ai-status');
-    expect(ai).toHaveTextContent('AI analyst: not run');
+    expect(ai).toHaveAttribute('data-state', 'disabled');
+    expect(ai).toHaveTextContent('AI analyst: turned off');
     expect(ai).toHaveTextContent(REPORT.ai_analysis.message);
+    expect(within(ai).queryByText(/AI-generated/)).toBeNull();
   });
 
-  it('shows AI claims only when generated, with their references', async () => {
+  it.each([
+    ['not_configured', 'AI analyst: not configured', 'No Gemini API key is configured on the server.'],
+    ['skipped_privacy_policy', 'AI analyst: skipped by privacy policy', 'AI analysis was skipped: the ledger is not verified as synthetic.'],
+    ['unavailable', 'AI analyst: unavailable', "The AI provider's rate limit or quota was reached. The investigation results are unaffected."],
+  ] as const)('shows the real %s state and keeps the deterministic report', async (state, title, message) => {
     await showReport({
       ...REPORT,
-      ai_analysis: { status: 'generated', provider: 'test', message: 'AI-generated interpretation.', rejected_claims: 0,
+      ai_analysis: { ...REPORT.ai_analysis, state, status: state === 'unavailable' ? 'failed' : 'not_configured', message, report: null,
+        unavailable_reason: state === 'unavailable' ? 'rate_limited' : null },
+    });
+    const ai = screen.getByTestId('ai-status');
+    expect(ai).toHaveTextContent(title);
+    expect(ai).toHaveTextContent(message);
+    expect(within(ai).queryByText(/AI-generated/)).toBeNull();
+    for (const f of REPORT.findings) expect(document.getElementById(`finding-${f.finding_id}`)).toBeInTheDocument();
+    expect(screen.getByText(/not by an AI model/)).toBeInTheDocument();
+  });
+
+  it('renders a completed Gemini report, labelled as AI-generated, with clickable evidence', async () => {
+    const drain = REPORT.victim.flagged_transfers[0].transaction_id;
+    await showReport({
+      ...REPORT,
+      ai_analysis: {
+        ...REPORT.ai_analysis, state: 'completed', status: 'generated', provider: 'gemini', model: 'gemini-3.8-flash',
+        message: 'Written by gemini (gemini-3.8-flash) from a pseudonymised extract of this report.', pseudonymized: true,
+        report: {
+          summary: 'ACC-VIC made one unusual transfer that ACC-M1 moved on within minutes.',
+          key_observations: [
+            { text: 'The transfer drained most of the balance.', basis: 'observed', evidence_ids: [drain] },
+            { text: 'The holder may have been deceived.', basis: 'hypothesis', evidence_ids: [] },
+          ],
+          evidence_references: [drain, 'ACC-M1', 'F-001'],
+          reasoning_and_limitations: ['Balances mix funds.'],
+          recommended_manual_checks: [{ text: 'Confirm authorisation with the holder.', evidence_ids: [drain] }],
+          confidence_note: 'No device or login records are available.',
+        },
+        sections: [],
+      },
+    });
+    const ai = screen.getByTestId('ai-status');
+    expect(ai).toHaveAttribute('data-state', 'completed');
+    expect(within(ai).getByText('AI-generated · gemini-3.8-flash')).toBeInTheDocument();
+    expect(ai).toHaveTextContent('ACC-VIC made one unusual transfer');
+    expect(within(ai).getByText('Cites ledger record')).toBeInTheDocument();
+    expect(within(ai).getByText('Hypothesis')).toBeInTheDocument();
+    expect(ai).toHaveTextContent('Balances mix funds.');
+    expect(ai).toHaveTextContent('Confirm authorisation with the holder.');
+    expect(ai).toHaveTextContent('Evidence completeness: No device or login records are available.');
+    expect(ai).toHaveTextContent(/not from this text/);
+    fireEvent.click(within(ai).getAllByRole('button', { name: drain })[0]);
+    expect(document.getElementById('selection-detail')).toHaveTextContent(drain);
+    expect(within(ai).getByRole('link', { name: 'F-001' })).toHaveAttribute('href', '#finding-F-001');
+    // The template summary stays separate and labelled as not AI.
+    expect(screen.getByText(/not by an AI model/)).toBeInTheDocument();
+  });
+
+  it('still shows legacy AI sections from an older server without `state`', async () => {
+    const { state: _s, report: _r, ...legacy } = REPORT.ai_analysis;
+    await showReport({
+      ...REPORT,
+      ai_analysis: { ...legacy, status: 'generated', provider: 'test', message: 'Older server.',
         sections: [{ question: 'Q?', claims: [{ text: 'ACC-M1 forwarded funds.', kind: 'interpretation', refs: ['ACC-M1'] }] }] },
     });
     const ai = screen.getByTestId('ai-status');
-    expect(ai).toHaveTextContent('AI analyst (test)');
+    expect(ai).toHaveAttribute('data-state', 'completed');
     expect(within(ai).getByText('ACC-M1 forwarded funds.')).toBeInTheDocument();
-    expect(within(ai).getByRole('button', { name: 'ACC-M1' })).toBeInTheDocument();
   });
 
   it('clicking a transfer shows its ledger evidence; clicking an account shows its own assessment', async () => {
