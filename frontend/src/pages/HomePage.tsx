@@ -54,9 +54,12 @@ export const HomePage: React.FC = () => {
           investigator’s judgement; it does not prove intent or take action on accounts.
         </motion.p>
         <motion.div {...fadeUp(0.15)} className="mt-8 flex flex-col sm:flex-row gap-3">
-          <Link to={`/cases/${SAMPLE_CASE_ID}`} className="btn-primary text-sm px-6 min-h-[3rem]">
-            Start sample investigation
+          <Link to="/investigate" className="btn-primary text-sm px-6 min-h-[3rem]">
+            Investigate an account
             <ArrowRight className="w-4 h-4" aria-hidden="true" />
+          </Link>
+          <Link to={`/cases/${SAMPLE_CASE_ID}`} className="btn-secondary text-sm px-6 min-h-[3rem]">
+            Open sample case
           </Link>
           <Link to="/cases" className="btn-secondary text-sm px-6 min-h-[3rem]">
             <FolderOpen className="w-4 h-4" aria-hidden="true" />
@@ -65,8 +68,8 @@ export const HomePage: React.FC = () => {
         </motion.div>
         <motion.div {...fadeUp(0.2)}>
           <SyntheticDataNote className="mt-4">
-            The sample case, {SAMPLE_CASE_ID}, is demonstration data: a synthetic complaint about a ₹2,50,000 transfer,
-            traced through a synthetic account ledger.
+            Investigations run on a synthetic account ledger. The sample case, {SAMPLE_CASE_ID}, is a synthetic complaint
+            about a ₹2,50,000 transfer through that ledger.
           </SyntheticDataNote>
         </motion.div>
       </section>

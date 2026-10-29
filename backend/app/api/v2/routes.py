@@ -8,11 +8,6 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy.orm import Session
 
-try:
-    from app.api.auth import AuthContext, verify_write_permission
-except ModuleNotFoundError:
-    from backend.app.api.auth import AuthContext, verify_write_permission
-
 logger = logging.getLogger("fraudshield.v2.api")
 
 V2AccountIdPath = Path(
@@ -33,7 +28,10 @@ try:
         ModelStatusResponse,
         TraceGraphResponse,
     )
+    from app.api.v2.investigation_schemas import DataSourceInfo, InvestigationRequest, InvestigationResponse
     from app.db.v2.session import get_v2_db
+    from app.services.v2 import data_source
+    from app.services.v2.investigation import AccountNotFound, InvestigationService
     from app.services.v2.account_service import AccountService
     from app.services.v2.graph_tracer import ForensicGraphTracer
     from app.services.v2.live_analysis import AccountLiveAnalysisService
@@ -49,7 +47,10 @@ except ModuleNotFoundError:
         ModelStatusResponse,
         TraceGraphResponse,
     )
+    from backend.app.api.v2.investigation_schemas import DataSourceInfo, InvestigationRequest, InvestigationResponse
     from backend.app.db.v2.session import get_v2_db
+    from backend.app.services.v2 import data_source
+    from backend.app.services.v2.investigation import AccountNotFound, InvestigationService
     from backend.app.services.v2.account_service import AccountService
     from backend.app.services.v2.graph_tracer import ForensicGraphTracer
     from backend.app.services.v2.live_analysis import AccountLiveAnalysisService
@@ -219,12 +220,11 @@ def get_account_ml_assessment(
     "/accounts/{account_id}/analyze",
     response_model=AccountLiveAnalysisResponse,
     summary="Execute Fresh Live Account Risk Analysis",
-    description="Orchestrates on-demand real-time feature extraction, rule assessment, ML inference, TreeSHAP explanation, and advisory recommendation generation.",
+    description="Orchestrates on-demand real-time feature extraction, rule assessment, ML inference, TreeSHAP explanation, and advisory recommendation generation. Read-only: computes from the ledger and stores nothing, so it needs no write permission.",
 )
 def run_live_account_analysis(
     account_id: str = V2AccountIdPath,
     db: Session = Depends(get_v2_db),
-    auth: AuthContext = Depends(verify_write_permission),
 ) -> AccountLiveAnalysisResponse:
     try:
         analysis = AccountLiveAnalysisService.run_analysis(db, account_id)
@@ -257,3 +257,54 @@ def run_live_account_analysis(
 
     return analysis
 
+
+
+def _source_unavailable(exc: "data_source.DataSourceUnavailable") -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail={"code": exc.code, "message": exc.message}
+    )
+
+
+@router.get(
+    "/data-source",
+    response_model=DataSourceInfo,
+    summary="Configured Transaction Ledger",
+    description="Which ledger the V2 APIs query, whether it is synthetic, and how fresh it is (from a fresh query).",
+)
+def get_data_source(db: Session = Depends(get_v2_db)) -> DataSourceInfo:
+    try:
+        return DataSourceInfo.model_validate(data_source.describe(db))
+    except data_source.DataSourceUnavailable as exc:
+        raise _source_unavailable(exc)
+
+
+@router.post(
+    "/investigations",
+    response_model=InvestigationResponse,
+    summary="Run a Victim-First Investigation",
+    description=(
+        "Starts from the entered account, flags its unusual transfers against its own history, traces where the funds "
+        "went and came from, assesses each linked account with the rules and the account model, and returns an "
+        "evidence-referenced report. Computed on request from the configured ledger; nothing is stored, so it needs "
+        "no write permission."
+    ),
+)
+def run_investigation(req: InvestigationRequest, db: Session = Depends(get_v2_db)) -> InvestigationResponse:
+    try:
+        return InvestigationService.run(db, req)
+    except AccountNotFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "account_not_found",
+                "message": f"Account '{req.account_id}' is not in the configured ledger. Check the ID (for example ACC-000001).",
+            },
+        )
+    except data_source.DataSourceUnavailable as exc:
+        raise _source_unavailable(exc)
+    except Exception as e:  # noqa: BLE001 - report a failure, never a partial report
+        logger.error("Investigation failed for %s: %s", req.account_id, e, exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"code": "investigation_failed", "message": "The investigation could not be completed. No report was produced."},
+        )

@@ -5,6 +5,7 @@ import { HomePage, SAMPLE_CASE_ID } from './pages/HomePage';
 import { InvestigationsPage } from './pages/InvestigationsPage';
 import { CaseWorkspacePage } from './pages/CaseWorkspacePage';
 import { ToolsPage } from './pages/ToolsPage';
+import { InvestigatePage } from './pages/InvestigatePage';
 import { LoadingState } from './components/ui/StateViews';
 
 // Tools pages carry the heavy charting/graph libraries (cytoscape, recharts); load them on demand
@@ -66,6 +67,7 @@ export const AppRoutes: React.FC = () => (
   <Routes>
     <Route element={<AppLayout />}>
       <Route path="/" element={<HomePage />} />
+      <Route path="/investigate" element={<InvestigatePage />} />
       <Route path="/cases" element={<InvestigationsPage />} />
       <Route path="/cases/:caseId" element={<CaseWorkspacePage />} />
       <Route path="/tools" element={<ToolsPage />} />

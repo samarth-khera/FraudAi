@@ -227,7 +227,8 @@ export const V2AccountDetailPage: React.FC = () => {
       setLiveAnalysis(result);
     } catch (err: any) {
       if (err instanceof ApiError && err.status === 503) {
-        setAnalysisError('Model Unavailable: XGBoost model binary is not loaded on server. Run training pipeline first.');
+        // Show the server's own reason (model unavailable, or another 503); never assume one.
+        setAnalysisError(err.message || 'The server could not run the analysis right now.');
       } else if (err instanceof ApiError && err.status === 404) {
         setAnalysisError(`Account '${accountId}' not found in core database.`);
       } else {
