@@ -10,6 +10,7 @@ import {
   V2ModelStatusResponse,
   V2TraceGraphResponse,
 } from '../types/v2';
+import { DataSourceInfo, InvestigationRequest, InvestigationResponse } from '../types/investigation';
 import { API_BASE_URL } from './apiBase';
 
 const BASE_URL = `${API_BASE_URL}/api/v2`;
@@ -147,6 +148,27 @@ export const v2Api = {
       headers: { 'Content-Type': 'application/json' },
     });
     return handleResponse<import('../types/v2').V2AccountLiveAnalysisResponse>(res);
+  },
+
+  /**
+   * Runs a victim-first investigation. Computed on the server at request time; nothing is stored.
+   */
+  async runInvestigation(body: InvestigationRequest, signal?: AbortSignal): Promise<InvestigationResponse> {
+    const res = await fetch(`${BASE_URL}/investigations`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal,
+    });
+    return handleResponse<InvestigationResponse>(res);
+  },
+
+  /**
+   * Which ledger the server queries, whether it is synthetic, and how fresh it is.
+   */
+  async getDataSource(): Promise<DataSourceInfo> {
+    const res = await fetch(`${BASE_URL}/data-source`);
+    return handleResponse<DataSourceInfo>(res);
   },
 };
 

@@ -75,7 +75,11 @@ class AccountFeatureBuilder:
         assessment = AccountRiskAssessor.assess_account(db, account_id)
         if not assessment:
             return None
+        return cls.features_from_assessment(account, assessment)
 
+    @staticmethod
+    def features_from_assessment(account: AccountModel, assessment) -> Dict[str, float]:
+        """Builds the feature dictionary from an account row and its already-computed rule assessment."""
         sig = assessment.signals
 
         # Profile features
