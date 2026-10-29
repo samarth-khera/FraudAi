@@ -439,6 +439,9 @@ _LEGACY_STATUS = {
 }
 _REJECTED_REASONS = ("invalid_output", "policy_violation", "malformed_output")
 
+# Order of the sanitised provider fields in the "AI analyst unavailable" log line (provider_message goes last).
+_DIAGNOSTIC_KEYS = ("provider_status", "provider_reason", "request_id", "retry_after", "quota_id")
+
 UNAVAILABLE_MESSAGES = {
     "timeout": "The AI provider did not answer within the time limit.",
     "rate_limited": "The AI provider's rate limit or quota was reached.",
@@ -446,6 +449,7 @@ UNAVAILABLE_MESSAGES = {
     "request_rejected": "The AI provider rejected the request.",
     "model_not_found": "The configured AI model is not available to this API key.",
     "upstream_error": "The AI provider returned an error.",
+    "service_unavailable": "The AI provider reported that it is temporarily overloaded or unavailable. This is on the provider's side; try again later.",
     "blocked": "The AI provider declined to answer.",
     "empty_output": "The AI provider returned no explanation.",
     "truncated_output": "The AI explanation was cut off before it was complete.",
@@ -533,12 +537,16 @@ async def analyze(report: dict, provider: Optional[Provider] = None, config: Opt
     started = time.perf_counter()
     name = getattr(provider, "name", "gemini")
 
-    def unavailable(reason: str, http_status: Optional[int] = None, error_type: Optional[str] = None) -> dict:
-        # Safe diagnostics only: fixed reason code, numeric HTTP status, exception class name. Never messages or content.
+    def unavailable(reason: str, http_status: Optional[int] = None, error_type: Optional[str] = None,
+                    diagnostics: Optional[dict] = None) -> dict:
+        # Safe diagnostics only: fixed reason code, numeric HTTP status, exception class name, and the provider fields
+        # the Gemini module has already sanitised. Never the prompt, the payload, a raw body or an exception message.
+        extra = "".join(f" {k}={diagnostics[k]}" for k in _DIAGNOSTIC_KEYS if diagnostics and diagnostics.get(k))
+        message = diagnostics.get("provider_message") if diagnostics else None
         logger.warning(
-            "AI analyst unavailable: reason=%s http_status=%s error_type=%s latency_ms=%d",
+            "AI analyst unavailable: reason=%s http_status=%s error_type=%s latency_ms=%d%s%s",
             reason, http_status if http_status is not None else "none", error_type or "none",
-            int((time.perf_counter() - started) * 1000),
+            int((time.perf_counter() - started) * 1000), extra, f' provider_message="{message}"' if message else "",
         )
         return _result(
             "unavailable", f"{UNAVAILABLE_MESSAGES.get(reason, UNAVAILABLE_MESSAGES['upstream_error'])} The investigation results are unaffected.",
@@ -567,11 +575,13 @@ async def analyze(report: dict, provider: Optional[Provider] = None, config: Opt
             return _result("not_configured", f"No Gemini API key is configured on the server. {template_note}", config)
         known = reason in UNAVAILABLE_MESSAGES
         status = getattr(exc, "http_code", None)
+        diagnostics = getattr(exc, "diagnostics", None)
         return unavailable(
             reason if known else "upstream_error",
             http_status=status if isinstance(status, int) else None,
             # A ProviderError's class says nothing new; for anything else the class name tells which layer failed.
             error_type=None if known else type(exc).__name__,
+            diagnostics=diagnostics if known and isinstance(diagnostics, dict) else None,
         )
 
     if out.blocked:
