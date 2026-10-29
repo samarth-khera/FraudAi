@@ -19,9 +19,11 @@ if str(PROJECT_ROOT / "backend") not in sys.path:
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from backend.app.db.v2.ingestion import IngestionResult, ingest_v2_dataset
-from backend.app.db.v2.models import AccountModel, TransactionModel
-from backend.app.db.v2.session import (
+# Import through the same package path ("app.") that the ingestion module uses. Mixing "backend.app."
+# and "app." registers the V2 tables twice, and creating them on a fresh database then fails.
+from app.db.v2.ingestion import IngestionResult, ingest_v2_dataset
+from app.db.v2.models import AccountModel, TransactionModel
+from app.db.v2.session import (
     DEFAULT_V2_DATABASE_URL,
     get_v2_engine,
     validate_not_v1_database,
