@@ -184,6 +184,9 @@ class SingleModelInfo(BaseModel):
     baseline_comparison: Optional[dict[str, Any]] = None
     leakage_protections: Optional[list[str]] = None
     features: Optional[list[str]] = None
+    decision_threshold: Optional[float] = None
+    score_semantics: Optional[str] = None
+    operational_notes: Optional[dict[str, Any]] = None
 
 
 class ModelStatusResponse(BaseModel):

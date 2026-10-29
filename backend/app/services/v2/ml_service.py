@@ -52,7 +52,10 @@ class V2MLInferenceService:
     _account_metadata: Optional[Dict[str, Any]] = None
     _paysim_metadata: Optional[Dict[str, Any]] = None
 
-    ACCOUNT_ARTIFACTS_DIR = _REPO_ROOT / "ml/artifacts/v2/account_model"
+    # Active account model. v2-account-1.0.0 remains in ml/artifacts/v2/account_model for comparison;
+    # see docs/ACCOUNT_MODEL_AUDIT.md for why it was replaced.
+    ACCOUNT_ARTIFACTS_DIR = _REPO_ROOT / "ml/artifacts/v2/account_model_v2"
+    DEFAULT_THRESHOLD = 0.5
     PAYSIM_ARTIFACTS_DIR = _REPO_ROOT / "ml/artifacts/v2/paysim_benchmark"
 
     @classmethod
@@ -115,11 +118,16 @@ class V2MLInferenceService:
                 "test_accounts_count": acc_meta.get("scenario_split_strategy", {}).get("test_accounts_count"),
                 "test_suspicious_count": acc_meta.get("scenario_split_strategy", {}).get("test_suspicious_count"),
                 "test_normal_count": acc_meta.get("scenario_split_strategy", {}).get("test_normal_count"),
+                "validation_suspicious_count": acc_meta.get("scenario_split_strategy", {}).get("validation_suspicious_count"),
+                "train_suspicious_count": acc_meta.get("scenario_split_strategy", {}).get("train_suspicious_count"),
                 "held_out_test_scenarios": acc_meta.get("scenario_split_strategy", {}).get("held_out_test_scenarios"),
             } if acc_meta else None,
             baseline_comparison=acc_meta.get("baseline_comparison"),
             leakage_protections=acc_meta.get("leakage_protections"),
             features=acc_meta.get("features", FEATURE_NAMES) if acc_available else None,
+            decision_threshold=acc_meta.get("decision_threshold") if acc_meta else None,
+            score_semantics=acc_meta.get("score_semantics") if acc_meta else None,
+            operational_notes=acc_meta.get("operational_notes") if acc_meta else None,
         )
 
         # 2. PaySim benchmark status
@@ -188,6 +196,24 @@ class V2MLInferenceService:
         )
 
     @classmethod
+    def decision_threshold(cls) -> float:
+        """Review threshold stored with the active model (selected on validation data)."""
+        meta = cls._account_metadata or {}
+        value = meta.get("decision_threshold")
+        return float(value) if isinstance(value, (int, float)) and 0.0 < value < 1.0 else cls.DEFAULT_THRESHOLD
+
+    @staticmethod
+    def risk_level_for(score: float, threshold: float) -> str:
+        """Levels are anchored to the review threshold: anything below it is "low"."""
+        if score < threshold:
+            return "low"
+        if score < max(0.5, threshold):
+            return "elevated"
+        if score < 0.8:
+            return "high"
+        return "critical"
+
+    @classmethod
     def assess_account(cls, db: Session, account_id: str) -> Optional[AccountMLAssessmentResponse]:
         """Calculates ML model risk assessment with local TreeSHAP explanations."""
         # 1. Extract observable features
@@ -204,17 +230,10 @@ class V2MLInferenceService:
         prob_suspicious = float(probs[1])
 
         risk_score = round(prob_suspicious * 100.0, 1)
-
-        if risk_score < 30.0:
-            risk_level = "low"
-        elif risk_score < 70.0:
-            risk_level = "elevated"
-        elif risk_score < 90.0:
-            risk_level = "high"
-        else:
-            risk_level = "critical"
-
-        predicted_class = "suspicious" if prob_suspicious >= 0.50 else "legitimate"
+        threshold = cls.decision_threshold()
+        risk_level = cls.risk_level_for(prob_suspicious, threshold)
+        # "suspicious" here means "at or above the validated review threshold", not a finding.
+        predicted_class = "suspicious" if prob_suspicious >= threshold else "legitimate"
 
         # 4. Compute genuine TreeSHAP local contributions
         top_contributions: List[FeatureContribution] = []

@@ -296,6 +296,18 @@ const PAYSIM_FEATURE_GLOSSARY: Record<string, FeatureGlossaryEntry> = {
 // Component
 // -----------------------------------------------------------------------------
 
+function accountTestTotal(info: V2SingleModelInfo | null | undefined): string {
+  const d = info?.dataset_info as Record<string, number> | null | undefined;
+  if (!d || d.test_suspicious_count === undefined || d.test_normal_count === undefined) return '—';
+  return (d.test_suspicious_count + d.test_normal_count).toLocaleString('en-IN');
+}
+
+function accountTestSummary(info: V2SingleModelInfo | null | undefined): string {
+  const d = info?.dataset_info as Record<string, number> | null | undefined;
+  if (!d || d.test_suspicious_count === undefined || d.test_normal_count === undefined) return 'held-out test accounts';
+  return `${d.test_suspicious_count.toLocaleString('en-IN')} suspicious and ${d.test_normal_count.toLocaleString('en-IN')} ordinary held-out accounts`;
+}
+
 export const ModelInsightsPage: React.FC = () => {
   const [modelStatus, setModelStatus] = useState<V2ModelStatusResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -496,7 +508,7 @@ export const ModelInsightsPage: React.FC = () => {
                   : 'bg-[#FAF7F2] text-[#1A1714] border border-[#EAE3D6]'
               }`}
             >
-              v2-account-1.0.0
+              {modelStatus?.account_model?.version ?? 'account model'}
             </span>
           </div>
           <div className="text-sm font-bold mt-1">V2 Account-Level Fraud Model</div>
@@ -608,7 +620,7 @@ export const ModelInsightsPage: React.FC = () => {
                       <tr className="border-b border-[#EAE3D6] bg-[#FAF7F2] font-mono text-[11px] text-[#6B655B]">
                         <th className="py-3 px-4">Evaluation Dimension</th>
                         <th className="py-3 px-4 font-bold text-[#1A1714]">
-                          V2 Account-Level Model (v2-account-1.0.0)
+                          V2 Account-Level Model ({modelStatus.account_model.version ?? 'unavailable'})
                         </th>
                         <th className="py-3 px-4 font-bold text-[#1A1714]">
                           PaySim Benchmark (v2-benchmark-1.0.0)
@@ -664,7 +676,7 @@ export const ModelInsightsPage: React.FC = () => {
                       <tr>
                         <td className="py-3.5 px-4 font-semibold text-[#1A1714]">ROC-AUC</td>
                         <td className="py-3.5 px-4 font-mono font-bold text-[#1A1714]">
-                          {modelStatus.account_model.test_metrics?.roc_auc ?? '0.9945'}
+                          {modelStatus.account_model.test_metrics?.roc_auc ?? '—'}
                         </td>
                         <td className="py-3.5 px-4 font-mono font-bold text-[#1A1714]">
                           {modelStatus.paysim_benchmark.test_metrics?.roc_auc ?? '1.000'}
@@ -673,7 +685,7 @@ export const ModelInsightsPage: React.FC = () => {
                       <tr>
                         <td className="py-3.5 px-4 font-semibold text-[#1A1714]">PR-AUC</td>
                         <td className="py-3.5 px-4 font-mono font-bold text-[#EA8500]">
-                          {modelStatus.account_model.test_metrics?.pr_auc ?? '0.4642'}
+                          {modelStatus.account_model.test_metrics?.pr_auc ?? '—'}
                         </td>
                         <td className="py-3.5 px-4 font-mono font-bold text-[#EA8500]">
                           {modelStatus.paysim_benchmark.test_metrics?.pr_auc ?? '0.9999'}
@@ -681,12 +693,16 @@ export const ModelInsightsPage: React.FC = () => {
                       </tr>
                       <tr>
                         <td className="py-3.5 px-4 font-semibold text-[#1A1714]">Calibrated Threshold</td>
-                        <td className="py-3.5 px-4 font-mono text-[#6B655B]">0.50 (Calibrated for network precision)</td>
+                        <td className="py-3.5 px-4 font-mono text-[#6B655B]">
+                          {modelStatus.account_model.decision_threshold ?? '—'} (chosen on validation data to maximise F2)
+                        </td>
                         <td className="py-3.5 px-4 font-mono text-[#6B655B]">0.65 (Calibrated on validation set)</td>
                       </tr>
                       <tr>
                         <td className="py-3.5 px-4 font-semibold text-[#1A1714]">Held-Out Sample Size</td>
-                        <td className="py-3.5 px-4 font-mono text-[#6B655B]">2,000 accounts across 2 test scenarios</td>
+                        <td className="py-3.5 px-4 font-mono text-[#6B655B]">
+                          {accountTestSummary(modelStatus.account_model)}
+                        </td>
                         <td className="py-3.5 px-4 font-mono text-[#6B655B]">90,829 test transaction steps</td>
                       </tr>
                       <tr>
@@ -786,12 +802,12 @@ export const ModelInsightsPage: React.FC = () => {
                       <h3 className="text-sm font-bold text-[#1A1714]">Held-Out Test Confusion Matrix</h3>
                       <p className="text-[11px] text-[#6B655B]">
                         {activeModelTab === 'v2_account'
-                          ? 'Evaluated on 2,000 accounts across unseen test scenarios'
+                          ? `Evaluated on ${accountTestSummary(activeModelInfo)}`
                           : 'Evaluated on 90,829 held-out chronological transactions'}
                       </p>
                     </div>
                     <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#FAF7F2] text-[#1A1714] border border-[#EAE3D6]">
-                      {activeModelTab === 'v2_account' ? '2,000 Accounts' : '90,829 TXs'}
+                      {activeModelTab === 'v2_account' ? `${accountTestTotal(activeModelInfo)} Accounts` : '90,829 TXs'}
                     </span>
                   </div>
 
@@ -857,7 +873,7 @@ export const ModelInsightsPage: React.FC = () => {
                     <span className="font-bold text-[#1A1714] block">Operational Interpretation:</span>
                     <p>
                       {activeModelTab === 'v2_account'
-                        ? 'Under severe class imbalance (6 suspicious accounts in 2,000 total test entities), the model prioritized precision over aggressive coverage to minimize false-positive disruption to innocent account holders.'
+                        ? `Suspicious accounts are a small minority of the test set (${accountTestSummary(activeModelInfo)}). The threshold favours recall because every flag goes to a person and nothing is automated, so false alarms are expected.`
                         : 'Evaluated across 90,829 held-out chronological transactions, the benchmark model successfully captured 1,365 of 1,366 fraud events with only 3 false-positive alerts.'}
                     </p>
                   </div>

@@ -156,7 +156,11 @@ describe('CaseWorkspacePage', () => {
     expect(screen.getByText(/The two checks disagree/)).toBeInTheDocument();
     expect(screen.getByText(/Largest transaction:/)).toBeInTheDocument();
     expect(screen.getAllByText('Raised score').length).toBeGreaterThan(0);
-    expect(screen.getByText(/caught 33% of suspicious/)).toBeInTheDocument();
+    // Limits come from the served model's metadata, not hardcoded numbers.
+    expect(screen.getByText(/260 suspicious, 3,919 ordinary/)).toBeInTheDocument();
+    expect(screen.getByText(/at its 18% threshold the model caught\s+53% of suspicious/)).toBeInTheDocument();
+    expect(screen.getByText(/Accounts at 18% or more are suggested for review/)).toBeInTheDocument();
+    expect(screen.getByText(/flags about\s+5% of ordinary accounts/)).toBeInTheDocument();
     expect(v2Api.getMLAssessment).toHaveBeenCalledWith('ACC-000003');
   });
 

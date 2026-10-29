@@ -1,0 +1,1272 @@
+{
+  "generated_at": "2026-10-29T04:03:59Z",
+  "dataset": {
+    "source": "Scenario-bank synthetic ledger (ml/v2/scenario_bank.py)",
+    "seed": 20261029,
+    "accounts_evaluated": 20000,
+    "excluded_external_sinks": [
+      "SINK-001",
+      "SINK-002",
+      "SINK-003"
+    ],
+    "positive_definition": [
+      "dormant_awakened_mule",
+      "mule_aggregator",
+      "mule_feeder",
+      "mule_first_hop",
+      "mule_intermediate",
+      "shell_roundtripper"
+    ],
+    "split_seed": 7,
+    "split_fractions": [
+      0.6,
+      0.2,
+      0.2
+    ],
+    "unseen_test_only_families": [
+      "cyclic_roundtrip",
+      "slow_layering"
+    ]
+  },
+  "splits": {
+    "train": {
+      "accounts": 11940,
+      "positives": 511,
+      "negatives": 11429,
+      "scenario_instances": 104,
+      "positives_by_family": {
+        "app_layering": 160,
+        "dormant_awakening": 26,
+        "fan_out_dispersal": 156,
+        "structuring": 169
+      }
+    },
+    "validation": {
+      "accounts": 3881,
+      "positives": 157,
+      "negatives": 3724,
+      "scenario_instances": 23,
+      "positives_by_family": {
+        "app_layering": 27,
+        "dormant_awakening": 5,
+        "fan_out_dispersal": 49,
+        "structuring": 76
+      }
+    },
+    "test": {
+      "accounts": 4179,
+      "positives": 260,
+      "negatives": 3919,
+      "scenario_instances": 63,
+      "positives_by_family": {
+        "app_layering": 20,
+        "cyclic_roundtrip": 72,
+        "dormant_awakening": 9,
+        "fan_out_dispersal": 50,
+        "slow_layering": 98,
+        "structuring": 11
+      }
+    }
+  },
+  "model_selection": {
+    "criterion": "validation PR-AUC",
+    "selected": "xgb_d6_n400_w4.73",
+    "validation_pr_auc": 0.3861,
+    "candidates": [
+      {
+        "name": "xgb_d6_n400_w4.73",
+        "validation_pr_auc": 0.3861
+      },
+      {
+        "name": "xgb_d6_n200_w4.73",
+        "validation_pr_auc": 0.3821
+      },
+      {
+        "name": "xgb_d6_n200_w1.0",
+        "validation_pr_auc": 0.3816
+      },
+      {
+        "name": "xgb_d4_n200_w1.0",
+        "validation_pr_auc": 0.3815
+      },
+      {
+        "name": "xgb_d3_n400_w1.0",
+        "validation_pr_auc": 0.3723
+      },
+      {
+        "name": "xgb_d4_n400_w1.0",
+        "validation_pr_auc": 0.3723
+      },
+      {
+        "name": "xgb_d6_n400_w1.0",
+        "validation_pr_auc": 0.3708
+      },
+      {
+        "name": "xgb_d4_n400_w4.73",
+        "validation_pr_auc": 0.3631
+      },
+      {
+        "name": "xgb_d3_n200_w1.0",
+        "validation_pr_auc": 0.3612
+      },
+      {
+        "name": "xgb_d4_n200_w4.73",
+        "validation_pr_auc": 0.3603
+      },
+      {
+        "name": "xgb_d3_n400_w4.73",
+        "validation_pr_auc": 0.3471
+      },
+      {
+        "name": "xgb_d3_n200_w4.73",
+        "validation_pr_auc": 0.3385
+      }
+    ],
+    "threshold_rule": "maximise F2 on validation (recall weighted twice precision); test not used"
+  },
+  "results": {
+    "new_xgboost": {
+      "validation_threshold_f2": 0.1752,
+      "validation": {
+        "threshold": 0.1752,
+        "positives": 157,
+        "negatives": 3724,
+        "precision": 0.2538,
+        "recall": 0.5287,
+        "f1_score": 0.343,
+        "roc_auc": 0.8695,
+        "pr_auc": 0.3861,
+        "confusion_matrix": [
+          [
+            3480,
+            244
+          ],
+          [
+            74,
+            83
+          ]
+        ],
+        "true_negatives": 3480,
+        "false_positives": 244,
+        "false_negatives": 74,
+        "true_positives": 83,
+        "false_positive_rate": 0.0655
+      },
+      "test": {
+        "threshold": 0.1752,
+        "positives": 260,
+        "negatives": 3919,
+        "precision": 0.3263,
+        "recall": 0.5346,
+        "f1_score": 0.4052,
+        "roc_auc": 0.7601,
+        "pr_auc": 0.377,
+        "confusion_matrix": [
+          [
+            3632,
+            287
+          ],
+          [
+            121,
+            139
+          ]
+        ],
+        "true_negatives": 3632,
+        "false_positives": 287,
+        "false_negatives": 121,
+        "true_positives": 139,
+        "false_positive_rate": 0.0732
+      },
+      "test_ci95": {
+        "recall": [
+          0.4439,
+          0.6286
+        ],
+        "precision": [
+          0.253,
+          0.4004
+        ],
+        "pr_auc": [
+          0.2888,
+          0.4734
+        ],
+        "resampling_unit": "scenario instance or ordinary account"
+      },
+      "test_breakdown": {
+        "app_layering": {
+          "positives": 20,
+          "detected": 14,
+          "recall": 0.7
+        },
+        "cyclic_roundtrip": {
+          "positives": 72,
+          "detected": 34,
+          "recall": 0.4722
+        },
+        "dormant_awakening": {
+          "positives": 9,
+          "detected": 9,
+          "recall": 1.0
+        },
+        "fan_out_dispersal": {
+          "positives": 50,
+          "detected": 17,
+          "recall": 0.34
+        },
+        "slow_layering": {
+          "positives": 98,
+          "detected": 58,
+          "recall": 0.5918
+        },
+        "structuring": {
+          "positives": 11,
+          "detected": 7,
+          "recall": 0.6364
+        },
+        "negatives:legit_dormant_reactivation": {
+          "accounts": 26,
+          "flagged": 9,
+          "flag_rate": 0.3462
+        },
+        "negatives:merchant_sweep": {
+          "accounts": 10,
+          "flagged": 0,
+          "flag_rate": 0.0
+        },
+        "negatives:ordinary": {
+          "accounts": 3747,
+          "flagged": 213,
+          "flag_rate": 0.0568
+        },
+        "negatives:salary_quick_payment": {
+          "accounts": 63,
+          "flagged": 30,
+          "flag_rate": 0.4762
+        },
+        "negatives:student_fee_payment": {
+          "accounts": 35,
+          "flagged": 26,
+          "flag_rate": 0.7429
+        },
+        "negatives:victims": {
+          "accounts": 38,
+          "flagged": 9,
+          "flag_rate": 0.2368
+        }
+      },
+      "test_seen_families": {
+        "threshold": 0.1752,
+        "positives": 90,
+        "negatives": 3894,
+        "precision": 0.1424,
+        "recall": 0.5222,
+        "f1_score": 0.2238,
+        "roc_auc": 0.8298,
+        "pr_auc": 0.2604,
+        "confusion_matrix": [
+          [
+            3611,
+            283
+          ],
+          [
+            43,
+            47
+          ]
+        ],
+        "true_negatives": 3611,
+        "false_positives": 283,
+        "false_negatives": 43,
+        "true_positives": 47,
+        "false_positive_rate": 0.0727
+      },
+      "test_unseen_families": {
+        "threshold": 0.1752,
+        "positives": 170,
+        "negatives": 3919,
+        "precision": 0.2427,
+        "recall": 0.5412,
+        "f1_score": 0.3352,
+        "roc_auc": 0.7235,
+        "pr_auc": 0.2858,
+        "confusion_matrix": [
+          [
+            3632,
+            287
+          ],
+          [
+            78,
+            92
+          ]
+        ],
+        "true_negatives": 3632,
+        "false_positives": 287,
+        "false_negatives": 78,
+        "true_positives": 92,
+        "false_positive_rate": 0.0732
+      },
+      "brier_score_test": 0.049
+    },
+    "logistic_regression": {
+      "validation_threshold_f2": 0.6213,
+      "validation": {
+        "threshold": 0.6213,
+        "positives": 157,
+        "negatives": 3724,
+        "precision": 0.2181,
+        "recall": 0.5987,
+        "f1_score": 0.3197,
+        "roc_auc": 0.8621,
+        "pr_auc": 0.2459,
+        "confusion_matrix": [
+          [
+            3387,
+            337
+          ],
+          [
+            63,
+            94
+          ]
+        ],
+        "true_negatives": 3387,
+        "false_positives": 337,
+        "false_negatives": 63,
+        "true_positives": 94,
+        "false_positive_rate": 0.0905
+      },
+      "test": {
+        "threshold": 0.6213,
+        "positives": 260,
+        "negatives": 3919,
+        "precision": 0.2792,
+        "recall": 0.5692,
+        "f1_score": 0.3747,
+        "roc_auc": 0.7667,
+        "pr_auc": 0.3116,
+        "confusion_matrix": [
+          [
+            3537,
+            382
+          ],
+          [
+            112,
+            148
+          ]
+        ],
+        "true_negatives": 3537,
+        "false_positives": 382,
+        "false_negatives": 112,
+        "true_positives": 148,
+        "false_positive_rate": 0.0975
+      },
+      "test_ci95": {
+        "recall": [
+          0.4929,
+          0.6516
+        ],
+        "precision": [
+          0.2141,
+          0.3467
+        ],
+        "pr_auc": [
+          0.2367,
+          0.3937
+        ],
+        "resampling_unit": "scenario instance or ordinary account"
+      },
+      "test_breakdown": {
+        "app_layering": {
+          "positives": 20,
+          "detected": 18,
+          "recall": 0.9
+        },
+        "cyclic_roundtrip": {
+          "positives": 72,
+          "detected": 36,
+          "recall": 0.5
+        },
+        "dormant_awakening": {
+          "positives": 9,
+          "detected": 8,
+          "recall": 0.8889
+        },
+        "fan_out_dispersal": {
+          "positives": 50,
+          "detected": 23,
+          "recall": 0.46
+        },
+        "slow_layering": {
+          "positives": 98,
+          "detected": 56,
+          "recall": 0.5714
+        },
+        "structuring": {
+          "positives": 11,
+          "detected": 7,
+          "recall": 0.6364
+        },
+        "negatives:legit_dormant_reactivation": {
+          "accounts": 26,
+          "flagged": 6,
+          "flag_rate": 0.2308
+        },
+        "negatives:merchant_sweep": {
+          "accounts": 10,
+          "flagged": 0,
+          "flag_rate": 0.0
+        },
+        "negatives:ordinary": {
+          "accounts": 3747,
+          "flagged": 275,
+          "flag_rate": 0.0734
+        },
+        "negatives:salary_quick_payment": {
+          "accounts": 63,
+          "flagged": 50,
+          "flag_rate": 0.7937
+        },
+        "negatives:student_fee_payment": {
+          "accounts": 35,
+          "flagged": 35,
+          "flag_rate": 1.0
+        },
+        "negatives:victims": {
+          "accounts": 38,
+          "flagged": 16,
+          "flag_rate": 0.4211
+        }
+      },
+      "test_seen_families": {
+        "threshold": 0.6213,
+        "positives": 90,
+        "negatives": 3894,
+        "precision": 0.1308,
+        "recall": 0.6222,
+        "f1_score": 0.2162,
+        "roc_auc": 0.8459,
+        "pr_auc": 0.2056,
+        "confusion_matrix": [
+          [
+            3522,
+            372
+          ],
+          [
+            34,
+            56
+          ]
+        ],
+        "true_negatives": 3522,
+        "false_positives": 372,
+        "false_negatives": 34,
+        "true_positives": 56,
+        "false_positive_rate": 0.0955
+      },
+      "test_unseen_families": {
+        "threshold": 0.6213,
+        "positives": 170,
+        "negatives": 3919,
+        "precision": 0.1941,
+        "recall": 0.5412,
+        "f1_score": 0.2857,
+        "roc_auc": 0.7252,
+        "pr_auc": 0.2092,
+        "confusion_matrix": [
+          [
+            3537,
+            382
+          ],
+          [
+            78,
+            92
+          ]
+        ],
+        "true_negatives": 3537,
+        "false_positives": 382,
+        "false_negatives": 78,
+        "true_positives": 92,
+        "false_positive_rate": 0.0975
+      }
+    },
+    "rule_baseline": {
+      "validation_threshold_f2": 0.45,
+      "validation": {
+        "threshold": 0.45,
+        "positives": 157,
+        "negatives": 3724,
+        "precision": 0.1201,
+        "recall": 0.4522,
+        "f1_score": 0.1898,
+        "roc_auc": 0.6252,
+        "pr_auc": 0.0789,
+        "confusion_matrix": [
+          [
+            3204,
+            520
+          ],
+          [
+            86,
+            71
+          ]
+        ],
+        "true_negatives": 3204,
+        "false_positives": 520,
+        "false_negatives": 86,
+        "true_positives": 71,
+        "false_positive_rate": 0.1396
+      },
+      "test": {
+        "threshold": 0.45,
+        "positives": 260,
+        "negatives": 3919,
+        "precision": 0.1188,
+        "recall": 0.2846,
+        "f1_score": 0.1676,
+        "roc_auc": 0.6036,
+        "pr_auc": 0.1025,
+        "confusion_matrix": [
+          [
+            3370,
+            549
+          ],
+          [
+            186,
+            74
+          ]
+        ],
+        "true_negatives": 3370,
+        "false_positives": 549,
+        "false_negatives": 186,
+        "true_positives": 74,
+        "false_positive_rate": 0.1401
+      },
+      "test_ci95": {
+        "recall": [
+          0.2083,
+          0.3615
+        ],
+        "precision": [
+          0.0769,
+          0.1622
+        ],
+        "pr_auc": [
+          0.0704,
+          0.1422
+        ],
+        "resampling_unit": "scenario instance or ordinary account"
+      },
+      "test_breakdown": {
+        "app_layering": {
+          "positives": 20,
+          "detected": 16,
+          "recall": 0.8
+        },
+        "cyclic_roundtrip": {
+          "positives": 72,
+          "detected": 18,
+          "recall": 0.25
+        },
+        "dormant_awakening": {
+          "positives": 9,
+          "detected": 8,
+          "recall": 0.8889
+        },
+        "fan_out_dispersal": {
+          "positives": 50,
+          "detected": 18,
+          "recall": 0.36
+        },
+        "slow_layering": {
+          "positives": 98,
+          "detected": 13,
+          "recall": 0.1327
+        },
+        "structuring": {
+          "positives": 11,
+          "detected": 1,
+          "recall": 0.0909
+        },
+        "negatives:legit_dormant_reactivation": {
+          "accounts": 26,
+          "flagged": 9,
+          "flag_rate": 0.3462
+        },
+        "negatives:merchant_sweep": {
+          "accounts": 10,
+          "flagged": 5,
+          "flag_rate": 0.5
+        },
+        "negatives:ordinary": {
+          "accounts": 3747,
+          "flagged": 428,
+          "flag_rate": 0.1142
+        },
+        "negatives:salary_quick_payment": {
+          "accounts": 63,
+          "flagged": 56,
+          "flag_rate": 0.8889
+        },
+        "negatives:student_fee_payment": {
+          "accounts": 35,
+          "flagged": 35,
+          "flag_rate": 1.0
+        },
+        "negatives:victims": {
+          "accounts": 38,
+          "flagged": 16,
+          "flag_rate": 0.4211
+        }
+      },
+      "test_at_documented_threshold_50": {
+        "threshold": 0.5,
+        "positives": 260,
+        "negatives": 3919,
+        "precision": 0.1253,
+        "recall": 0.2115,
+        "f1_score": 0.1574,
+        "roc_auc": 0.6036,
+        "pr_auc": 0.1025,
+        "confusion_matrix": [
+          [
+            3535,
+            384
+          ],
+          [
+            205,
+            55
+          ]
+        ],
+        "true_negatives": 3535,
+        "false_positives": 384,
+        "false_negatives": 205,
+        "true_positives": 55,
+        "false_positive_rate": 0.098
+      },
+      "test_seen_families": {
+        "threshold": 0.45,
+        "positives": 90,
+        "negatives": 3894,
+        "precision": 0.0744,
+        "recall": 0.4778,
+        "f1_score": 0.1287,
+        "roc_auc": 0.6505,
+        "pr_auc": 0.0698,
+        "confusion_matrix": [
+          [
+            3359,
+            535
+          ],
+          [
+            47,
+            43
+          ]
+        ],
+        "true_negatives": 3359,
+        "false_positives": 535,
+        "false_negatives": 47,
+        "true_positives": 43,
+        "false_positive_rate": 0.1374
+      },
+      "test_unseen_families": {
+        "threshold": 0.45,
+        "positives": 170,
+        "negatives": 3919,
+        "precision": 0.0534,
+        "recall": 0.1824,
+        "f1_score": 0.0827,
+        "roc_auc": 0.5795,
+        "pr_auc": 0.0581,
+        "confusion_matrix": [
+          [
+            3370,
+            549
+          ],
+          [
+            139,
+            31
+          ]
+        ],
+        "true_negatives": 3370,
+        "false_positives": 549,
+        "false_negatives": 139,
+        "true_positives": 31,
+        "false_positive_rate": 0.1401
+      }
+    },
+    "previous_model_v2_account_1_0_0": {
+      "validation_threshold_f2": 0.0018,
+      "validation": {
+        "threshold": 0.0018,
+        "positives": 157,
+        "negatives": 3724,
+        "precision": 0.085,
+        "recall": 0.6433,
+        "f1_score": 0.1502,
+        "roc_auc": 0.6877,
+        "pr_auc": 0.1165,
+        "confusion_matrix": [
+          [
+            2637,
+            1087
+          ],
+          [
+            56,
+            101
+          ]
+        ],
+        "true_negatives": 2637,
+        "false_positives": 1087,
+        "false_negatives": 56,
+        "true_positives": 101,
+        "false_positive_rate": 0.2919
+      },
+      "test": {
+        "threshold": 0.0018,
+        "positives": 260,
+        "negatives": 3919,
+        "precision": 0.1359,
+        "recall": 0.7385,
+        "f1_score": 0.2295,
+        "roc_auc": 0.7664,
+        "pr_auc": 0.2196,
+        "confusion_matrix": [
+          [
+            2698,
+            1221
+          ],
+          [
+            68,
+            192
+          ]
+        ],
+        "true_negatives": 2698,
+        "false_positives": 1221,
+        "false_negatives": 68,
+        "true_positives": 192,
+        "false_positive_rate": 0.3116
+      },
+      "test_ci95": {
+        "recall": [
+          0.6591,
+          0.8256
+        ],
+        "precision": [
+          0.0986,
+          0.1721
+        ],
+        "pr_auc": [
+          0.1483,
+          0.3009
+        ],
+        "resampling_unit": "scenario instance or ordinary account"
+      },
+      "test_breakdown": {
+        "app_layering": {
+          "positives": 20,
+          "detected": 19,
+          "recall": 0.95
+        },
+        "cyclic_roundtrip": {
+          "positives": 72,
+          "detected": 65,
+          "recall": 0.9028
+        },
+        "dormant_awakening": {
+          "positives": 9,
+          "detected": 9,
+          "recall": 1.0
+        },
+        "fan_out_dispersal": {
+          "positives": 50,
+          "detected": 22,
+          "recall": 0.44
+        },
+        "slow_layering": {
+          "positives": 98,
+          "detected": 70,
+          "recall": 0.7143
+        },
+        "structuring": {
+          "positives": 11,
+          "detected": 7,
+          "recall": 0.6364
+        },
+        "negatives:legit_dormant_reactivation": {
+          "accounts": 26,
+          "flagged": 15,
+          "flag_rate": 0.5769
+        },
+        "negatives:merchant_sweep": {
+          "accounts": 10,
+          "flagged": 10,
+          "flag_rate": 1.0
+        },
+        "negatives:ordinary": {
+          "accounts": 3747,
+          "flagged": 1071,
+          "flag_rate": 0.2858
+        },
+        "negatives:salary_quick_payment": {
+          "accounts": 63,
+          "flagged": 57,
+          "flag_rate": 0.9048
+        },
+        "negatives:student_fee_payment": {
+          "accounts": 35,
+          "flagged": 35,
+          "flag_rate": 1.0
+        },
+        "negatives:victims": {
+          "accounts": 38,
+          "flagged": 33,
+          "flag_rate": 0.8684
+        }
+      },
+      "test_at_original_threshold_0_5": {
+        "threshold": 0.5,
+        "positives": 260,
+        "negatives": 3919,
+        "precision": 0.3871,
+        "recall": 0.0923,
+        "f1_score": 0.1491,
+        "roc_auc": 0.7664,
+        "pr_auc": 0.2196,
+        "confusion_matrix": [
+          [
+            3881,
+            38
+          ],
+          [
+            236,
+            24
+          ]
+        ],
+        "true_negatives": 3881,
+        "false_positives": 38,
+        "false_negatives": 236,
+        "true_positives": 24,
+        "false_positive_rate": 0.0097
+      },
+      "test_breakdown_at_original_threshold_0_5": {
+        "app_layering": {
+          "positives": 20,
+          "detected": 2,
+          "recall": 0.1
+        },
+        "cyclic_roundtrip": {
+          "positives": 72,
+          "detected": 19,
+          "recall": 0.2639
+        },
+        "dormant_awakening": {
+          "positives": 9,
+          "detected": 1,
+          "recall": 0.1111
+        },
+        "fan_out_dispersal": {
+          "positives": 50,
+          "detected": 1,
+          "recall": 0.02
+        },
+        "slow_layering": {
+          "positives": 98,
+          "detected": 1,
+          "recall": 0.0102
+        },
+        "structuring": {
+          "positives": 11,
+          "detected": 0,
+          "recall": 0.0
+        },
+        "negatives:legit_dormant_reactivation": {
+          "accounts": 26,
+          "flagged": 0,
+          "flag_rate": 0.0
+        },
+        "negatives:merchant_sweep": {
+          "accounts": 10,
+          "flagged": 0,
+          "flag_rate": 0.0
+        },
+        "negatives:ordinary": {
+          "accounts": 3747,
+          "flagged": 12,
+          "flag_rate": 0.0032
+        },
+        "negatives:salary_quick_payment": {
+          "accounts": 63,
+          "flagged": 1,
+          "flag_rate": 0.0159
+        },
+        "negatives:student_fee_payment": {
+          "accounts": 35,
+          "flagged": 13,
+          "flag_rate": 0.3714
+        },
+        "negatives:victims": {
+          "accounts": 38,
+          "flagged": 12,
+          "flag_rate": 0.3158
+        }
+      },
+      "test_seen_families": {
+        "threshold": 0.0018,
+        "positives": 90,
+        "negatives": 3894,
+        "precision": 0.0453,
+        "recall": 0.6333,
+        "f1_score": 0.0846,
+        "roc_auc": 0.719,
+        "pr_auc": 0.0736,
+        "confusion_matrix": [
+          [
+            2694,
+            1200
+          ],
+          [
+            33,
+            57
+          ]
+        ],
+        "true_negatives": 2694,
+        "false_positives": 1200,
+        "false_negatives": 33,
+        "true_positives": 57,
+        "false_positive_rate": 0.3082
+      },
+      "test_unseen_families": {
+        "threshold": 0.0018,
+        "positives": 170,
+        "negatives": 3919,
+        "precision": 0.0996,
+        "recall": 0.7941,
+        "f1_score": 0.1769,
+        "roc_auc": 0.793,
+        "pr_auc": 0.1876,
+        "confusion_matrix": [
+          [
+            2698,
+            1221
+          ],
+          [
+            35,
+            135
+          ]
+        ],
+        "true_negatives": 2698,
+        "false_positives": 1221,
+        "false_negatives": 35,
+        "true_positives": 135,
+        "false_positive_rate": 0.3116
+      }
+    }
+  },
+  "error_examples": {
+    "false_negatives": [
+      {
+        "account_id": "ACC-012525",
+        "family": "cyclic_roundtrip",
+        "ground_truth_label": "shell_roundtripper",
+        "score": 0.0,
+        "rapid_pass_through": 1.0,
+        "max_amount": 67371.28,
+        "flow_through_ratio": 0.3597
+      },
+      {
+        "account_id": "ACC-009613",
+        "family": "cyclic_roundtrip",
+        "ground_truth_label": "shell_roundtripper",
+        "score": 0.0,
+        "rapid_pass_through": 1.0,
+        "max_amount": 63742.42,
+        "flow_through_ratio": 0.3377
+      },
+      {
+        "account_id": "ACC-016987",
+        "family": "cyclic_roundtrip",
+        "ground_truth_label": "shell_roundtripper",
+        "score": 0.0,
+        "rapid_pass_through": 1.0,
+        "max_amount": 66455.68,
+        "flow_through_ratio": 0.3413
+      },
+      {
+        "account_id": "ACC-004405",
+        "family": "cyclic_roundtrip",
+        "ground_truth_label": "shell_roundtripper",
+        "score": 0.0,
+        "rapid_pass_through": 1.0,
+        "max_amount": 97951.44,
+        "flow_through_ratio": 0.5296
+      },
+      {
+        "account_id": "ACC-013180",
+        "family": "cyclic_roundtrip",
+        "ground_truth_label": "shell_roundtripper",
+        "score": 0.0,
+        "rapid_pass_through": 0.0,
+        "max_amount": 91004.65,
+        "flow_through_ratio": 0.2821
+      },
+      {
+        "account_id": "ACC-015615",
+        "family": "cyclic_roundtrip",
+        "ground_truth_label": "shell_roundtripper",
+        "score": 0.0,
+        "rapid_pass_through": 0.0,
+        "max_amount": 98885.6,
+        "flow_through_ratio": 0.2878
+      },
+      {
+        "account_id": "ACC-003198",
+        "family": "cyclic_roundtrip",
+        "ground_truth_label": "shell_roundtripper",
+        "score": 9.999999747378752e-05,
+        "rapid_pass_through": 1.0,
+        "max_amount": 96819.0,
+        "flow_through_ratio": 0.5191
+      },
+      {
+        "account_id": "ACC-001422",
+        "family": "cyclic_roundtrip",
+        "ground_truth_label": "shell_roundtripper",
+        "score": 9.999999747378752e-05,
+        "rapid_pass_through": 0.0,
+        "max_amount": 63105.92,
+        "flow_through_ratio": 0.4164
+      },
+      {
+        "account_id": "ACC-013974",
+        "family": "cyclic_roundtrip",
+        "ground_truth_label": "shell_roundtripper",
+        "score": 9.999999747378752e-05,
+        "rapid_pass_through": 1.0,
+        "max_amount": 94722.8,
+        "flow_through_ratio": 0.3465
+      },
+      {
+        "account_id": "ACC-010778",
+        "family": "cyclic_roundtrip",
+        "ground_truth_label": "shell_roundtripper",
+        "score": 9.999999747378752e-05,
+        "rapid_pass_through": 0.0,
+        "max_amount": 90283.18,
+        "flow_through_ratio": 0.4736
+      }
+    ],
+    "false_positives": [
+      {
+        "account_id": "ACC-001244",
+        "family": "legit_dormant_reactivation",
+        "ground_truth_label": "legitimate_retail",
+        "score": 0.9765999913215637,
+        "rapid_pass_through": 0.0,
+        "max_amount": 145535.59,
+        "flow_through_ratio": 0.9124
+      },
+      {
+        "account_id": "ACC-011370",
+        "family": "legit_dormant_reactivation",
+        "ground_truth_label": "legitimate_retail",
+        "score": 0.9334999918937683,
+        "rapid_pass_through": 1.0,
+        "max_amount": 146483.3,
+        "flow_through_ratio": 0.9808
+      },
+      {
+        "account_id": "ACC-019513",
+        "family": "ordinary",
+        "ground_truth_label": "legitimate_retail",
+        "score": 0.9193000197410583,
+        "rapid_pass_through": 0.0,
+        "max_amount": 58893.76,
+        "flow_through_ratio": 0.7851
+      },
+      {
+        "account_id": "ACC-008431",
+        "family": "student_fee_payment",
+        "ground_truth_label": "legitimate_retail",
+        "score": 0.8998000025749207,
+        "rapid_pass_through": 1.0,
+        "max_amount": 29029.73,
+        "flow_through_ratio": 0.9497
+      },
+      {
+        "account_id": "ACC-011203",
+        "family": "salary_quick_payment",
+        "ground_truth_label": "legitimate_retail",
+        "score": 0.8834999799728394,
+        "rapid_pass_through": 1.0,
+        "max_amount": 103724.21,
+        "flow_through_ratio": 0.6258
+      },
+      {
+        "account_id": "ACC-003392",
+        "family": "student_fee_payment",
+        "ground_truth_label": "legitimate_retail",
+        "score": 0.8614000082015991,
+        "rapid_pass_through": 1.0,
+        "max_amount": 50000.0,
+        "flow_through_ratio": 0.9631
+      },
+      {
+        "account_id": "ACC-014215",
+        "family": "student_fee_payment",
+        "ground_truth_label": "legitimate_retail",
+        "score": 0.8396000266075134,
+        "rapid_pass_through": 1.0,
+        "max_amount": 50000.0,
+        "flow_through_ratio": 0.8953
+      },
+      {
+        "account_id": "ACC-007686",
+        "family": "student_fee_payment",
+        "ground_truth_label": "legitimate_retail",
+        "score": 0.8378999829292297,
+        "rapid_pass_through": 1.0,
+        "max_amount": 39116.14,
+        "flow_through_ratio": 1.0068
+      },
+      {
+        "account_id": "ACC-006298",
+        "family": "legit_dormant_reactivation",
+        "ground_truth_label": "legitimate_retail",
+        "score": 0.819599986076355,
+        "rapid_pass_through": 1.0,
+        "max_amount": 138901.09,
+        "flow_through_ratio": 0.6614
+      },
+      {
+        "account_id": "ACC-001034",
+        "family": "ordinary",
+        "ground_truth_label": "legitimate_retail",
+        "score": 0.8040000200271606,
+        "rapid_pass_through": 1.0,
+        "max_amount": 30879.5,
+        "flow_through_ratio": 1.5611
+      }
+    ]
+  },
+  "external_demo_ledger_check": {
+    "ACC-000001": {
+      "demo_ledger_label": "compromised_victim",
+      "previous_model": 0.7648,
+      "new_model": 0.0724,
+      "rule_score": 25.0
+    },
+    "ACC-000003": {
+      "demo_ledger_label": "mule_first_hop",
+      "previous_model": 0.1012,
+      "new_model": 0.713,
+      "rule_score": 60.0
+    },
+    "ACC-000002": {
+      "demo_ledger_label": "mule_intermediate",
+      "previous_model": 0.154,
+      "new_model": 0.1817,
+      "rule_score": 60.0
+    },
+    "ACC-000005": {
+      "demo_ledger_label": "mule_intermediate",
+      "previous_model": 0.126,
+      "new_model": 0.3822,
+      "rule_score": 60.0
+    },
+    "ACC-000032": {
+      "demo_ledger_label": "dormant_awakened_mule",
+      "previous_model": 0.0159,
+      "new_model": 0.9295,
+      "rule_score": 60.0
+    }
+  },
+  "external_demo_ledger_evaluation": {
+    "note": "Demo ledger (data/v2_fraudshield.db); never used for training, selection or thresholds.",
+    "excluded_cashout_terminal_accounts": 3,
+    "new_model": {
+      "threshold": 0.1752,
+      "positives": 29,
+      "negatives": 9968,
+      "precision": 0.0408,
+      "recall": 0.7931,
+      "f1_score": 0.0776,
+      "roc_auc": 0.9435,
+      "pr_auc": 0.194,
+      "confusion_matrix": [
+        [
+          9427,
+          541
+        ],
+        [
+          6,
+          23
+        ]
+      ],
+      "true_negatives": 9427,
+      "false_positives": 541,
+      "false_negatives": 6,
+      "true_positives": 23,
+      "false_positive_rate": 0.0543
+    },
+    "previous_model_at_0_5": {
+      "threshold": 0.5,
+      "positives": 29,
+      "negatives": 9968,
+      "precision": 0.8929,
+      "recall": 0.8621,
+      "f1_score": 0.8772,
+      "roc_auc": 0.9991,
+      "pr_auc": 0.9134,
+      "confusion_matrix": [
+        [
+          9965,
+          3
+        ],
+        [
+          4,
+          25
+        ]
+      ],
+      "true_negatives": 9965,
+      "false_positives": 3,
+      "false_negatives": 4,
+      "true_positives": 25,
+      "false_positive_rate": 0.0003
+    },
+    "rule_baseline_at_validation_threshold": {
+      "threshold": 0.45,
+      "positives": 29,
+      "negatives": 9968,
+      "precision": 0.0134,
+      "recall": 0.5517,
+      "f1_score": 0.0262,
+      "roc_auc": 0.7309,
+      "pr_auc": 0.0097,
+      "confusion_matrix": [
+        [
+          8793,
+          1175
+        ],
+        [
+          13,
+          16
+        ]
+      ],
+      "true_negatives": 8793,
+      "false_positives": 1175,
+      "false_negatives": 13,
+      "true_positives": 16,
+      "false_positive_rate": 0.1179
+    }
+  },
+  "top_feature_importances": {
+    "customer_type_corporate": 0.3039,
+    "rapid_pass_through": 0.1357,
+    "customer_type_student": 0.1243,
+    "unique_counterparties": 0.0376,
+    "has_dwell_time": 0.0338,
+    "avg_amount": 0.033,
+    "flow_through_ratio": 0.0288,
+    "customer_type_retail": 0.0268,
+    "total_transactions": 0.025,
+    "max_amount": 0.0224
+  },
+  "elapsed_seconds": 6.0
+}
