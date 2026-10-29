@@ -203,6 +203,16 @@ class V2MLInferenceService:
         value = meta.get("decision_threshold")
         return float(value) if isinstance(value, (int, float)) and 0.0 < value < 1.0 else cls.DEFAULT_THRESHOLD
 
+    @classmethod
+    def classify(cls, score: float) -> Tuple[str, str]:
+        """(predicted_class, risk_level) for a 0-1 model score using the served threshold.
+
+        "suspicious" means "at or above the review threshold", not a finding.
+        """
+        threshold = cls.decision_threshold()
+        predicted_class = "suspicious" if score >= threshold else "legitimate"
+        return predicted_class, cls.risk_level_for(score, threshold)
+
     @staticmethod
     def risk_level_for(score: float, threshold: float) -> str:
         """Levels are anchored to the review threshold: anything below it is "low"."""
@@ -231,10 +241,7 @@ class V2MLInferenceService:
         prob_suspicious = float(probs[1])
 
         risk_score = round(prob_suspicious * 100.0, 1)
-        threshold = cls.decision_threshold()
-        risk_level = cls.risk_level_for(prob_suspicious, threshold)
-        # "suspicious" here means "at or above the validated review threshold", not a finding.
-        predicted_class = "suspicious" if prob_suspicious >= threshold else "legitimate"
+        predicted_class, risk_level = cls.classify(prob_suspicious)
 
         # 4. Compute genuine TreeSHAP local contributions
         top_contributions: List[FeatureContribution] = []

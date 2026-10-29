@@ -174,6 +174,12 @@ class HealthResponse(BaseModel):
     service: str
     phase: str
     synthetic_data: bool = True
+    write_access: Optional[str] = Field(
+        None,
+        description="How write endpoints are protected: 'api_key_required', 'open_local_development' "
+        "(no key; local use only) or 'disabled_no_key_configured' (production without a key). "
+        "Reviewer names are self-reported in every mode.",
+    )
 
 
 class CaseReviewProgress(BaseModel):

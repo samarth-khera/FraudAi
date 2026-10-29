@@ -218,8 +218,10 @@ describe position in the money flow only.
   some behaviour families are still small (9–11 accounts), the synthetic suspicious rate (~6%) is far above real
   life, and the account-level features cannot see who the counterparties are. See
   [`docs/ACCOUNT_MODEL_AUDIT.md`](docs/ACCOUNT_MODEL_AUDIT.md).
-- **Reviewer identity is not verified.** Without an API key configured (`ADMIN_API_KEY`), the reviewer
-  name is whatever is typed. The history labels it as unverified. Production use would need sign-in and roles.
+- **Reviewer identity is never verified.** Reviewer names are typed by the user and recorded as self-reported.
+  An API key (`ADMIN_API_KEY`) only controls whether changes are accepted; it does not prove who typed the
+  name. Without a key the server accepts changes from anyone who can reach it, so run it locally only. See
+  [`backend/README.md`](backend/README.md#write-access-and-reviewer-identity).
 - **Audit history is append-only in the application, not tamper-proof.** Events are stored in SQLite with
   server timestamps. They are not cryptographically signed or hash-chained.
 - **Older local data.** A database used with earlier builds may contain reviews of `ACC-000001` under FS-1042
@@ -279,6 +281,7 @@ Reviews are permanent history, so earlier test runs remain visible. In the curre
 | FS-2001 | ACC-000002 | `chrome_verification` | Browser verification review (“keep under review”), 28 Oct 2026. |
 | FS-2001 | ACC-000003 | `acceptance_check` | Acceptance-test review, 29 Oct 2026. A live demo adds a newer decision on top. |
 | FS-2001 | ACC-000003 | `trust_check` | Score-clarity browser check (“escalate for investigation”), 29 Oct 2026. |
+| FS-2001 | ACC-000012 | `hardening_check` | Write-access browser check (“keep under review”), 29 Oct 2026. |
 
 To present from a clean history, stop the backend, move `backend/fraudshield.db` somewhere safe (keep it;
 it is the record), and start the backend again: it recreates the database with only the two sample cases.

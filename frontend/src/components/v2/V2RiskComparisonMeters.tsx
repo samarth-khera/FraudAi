@@ -265,7 +265,7 @@ export const V2RiskComparisonMeters: React.FC<V2RiskComparisonMetersProps> = ({
       </AnimatePresence>
 
       {/* Divergence Notification if Scores Disagree */}
-      {divergence.divergence_detected && (
+      {(divergence.checks_disagree ?? divergence.divergence_detected) && (
         <div className="bg-[#FFF8EE] border border-[#FCD5B5] rounded-2xl p-4 text-xs text-[#1A1714] flex items-start gap-3">
           <div className="w-7 h-7 rounded-xl bg-[#EA8500]/10 flex items-center justify-center shrink-0 text-[#EA8500] mt-0.5">
             <AlertTriangle className="w-4 h-4" />

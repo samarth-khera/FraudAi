@@ -18,6 +18,9 @@ import {
 
 const BASE_URL = import.meta.env.VITE_API_URL || '';
 
+/** How the server protects write endpoints (GET /health). This browser app never sends an API key. */
+export type WriteAccessMode = 'api_key_required' | 'open_local_development' | 'disabled_no_key_configured';
+
 export class ApiError extends Error {
   code: string;
   details?: any;
@@ -68,7 +71,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export const api = {
   // Health
-  getHealth: () => request<{ status: string; service: string; phase: string }>('/health'),
+  getHealth: () =>
+    request<{ status: string; service: string; phase: string; write_access?: WriteAccessMode }>('/health'),
 
   // Cases
   getCases: (skip: number = 0, limit: number = 50) =>

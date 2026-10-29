@@ -470,6 +470,9 @@ describe('V2AccountDetailPage Component', () => {
     expect(screen.getByText(/Rule score \(fixed rules\)/)).toBeInTheDocument();
     expect(screen.queryByText(/Raw Probability/)).toBeNull();
     expect(screen.getAllByText(/suggested for review, not confirmed fraud/).length).toBeGreaterThan(0);
+    // The deprecated score_delta (51.5 = model % minus rule points) is never displayed.
+    expect(screen.queryByText(/51\.5/)).toBeNull();
+    expect(screen.queryByText(/pt delta|points? (difference|gap)/i)).toBeNull();
     expect(screen.getByText(/What Should the Investigator Do Next\?/i)).toBeInTheDocument();
     expect(screen.getByText(/Review High-Value Outlier Transfer of ₹250,000.00/i)).toBeInTheDocument();
   });
