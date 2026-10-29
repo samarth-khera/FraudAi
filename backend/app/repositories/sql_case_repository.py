@@ -166,6 +166,10 @@ class SqlCaseRepository:
         m = self.db.query(FraudCaseModel).filter_by(case_id=case_id).first()
         return _model_to_case(m) if m else None
 
+    def get_case_updated_at(self, case_id: str) -> Optional[datetime]:
+        m = self.db.query(FraudCaseModel).filter_by(case_id=case_id).first()
+        return m.updated_at if m else None
+
     def create_case(
         self,
         case: FraudCase,
@@ -409,17 +413,7 @@ class SqlCaseRepository:
         # Ensure account exists in accounts table
         account_obj = self.db.query(AccountModel).filter_by(account_id=account_id).first()
         if not account_obj:
-            if account_id == "ACC-000001" and case_id == "FS-1042":
-                account_obj = AccountModel(
-                    account_id="ACC-000001",
-                    label="Victim customer Aditi Joshi (synthetic)",
-                    role="reporting_victim",
-                    is_synthetic=True,
-                )
-                self.db.add(account_obj)
-                self.db.flush()
-            else:
-                raise EntityNotFoundError("account_not_found", f"Account '{account_id}' does not exist in the ledger.")
+            raise EntityNotFoundError("account_not_found", f"Account '{account_id}' does not exist in the ledger.")
 
         # Scope verification: Account must be connected to this case
         has_existing_rev = (
@@ -466,8 +460,7 @@ class SqlCaseRepository:
             except Exception:
                 pass
 
-        is_demo_linked = bool(account_id == "ACC-000001" and case_id == "FS-1042")
-        if not (has_existing_rev or is_origin_involved or is_in_case_tx or is_in_trace or is_demo_linked):
+        if not (has_existing_rev or is_origin_involved or is_in_case_tx or is_in_trace):
             raise EntityNotFoundError(
                 "account_not_in_case_scope",
                 f"Account '{account_id}' is not associated with Case '{case_id}'.",
@@ -689,6 +682,18 @@ class SqlCaseRepository:
 
     # ---------------- Trace Paths ----------------
     def save_trace_paths(self, case_id: str, paths: list[FundTracePath]) -> None:
+        # Viewing a case re-runs the trace. Only rewrite (and audit) when the result changed,
+        # so the audit trail records real changes instead of every page view.
+        existing = {
+            (r.path_id, r.account_ids_json, r.transaction_ids_json)
+            for r in self.db.query(CaseTracePathModel).filter_by(case_id=case_id).all()
+        }
+        incoming = {
+            (p.path_id, json.dumps(p.account_ids), json.dumps(p.transaction_ids)) for p in paths
+        }
+        if existing == incoming:
+            return
+
         # Clear previous paths for this case to avoid duplicates on re-tracing
         self.db.query(CaseTracePathModel).filter_by(case_id=case_id).delete()
         for p in paths:

@@ -64,12 +64,6 @@ import { V2NextStepsRecommendation } from '../../components/v2/V2NextStepsRecomm
 import { V2BankingHeroHeader } from '../../components/v2/V2BankingHeroHeader';
 import { V2ModelDivergenceAlert } from '../../components/v2/V2ModelDivergenceAlert';
 
-interface AdjudicationEntry {
-  status: string;
-  notes: string;
-  timestamp: string;
-  investigatorId: string;
-}
 
 export const V2AccountDetailPage: React.FC = () => {
   const { accountId } = useParams<{ accountId: string }>();
@@ -128,12 +122,6 @@ export const V2AccountDetailPage: React.FC = () => {
   const [errorNotFound, setErrorNotFound] = useState<boolean>(false);
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
 
-  // Human Adjudication State
-  const [adjudicationStatus, setAdjudicationStatus] = useState<string>('pending_review');
-  const [adjudicationNotes, setAdjudicationNotes] = useState<string>('');
-  const [adjudicationSaved, setAdjudicationSaved] = useState<boolean>(false);
-  const [adjudicationHistory, setAdjudicationHistory] = useState<AdjudicationEntry[]>([]);
-
   // 1. Initial Load: Save to recents & load adjudication history from localStorage
   useEffect(() => {
     if (!accountId) return;
@@ -147,33 +135,6 @@ export const V2AccountDetailPage: React.FC = () => {
       // Ignore localStorage errors
     }
 
-    try {
-      const adjKey = `fs_v2_adjudication_${accountId}`;
-      const savedAdj = localStorage.getItem(adjKey);
-      if (savedAdj) {
-        const parsed = JSON.parse(savedAdj);
-        setAdjudicationStatus(parsed.status || 'pending_review');
-        setAdjudicationNotes(parsed.notes || '');
-        if (Array.isArray(parsed.history)) {
-          setAdjudicationHistory(parsed.history);
-        } else if (parsed.timestamp) {
-          setAdjudicationHistory([
-            {
-              status: parsed.status,
-              notes: parsed.notes,
-              timestamp: parsed.timestamp,
-              investigatorId: parsed.investigatorId || 'INV-COMPLIANCE-01',
-            },
-          ]);
-        }
-      } else {
-        setAdjudicationStatus('pending_review');
-        setAdjudicationNotes('');
-        setAdjudicationHistory([]);
-      }
-    } catch {
-      // Ignore
-    }
   }, [accountId]);
 
   // 2. Load Core Non-Predictive Account Facts & Ledger Movements on Mount
@@ -279,35 +240,6 @@ export const V2AccountDetailPage: React.FC = () => {
     setTimeout(() => setCopiedId(false), 2000);
   };
 
-  const handleSaveAdjudication = () => {
-    if (!accountId) return;
-    try {
-      const adjKey = `fs_v2_adjudication_${accountId}`;
-      const newEntry: AdjudicationEntry = {
-        status: adjudicationStatus,
-        notes: adjudicationNotes,
-        timestamp: new Date().toISOString(),
-        investigatorId: 'INV-COMPLIANCE-01',
-      };
-      const updatedHistory = [newEntry, ...adjudicationHistory];
-      localStorage.setItem(
-        adjKey,
-        JSON.stringify({
-          status: adjudicationStatus,
-          notes: adjudicationNotes,
-          timestamp: newEntry.timestamp,
-          investigatorId: newEntry.investigatorId,
-          history: updatedHistory,
-        })
-      );
-      setAdjudicationHistory(updatedHistory);
-      setAdjudicationSaved(true);
-      setTimeout(() => setAdjudicationSaved(false), 3000);
-    } catch {
-      // Ignore
-    }
-  };
-
   // 6. Interactive Linked Filtering of Transactions Table
   const allTxns = transactions?.transactions || [];
 
@@ -373,18 +305,18 @@ export const V2AccountDetailPage: React.FC = () => {
               The identifier <code className="bg-[#FAF7F2] border border-[#EAE3D6] px-2 py-0.5 rounded font-mono font-bold text-[#1A1714]">{accountId}</code> was not found in the V2 core banking ledger.
             </p>
             <p className="text-xs text-[#8C857B] max-w-md mx-auto leading-relaxed">
-              If this identifier is an entity from an incident investigation network (such as Case FS-1042 counterparty nodes A100, B200, or C300), review its connected evidence and human adjudication in the Case Dossier.
+              Some cases keep their own account records (for example, A100 in case FS-1042). Those accounts are not in the synthetic ledger; open them from their case instead.
             </p>
           </div>
           <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
             <Link
-              to={`/cases/FS-1042?tab=review&account=${encodeURIComponent(accountId || '')}`}
+              to="/cases"
               className="px-5 py-2.5 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white text-xs font-bold transition-all shadow-xs"
             >
-              Open Incident Dossier (FS-1042)
+              Open investigations
             </Link>
             <Link
-              to="/workspace"
+              to="/tools/accounts"
               className="px-5 py-2.5 rounded-xl bg-white hover:bg-[#FAF7F2] border border-[#EAE3D6] text-[#1A1714] text-xs font-bold transition-all shadow-xs"
             >
               Return to Search Workspace
@@ -426,7 +358,7 @@ export const V2AccountDetailPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-[#6B655B]">
           <div className="flex items-center gap-2">
             <Link
-              to="/v2"
+              to="/tools/accounts"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#EAE3D6] text-[#6B655B] hover:text-[#1A1714] hover:border-[#DDD4C4] transition-all font-medium shadow-2xs"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
@@ -475,7 +407,7 @@ export const V2AccountDetailPage: React.FC = () => {
             </span>
             <span className="text-[#8C857B]">→</span>
             <span className="px-2.5 py-1 rounded-lg bg-[#FFF4E6] border border-[#FCD5B5] text-[#EA8500] font-bold">
-              4. Human Review & Adjudication
+              4. Human review (in a case)
             </span>
           </div>
         </div>
@@ -1040,7 +972,7 @@ export const V2AccountDetailPage: React.FC = () => {
                   traceData={traceData}
                   onSelectNode={(node) => {
                     if (node && node.account_id && node.account_id !== accountId) {
-                      navigate(`/v2/accounts/${encodeURIComponent(node.account_id)}`);
+                      navigate(`/tools/accounts/${encodeURIComponent(node.account_id)}`);
                     }
                   }}
                 />
@@ -1213,7 +1145,7 @@ export const V2AccountDetailPage: React.FC = () => {
                             </td>
                             <td className="py-3 px-4">
                               <Link
-                                to={`/v2/accounts/${encodeURIComponent(t.counterparty_account_id)}`}
+                                to={`/tools/accounts/${encodeURIComponent(t.counterparty_account_id)}`}
                                 className="font-mono text-[#EA8500] hover:underline font-medium"
                               >
                                 {t.counterparty_account_id}
@@ -1292,13 +1224,13 @@ export const V2AccountDetailPage: React.FC = () => {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-[11px]">
                     <div>
                       <span className="text-[#8C857B] block uppercase text-[10px]">Origin Account</span>
-                      <Link to={`/v2/accounts/${selectedTxnForDetail.origin_account_id}`} className="text-[#EA8500] hover:underline font-bold">
+                      <Link to={`/tools/accounts/${selectedTxnForDetail.origin_account_id}`} className="text-[#EA8500] hover:underline font-bold">
                         {selectedTxnForDetail.origin_account_id}
                       </Link>
                     </div>
                     <div>
                       <span className="text-[#8C857B] block uppercase text-[10px]">Destination Account</span>
-                      <Link to={`/v2/accounts/${selectedTxnForDetail.destination_account_id}`} className="text-[#EA8500] hover:underline font-bold">
+                      <Link to={`/tools/accounts/${selectedTxnForDetail.destination_account_id}`} className="text-[#EA8500] hover:underline font-bold">
                         {selectedTxnForDetail.destination_account_id}
                       </Link>
                     </div>
@@ -1325,96 +1257,20 @@ export const V2AccountDetailPage: React.FC = () => {
         {/* TAB 4: COMPLIANCE & HUMAN ADJUDICATION                                   */}
         {/* ========================================================================= */}
         {activeTab === 'review' && (
-          <div ref={adjudicationRef} className="space-y-6 gsap-fade-in">
-            <div className="bg-white rounded-3xl border border-[#EAE3D6] p-6 sm:p-8 shadow-xs space-y-6">
-              <div className="border-b border-[#FAF7F2] pb-4">
-                <h3 className="text-lg font-bold text-[#1A1714] font-display flex items-center gap-2">
-                  <UserCheck className="w-5 h-5 text-[#EA8500]" />
-                  Human Compliance Adjudication
-                </h3>
-                <p className="text-xs text-[#6B655B] mt-0.5">
-                  Record official human review decisions. Algorithm outputs provide decision support and require human oversight.
-                </p>
-              </div>
-
-              {/* Adjudication Form */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-xs font-bold text-[#1A1714] block mb-1">
-                      Adjudication Finding Status
-                    </label>
-                    <select
-                      value={adjudicationStatus}
-                      onChange={(e) => setAdjudicationStatus(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] text-xs font-bold text-[#1A1714] focus:outline-none focus:border-[#EA8500]"
-                    >
-                      <option value="pending_review">Pending Additional Review</option>
-                      <option value="verified_legitimate_victim">Verified Legitimate Customer (Compromised/Victim)</option>
-                      <option value="confirmed_mule_conduit">Confirmed Money Mule Conduit</option>
-                      <option value="escalated_for_legal_subpoena">Escalated for Law Enforcement Subpoena</option>
-                      <option value="cleared_routine">Cleared — Standard Retail Behavior</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-[#1A1714] block mb-1">
-                      Investigator Case Notes
-                    </label>
-                    <textarea
-                      rows={4}
-                      placeholder="Document factual findings, customer contact logs, and rationale for this determination..."
-                      value={adjudicationNotes}
-                      onChange={(e) => setAdjudicationNotes(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] text-xs text-[#1A1714] placeholder-[#8C857B] focus:outline-none focus:border-[#EA8500]"
-                    />
-                  </div>
-
-                  <button
-                    onClick={handleSaveAdjudication}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white text-xs font-bold transition-all shadow-xs"
-                  >
-                    <Save className="w-4 h-4" />
-                    <span>Record Finding</span>
-                  </button>
-
-                  {adjudicationSaved && (
-                    <span className="text-xs text-[#10B981] font-bold inline-flex items-center gap-1 ml-3">
-                      <CheckCircle2 className="w-4 h-4" /> Saved to Audit Trail
-                    </span>
-                  )}
-                </div>
-
-                {/* Audit Trail List */}
-                <div className="bg-[#FAF7F2] rounded-2xl border border-[#EAE3D6] p-4 space-y-3">
-                  <div className="flex items-center justify-between border-b border-[#EAE3D6] pb-2">
-                    <span className="text-xs font-bold text-[#1A1714]">Logged Adjudication Audit Trail</span>
-                    <span className="text-[11px] font-mono text-[#6B655B]">{adjudicationHistory.length} records</span>
-                  </div>
-
-                  {adjudicationHistory.length > 0 ? (
-                    <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
-                      {adjudicationHistory.map((item, idx) => (
-                        <div key={idx} className="bg-white rounded-xl p-3 border border-[#EAE3D6] text-xs space-y-1">
-                          <div className="flex items-center justify-between">
-                            <span className="font-bold text-[#EA8500] uppercase text-[10px]">
-                              {item.status.replace(/_/g, ' ')}
-                            </span>
-                            <span className="text-[10px] font-mono text-[#8C857B]">
-                              {new Date(item.timestamp).toLocaleString('en-IN')}
-                            </span>
-                          </div>
-                          <p className="text-[#1A1714] text-[11px]">"{item.notes}"</p>
-                          <div className="text-[10px] text-[#8C857B] font-mono">By: {item.investigatorId}</div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-[#6B655B] italic py-4 text-center">
-                      No previous human adjudications recorded for this account.
-                    </p>
-                  )}
-                </div>
+          <div ref={adjudicationRef} className="space-y-6">
+            <div className="bg-white rounded-3xl border border-[#EAE3D6] p-6 sm:p-8 shadow-xs space-y-4 max-w-3xl">
+              <h3 className="text-lg font-bold text-[#1A1714]">Review decisions are recorded inside a case</h3>
+              <p className="text-sm text-[#6B655B] leading-relaxed">
+                This page looks up an account on its own, outside any investigation. A decision about an account only makes
+                sense in the context of a specific complaint, so FraudShield records decisions in a case’s Review &amp; history
+                section, where they are saved on the server with the reviewer’s reasoning.
+              </p>
+              <p className="text-sm text-[#6B655B] leading-relaxed">
+                Accounts ACC-000001, ACC-000002, ACC-000003, ACC-000005, ACC-000009 and ACC-000012 appear in sample case FS-2001.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link to="/cases/FS-2001?section=review" className="btn-primary">Open case FS-2001</Link>
+                <Link to="/cases" className="btn-secondary">All investigations</Link>
               </div>
             </div>
           </div>

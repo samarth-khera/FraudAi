@@ -7,6 +7,7 @@ and computes calibrated risk probabilities with native TreeSHAP local explanatio
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -39,6 +40,8 @@ class ModelUnavailableException(Exception):
     pass
 
 
+logger = logging.getLogger("fraudshield.v2.ml")
+
 _REPO_ROOT = Path(__file__).resolve().parents[4]
 
 
@@ -49,7 +52,10 @@ class V2MLInferenceService:
     _account_metadata: Optional[Dict[str, Any]] = None
     _paysim_metadata: Optional[Dict[str, Any]] = None
 
-    ACCOUNT_ARTIFACTS_DIR = _REPO_ROOT / "ml/artifacts/v2/account_model"
+    # Active account model. v2-account-1.0.0 remains in ml/artifacts/v2/account_model for comparison;
+    # see docs/ACCOUNT_MODEL_AUDIT.md for why it was replaced.
+    ACCOUNT_ARTIFACTS_DIR = _REPO_ROOT / "ml/artifacts/v2/account_model_v2"
+    DEFAULT_THRESHOLD = 0.5
     PAYSIM_ARTIFACTS_DIR = _REPO_ROOT / "ml/artifacts/v2/paysim_benchmark"
 
     @classmethod
@@ -60,8 +66,9 @@ class V2MLInferenceService:
 
         model_path = cls.ACCOUNT_ARTIFACTS_DIR / "model.joblib"
         if not model_path.exists():
+            logger.error("V2 account model binary not found at %s", model_path)
             raise ModelUnavailableException(
-                f"V2 Account ML model binary not found at {model_path}. Run training pipeline first."
+                "The account risk model file is missing on the server. Run the account model training pipeline."
             )
 
         try:
@@ -72,7 +79,10 @@ class V2MLInferenceService:
                     cls._account_metadata = json.load(f)
             return cls._account_model
         except Exception as e:
-            raise ModelUnavailableException(f"Failed to load V2 Account ML model: {e}")
+            logger.error("Failed to load V2 account model from %s: %s", model_path, e, exc_info=True)
+            raise ModelUnavailableException(
+                "The account risk model file exists but could not be loaded. Check the server logs."
+            )
 
     @classmethod
     def get_model_status(cls) -> ModelStatusResponse:
@@ -108,11 +118,16 @@ class V2MLInferenceService:
                 "test_accounts_count": acc_meta.get("scenario_split_strategy", {}).get("test_accounts_count"),
                 "test_suspicious_count": acc_meta.get("scenario_split_strategy", {}).get("test_suspicious_count"),
                 "test_normal_count": acc_meta.get("scenario_split_strategy", {}).get("test_normal_count"),
+                "validation_suspicious_count": acc_meta.get("scenario_split_strategy", {}).get("validation_suspicious_count"),
+                "train_suspicious_count": acc_meta.get("scenario_split_strategy", {}).get("train_suspicious_count"),
                 "held_out_test_scenarios": acc_meta.get("scenario_split_strategy", {}).get("held_out_test_scenarios"),
             } if acc_meta else None,
             baseline_comparison=acc_meta.get("baseline_comparison"),
             leakage_protections=acc_meta.get("leakage_protections"),
             features=acc_meta.get("features", FEATURE_NAMES) if acc_available else None,
+            decision_threshold=acc_meta.get("decision_threshold") if acc_meta else None,
+            score_semantics=acc_meta.get("score_semantics") if acc_meta else None,
+            operational_notes=acc_meta.get("operational_notes") if acc_meta else None,
         )
 
         # 2. PaySim benchmark status
@@ -147,18 +162,56 @@ class V2MLInferenceService:
             features=paysim_meta.get("features"),
         )
 
-        overall = "healthy" if acc_available else "degraded_missing_account_model"
+        # Report readiness from an actual load attempt, not just file presence.
+        status_detail: Optional[str] = None
+        inference_ready = False
+        if acc_available:
+            try:
+                cls.load_account_model()
+                inference_ready = True
+            except ModelUnavailableException as e:
+                status_detail = str(e)
+        else:
+            status_detail = "The account risk model file is missing on the server."
+
+        if inference_ready:
+            overall = "healthy"
+        elif acc_available:
+            overall = "degraded_account_model_load_failed"
+        else:
+            overall = "degraded_missing_account_model"
+        if inference_ready and not paysim_available:
+            status_detail = "Account model ready. The PaySim benchmark artifact is missing, so its metrics are unavailable."
 
         return ModelStatusResponse(
             account_model=account_info,
             paysim_benchmark=paysim_info,
             overall_status=overall,
-            inference_ready=acc_available,
+            inference_ready=inference_ready,
+            status_detail=status_detail,
             disclaimer=(
                 "Models serve strictly as decision support. Performance metrics reflect synthetic held-out evaluation "
                 "and do not guarantee real-world banking accuracy. Automated freezing or punitive actions are strictly prohibited."
             ),
         )
+
+    @classmethod
+    def decision_threshold(cls) -> float:
+        """Review threshold stored with the active model (selected on validation data)."""
+        meta = cls._account_metadata or {}
+        value = meta.get("decision_threshold")
+        return float(value) if isinstance(value, (int, float)) and 0.0 < value < 1.0 else cls.DEFAULT_THRESHOLD
+
+    @staticmethod
+    def risk_level_for(score: float, threshold: float) -> str:
+        """Levels are anchored to the review threshold: anything below it is "low"."""
+        if score < threshold:
+            return "low"
+        if score < max(0.5, threshold):
+            return "elevated"
+        if score < 0.8:
+            return "high"
+        return "critical"
 
     @classmethod
     def assess_account(cls, db: Session, account_id: str) -> Optional[AccountMLAssessmentResponse]:
@@ -177,17 +230,10 @@ class V2MLInferenceService:
         prob_suspicious = float(probs[1])
 
         risk_score = round(prob_suspicious * 100.0, 1)
-
-        if risk_score < 30.0:
-            risk_level = "low"
-        elif risk_score < 70.0:
-            risk_level = "elevated"
-        elif risk_score < 90.0:
-            risk_level = "high"
-        else:
-            risk_level = "critical"
-
-        predicted_class = "suspicious" if prob_suspicious >= 0.50 else "legitimate"
+        threshold = cls.decision_threshold()
+        risk_level = cls.risk_level_for(prob_suspicious, threshold)
+        # "suspicious" here means "at or above the validated review threshold", not a finding.
+        predicted_class = "suspicious" if prob_suspicious >= threshold else "legitimate"
 
         # 4. Compute genuine TreeSHAP local contributions
         top_contributions: List[FeatureContribution] = []

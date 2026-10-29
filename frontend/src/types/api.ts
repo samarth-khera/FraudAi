@@ -2,7 +2,7 @@
  * Exact TypeScript definitions matching backend FastAPI schemas and domain models.
  */
 
-export type TransactionType = 'UPI' | 'IMPS' | 'NEFT' | 'RTGS' | 'OTHER' | 'TRANSFER' | 'CASH_OUT' | 'PAYMENT' | 'CASH_IN' | 'DEBIT';
+export type TransactionType = 'UPI' | 'IMPS' | 'NEFT' | 'RTGS' | 'ATM_CASH_OUT' | 'OTHER' | 'TRANSFER' | 'CASH_OUT' | 'PAYMENT' | 'CASH_IN' | 'DEBIT';
 
 export type InvestigationStatus = 'open' | 'under_investigation' | 'closed';
 
@@ -59,7 +59,17 @@ export interface FraudCase {
   investigation_status: InvestigationStatus;
   description: string;
   created_at?: string;
-  updated_at?: string;
+  updated_at?: string | null;
+  /** 'case_ledger': accounts exist only in this case's records. 'v2_synthetic_ledger': accounts are synthetic-ledger records. */
+  account_dataset?: 'case_ledger' | 'v2_synthetic_ledger' | string;
+  dataset_note?: string;
+  review_progress?: CaseReviewProgress | null;
+}
+
+export interface CaseReviewProgress {
+  accounts_in_case: number;
+  decisions_recorded: number;
+  last_decision_at: string | null;
 }
 
 export interface CaseListResponse {

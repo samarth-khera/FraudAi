@@ -32,7 +32,7 @@ if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
 interface SampleCase {
   id: string;
   name: string;
-  category: 'victim' | 'mule' | 'counterparty' | 'baseline';
+  category: 'in_case' | 'not_in_case';
   roleTag: string;
   tagColor: string;
   badgeDot: string;
@@ -42,58 +42,56 @@ interface SampleCase {
   findingNote: string;
 }
 
+// Facts taken from the synthetic ledger and sample case FS-2001. Ground-truth scenario labels are
+// deliberately not shown: they are training labels, not findings an investigator would have.
 const SAMPLE_ACCOUNTS: SampleCase[] = [
   {
     id: 'ACC-000001',
     name: 'Aditi Joshi',
-    category: 'victim',
-    roleTag: 'Scam Victim Demo',
-    tagColor: 'bg-[#FFF0F2] text-[#BE123C] border-[#FECDD3]',
-    badgeDot: 'bg-[#E11D48]',
-    summary:
-      'A customer tricked into sending money in a payment scam. Their savings were drained, but regular banking rules did not catch it — showing why AI protection matters.',
-    activityCount: '56 transfers',
-    patternLabel: 'Savings drained (₹250k)',
-    findingNote: 'AI flagged unusual drain · Protected from wrongful freezing',
-  },
-  {
-    id: 'ACC-000002',
-    name: 'Sara Bhat',
-    category: 'mule',
-    roleTag: 'Money Mule Demo',
-    tagColor: 'bg-[#FFF4E6] text-[#C05621] border-[#FCD5B5]',
+    category: 'in_case',
+    roleTag: 'FS-2001 · reporting customer',
+    tagColor: 'bg-[#FFF4E6] text-[#B45309] border-[#FCD5B5]',
     badgeDot: 'bg-[#EA8500]',
-    summary:
-      'A pass-through account used to move stolen money quickly (<12 minutes) before the funds can be frozen or recalled.',
-    activityCount: '33 transfers',
-    patternLabel: 'Rapid pass-through under 12 min',
-    findingNote: 'Flagged for unusually fast transfer speed',
+    summary: 'Sent the reported ₹2,50,000 IMPS transfer to ACC-000003 on 16 Jan 2026.',
+    activityCount: '56 transactions',
+    patternLabel: 'Reporting customer',
+    findingNote: 'Open case FS-2001 to review it in context',
   },
   {
     id: 'ACC-000003',
     name: 'Ishan Reddy',
-    category: 'counterparty',
-    roleTag: 'Connected Account Demo',
-    tagColor: 'bg-[#EBF5FF] text-[#1E40AF] border-[#BFDBFE]',
-    badgeDot: 'bg-[#3B82F6]',
-    summary:
-      'A recipient account 2 transfers down the payment chain. Shows how far the money trail goes and where investigation bounds stop.',
-    activityCount: '48 transfers',
-    patternLabel: '2 steps away from source',
-    findingNote: 'Tracked in money map · Exposure bounded',
+    category: 'in_case',
+    roleTag: 'FS-2001 · first receiver',
+    tagColor: 'bg-[#FFF4E6] text-[#B45309] border-[#FCD5B5]',
+    badgeDot: 'bg-[#EA8500]',
+    summary: 'Received the reported ₹2,50,000 and sent ₹2,45,000 on to two accounts within 10 minutes.',
+    activityCount: '54 transactions',
+    patternLabel: 'First receiver',
+    findingNote: 'Receiving money in a case is not a finding',
   },
   {
-    id: 'ACC-000010',
-    name: 'Arjun Sengupta',
-    category: 'baseline',
-    roleTag: 'Normal Account Demo',
-    tagColor: 'bg-[#EAF7EE] text-[#166534] border-[#BBF7D0]',
-    badgeDot: 'bg-[#22C55E]',
-    summary:
-      'A regular customer with everyday shopping and salary transfers. Confirms genuine customer accounts are never wrongly flagged.',
-    activityCount: '50 transfers',
-    patternLabel: 'Steady everyday transfers',
-    findingNote: 'Low risk · Zero suspicious activity',
+    id: 'ACC-000002',
+    name: 'Sara Bhat',
+    category: 'in_case',
+    roleTag: 'FS-2001 · passed money on',
+    tagColor: 'bg-[#FFF4E6] text-[#B45309] border-[#FCD5B5]',
+    badgeDot: 'bg-[#EA8500]',
+    summary: 'Received ₹1,20,000 from ACC-000003 and sent ₹1,18,000 onward 12 minutes later.',
+    activityCount: '33 transactions',
+    patternLabel: 'Hop 2 in FS-2001',
+    findingNote: 'Receiving money in a case is not a finding',
+  },
+  {
+    id: 'ACC-000004',
+    name: 'Ishan Patel',
+    category: 'not_in_case',
+    roleTag: 'Not in a sample case',
+    tagColor: 'bg-[#FAF7F2] text-[#6B655B] border-[#EAE3D6]',
+    badgeDot: 'bg-[#8C857B]',
+    summary: 'A retail account with no connection to the sample cases. Useful for comparison.',
+    activityCount: '50 transactions',
+    patternLabel: 'No case connection',
+    findingNote: 'Automated checks still run on its full ledger',
   },
 ];
 
@@ -117,7 +115,7 @@ export const V2SearchPage: React.FC = () => {
   const [query, setQuery] = useState('');
   const [modelStatus, setModelStatus] = useState<V2ModelStatusResponse | null>(null);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const [selectedFilter, setSelectedFilter] = useState<'all' | 'victim' | 'mule' | 'counterparty' | 'baseline'>('all');
+  const [selectedFilter, setSelectedFilter] = useState<'all' | 'in_case' | 'not_in_case'>('all');
   const [searchError, setSearchError] = useState('');
   const [isInputFocused, setIsInputFocused] = useState(false);
 
@@ -279,14 +277,14 @@ export const V2SearchPage: React.FC = () => {
     }
     const normalized = normalizeAccountId(trimmed);
     if (normalized) {
-      navigate(`/v2/accounts/${encodeURIComponent(normalized)}`);
+      navigate(`/tools/accounts/${encodeURIComponent(normalized)}`);
     } else {
       setSearchError('Please enter a valid account ID, such as ACC-000001 or a number like 1.');
     }
   };
 
   const handleSelectAccount = (id: string) => {
-    navigate(`/v2/accounts/${encodeURIComponent(id)}`);
+    navigate(`/tools/accounts/${encodeURIComponent(id)}`);
   };
 
   const clearRecentSearches = () => {
@@ -455,10 +453,10 @@ export const V2SearchPage: React.FC = () => {
                       whileTap={{ scale: 0.97 }}
                       onClick={() => handleSelectAccount('ACC-000001')}
                       className="gsap-shortcut-chip h-7 sm:h-8 px-3 rounded-full bg-[#FFF0F2] hover:bg-[#FFE4E6] text-[#BE123C] border border-[#FECDD3] font-mono text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                      title="Demo: Scam victim account"
+                      title="FS-2001 reporting customer"
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-[#E11D48]"></span>
-                      <span>ACC-000001 (Victim)</span>
+                      <span>ACC-000001 · reporter</span>
                     </motion.button>
 
                     <motion.button
@@ -467,10 +465,10 @@ export const V2SearchPage: React.FC = () => {
                       whileTap={{ scale: 0.97 }}
                       onClick={() => handleSelectAccount('ACC-000002')}
                       className="gsap-shortcut-chip h-7 sm:h-8 px-3 rounded-full bg-[#FFF4E6] hover:bg-[#FFE8CC] text-[#C05621] border border-[#FCD5B5] font-mono text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                      title="Demo: Pass-through money mule"
+                      title="FS-2001 hop 2"
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-[#EA8500]"></span>
-                      <span>ACC-000002 (Mule)</span>
+                      <span>ACC-000002 · hop 2</span>
                     </motion.button>
 
                     <motion.button
@@ -479,22 +477,22 @@ export const V2SearchPage: React.FC = () => {
                       whileTap={{ scale: 0.97 }}
                       onClick={() => handleSelectAccount('ACC-000003')}
                       className="gsap-shortcut-chip h-7 sm:h-8 px-3 rounded-full bg-[#EBF5FF] hover:bg-[#DBEAFE] text-[#1E40AF] border border-[#BFDBFE] font-mono text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                      title="Demo: Connected downstream recipient"
+                      title="FS-2001 first receiver"
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6]"></span>
-                      <span>ACC-000003 (Hop 2)</span>
+                      <span>ACC-000003 · first receiver</span>
                     </motion.button>
 
                     <motion.button
                       type="button"
                       whileHover={{ scale: 1.03, y: -1 }}
                       whileTap={{ scale: 0.97 }}
-                      onClick={() => handleSelectAccount('ACC-000010')}
+                      onClick={() => handleSelectAccount('ACC-000004')}
                       className="gsap-shortcut-chip h-7 sm:h-8 px-3 rounded-full bg-[#EAF7EE] hover:bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0] font-mono text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                      title="Demo: Normal everyday customer"
+                      title="Not connected to a sample case"
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]"></span>
-                      <span>ACC-000010 (Normal)</span>
+                      <span>ACC-000004 · no case</span>
                     </motion.button>
                   </div>
 
@@ -680,24 +678,15 @@ export const V2SearchPage: React.FC = () => {
                 Try an example account
               </h2>
               <p className="text-xs sm:text-sm text-[#6B655B] mt-1 font-normal">
-                Curated Synthetic Ledger Investigation Cases to explore how the system works
+                Synthetic-ledger accounts, three of them from sample case FS-2001
               </p>
             </div>
 
             {/* Framer Motion Animated Filter Pills */}
             <div className="flex items-center gap-1.5 p-1 bg-[#FAF7F2] border border-[#EAE3D6] rounded-2xl shadow-2xs text-xs flex-wrap">
               <span className="text-[#8C857B] text-xs px-2 hidden sm:inline font-semibold">Filter:</span>
-              {(['all', 'victim', 'mule', 'counterparty', 'baseline'] as const).map((filter) => {
-                const label =
-                  filter === 'all'
-                    ? 'All (4)'
-                    : filter === 'victim'
-                    ? 'Victim'
-                    : filter === 'mule'
-                    ? 'Mule'
-                    : filter === 'counterparty'
-                    ? 'Connected'
-                    : 'Normal';
+              {(['all', 'in_case', 'not_in_case'] as const).map((filter) => {
+                const label = filter === 'all' ? 'All (4)' : filter === 'in_case' ? 'In case FS-2001' : 'Not in a case';
 
                 const isSelected = selectedFilter === filter;
 
@@ -892,10 +881,15 @@ export const V2SearchPage: React.FC = () => {
                     <div className="w-11 h-11 rounded-2xl bg-[#FFF4E6] border border-[#FCD5B5] flex items-center justify-center text-[#EA8500] shadow-2xs group-hover:scale-105 transition-transform duration-300">
                       <Cpu className="w-5 h-5" />
                     </div>
-                    {modelStatus?.inference_ready ? (
+                    {modelStatus === null ? (
+                      <span className="flex items-center gap-1.5 text-xs font-bold text-[#8C857B] bg-[#FAF7F2] px-3.5 py-1 rounded-full border border-[#EAE3D6]">
+                        <span className="w-2 h-2 rounded-full bg-[#8C857B] animate-pulse"></span>
+                        <span>CHECKING</span>
+                      </span>
+                    ) : modelStatus.inference_ready ? (
                       <span className="flex items-center gap-1.5 text-xs font-bold text-[#166534] bg-[#EAF7EE] px-3.5 py-1 rounded-full border border-[#BBF7D0]">
                         <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse"></span>
-                        <span>ONLINE</span>
+                        <span>{modelStatus.overall_status === 'healthy' ? 'ONLINE' : 'OPERATIONAL'}</span>
                       </span>
                     ) : (
                       <span className="flex items-center gap-1.5 text-xs font-bold text-[#BE123C] bg-[#FFF0F2] px-3.5 py-1 rounded-full border border-[#FECDD3]">

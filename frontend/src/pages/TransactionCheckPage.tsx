@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import React, { useState } from 'react';
 import {
   ShieldAlert,
   ShieldCheck,
@@ -13,7 +12,6 @@ import {
   TrendingDown,
   Minus,
   BarChart3,
-  Link2,
   ServerCrash,
   Layers,
   Sliders,
@@ -22,35 +20,13 @@ import { api, ApiError } from '../services/api';
 import {
   RiskExplainResponse,
   RiskScoreRequest,
-  TracedTransaction,
 } from '../types/api';
 
 interface LinkedTxMeta {
   transactionId: string;
-  caseId: string;
-  sender?: string;
-  receiver?: string;
-  originalRail?: string;
-}
-
-function mapRailToPaySimType(rail: string): string {
-  const upper = (rail || '').toUpperCase();
-  if (['CASH_IN', 'CASH_OUT', 'DEBIT', 'PAYMENT', 'TRANSFER'].includes(upper)) {
-    return upper;
-  }
-  return 'TRANSFER';
-}
-
-function deriveStepFromTimestamp(ts?: string): number {
-  if (!ts) return 11;
-  const d = new Date(ts);
-  if (Number.isNaN(d.getTime())) return 11;
-  return d.getUTCHours() + 1;
 }
 
 export const TransactionCheckPage: React.FC = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-
   const [formData, setFormData] = useState<RiskScoreRequest>({
     step: 12,
     type: 'TRANSFER',
@@ -60,7 +36,6 @@ export const TransactionCheckPage: React.FC = () => {
   });
 
   const [linkedTx, setLinkedTx] = useState<LinkedTxMeta | null>(null);
-  const [caseTransactions, setCaseTransactions] = useState<TracedTransaction[]>([]);
   const [contributionView, setContributionView] = useState<'engineered' | 'encoded'>('engineered');
 
   const [loading, setLoading] = useState(false);
@@ -109,87 +84,7 @@ export const TransactionCheckPage: React.FC = () => {
     },
   ];
 
-  useEffect(() => {
-    api
-      .getCaseTransactions('FS-1042')
-      .then((res) => {
-        setCaseTransactions((res.transactions as unknown as TracedTransaction[]) || []);
-      })
-      .catch(() => {
-        // Non-blocking
-      });
-  }, []);
 
-  useEffect(() => {
-    const txId = searchParams.get('txId');
-    const caseId = searchParams.get('caseId') || 'FS-1042';
-    const amountParam = searchParams.get('amount');
-    const typeParam = searchParams.get('type');
-    const stepParam = searchParams.get('step');
-    const senderParam = searchParams.get('sender');
-    const receiverParam = searchParams.get('receiver');
-
-    if (txId && amountParam) {
-      const amt = Number(amountParam);
-      const stepNum = stepParam ? Math.max(1, Math.round(Number(stepParam))) : 11;
-      const mappedType = mapRailToPaySimType(typeParam || 'TRANSFER');
-      if (Number.isFinite(amt) && amt >= 0) {
-        setFormData({
-          step: stepNum,
-          type: mappedType,
-          amount: amt,
-          oldbalanceOrg: amt,
-          oldbalanceDest: 0,
-        });
-        setLinkedTx({
-          transactionId: txId,
-          caseId,
-          sender: senderParam || undefined,
-          receiver: receiverParam || undefined,
-          originalRail: typeParam || undefined,
-        });
-      }
-    } else if (txId && !amountParam) {
-      const found = caseTransactions.find((t) => t.transaction_id === txId);
-      if (found) {
-        setFormData({
-          step: deriveStepFromTimestamp(found.timestamp),
-          type: mapRailToPaySimType(found.transaction_type),
-          amount: found.amount,
-          oldbalanceOrg: found.amount,
-          oldbalanceDest: 0,
-        });
-        setLinkedTx({
-          transactionId: found.transaction_id,
-          caseId,
-          sender: found.sender_account_id,
-          receiver: found.receiver_account_id,
-          originalRail: found.transaction_type,
-        });
-      }
-    }
-  }, [searchParams, caseTransactions]);
-
-  const handleSelectCaseTx = (tx: TracedTransaction) => {
-    const mappedType = mapRailToPaySimType(tx.transaction_type);
-    const stepNum = deriveStepFromTimestamp(tx.timestamp);
-    setFormData({
-      step: stepNum,
-      type: mappedType,
-      amount: tx.amount,
-      oldbalanceOrg: tx.amount,
-      oldbalanceDest: 0,
-    });
-    setLinkedTx({
-      transactionId: tx.transaction_id,
-      caseId: 'FS-1042',
-      sender: tx.sender_account_id,
-      receiver: tx.receiver_account_id,
-      originalRail: tx.transaction_type,
-    });
-    setResult(null);
-    setError(null);
-  };
 
   const handleInputChange = (field: keyof RiskScoreRequest, value: string) => {
     setFormData((prev) => ({
@@ -277,78 +172,33 @@ export const TransactionCheckPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#0F766E]">
-              03 / PRE-TRANSACTION RISK &amp; EXPLAINABILITY WORKBENCH
+              Tools · PaySim benchmark
             </span>
             <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#0B1322] text-[#2DD4BF] border border-[#1C2B45]">
               XGBOOST + TREESHAP
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-[#0B1322] tracking-tight mt-0.5">
-            Explainable Transaction Risk Scoring
+            Transaction model check
           </h1>
           <p className="text-xs text-[#475569] mt-0.5">
-            Evaluate pre-transaction telemetry and decompose individual predictions into exact additive log-odds feature contributions.
+            Score one hypothetical transaction with the PaySim benchmark model and see which inputs moved the score (TreeSHAP log-odds contributions).
           </p>
         </div>
 
-        {linkedTx && (
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-[#0B1322] border border-[#1C2B45] text-xs text-white font-mono">
-            <Link2 className="w-3.5 h-3.5 text-[#2DD4BF] flex-shrink-0" />
-            <span>
-              Linked to <strong className="text-[#2DD4BF]">{linkedTx.transactionId}</strong>
-              {linkedTx.sender && linkedTx.receiver ? ` (${linkedTx.sender} → ${linkedTx.receiver})` : ''}
-              {linkedTx.originalRail ? ` [${linkedTx.originalRail}]` : ''}
-            </span>
-            <Link
-              to={`/app/cases/${linkedTx.caseId}`}
-              className="ml-1 underline font-semibold text-[#2DD4BF] hover:text-white"
-            >
-              Case {linkedTx.caseId}
-            </Link>
-            <button
-              type="button"
-              onClick={() => {
-                setLinkedTx(null);
-                setSearchParams({});
-              }}
-              className="ml-1 text-[10px] text-slate-400 hover:text-white font-bold"
-              title="Unlink transaction"
-            >
-              ✕
-            </button>
-          </div>
-        )}
       </div>
 
-      {/* Benchmark Scenario & Case FS-1042 Leg Selector Strip */}
+      {/* Benchmark example selector */}
       <div className="forensic-panel p-4 space-y-3.5">
-        <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-[#E2DFD7]">
+        <div className="pb-2.5 border-b border-[#E2DFD7] space-y-1.5">
           <span className="font-mono text-[11px] font-bold text-[#0B1322] uppercase tracking-wider">
-            1. Load Benchmark Scenario or Link Case FS-1042 Leg
+            1. Load an example transaction
           </span>
-          {caseTransactions.length > 0 && (
-            <div className="flex items-center gap-2">
-              <label htmlFor="case-tx-select" className="text-[11px] font-mono font-semibold text-[#475569]">
-                Case FS-1042 Leg:
-              </label>
-              <select
-                id="case-tx-select"
-                value={linkedTx?.transactionId || ''}
-                onChange={(e) => {
-                  const found = caseTransactions.find((t) => t.transaction_id === e.target.value);
-                  if (found) handleSelectCaseTx(found);
-                }}
-                className="px-2.5 py-1 rounded bg-[#FAF9F6] border border-[#D6D3CD] text-xs font-mono font-semibold text-[#0B1322]"
-              >
-                <option value="">-- Select Case Transaction --</option>
-                {caseTransactions.map((t) => (
-                  <option key={t.transaction_id} value={t.transaction_id}>
-                    {t.transaction_id}: {t.sender_account_id} → {t.receiver_account_id} (₹{t.amount.toLocaleString()} {t.transaction_type})
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+          <p className="text-xs text-[#475569] leading-relaxed">
+            This tool uses the PaySim benchmark model, trained on a public mobile-money simulation. It cannot score
+            transactions from the sample cases: they come from different data, and the pre-transfer balances it needs
+            are not in the case records. Use it to see how the benchmark model reacts to inputs you enter.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -360,7 +210,7 @@ export const TransactionCheckPage: React.FC = () => {
                 type="button"
                 onClick={() => {
                   setFormData(p.data);
-                  setLinkedTx({ transactionId: p.txLabel, caseId: 'FS-1042' });
+                  setLinkedTx({ transactionId: p.txLabel });
                   setResult(null);
                   setError(null);
                 }}
@@ -387,31 +237,6 @@ export const TransactionCheckPage: React.FC = () => {
           })}
         </div>
 
-        {/* 1-Click Case FS-1042 Leg Pills */}
-        {caseTransactions.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 pt-1">
-            <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-[#64748B] mr-1">
-              Quick-Load FS-1042 Leg:
-            </span>
-            {caseTransactions.map((t) => {
-              const active = linkedTx?.transactionId === t.transaction_id;
-              return (
-                <button
-                  key={t.transaction_id}
-                  type="button"
-                  onClick={() => handleSelectCaseTx(t)}
-                  className={`px-2.5 py-1 rounded font-mono text-[11px] font-semibold border transition-colors ${
-                    active
-                      ? 'bg-[#0B1322] text-[#2DD4BF] border-[#0D9488]'
-                      : 'bg-white hover:bg-[#F0FDFA] text-[#0B1322] border-[#D6D3CD] hover:border-[#0D9488]'
-                  }`}
-                >
-                  {t.transaction_id} ({t.sender_account_id}→{t.receiver_account_id} · ₹{(t.amount / 1000).toFixed(0)}k)
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       {/* Main Split Workbench */}

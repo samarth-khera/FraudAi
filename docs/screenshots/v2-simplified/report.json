@@ -1,0 +1,15 @@
+{
+  "log": [
+    "ok: laptop summary: no horizontal page overflow (-6px)",
+    "ok: laptop money-flow: no horizontal page overflow (-6px)",
+    "ok: laptop accounts: no horizontal page overflow (-6px)",
+    "ok: laptop review: no horizontal page overflow (-6px)",
+    "ok: mobile summary: no horizontal page overflow (-6px)",
+    "ok: mobile money-flow: no horizontal page overflow (-6px)",
+    "ok: mobile accounts: no horizontal page overflow (-6px)",
+    "ok: mobile review: no horizontal page overflow (-6px)",
+    "mobile menu opens"
+  ],
+  "consoleErrors": [],
+  "failedRequests": []
+}

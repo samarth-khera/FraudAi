@@ -149,7 +149,11 @@ describe('V2SearchPage Component', () => {
     );
 
     expect(screen.getByPlaceholderText(/Enter Synthetic Account ID/i)).toBeInTheDocument();
-    expect(screen.getByText(/Curated Synthetic Ledger Investigation Cases/i)).toBeInTheDocument();
+    expect(screen.getByText(/three of them from sample case FS-2001/i)).toBeInTheDocument();
+    // Ground-truth training labels are not presented as findings.
+    expect(screen.queryByText(/Money Mule Demo/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Normal Account Demo/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/ACC-000010 \(Normal\)/i)).not.toBeInTheDocument();
     expect(screen.getByText(/Ground-Truth Reference Notice/i)).toBeInTheDocument();
 
     // Verify sample accounts are present
@@ -459,11 +463,12 @@ describe('V2AccountDetailPage Component', () => {
     expect(screen.getByText(/Review High-Value Outlier Transfer of ₹250,000.00/i)).toBeInTheDocument();
   });
 
-  it('records human adjudication finding and renders audit trail entry', async () => {
+  it('does not offer a local-only review form; points to case review instead', async () => {
+    const setItem = vi.spyOn(Storage.prototype, 'setItem');
     render(
-      <MemoryRouter initialEntries={['/v2/accounts/ACC-000001?tab=review']}>
+      <MemoryRouter initialEntries={['/tools/accounts/ACC-000001?tab=review']}>
         <Routes>
-          <Route path="/v2/accounts/:accountId" element={<V2AccountDetailPage />} />
+          <Route path="/tools/accounts/:accountId" element={<V2AccountDetailPage />} />
         </Routes>
       </MemoryRouter>
     );
@@ -472,28 +477,20 @@ describe('V2AccountDetailPage Component', () => {
       expect(screen.getByText('Aditi Joshi')).toBeInTheDocument();
     });
 
-    // Enter notes in textarea
-    const notesInput = screen.getByPlaceholderText(/Document factual findings/i);
-    fireEvent.change(notesInput, { target: { value: 'Verified legitimate customer victim of APP scam.' } });
-
-    // Click Record Finding
-    const recordBtn = screen.getByRole('button', { name: /Record Finding/i });
-    fireEvent.click(recordBtn);
-
-    // Verify Audit Trail is rendered
-    await waitFor(() => {
-      expect(screen.getByText(/Logged Adjudication Audit Trail/i)).toBeInTheDocument();
-      expect(screen.getByText(/"Verified legitimate customer victim of APP scam."/i)).toBeInTheDocument();
-    });
+    expect(screen.getByText(/Review decisions are recorded inside a case/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Record Finding/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Open case FS-2001/i })).toHaveAttribute('href', '/cases/FS-2001?section=review');
+    expect(setItem.mock.calls.some(([key]) => String(key).startsWith('fs_v2_adjudication_'))).toBe(false);
+    setItem.mockRestore();
   });
 
-  it('renders helpful incident dossier link when account is not found in V2 core ledger', async () => {
+  it('explains case-only accounts without inventing a link to a specific case', async () => {
     vi.spyOn(v2Api, 'getAccount').mockRejectedValue(new ApiError(404, 'Account not found'));
 
     render(
-      <MemoryRouter initialEntries={['/v2/accounts/A100']}>
+      <MemoryRouter initialEntries={['/tools/accounts/A100']}>
         <Routes>
-          <Route path="/v2/accounts/:accountId" element={<V2AccountDetailPage />} />
+          <Route path="/tools/accounts/:accountId" element={<V2AccountDetailPage />} />
         </Routes>
       </MemoryRouter>
     );
@@ -502,11 +499,9 @@ describe('V2AccountDetailPage Component', () => {
       expect(screen.getByText(/Account Not Found in Core Ledger/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/If this identifier is an entity from an incident investigation network/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Open Incident Dossier \(FS-1042\)/i })).toHaveAttribute(
-      'href',
-      '/cases/FS-1042?tab=review&account=A100'
-    );
+    expect(screen.getByText(/Those accounts are not in the synthetic ledger/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Open investigations/i })).toHaveAttribute('href', '/cases');
+    expect(screen.queryByRole('link', { name: /FS-1042/i })).not.toBeInTheDocument();
   });
 });
 

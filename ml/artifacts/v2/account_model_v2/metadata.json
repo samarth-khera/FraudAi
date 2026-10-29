@@ -1,0 +1,301 @@
+{
+  "model_name": "FraudShield V2 Account-Behaviour Classifier",
+  "model_type": "XGBClassifier (Tabular Gradient Boosting)",
+  "model_version": "v2-account-2.0.0",
+  "previous_version": "v2-account-1.0.0",
+  "trained_at": "2026-10-29T04:03:59Z",
+  "dataset_source": "Scenario-bank synthetic ledger (ml/v2/scenario_bank.py, seed 20261029)",
+  "training_configuration": {
+    "selected_candidate": "xgb_d6_n400_w4.73",
+    "params": {
+      "objective": "binary:logistic",
+      "base_score": null,
+      "booster": null,
+      "callbacks": null,
+      "colsample_bylevel": null,
+      "colsample_bynode": null,
+      "colsample_bytree": 0.8,
+      "device": null,
+      "early_stopping_rounds": null,
+      "enable_categorical": true,
+      "eval_metric": "logloss",
+      "feature_types": null,
+      "feature_weights": null,
+      "gamma": null,
+      "grow_policy": null,
+      "importance_type": null,
+      "interaction_constraints": null,
+      "learning_rate": 0.05,
+      "max_bin": null,
+      "max_cat_threshold": null,
+      "max_cat_to_onehot": null,
+      "max_delta_step": null,
+      "max_depth": 6,
+      "max_leaves": null,
+      "min_child_weight": 2,
+      "missing": NaN,
+      "monotone_constraints": null,
+      "multi_strategy": null,
+      "n_estimators": 400,
+      "n_jobs": 4,
+      "num_parallel_tree": null,
+      "random_state": 42,
+      "reg_alpha": null,
+      "reg_lambda": null,
+      "sampling_method": null,
+      "scale_pos_weight": 4.73,
+      "subsample": 0.8,
+      "tree_method": null,
+      "validate_parameters": null,
+      "verbosity": null
+    }
+  },
+  "decision_threshold": 0.1752,
+  "threshold_selection": "maximise F2 on validation (recall weighted twice precision); test not used",
+  "scenario_split_strategy": {
+    "strategy": "Scenario-instance grouped train/validation/test; two families test-only",
+    "held_out_test_scenarios": [
+      "cyclic_roundtrip",
+      "slow_layering"
+    ],
+    "train_accounts_count": 11940,
+    "validation_accounts_count": 3881,
+    "test_accounts_count": 4179,
+    "train_suspicious_count": 511,
+    "validation_suspicious_count": 157,
+    "test_suspicious_count": 260,
+    "test_normal_count": 3919
+  },
+  "ml_evaluation_metrics": {
+    "threshold": 0.1752,
+    "positives": 260,
+    "negatives": 3919,
+    "precision": 0.3263,
+    "recall": 0.5346,
+    "f1_score": 0.4052,
+    "roc_auc": 0.7601,
+    "pr_auc": 0.377,
+    "confusion_matrix": [
+      [
+        3632,
+        287
+      ],
+      [
+        121,
+        139
+      ]
+    ],
+    "true_negatives": 3632,
+    "false_positives": 287,
+    "false_negatives": 121,
+    "true_positives": 139,
+    "false_positive_rate": 0.0732,
+    "ci95": {
+      "recall": [
+        0.4439,
+        0.6286
+      ],
+      "precision": [
+        0.253,
+        0.4004
+      ],
+      "pr_auc": [
+        0.2888,
+        0.4734
+      ],
+      "resampling_unit": "scenario instance or ordinary account"
+    }
+  },
+  "metrics_by_family": {
+    "app_layering": {
+      "positives": 20,
+      "detected": 14,
+      "recall": 0.7
+    },
+    "cyclic_roundtrip": {
+      "positives": 72,
+      "detected": 34,
+      "recall": 0.4722
+    },
+    "dormant_awakening": {
+      "positives": 9,
+      "detected": 9,
+      "recall": 1.0
+    },
+    "fan_out_dispersal": {
+      "positives": 50,
+      "detected": 17,
+      "recall": 0.34
+    },
+    "slow_layering": {
+      "positives": 98,
+      "detected": 58,
+      "recall": 0.5918
+    },
+    "structuring": {
+      "positives": 11,
+      "detected": 7,
+      "recall": 0.6364
+    },
+    "negatives:legit_dormant_reactivation": {
+      "accounts": 26,
+      "flagged": 9,
+      "flag_rate": 0.3462
+    },
+    "negatives:merchant_sweep": {
+      "accounts": 10,
+      "flagged": 0,
+      "flag_rate": 0.0
+    },
+    "negatives:ordinary": {
+      "accounts": 3747,
+      "flagged": 213,
+      "flag_rate": 0.0568
+    },
+    "negatives:salary_quick_payment": {
+      "accounts": 63,
+      "flagged": 30,
+      "flag_rate": 0.4762
+    },
+    "negatives:student_fee_payment": {
+      "accounts": 35,
+      "flagged": 26,
+      "flag_rate": 0.7429
+    },
+    "negatives:victims": {
+      "accounts": 38,
+      "flagged": 9,
+      "flag_rate": 0.2368
+    }
+  },
+  "seen_vs_unseen": {
+    "seen": {
+      "threshold": 0.1752,
+      "positives": 90,
+      "negatives": 3894,
+      "precision": 0.1424,
+      "recall": 0.5222,
+      "f1_score": 0.2238,
+      "roc_auc": 0.8298,
+      "pr_auc": 0.2604,
+      "confusion_matrix": [
+        [
+          3611,
+          283
+        ],
+        [
+          43,
+          47
+        ]
+      ],
+      "true_negatives": 3611,
+      "false_positives": 283,
+      "false_negatives": 43,
+      "true_positives": 47,
+      "false_positive_rate": 0.0727
+    },
+    "unseen": {
+      "threshold": 0.1752,
+      "positives": 170,
+      "negatives": 3919,
+      "precision": 0.2427,
+      "recall": 0.5412,
+      "f1_score": 0.3352,
+      "roc_auc": 0.7235,
+      "pr_auc": 0.2858,
+      "confusion_matrix": [
+        [
+          3632,
+          287
+        ],
+        [
+          78,
+          92
+        ]
+      ],
+      "true_negatives": 3632,
+      "false_positives": 287,
+      "false_negatives": 78,
+      "true_positives": 92,
+      "false_positive_rate": 0.0732
+    }
+  },
+  "baseline_comparison": {
+    "baseline_name": "Deterministic rule assessor (threshold chosen on validation)",
+    "threshold": 45.0,
+    "precision": 0.1188,
+    "recall": 0.2846,
+    "f1_score": 0.1676,
+    "pr_auc": 0.1025,
+    "roc_auc": 0.6036,
+    "confusion_matrix": [
+      [
+        3370,
+        549
+      ],
+      [
+        186,
+        74
+      ]
+    ],
+    "comparison_notes": "Both scored on the same locked test accounts with thresholds chosen on validation."
+  },
+  "score_semantics": "Model output is an uncalibrated score between 0 and 1 learned from synthetic labels, shown as a percentage. It is not a verified probability that an account is fraudulent.",
+  "operational_notes": {
+    "demo_ledger_ordinary_accounts": 9968,
+    "demo_ledger_flag_rate_ordinary": 0.0543,
+    "demo_ledger_positive_accounts": 29,
+    "demo_ledger_positives_flagged": 23,
+    "demo_ledger_precision": 0.0408,
+    "note": "On the app's own ledger suspicious accounts are rare (about 0.3%), so most flags are false alarms. No synthetic scenario places a corporate account, so the model has no evidence about corporate accounts."
+  },
+  "top_feature_importances": {
+    "customer_type_corporate": 0.3039,
+    "rapid_pass_through": 0.1357,
+    "customer_type_student": 0.1243,
+    "unique_counterparties": 0.0376,
+    "has_dwell_time": 0.0338,
+    "avg_amount": 0.033,
+    "flow_through_ratio": 0.0288,
+    "customer_type_retail": 0.0268,
+    "total_transactions": 0.025,
+    "max_amount": 0.0224
+  },
+  "features": [
+    "customer_type_retail",
+    "customer_type_student",
+    "customer_type_sme",
+    "customer_type_corporate",
+    "kyc_tier_level",
+    "initial_balance",
+    "current_balance",
+    "balance_ratio",
+    "total_transactions",
+    "velocity_24h_count",
+    "velocity_7d_count",
+    "velocity_30d_count",
+    "flow_through_ratio",
+    "rapid_pass_through",
+    "median_dwell_minutes",
+    "has_dwell_time",
+    "max_amount",
+    "avg_amount",
+    "amount_spike_ratio",
+    "unique_counterparties",
+    "counterparty_diversity_ratio",
+    "fan_in_ratio",
+    "fan_out_ratio",
+    "dormancy_gap_days",
+    "dormant_awakening_detected",
+    "cycle_detected"
+  ],
+  "leakage_protections": [
+    "ground_truth_label, scenario_id, scenario_tag and is_suspicious_scenario are never model inputs.",
+    "PII (names, phone, email, upi_id, tax_id) is never a model input.",
+    "Scenario accounts keep their generated opening balance; amounts are derived from funds actually received.",
+    "Every account of a scenario instance is in exactly one split; two scenario families are test-only.",
+    "Model choice and threshold use validation data only; the test split is scored once."
+  ],
+  "evaluation_report": "ml/reports/account_model_v2_evaluation.json",
+  "disclaimer": "Decision support only. Trained and evaluated exclusively on synthetic scenarios. A high score is not proof of wrongdoing and a low score does not clear an account."
+}

@@ -14,11 +14,16 @@ def test_health(client):
 
 def test_list_cases(client):
     body = client.get("/api/cases").json()
-    assert body["count"] == 1
-    c = body["cases"][0]
-    assert c["case_id"] == "FS-1042" and c["reported_amount"] == 50000
+    by_id = {c["case_id"]: c for c in body["cases"]}
+    assert {"FS-1042", "FS-2001"} <= set(by_id)
+    c = by_id["FS-1042"]
+    assert c["reported_amount"] == 50000
     assert set(c) == {"case_id", "reported_origin_transaction_id", "reported_amount", "currency",
-                      "reported_at", "investigation_status", "description"}
+                      "reported_at", "investigation_status", "description", "updated_at",
+                      "account_dataset", "dataset_note", "review_progress"}
+    # FS-1042 accounts (V001, A100, ...) exist only in the case records.
+    assert c["account_dataset"] == "case_ledger"
+    assert by_id["FS-2001"]["account_dataset"] == "v2_synthetic_ledger"
 
 
 def test_get_case(client):
