@@ -124,7 +124,7 @@ everything else is read-only and needs no key.
 | `GET` | `/api/v2/accounts/{id}/ml-assessment` | | Account model score and TreeSHAP factors; `503 model_unavailable` if the model cannot load |
 | `POST` | `/api/v2/accounts/{id}/analyze` | | Live analysis (below). Computes from the ledger and stores nothing, so it is available in every write-access mode. |
 | `GET` | `/api/v2/models/status` | | Model versions, served thresholds, evaluation metrics |
-| `POST` | `/api/v2/investigations` | | Victim-first investigation: flags, time-ordered trace, per-account rule + model assessment, exposure range, evidence-referenced findings. Stores nothing; available in every write-access mode. See [docs/LIVE_INVESTIGATION.md](../docs/LIVE_INVESTIGATION.md). |
+| `POST` | `/api/v2/investigations` | | Victim-first investigation: flags, time-ordered trace, per-account rule + model assessment, exposure range, evidence-referenced findings, plus an optional Gemini explanation in `ai_analysis` (`state` says whether it ran; see [docs/AI_ANALYST.md](../docs/AI_ANALYST.md)). Stores nothing; available in every write-access mode. See [docs/LIVE_INVESTIGATION.md](../docs/LIVE_INVESTIGATION.md). |
 | `GET` | `/api/v2/data-source` | | Which ledger is queried, whether it is synthetic, record counts and `data_as_of` (fresh query) |
 | `POST` | `/api/risk/score`, `/api/risk/explain` | | PaySim transaction benchmark (separate from the account model) |
 

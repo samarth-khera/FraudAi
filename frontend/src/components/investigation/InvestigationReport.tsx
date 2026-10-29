@@ -3,8 +3,8 @@ import { AlertTriangle, ArrowDownLeft, ArrowUpRight, Bot, Database, FlaskConical
 import { Pill } from '../ui/StateViews';
 import { formatDateTime, formatMoney } from '../../lib/format';
 import { featureInfo } from '../../lib/featureGlossary';
-import { AccountFinding, AnalystSection, InvestigationResponse, TraceEdge, TraceNode } from '../../types/investigation';
-import { ACTION_LABEL, FLAG_LABEL, GRAPH_ROLE, KIND, ROLE_ASSESSMENT } from './labels';
+import { AIState, AccountFinding, AnalystSection, InvestigationResponse, TraceEdge, TraceNode } from '../../types/investigation';
+import { ACTION_LABEL, AI_STATE, BASIS, FLAG_LABEL, GRAPH_ROLE, KIND, ROLE_ASSESSMENT } from './labels';
 
 const InvestigationGraph = lazy(() => import('./InvestigationGraph'));
 
@@ -239,7 +239,7 @@ export const InvestigationReport: React.FC<{ report: InvestigationResponse; onNe
           <span><span className="inline-block w-4 border-t-2 border-[#BE123C] align-middle mr-1" />Cycle</span>
         </div>
         {trace.edges.length ? (
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
             <p className="xl:col-span-2 -mb-2 text-xs text-[#8C857B]">Drag to pan and scroll or pinch to zoom; Fit shows the whole graph. The timeline and tables list every transfer and account.</p>
             <Suspense fallback={<div className="h-[420px] rounded-2xl border border-[#EAE3D6] bg-[#FCFBF8]" />}>
               <InvestigationGraph nodes={trace.nodes} edges={trace.edges} accounts={report.accounts} selected={selected} onSelect={setSelected} />
@@ -503,17 +503,75 @@ const QA: React.FC<{ sections: AnalystSection[]; Refs: RefsC }> = ({ sections, R
   </ol>
 );
 
+/** Older servers send only the legacy `status`. */
+function aiState(ai: InvestigationResponse['ai_analysis']): AIState {
+  if (ai.state) return ai.state;
+  return ai.status === 'generated' ? 'completed' : ai.status === 'not_configured' ? 'not_configured' : 'unavailable';
+}
+
 const AIStatus: React.FC<{ report: InvestigationResponse; Refs: RefsC }> = ({ report, Refs }) => {
   const ai = report.ai_analysis;
-  const generated = ai.status === 'generated';
+  const state = aiState(ai);
+  const r = state === 'completed' ? ai.report : null;
+  const meta = AI_STATE[state];
   return (
-    <div className={`rounded-2xl border p-4 ${generated ? 'border-[#BFDBFE] bg-[#F5F9FF]' : 'border-[#EAE3D6] bg-[#FAF7F2]'}`} data-testid="ai-status">
-      <h3 className="text-sm font-semibold flex items-center gap-1.5">
-        <Bot className="w-4 h-4" aria-hidden="true" />
-        {generated ? `AI analyst (${ai.provider})` : 'AI analyst: not run'}
-      </h3>
+    <div
+      className={`rounded-2xl border p-4 ${r ? 'border-[#BFDBFE] bg-[#F5F9FF]' : 'border-[#EAE3D6] bg-[#FAF7F2]'}`}
+      data-testid="ai-status"
+      data-state={state}
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <h3 className="text-sm font-semibold flex items-center gap-1.5">
+          <Bot className="w-4 h-4" aria-hidden="true" />
+          {meta.title}
+        </h3>
+        {r && <Pill tone="blue">AI-generated · {ai.model ?? ai.provider}</Pill>}
+        {!r && <Pill tone={meta.tone}>{state.replace(/_/g, ' ')}</Pill>}
+      </div>
       <p className="mt-1 text-sm text-[#6B655B]">{ai.message}</p>
-      {generated && <QA sections={ai.sections} Refs={Refs} />}
+      {!r && state === 'completed' && ai.sections.length > 0 && <QA sections={ai.sections} Refs={Refs} />}
+      {r && (
+        <div className="mt-4 space-y-4 text-sm">
+          <p className="text-[#1A1714] leading-relaxed">{r.summary}</p>
+          <div>
+            <h4 className="text-xs font-semibold text-[#6B655B]">Key observations</h4>
+            <ul className="mt-1.5 space-y-1.5">
+              {r.key_observations.map((o, i) => (
+                <li key={i} className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[#3D3833]">
+                  <Pill tone={BASIS[o.basis].tone}>{BASIS[o.basis].label}</Pill>
+                  <span className="min-w-0">{o.text}</span>
+                  <Refs ids={o.evidence_ids} />
+                </li>
+              ))}
+            </ul>
+          </div>
+          {r.evidence_references.length > 0 && (
+            <p className="text-xs text-[#6B655B]">
+              Evidence it relied on: <Refs ids={r.evidence_references} />
+            </p>
+          )}
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <h4 className="text-xs font-semibold text-[#6B655B]">Reasoning and limitations</h4>
+              <ul className="mt-1 list-disc pl-4 space-y-0.5 text-[#3D3833]">{r.reasoning_and_limitations.map((t, i) => <li key={i}>{t}</li>)}</ul>
+            </div>
+            <div>
+              <h4 className="text-xs font-semibold text-[#6B655B]">Recommended manual checks</h4>
+              <ul className="mt-1 list-disc pl-4 space-y-1 text-[#3D3833]">
+                {r.recommended_manual_checks.map((c, i) => (
+                  <li key={i}>
+                    {c.text} <Refs ids={c.evidence_ids} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <p className="text-xs text-[#6B655B]"><span className="font-semibold">Evidence completeness:</span> {r.confidence_note}</p>
+          <p className="text-xs text-[#8C857B]">
+            AI explanations can be wrong. Scores, amounts and findings above come from the rules, the model and the ledger, not from this text.
+          </p>
+        </div>
+      )}
     </div>
   );
 };

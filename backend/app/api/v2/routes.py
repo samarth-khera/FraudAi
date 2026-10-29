@@ -286,12 +286,13 @@ def get_data_source(db: Session = Depends(get_v2_db)) -> DataSourceInfo:
         "Starts from the entered account, flags its unusual transfers against its own history, traces where the funds "
         "went and came from, assesses each linked account with the rules and the account model, and returns an "
         "evidence-referenced report. Computed on request from the configured ledger; nothing is stored, so it needs "
-        "no write permission."
+        "no write permission. If the AI analyst is enabled and the privacy policy allows it, a Gemini explanation is "
+        "added in `ai_analysis`; its `state` says whether it ran, and an AI failure never fails the investigation."
     ),
 )
-def run_investigation(req: InvestigationRequest, db: Session = Depends(get_v2_db)) -> InvestigationResponse:
+async def run_investigation(req: InvestigationRequest, db: Session = Depends(get_v2_db)) -> InvestigationResponse:
     try:
-        return InvestigationService.run(db, req)
+        return await InvestigationService.run_async(db, req)
     except AccountNotFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
