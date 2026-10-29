@@ -122,7 +122,7 @@ everything else is read-only and needs no key.
 | `GET` | `/api/v2/accounts/{id}`, `/transactions` | | Ledger profile and transactions (PII masked) |
 | `GET` | `/api/v2/accounts/{id}/assessment` | | Rule score (points out of 100) |
 | `GET` | `/api/v2/accounts/{id}/ml-assessment` | | Account model score and TreeSHAP factors; `503 model_unavailable` if the model cannot load |
-| `POST` | `/api/v2/accounts/{id}/analyze` | yes* | Live analysis (below). *Computes only; nothing is stored. |
+| `POST` | `/api/v2/accounts/{id}/analyze` | | Live analysis (below). Computes from the ledger and stores nothing, so it is available in every write-access mode. |
 | `GET` | `/api/v2/models/status` | | Model versions, served thresholds, evaluation metrics |
 | `POST` | `/api/risk/score`, `/api/risk/explain` | | PaySim transaction benchmark (separate from the account model) |
 

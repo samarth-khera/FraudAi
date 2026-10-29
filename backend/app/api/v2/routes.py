@@ -8,11 +8,6 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy.orm import Session
 
-try:
-    from app.api.auth import AuthContext, verify_write_permission
-except ModuleNotFoundError:
-    from backend.app.api.auth import AuthContext, verify_write_permission
-
 logger = logging.getLogger("fraudshield.v2.api")
 
 V2AccountIdPath = Path(
@@ -219,12 +214,11 @@ def get_account_ml_assessment(
     "/accounts/{account_id}/analyze",
     response_model=AccountLiveAnalysisResponse,
     summary="Execute Fresh Live Account Risk Analysis",
-    description="Orchestrates on-demand real-time feature extraction, rule assessment, ML inference, TreeSHAP explanation, and advisory recommendation generation.",
+    description="Orchestrates on-demand real-time feature extraction, rule assessment, ML inference, TreeSHAP explanation, and advisory recommendation generation. Read-only: computes from the ledger and stores nothing, so it needs no write permission.",
 )
 def run_live_account_analysis(
     account_id: str = V2AccountIdPath,
     db: Session = Depends(get_v2_db),
-    auth: AuthContext = Depends(verify_write_permission),
 ) -> AccountLiveAnalysisResponse:
     try:
         analysis = AccountLiveAnalysisService.run_analysis(db, account_id)
