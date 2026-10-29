@@ -140,7 +140,8 @@ export const InvestigatePage: React.FC = () => {
             </p>
             <p className="mt-1 text-sm text-[#6B655B]">
               The server is querying the ledger and running the checks. The report appears when it has finished.
-              {elapsed >= 10 && ' If the free server was asleep, the first request can take about a minute.'}
+              {elapsed >= 8 && ' When the AI analyst is enabled it adds several seconds after the checks finish.'}
+              {elapsed >= 20 && ' If the free server was asleep, the first request can take about a minute.'}
             </p>
           </div>
         </div>
