@@ -270,7 +270,8 @@ def test_config_defaults_are_conservative(monkeypatch):
     monkeypatch.setenv("GEMINI_TIMEOUT_SECONDS", "9999")
     monkeypatch.setenv("GEMINI_MAX_OUTPUT_TOKENS", "not-a-number")
     c = AnalystConfig.from_env()
-    assert c.privacy_policy == "synthetic_only" and c.timeout_seconds == 60 and c.max_output_tokens == ai_analyst.DEFAULT_MAX_OUTPUT_TOKENS
+    assert c.privacy_policy == "synthetic_only" and c.timeout_seconds == ai_analyst.MAX_TIMEOUT_SECONDS == 300
+    assert c.max_output_tokens == ai_analyst.DEFAULT_MAX_OUTPUT_TOKENS
     assert FAKE_KEY not in repr(c)
 
 
@@ -331,7 +332,7 @@ def api_error(cls, code, status):
     (api_error(errors.ClientError, 404, "NOT_FOUND"), "model_not_found"),
     (api_error(errors.ClientError, 400, "INVALID_ARGUMENT"), "request_rejected"),
     (api_error(errors.ServerError, 500, "INTERNAL"), "upstream_error"),
-    (api_error(errors.ServerError, 503, "UNAVAILABLE"), "upstream_error"),
+    (api_error(errors.ServerError, 503, "UNAVAILABLE"), "service_unavailable"),
     (httpx.ReadTimeout("read timed out"), "timeout"),
     (httpx.ConnectError("connection refused"), "upstream_error"),
 ])
@@ -345,7 +346,9 @@ def test_provider_errors_become_unavailable_without_leaking_details(report, monk
     assert ai["state"] == "unavailable" and ai["unavailable_reason"] == reason and ai["report"] is None
     assert "unaffected" in ai["message"]
     for leak in (FAKE_KEY, "secret detail", "timed out", "refused"):
-        assert leak not in json.dumps(ai) and leak not in caplog.text
+        assert leak not in json.dumps(ai), "the browser never gets provider or exception text"
+    for leak in (FAKE_KEY, "timed out", "refused"):
+        assert leak not in caplog.text, "the log gets a sanitised provider message, never the key or exception text"
 
 
 def test_hard_timeout_bounds_the_whole_call(report, monkeypatch):
@@ -470,7 +473,9 @@ def test_no_secret_or_key_reference_in_frontend_sources():
     (api_error(errors.ClientError, 403, "PERMISSION_DENIED"), "auth_failed", 403),
     (api_error(errors.ClientError, 404, "NOT_FOUND"), "model_not_found", 404),
     (api_error(errors.ServerError, 500, "INTERNAL"), "upstream_error", 500),
-    (api_error(errors.ServerError, 503, "UNAVAILABLE"), "upstream_error", 503),
+    (api_error(errors.ServerError, 503, "UNAVAILABLE"), "service_unavailable", 503),
+    (api_error(errors.ServerError, 502, "BAD_GATEWAY"), "upstream_error", 502),
+    (api_error(errors.ClientError, 400, "FAILED_PRECONDITION"), "request_rejected", 400),
     (api_error(errors.ClientError, 400, "INVALID_ARGUMENT"), "request_rejected", 400),
 ])
 def test_provider_maps_status_codes_and_keeps_the_numeric_status(monkeypatch, exc, reason, status):
@@ -486,11 +491,11 @@ def test_provider_maps_status_codes_and_keeps_the_numeric_status(monkeypatch, ex
 
 @pytest.mark.parametrize("exc, expected", [
     (api_error(errors.ServerError, 504, "DEADLINE_EXCEEDED"), "reason=timeout http_status=504 error_type=none"),
-    (api_error(errors.ServerError, 503, "UNAVAILABLE"), "reason=upstream_error http_status=503 error_type=none"),
+    (api_error(errors.ServerError, 503, "UNAVAILABLE"), "reason=service_unavailable http_status=503 error_type=none"),
     (api_error(errors.ClientError, 429, "RESOURCE_EXHAUSTED"), "reason=rate_limited http_status=429 error_type=none"),
     (httpx.ReadTimeout("read timed out"), "reason=timeout http_status=none error_type=none"),
 ])
-def test_log_line_carries_reason_and_status_only(report, monkeypatch, caplog, exc, expected):
+def test_log_line_carries_reason_status_and_only_sanitised_provider_fields(report, monkeypatch, caplog, exc, expected):
     async def fail(**kwargs):
         raise exc
 
@@ -498,7 +503,7 @@ def test_log_line_carries_reason_and_status_only(report, monkeypatch, caplog, ex
         ai = asyncio.run(run_analysis(report, stub_provider(monkeypatch, fail)))
     line = next(r.getMessage() for r in caplog.records if r.name == "fraudshield.v2.ai_analyst")
     assert expected in line and "latency_ms=" in line
-    for leak in (FAKE_KEY, "secret detail", "timed out", "investigation_data", "ACC-VIC", "DEADLINE_EXCEEDED"):
+    for leak in (FAKE_KEY, "timed out", "investigation_data", "ACC-VIC", "PA-0"):
         assert leak not in caplog.text
     # The browser gets the reason code and a fixed message, never the status or provider text.
     body = json.dumps(ai)
@@ -595,3 +600,319 @@ def test_startup_survives_an_sdk_import_failure(ledger, monkeypatch, caplog):  #
 def test_preload_is_a_no_op_when_disabled(monkeypatch):
     monkeypatch.setattr(ai_analyst, "_gemini_module", lambda: (_ for _ in ()).throw(AssertionError("loaded while disabled")))
     assert ai_analyst.preload_provider() is False
+
+
+# ---------------------------------------------------------------- regression: unsupported thinking level (HTTP 400)
+def test_unsupported_thinking_level_is_reported_without_a_request(report, caplog):
+    """Production failure 2026-10-29: GEMINI_THINKING_LEVEL=minimal on gemini-3.8-flash -> Google HTTP 400."""
+    fake = FakeProvider(good_reply)
+    with caplog.at_level(logging.DEBUG):
+        ai = asyncio.run(ai_analyst.analyze(report, fake, cfg(model="gemini-3.8-flash", thinking_level="minimal")))
+    assert fake.calls == [], "a request that Google documents as invalid must not be sent"
+    assert (ai["state"], ai["status"], ai["unavailable_reason"], ai["report"]) == ("unavailable", "failed", "invalid_configuration", None)
+    assert "not supported by the configured model" in ai["message"] and "unaffected" in ai["message"]
+    assert "setting=thinking_level model=gemini-3.8-flash" in caplog.text and "reason=invalid_configuration" in caplog.text
+
+
+@pytest.mark.parametrize("model, level", [
+    ("gemini-3.8-flash", "low"), ("gemini-3.8-flash", "medium"), ("gemini-3.8-flash", "high"),
+    ("gemini-3.8-flash", None), ("gemini-3.6-flash", "minimal"),  # unlisted models pass through unchanged
+])
+def test_supported_or_unlisted_thinking_levels_are_sent(report, model, level):
+    fake = FakeProvider(good_reply)
+    ai = asyncio.run(ai_analyst.analyze(report, fake, cfg(model=model, thinking_level=level)))
+    assert len(fake.calls) == 1 and ai["state"] == "completed"
+
+
+def test_endpoint_with_minimal_thinking_keeps_the_investigation(ledger, gemini_on, monkeypatch):  # noqa: F811
+    client, _, _ = ledger
+    baseline = investigate(client).json()
+    fake = gemini_on(FakeProvider(good_reply))
+    monkeypatch.setenv("GEMINI_THINKING_LEVEL", "minimal")
+    body = investigate(client).json()
+    assert body["ai_analysis"]["unavailable_reason"] == "invalid_configuration" and fake.calls == []
+    assert deterministic(body) == deterministic(baseline)
+
+
+def test_provider_request_carries_the_configured_thinking_level_and_no_sampling_params(report, monkeypatch):
+    seen = {}
+
+    async def capture(**kwargs):
+        seen.update(kwargs)
+        return SimpleNamespace(prompt_feedback=None, candidates=[SimpleNamespace(finish_reason=SimpleNamespace(value="STOP"))],
+                               text=good_reply({"contents": kwargs["contents"]}))
+
+    monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+    p = GeminiProvider("gemini-3.8-flash", timeout_seconds=55, thinking_level="low")
+    p._client = SimpleNamespace(aio=SimpleNamespace(models=SimpleNamespace(generate_content=capture)))
+    ai = asyncio.run(run_analysis(report, p, model="gemini-3.8-flash", max_output_tokens=2048))
+    assert ai["state"] == "completed"
+    c = seen["config"]
+    assert getattr(c.thinking_config.thinking_level, "value", c.thinking_config.thinking_level).upper() == "LOW"
+    assert c.temperature is None and c.top_p is None and c.top_k is None
+    assert c.max_output_tokens == 2048 and c.response_mime_type == "application/json" and c.candidate_count == 1
+
+
+def test_http_400_is_request_rejected_with_its_status_logged(report, monkeypatch, caplog):
+    async def reject(**kwargs):
+        raise api_error(errors.ClientError, 400, "INVALID_ARGUMENT")
+
+    with caplog.at_level(logging.DEBUG):
+        ai = asyncio.run(run_analysis(report, stub_provider(monkeypatch, reject)))
+    assert ai["unavailable_reason"] == "request_rejected" and ai["status"] == "failed"
+    assert "reason=request_rejected http_status=400 error_type=none" in caplog.text
+    assert "provider_status=INVALID_ARGUMENT" in caplog.text and FAKE_KEY not in caplog.text
+    assert "secret detail" not in json.dumps(ai) and "INVALID_ARGUMENT" not in json.dumps(ai)
+
+
+def test_startup_warns_about_an_unsupported_thinking_level(monkeypatch, caplog):
+    monkeypatch.setenv("GEMINI_ANALYST_ENABLED", "true")
+    monkeypatch.setenv("GEMINI_THINKING_LEVEL", "minimal")
+    monkeypatch.setattr(ai_analyst, "_gemini_module", lambda: None)
+    with caplog.at_level(logging.WARNING):
+        assert ai_analyst.preload_provider() is True
+    assert "AI analyst configuration problem: setting=thinking_level model=gemini-3.8-flash" in caplog.text
+
+
+def test_startup_attaches_a_handler_so_analyst_info_lines_reach_the_server_log():
+    from fastapi.testclient import TestClient
+
+    from app.main import create_app
+
+    log = logging.getLogger("fraudshield.v2.ai_analyst")
+    with TestClient(create_app()):
+        assert log.handlers and log.isEnabledFor(logging.INFO)
+
+
+# ---------------------------------------------------------------- separate explanation (Standard-tier latency)
+def explain(client, **body):
+    return client.post("/api/v2/investigations/explanation", json={"account_id": "ACC-VIC", **body})
+
+
+def test_separate_mode_returns_the_report_without_calling_gemini(ledger, gemini_on):  # noqa: F811
+    client, _, _ = ledger
+    fake = gemini_on(FakeProvider(good_reply))
+    body = investigate(client, ai_explanation="separate").json()
+    ai = body["ai_analysis"]
+    assert (ai["state"], ai["status"], ai["report"], ai["provider"]) == ("deferred", "not_configured", None, None)
+    assert fake.calls == [], "the report must not wait for, or trigger, the AI call"
+    assert body["accounts"] and body["trace"]["edges"] and len(body["report_digest"]) == 24
+
+
+def test_explanation_endpoint_explains_the_same_report(ledger, gemini_on):  # noqa: F811
+    client, _, _ = ledger
+    report = investigate(client, ai_explanation="separate").json()
+    fake = gemini_on(FakeProvider(good_reply))
+    r = explain(client, ai_explanation="separate")
+    assert r.status_code == 200
+    body = r.json()
+    assert set(body) == {"account_id", "report_digest", "data_as_of", "duration_ms", "ai_analysis"}, "no evidence is echoed back"
+    assert body["report_digest"] == report["report_digest"] and body["account_id"] == "ACC-VIC"
+    ai = body["ai_analysis"]
+    assert ai["state"] == "completed" and len(fake.calls) == 1
+    known = {e["transaction_id"] for e in report["trace"]["edges"]} | {n["account_id"] for n in report["trace"]["nodes"]} | {f["finding_id"] for f in report["findings"]}
+    assert set(ai["report"]["evidence_references"]) <= known
+    for o in ai["report"]["key_observations"]:
+        assert set(o["evidence_ids"]) <= known
+
+
+def test_digest_is_stable_and_tracks_the_deterministic_content(ledger):  # noqa: F811
+    client, S, _ = ledger
+    a = investigate(client, ai_explanation="separate").json()["report_digest"]
+    assert investigate(client).json()["report_digest"] == a, "the AI mode is not part of the report"
+    assert investigate(client, ai_explanation="separate").json()["report_digest"] == a
+    assert investigate(client, ai_explanation="separate", max_depth=2).json()["report_digest"] != a
+    assert investigate(client, account_id="ACC-M1", ai_explanation="separate").json()["report_digest"] != a
+    from sqlalchemy import update
+    from app.db.v2.models import TransactionModel
+    with S() as db:  # a changed ledger gives a different digest, so a stale explanation is not shown
+        db.execute(update(TransactionModel).where(TransactionModel.transaction_id == "TXN-T0011").values(amount=129_000))
+        db.commit()
+    assert investigate(client, ai_explanation="separate").json()["report_digest"] != a
+
+
+def test_explanation_endpoint_reports_errors_and_ai_failures_honestly(ledger, gemini_on):  # noqa: F811
+    client, _, _ = ledger
+    assert explain(client, account_id="ACC-NOPE").status_code == 404
+    assert explain(client, account_id="bad id!").status_code == 422
+    disabled = explain(client).json()["ai_analysis"]
+    assert disabled["state"] == "disabled"
+    gemini_on(FakeProvider(raises=ProviderError("timeout", 504)))
+    r = explain(client)
+    assert r.status_code == 200 and r.json()["ai_analysis"]["unavailable_reason"] == "timeout"
+    assert "secret" not in r.text
+
+
+def test_timeout_setting_allows_minutes_but_stays_bounded(monkeypatch):
+    monkeypatch.setenv("GEMINI_TIMEOUT_SECONDS", "180")
+    assert AnalystConfig.from_env().timeout_seconds == 180
+    monkeypatch.setenv("GEMINI_TIMEOUT_SECONDS", "1")
+    assert AnalystConfig.from_env().timeout_seconds == 3
+
+
+# ---------------------------------------------------------------- provider diagnostics (2026-10-29 HTTP 503)
+def google_error(cls, code, status, message, details=None, headers=None):
+    """An SDK error shaped like a real Gemini error: JSON body plus the httpx response it came from."""
+    body = {"error": {"code": code, "status": status, "message": message, **({"details": details} if details else {})}}
+    response = httpx.Response(code, json=body, headers=headers or {})
+    return cls(code, body, response)
+
+
+def unavailable_line(caplog) -> str:
+    return next(r.getMessage() for r in caplog.records if r.getMessage().startswith("AI analyst unavailable"))
+
+
+def test_http_503_is_service_unavailable_with_google_fields_in_the_log_only(report, monkeypatch, caplog):
+    async def overloaded(**kwargs):
+        raise google_error(errors.ServerError, 503, "UNAVAILABLE", "The model is overloaded. Please try again later.",
+                           headers={"x-request-id": "req-7f3a9c"})
+
+    with caplog.at_level(logging.DEBUG):
+        ai = asyncio.run(run_analysis(report, stub_provider(monkeypatch, overloaded)))
+    assert (ai["state"], ai["status"], ai["unavailable_reason"], ai["report"]) == ("unavailable", "failed", "service_unavailable", None)
+    assert "temporarily overloaded or unavailable" in ai["message"] and "unaffected" in ai["message"]
+    line = unavailable_line(caplog)
+    assert line.startswith("AI analyst unavailable: reason=service_unavailable http_status=503 error_type=none latency_ms=")
+    assert "provider_status=UNAVAILABLE" in line and "request_id=req-7f3a9c" in line
+    assert line.endswith('provider_message="The model is overloaded. Please try again later."')
+    body = json.dumps(ai)
+    for detail in ("overloaded. Please", "UNAVAILABLE", "req-7f3a9c", "http_status"):
+        assert detail not in body, "the browser gets the reason code and a fixed message only"
+
+
+def test_quota_errors_log_the_quota_and_retry_delay(report, monkeypatch, caplog):
+    details = [
+        {"@type": "type.googleapis.com/google.rpc.QuotaFailure",
+         "violations": [{"quotaMetric": "generativelanguage.googleapis.com/generate_content_free_tier_requests",
+                         "quotaId": "GenerateRequestsPerDayPerProjectPerModel-FreeTier"}]},
+        {"@type": "type.googleapis.com/google.rpc.RetryInfo", "retryDelay": "37s"},
+    ]
+
+    async def exhausted(**kwargs):
+        raise google_error(errors.ClientError, 429, "RESOURCE_EXHAUSTED", "You exceeded your current quota.", details)
+
+    with caplog.at_level(logging.DEBUG):
+        ai = asyncio.run(run_analysis(report, stub_provider(monkeypatch, exhausted)))
+    assert ai["unavailable_reason"] == "rate_limited"
+    line = unavailable_line(caplog)
+    assert "http_status=429" in line and "provider_status=RESOURCE_EXHAUSTED" in line
+    assert "retry_after=37s quota_id=GenerateRequestsPerDayPerProjectPerModel-FreeTier" in line
+    assert "37s" not in json.dumps(ai)
+
+
+def test_invalid_key_reported_as_http_400_is_an_auth_failure(report, monkeypatch, caplog):
+    details = [{"@type": "type.googleapis.com/google.rpc.ErrorInfo", "reason": "API_KEY_INVALID", "domain": "googleapis.com"}]
+
+    async def bad_key(**kwargs):
+        raise google_error(errors.ClientError, 400, "INVALID_ARGUMENT", "API key not valid. Please pass a valid API key.", details)
+
+    with caplog.at_level(logging.DEBUG):
+        ai = asyncio.run(run_analysis(report, stub_provider(monkeypatch, bad_key)))
+    assert ai["unavailable_reason"] == "auth_failed"
+    assert "http_status=400" in caplog.text and "provider_reason=API_KEY_INVALID" in caplog.text
+
+
+def test_provider_message_is_sanitised_before_it_is_logged(monkeypatch):
+    from app.services.v2.gemini_provider import safe_message
+
+    monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+    key_shaped = "AIza" + "SyD-dummy-" + "0123456789abc"  # built at runtime so no key-like literal is in the source
+    raw = (f'Invalid value at \'contents[0]\' "ACC-000001 sent 250000 to ACC-000002"\nkey {FAKE_KEY} {key_shaped} '
+           "alias PA-001 transfer TX-99 " + "x" * 1000)
+    safe = safe_message(raw)
+    assert len(safe) <= 160 and "\n" not in safe and safe.isprintable()
+    for leak in (FAKE_KEY, "AIzaSy", "ACC-000001", "250000", "PA-001", "TX-99"):
+        assert leak not in safe
+    assert safe.startswith("Invalid value at 'contents[0]' \"…\" key [key]")
+    assert safe_message(None) is None and safe_message({"not": "text"}) is None
+
+
+@pytest.mark.parametrize("exc, reason", [
+    (errors.ServerError(503, None), "service_unavailable"),               # no body at all
+    (errors.ServerError(502, "<html>Bad Gateway</html>"), "upstream_error"),  # proxy page instead of JSON
+    (errors.ServerError(500, {"error": {"code": 500, "details": "not-a-list"}}), "upstream_error"),
+    (errors.ClientError(429, {"message": "<html>" + "y" * 5000, "status": "Too Many Requests"}), "rate_limited"),
+])
+def test_missing_or_malformed_error_bodies_still_map_cleanly(monkeypatch, caplog, exc, reason):
+    async def fail(**kwargs):
+        raise exc
+
+    with pytest.raises(ProviderError) as e:
+        asyncio.run(stub_provider(monkeypatch, fail).generate(
+            system_instruction="s", contents="c", response_json_schema={}, max_output_tokens=512))
+    assert e.value.reason == reason
+    assert all(isinstance(v, str) and len(v) <= 160 for v in e.value.diagnostics.values())
+
+
+def test_diagnostics_never_raise_on_odd_headers(monkeypatch):
+    from app.services.v2.gemini_provider import diagnostics_of
+
+    class Exploding:
+        def get(self, name):
+            raise RuntimeError("boom")
+
+    exc = errors.ServerError(503, {"error": {"code": 503, "status": "UNAVAILABLE", "message": "overloaded"}})
+    exc.response = SimpleNamespace(headers=Exploding())
+    assert diagnostics_of(exc) == {"provider_status": "UNAVAILABLE", "provider_message": "overloaded"}
+
+
+def test_explanation_endpoint_keeps_the_report_when_gemini_is_overloaded(ledger, gemini_on):  # noqa: F811
+    client, _, _ = ledger
+    report = investigate(client, ai_explanation="separate").json()
+    gemini_on(FakeProvider(raises=ProviderError("service_unavailable", 503, {"provider_status": "UNAVAILABLE"})))
+    r = explain(client, ai_explanation="separate")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["report_digest"] == report["report_digest"]
+    assert (body["ai_analysis"]["state"], body["ai_analysis"]["unavailable_reason"]) == ("unavailable", "service_unavailable")
+    assert body["ai_analysis"]["report"] is None and "UNAVAILABLE" not in r.text
+    again = investigate(client, ai_explanation="separate").json()
+    assert again["report_digest"] == report["report_digest"] and again["findings"] == report["findings"]
+
+
+
+def test_real_sdk_error_path_yields_the_diagnostics(monkeypatch, caplog, report):
+    """The real google-genai client against a local stand-in server (never Google): the body and headers of a 503
+    reach the log through the SDK's own error parsing, and the request carries no retry."""
+    import threading
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+
+    from google import genai
+    from google.genai import types
+
+    hits = []
+
+    class Overloaded(BaseHTTPRequestHandler):
+        def do_POST(self):
+            hits.append(self.path)
+            self.rfile.read(int(self.headers.get("content-length", 0)))
+            body = json.dumps({"error": {"code": 503, "message": "The model is overloaded. Please try again later.",
+                                         "status": "UNAVAILABLE"}}).encode()
+            self.send_response(503)
+            self.send_header("content-type", "application/json")
+            self.send_header("x-request-id", "local-req-42")
+            self.send_header("content-length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, *args):
+            pass
+
+    server = HTTPServer(("127.0.0.1", 0), Overloaded)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+        provider = GeminiProvider("gemini-3.8-flash", timeout_seconds=5, thinking_level="low")
+        provider._client = genai.Client(api_key=FAKE_KEY, http_options=types.HttpOptions(
+            base_url=f"http://127.0.0.1:{server.server_port}", timeout=5000,
+            retry_options=types.HttpRetryOptions(attempts=1)))
+        with caplog.at_level(logging.DEBUG):
+            ai = asyncio.run(run_analysis(report, provider))
+    finally:
+        server.shutdown()
+    assert len(hits) == 1 and hits[0].endswith("/models/gemini-3.8-flash:generateContent")
+    assert ai["unavailable_reason"] == "service_unavailable"
+    line = unavailable_line(caplog)
+    assert "http_status=503" in line and "provider_status=UNAVAILABLE" in line and "request_id=local-req-42" in line
+    assert 'provider_message="The model is overloaded. Please try again later."' in line
+    assert FAKE_KEY not in caplog.text

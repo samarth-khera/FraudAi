@@ -50,8 +50,13 @@ QUESTIONS = [
 
 DEFAULT_MODEL = "gemini-3.8-flash"
 DEFAULT_TIMEOUT_SECONDS = 25.0
+MAX_TIMEOUT_SECONDS = 300.0
 DEFAULT_MAX_OUTPUT_TOKENS = 4096
 DEFAULT_THINKING_LEVEL = "low"
+# thinking_level values Google documents per model (ai.google.dev/gemini-api/docs/thinking, checked 2026-10-29).
+# An unsupported level is rejected with HTTP 400 ("minimal" on gemini-3.8-flash caused the production failure),
+# so such a configuration is reported without spending a request. Models not listed are passed through unchanged.
+SUPPORTED_THINKING_LEVELS = {"gemini-3.8-flash": ("low", "medium", "high")}
 PRIVACY_SYNTHETIC_ONLY = "synthetic_only"
 PRIVACY_ALLOW_NON_SYNTHETIC = "allow_non_synthetic"
 
@@ -89,11 +94,20 @@ class AnalystConfig:
             enabled=(os.environ.get("GEMINI_ANALYST_ENABLED", "false").strip().lower() == "true"),
             api_key_present=bool(os.environ.get("GEMINI_API_KEY", "").strip()),
             model=(os.environ.get("GEMINI_MODEL") or DEFAULT_MODEL).strip(),
-            timeout_seconds=number("GEMINI_TIMEOUT_SECONDS", DEFAULT_TIMEOUT_SECONDS, 3, 60),
+            # Standard-tier latency is documented as "seconds to minutes" (Google's own server default is 600 s).
+            timeout_seconds=number("GEMINI_TIMEOUT_SECONDS", DEFAULT_TIMEOUT_SECONDS, 3, MAX_TIMEOUT_SECONDS),
             max_output_tokens=int(number("GEMINI_MAX_OUTPUT_TOKENS", DEFAULT_MAX_OUTPUT_TOKENS, 512, 8192)),
             thinking_level=thinking if thinking in ("minimal", "low", "medium", "high") else None,
             privacy_policy=policy,
         )
+
+
+def config_problem(config: AnalystConfig) -> Optional[str]:
+    """Name of a setting the configured model is documented not to accept, or None."""
+    allowed = SUPPORTED_THINKING_LEVELS.get(config.model)
+    if allowed and config.thinking_level and config.thinking_level not in allowed:
+        return "thinking_level"
+    return None
 
 
 class Provider(Protocol):
@@ -417,12 +431,16 @@ def validate_and_ground(raw: Optional[str], allowed: set[str], ps: Pseudonymizer
 
 # ---------------------------------------------------------------- orchestration
 _LEGACY_STATUS = {
+    "deferred": "not_configured",
     "completed": "generated",
     "disabled": "not_configured",
     "not_configured": "not_configured",
     "skipped_privacy_policy": "not_configured",
 }
 _REJECTED_REASONS = ("invalid_output", "policy_violation", "malformed_output")
+
+# Order of the sanitised provider fields in the "AI analyst unavailable" log line (provider_message goes last).
+_DIAGNOSTIC_KEYS = ("provider_status", "provider_reason", "request_id", "retry_after", "quota_id")
 
 UNAVAILABLE_MESSAGES = {
     "timeout": "The AI provider did not answer within the time limit.",
@@ -431,12 +449,14 @@ UNAVAILABLE_MESSAGES = {
     "request_rejected": "The AI provider rejected the request.",
     "model_not_found": "The configured AI model is not available to this API key.",
     "upstream_error": "The AI provider returned an error.",
+    "service_unavailable": "The AI provider reported that it is temporarily overloaded or unavailable. This is on the provider's side; try again later.",
     "blocked": "The AI provider declined to answer.",
     "empty_output": "The AI provider returned no explanation.",
     "truncated_output": "The AI explanation was cut off before it was complete.",
     "malformed_output": "The AI provider's answer was not valid JSON.",
     "invalid_output": "The AI explanation did not pass validation (missing fields, or references to records that are not in this investigation).",
     "policy_violation": "The AI explanation was discarded because it asserted guilt or directed an account restriction.",
+    "invalid_configuration": "The server's AI settings are not supported by the configured model, so no request was sent.",
 }
 
 
@@ -458,6 +478,16 @@ def _result(state: str, message: str, config: AnalystConfig, **extra: Any) -> di
     }
 
 
+def deferred() -> dict:
+    """ai_analysis for a report whose explanation is requested separately. No configuration is read and nothing is sent."""
+    return {
+        "state": "deferred", "status": "not_configured", "provider": None, "model": None,
+        "message": "The AI explanation is requested separately so this report is not held up by it.",
+        "unavailable_reason": None, "privacy_policy": None, "pseudonymized": False, "report": None, "sections": [],
+        "rejected_claims": 0, "latency_ms": None,
+    }
+
+
 def _gemini_module():
     try:
         from app.services.v2 import gemini_provider
@@ -472,8 +502,12 @@ def preload_provider() -> bool:
     Only an import: no client, no key needed, no request. Never raises; on failure the analyst reports
     `unavailable` per request as before. Returns whether the module is loaded.
     """
-    if not AnalystConfig.from_env().enabled:
+    config = AnalystConfig.from_env()
+    if not config.enabled:
         return False
+    problem = config_problem(config)
+    if problem:
+        logger.warning("AI analyst configuration problem: setting=%s model=%s", problem, config.model)
     started = time.perf_counter()
     try:
         _gemini_module()
@@ -503,18 +537,27 @@ async def analyze(report: dict, provider: Optional[Provider] = None, config: Opt
     started = time.perf_counter()
     name = getattr(provider, "name", "gemini")
 
-    def unavailable(reason: str, http_status: Optional[int] = None, error_type: Optional[str] = None) -> dict:
-        # Safe diagnostics only: fixed reason code, numeric HTTP status, exception class name. Never messages or content.
+    def unavailable(reason: str, http_status: Optional[int] = None, error_type: Optional[str] = None,
+                    diagnostics: Optional[dict] = None) -> dict:
+        # Safe diagnostics only: fixed reason code, numeric HTTP status, exception class name, and the provider fields
+        # the Gemini module has already sanitised. Never the prompt, the payload, a raw body or an exception message.
+        extra = "".join(f" {k}={diagnostics[k]}" for k in _DIAGNOSTIC_KEYS if diagnostics and diagnostics.get(k))
+        message = diagnostics.get("provider_message") if diagnostics else None
         logger.warning(
-            "AI analyst unavailable: reason=%s http_status=%s error_type=%s latency_ms=%d",
+            "AI analyst unavailable: reason=%s http_status=%s error_type=%s latency_ms=%d%s%s",
             reason, http_status if http_status is not None else "none", error_type or "none",
-            int((time.perf_counter() - started) * 1000),
+            int((time.perf_counter() - started) * 1000), extra, f' provider_message="{message}"' if message else "",
         )
         return _result(
             "unavailable", f"{UNAVAILABLE_MESSAGES.get(reason, UNAVAILABLE_MESSAGES['upstream_error'])} The investigation results are unaffected.",
             config, provider=name, unavailable_reason=reason, pseudonymized=True,
             latency_ms=int((time.perf_counter() - started) * 1000),
         )
+
+    problem = config_problem(config)
+    if problem:
+        logger.warning("AI analyst configuration problem: setting=%s model=%s (no request sent)", problem, config.model)
+        return unavailable("invalid_configuration")
 
     try:
         if provider is None:
@@ -532,11 +575,13 @@ async def analyze(report: dict, provider: Optional[Provider] = None, config: Opt
             return _result("not_configured", f"No Gemini API key is configured on the server. {template_note}", config)
         known = reason in UNAVAILABLE_MESSAGES
         status = getattr(exc, "http_code", None)
+        diagnostics = getattr(exc, "diagnostics", None)
         return unavailable(
             reason if known else "upstream_error",
             http_status=status if isinstance(status, int) else None,
             # A ProviderError's class says nothing new; for anything else the class name tells which layer failed.
             error_type=None if known else type(exc).__name__,
+            diagnostics=diagnostics if known and isinstance(diagnostics, dict) else None,
         )
 
     if out.blocked:
