@@ -186,7 +186,9 @@ def test_api_v2_models_status(client: TestClient):
     assert data["overall_status"] == "healthy"
     assert data["inference_ready"] is True
     assert data["account_model"]["available"] is True
-    assert data["account_model"]["version"] == "v2-account-1.0.0"
+    active_meta = json.loads((V2MLInferenceService.ACCOUNT_ARTIFACTS_DIR / "metadata.json").read_text())
+    assert data["account_model"]["version"] == active_meta["model_version"]
+    assert data["account_model"]["decision_threshold"] == active_meta["decision_threshold"]
     assert data["paysim_benchmark"]["available"] is True
     assert "disclaimer" in data
 

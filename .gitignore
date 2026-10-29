@@ -9,6 +9,7 @@ data/raw/
 data/processed/
 data/v2_synthetic/
 data/generated/
+data/v2_model_eval/
 data/*.csv
 data/**/*.csv
 *.parquet

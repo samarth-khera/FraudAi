@@ -69,6 +69,9 @@ export const AccountModelPanel: React.FC<Props> = ({ accountId, isReportingCusto
   const status = data.status.ok ? data.status.value : null;
   const metrics = status?.account_model?.test_metrics as Record<string, number> | null | undefined;
   const testSuspicious = status?.account_model?.dataset_info?.test_suspicious_count as number | undefined;
+  const testNormal = status?.account_model?.dataset_info?.test_normal_count as number | undefined;
+  const threshold = status?.account_model?.decision_threshold ?? (typeof metrics?.threshold === 'number' ? metrics.threshold : null);
+  const ops = status?.account_model?.operational_notes;
   const rules = data.rules.ok ? data.rules.value : null;
   const model = data.model.ok ? data.model.value : null;
   const disagree = rules && model ? Math.abs(rules.risk_score - model.risk_score) >= 30 : false;
@@ -129,7 +132,9 @@ export const AccountModelPanel: React.FC<Props> = ({ accountId, isReportingCusto
                 <Pill tone={LEVEL_TONE[model.risk_level]}>{LEVEL_LABEL[model.risk_level]}</Pill>
               </p>
               <p className="mt-1 text-xs text-[#6B655B]">
-                How closely this account’s behaviour resembles suspicious accounts in the synthetic training data.
+                How closely this account’s behaviour resembles suspicious accounts in the synthetic training data. A
+                score, not a verified probability.
+                {threshold !== null && ` Accounts at ${Math.round(threshold * 100)}% or more are suggested for review.`}
               </p>
             </>
           ) : (
@@ -206,13 +211,27 @@ export const AccountModelPanel: React.FC<Props> = ({ accountId, isReportingCusto
         </p>
         {metrics && (
           <p>
-            On held-out synthetic test accounts, at its 50% threshold the model caught {pct(metrics.recall)} of suspicious
-            accounts, and {pct(metrics.precision)} of the accounts it flagged were suspicious
-            {testSuspicious !== undefined ? ` (only ${testSuspicious} suspicious accounts in the test set)` : ''}. It misses
-            cases and raises false alarms.
+            On held-out synthetic test accounts
+            {testSuspicious !== undefined && testNormal !== undefined
+              ? ` (${testSuspicious} suspicious, ${testNormal.toLocaleString('en-IN')} ordinary)`
+              : testSuspicious !== undefined
+              ? ` (only ${testSuspicious} suspicious)`
+              : ''}
+            , at its {threshold !== null ? `${Math.round(threshold * 100)}%` : 'review'} threshold the model caught{' '}
+            {pct(metrics.recall)} of suspicious accounts, and {pct(metrics.precision)} of the accounts it flagged were
+            suspicious. It misses cases and raises false alarms.
           </p>
         )}
-        <p>Trained and tested only on synthetic data. A score is a reason to look closer, never a finding.</p>
+        {ops?.demo_ledger_flag_rate_ordinary !== undefined && (
+          <p>
+            In this app’s own ledger, where suspicious accounts are rare, it also flags about{' '}
+            {pct(ops.demo_ledger_flag_rate_ordinary)} of ordinary accounts, so most flags there are false alarms.
+          </p>
+        )}
+        <p>
+          Trained and tested only on synthetic data. A high score is a reason to look closer, never a finding, and a low
+          score does not clear an account.
+        </p>
         <Link to="/tools/model" className="inline-block font-semibold text-[#B45309] hover:text-[#EA8500]">
           Full model evaluation →
         </Link>
