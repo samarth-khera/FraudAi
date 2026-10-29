@@ -26,7 +26,7 @@ AccountIdPath = Path(
     description="Unique account identifier.",
 )
 
-from app.api.auth import AuthContext, verify_write_permission
+from app.api.auth import AuthContext, verify_write_permission, write_access_mode
 from app.db.models import utc_now
 from app.db.session import SessionLocal, get_db
 from app.models.domain import AccountReviewStatus, FraudCase, Transaction
@@ -139,7 +139,9 @@ def _run_trace(repo: CaseRepository, case_id: str, max_depth: int) -> TraceResul
 # ---------------- System ----------------
 @router.get("/health", response_model=HealthResponse, tags=["system"])
 def health() -> HealthResponse:
-    return HealthResponse(status="ok", service="fraudshield-ai-backend", phase="1-synthetic")
+    return HealthResponse(
+        status="ok", service="fraudshield-ai-backend", phase="1-synthetic", write_access=write_access_mode()
+    )
 
 
 # ---------------- Case Management ----------------

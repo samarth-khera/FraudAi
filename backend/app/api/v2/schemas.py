@@ -223,10 +223,32 @@ class LedgerSnapshotInfo(BaseModel):
 
 
 class ModelDivergenceInfo(BaseModel):
-    divergence_detected: bool
-    ml_score: float
-    rule_score: float
-    score_delta: float
+    """Whether the account model and the fixed rules each suggest review, and whether they disagree.
+
+    The two scores are on different scales and must not be subtracted: ``ml_score`` is an uncalibrated model
+    score shown as 0-100%, ``rule_score`` is rule points out of 100. Compare the ``*_suggests_review`` flags.
+    """
+
+    model_suggests_review: bool = Field(
+        description="True when the model score is at or above the served review threshold (predicted_class 'suspicious')."
+    )
+    rule_suggests_review: bool = Field(description="True when the rule level is 'high' or 'critical'.")
+    checks_disagree: bool = Field(description="True when exactly one of the two checks suggests review.")
+    model_review_threshold: Optional[float] = Field(
+        None, description="Review threshold of the served account model on its 0-1 scale (from model metadata)."
+    )
+    model_score_unit: str = Field("percent_0_100_uncalibrated", description="Unit of ml_score.")
+    rule_score_unit: str = Field("points_0_100", description="Unit of rule_score.")
+    ml_score: float = Field(description="Account model score, 0-100%. Not a probability of fraud.")
+    rule_score: float = Field(description="Rule score, points out of 100.")
+    divergence_detected: bool = Field(
+        deprecated="Use checks_disagree. Kept as an alias with the same value for existing callers.",
+        description="Deprecated alias of checks_disagree.",
+    )
+    score_delta: float = Field(
+        deprecated="Not meaningful: subtracts rule points from a model percentage. Use checks_disagree.",
+        description="Deprecated. abs(ml_score - rule_score) across incompatible scales; do not interpret or display.",
+    )
     interpretation: str
     suggested_focus: str
 
@@ -242,6 +264,13 @@ class AccountLiveAnalysisResponse(BaseModel):
     divergence: ModelDivergenceInfo
     recommended_actions: list[RecommendedAction]
     evidence_gaps: list[str]
-    human_review_recommended: bool
+    human_review_recommended: bool = Field(
+        description="True when the model suggests review, the rules suggest review, or quick forwarding was observed."
+    )
+    human_review_basis: list[str] = Field(
+        default_factory=list,
+        description="Which conditions set human_review_recommended: 'model_at_or_above_threshold', "
+        "'rules_high_or_above', 'rapid_pass_through_observed'.",
+    )
     disclaimer: str
 

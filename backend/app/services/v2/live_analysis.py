@@ -36,6 +36,30 @@ except ModuleNotFoundError:
     from backend.app.services.v2.risk_assessment import AccountRiskAssessor
 
 
+def compare_review_suggestions(model_predicted_class: str, rule_risk_level: str, rapid_pass_through: bool) -> dict:
+    """Compare the two checks by their own review points, never by subtracting their scores.
+
+    The rule score is points out of 100; the model score is an uncalibrated 0-1 output shown as a percentage.
+    The model's review point is applied upstream (predicted_class uses the served threshold); the rules'
+    review point is "high" or above, matching the rule assessor's own recommendation text.
+    """
+    model_suggests = model_predicted_class == "suspicious"
+    rules_suggest = rule_risk_level in ("high", "critical")
+    basis = []
+    if model_suggests:
+        basis.append("model_at_or_above_threshold")
+    if rules_suggest:
+        basis.append("rules_high_or_above")
+    if rapid_pass_through:
+        basis.append("rapid_pass_through_observed")
+    return {
+        "model_suggests_review": model_suggests,
+        "rule_suggests_review": rules_suggest,
+        "checks_disagree": model_suggests != rules_suggest,
+        "human_review_basis": basis,
+    }
+
+
 class AccountLiveAnalysisService:
     """Orchestrates on-demand real-time forensic analysis of an account."""
 
@@ -88,15 +112,14 @@ class AccountLiveAnalysisService:
         if not ml_assessment:
             return None
 
-        # 4. Compare the two checks on their own terms. The rule score is points out of 100 and the model
-        # score is an uncalibrated 0-1 output, so subtracting them is meaningless. Each check has its own
-        # review point: rules at "high" or above, the model at its validated threshold.
+        # 4. Compare the two checks on their own terms (see compare_review_suggestions).
         ml_score = ml_assessment.risk_score
         rule_score = rule_assessment.risk_score
-        score_delta = round(abs(ml_score - rule_score), 1)  # kept for API compatibility; not a comparison
-        model_suggests_review = ml_assessment.predicted_class == "suspicious"
-        rules_suggest_review = rule_assessment.risk_level in ("high", "critical")
-        divergence_detected = model_suggests_review != rules_suggest_review
+        review = compare_review_suggestions(
+            ml_assessment.predicted_class, rule_assessment.risk_level, bool(rule_assessment.signals.rapid_pass_through)
+        )
+        model_suggests_review = review["model_suggests_review"]
+        rules_suggest_review = review["rule_suggests_review"]
 
         if model_suggests_review and not rules_suggest_review:
             divergence_interp = (
@@ -120,10 +143,15 @@ class AccountLiveAnalysisService:
             suggested_focus = "This does not clear the account; consider the case evidence."
 
         divergence_info = ModelDivergenceInfo(
-            divergence_detected=divergence_detected,
+            model_suggests_review=model_suggests_review,
+            rule_suggests_review=rules_suggest_review,
+            checks_disagree=review["checks_disagree"],
+            model_review_threshold=V2MLInferenceService.decision_threshold(),
             ml_score=ml_score,
             rule_score=rule_score,
-            score_delta=score_delta,
+            divergence_detected=review["checks_disagree"],
+            # Deprecated; same arithmetic as before so existing callers see no change in value.
+            score_delta=round(abs(ml_score - rule_score), 1),
             interpretation=divergence_interp,
             suggested_focus=suggested_focus,
         )
@@ -277,7 +305,6 @@ class AccountLiveAnalysisService:
             )
         )
 
-        human_review = model_suggests_review or rules_suggest_review or bool(signals.rapid_pass_through)
 
         now_utc = datetime.now(timezone.utc).isoformat()
         run_id = f"RUN-{uuid.uuid4().hex[:8].upper()}"
@@ -293,7 +320,8 @@ class AccountLiveAnalysisService:
             divergence=divergence_info,
             recommended_actions=recommended_actions,
             evidence_gaps=rule_assessment.evidence_gaps,
-            human_review_recommended=human_review,
+            human_review_recommended=bool(review["human_review_basis"]),
+            human_review_basis=review["human_review_basis"],
             disclaimer=(
                 "Advisory Decision Support Only. Results reflect on-demand real-time computation of observable ledger features "
                 "and trained machine learning inference. Machine learning risk estimates and rule signals provide indicators "

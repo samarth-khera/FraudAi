@@ -14,6 +14,7 @@ from typing import Any, Optional
 from sqlalchemy import asc, desc, func, or_
 from sqlalchemy.orm import Session
 
+from app.api.auth import audit_identity_fields
 from app.db.models import (
     AccountModel,
     AccountReviewStatusModel,
@@ -209,8 +210,7 @@ class SqlCaseRepository:
                 "reported_amount": float(case.reported_amount),
                 "currency": case.currency,
                 "investigation_status": case.investigation_status.value,
-                "actor_identity_verified": auth_context.verified if auth_context else False,
-                "auth_context": auth_context.auth_method if auth_context else "local_development",
+                **audit_identity_fields(auth_context),
             }
             self.db.add(audit)
             self.db.commit()
@@ -251,8 +251,7 @@ class SqlCaseRepository:
                     entity_id=case_id,
                     timestamp=utc_now(),
                 )
-                changes["actor_identity_verified"] = auth_context.verified if auth_context else False
-                changes["auth_context"] = auth_context.auth_method if auth_context else "local_development"
+                changes.update(audit_identity_fields(auth_context))
                 audit.details = changes
                 self.db.add(audit)
                 self.db.commit()
@@ -366,8 +365,7 @@ class SqlCaseRepository:
                 )
                 audit.details = {
                     "transaction_ids": [m.transaction_id for m in added],
-                    "actor_identity_verified": auth_context.verified if auth_context else False,
-                    "auth_context": auth_context.auth_method if auth_context else "local_development",
+                    **audit_identity_fields(auth_context),
                 }
                 self.db.add(audit)
 
@@ -517,8 +515,7 @@ class SqlCaseRepository:
                 "additional_info_needed": bool(additional_info_needed),
                 "automated_action_taken": "none",
                 "client_supplied_reviewer": clean_reviewer,
-                "reviewer_identity_verified": auth_context.verified if auth_context else False,
-                "auth_context": auth_context.auth_method if auth_context else "local_development",
+                **audit_identity_fields(auth_context),
             }
             audit.details = extra_details
             self.db.add(audit)

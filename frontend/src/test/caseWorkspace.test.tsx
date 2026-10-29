@@ -311,6 +311,41 @@ describe('CaseWorkspacePage', () => {
     expect(screen.queryByText(/Legacy record: ACC-000002/)).not.toBeInTheDocument();
   });
 
+  it('never shows a typed reviewer name as verified, even when the request used the API key', async () => {
+    mockCaseApis();
+    const audit = makeAudit();
+    audit.events.push(
+      {
+        event_id: 5, case_id: 'FS-2001', timestamp: '2026-10-29T11:00:00', action: 'account_review_recorded',
+        performed_by: 'key_holder', entity_type: 'account_review', entity_id: 'FS-2001:ACC-000005',
+        details: { account_id: 'ACC-000005', new_review_state: 'under_review', reviewer_name_source: 'self_reported',
+                   reviewer_identity_verified: false, request_authenticated: true, auth_method: 'api_key' },
+      },
+      {
+        event_id: 6, case_id: 'FS-2001', timestamp: '2026-10-20T11:00:00', action: 'account_review_recorded',
+        performed_by: 'legacy_key_holder', entity_type: 'account_review', entity_id: 'FS-2001:ACC-000005',
+        details: { account_id: 'ACC-000005', new_review_state: 'under_review', reviewer_identity_verified: true },
+      }
+    );
+    vi.mocked(api.getCaseAuditTrail).mockResolvedValue(audit);
+    renderCase('/cases/FS-2001?section=review');
+    await screen.findByText('key_holder');
+    expect(screen.getAllByText(/request authorised with the server’s API key/).length).toBe(2);
+    expect(screen.queryByText(/identity verified/i)).toBeNull();
+    expect(screen.getAllByText(/name typed by the reviewer, not verified/).length).toBeGreaterThanOrEqual(3);
+  });
+
+  it.each([
+    ['open_local_development', /local server with no API key.*Reviewer names are typed, not verified/],
+    ['api_key_required', /requires an API key for changes\. This browser app does not send one/],
+    ['disabled_no_key_configured', /Changes are disabled on this server/],
+  ] as const)('tells the reviewer how writes are protected (%s)', async (mode, text) => {
+    mockCaseApis();
+    vi.spyOn(api, 'getHealth').mockResolvedValue({ status: 'ok', service: 's', phase: 'p', write_access: mode });
+    renderCase('/cases/FS-2001?section=review');
+    expect(await screen.findByTestId('write-access-notice')).toHaveTextContent(text);
+  });
+
   it('shows a clear history error with retry', async () => {
     mockCaseApis();
     vi.mocked(api.getCaseAuditTrail).mockRejectedValue(new ApiError('Network request failed', 'network_error'));

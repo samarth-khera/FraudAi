@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.api.auth import log_write_access_mode
 from app.api.risk import router as risk_router
 from app.api.routes import router
 from app.db.seed import seed_all_demo_data
@@ -33,6 +34,7 @@ async def lifespan(_: FastAPI):
     # Load the saved model once at startup. Never trains. A failure is cached and the
     # rest of the API (case tracing) keeps working; /api/risk/score then returns 503.
     get_risk_service().load()
+    log_write_access_mode()
     yield
 
 
@@ -80,7 +82,7 @@ def create_app() -> FastAPI:
         h.strip()
         for h in os.getenv(
             "CORS_ALLOWED_HEADERS",
-            "Content-Type,Authorization,X-API-Key,X-Reviewer-Id,X-Requested-With,Accept",
+            "Content-Type,Authorization,X-API-Key,X-Requested-With,Accept",
         ).split(",")
         if h.strip()
     ]

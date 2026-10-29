@@ -9,7 +9,8 @@ def test_health(client):
     r = client.get("/health")
     assert r.status_code == 200
     assert r.json() == {"status": "ok", "service": "fraudshield-ai-backend",
-                        "phase": "1-synthetic", "synthetic_data": True}
+                        "phase": "1-synthetic", "synthetic_data": True,
+                        "write_access": "open_local_development"}
 
 
 def test_list_cases(client):

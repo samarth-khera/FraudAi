@@ -202,10 +202,22 @@ export interface V2LedgerSnapshotInfo {
   current_balance: number;
 }
 
+/** Compare the two checks by their own review points; the scores are on different scales. */
 export interface V2ModelDivergenceInfo {
-  divergence_detected: boolean;
+  model_suggests_review?: boolean;
+  rule_suggests_review?: boolean;
+  checks_disagree?: boolean;
+  /** Served review threshold of the account model, 0-1 scale. */
+  model_review_threshold?: number | null;
+  model_score_unit?: string;
+  rule_score_unit?: string;
+  /** Model score, 0-100%. Not a probability of fraud. */
   ml_score: number;
+  /** Rule points out of 100. */
   rule_score: number;
+  /** @deprecated Alias of checks_disagree. */
+  divergence_detected: boolean;
+  /** @deprecated Subtracts rule points from a model percentage; not meaningful. Never display. */
   score_delta: number;
   interpretation: string;
   suggested_focus: string;
@@ -223,6 +235,8 @@ export interface V2AccountLiveAnalysisResponse {
   recommended_actions: V2RecommendedAction[];
   evidence_gaps: string[];
   human_review_recommended: boolean;
+  /** Why human review is recommended: model_at_or_above_threshold, rules_high_or_above, rapid_pass_through_observed. */
+  human_review_basis?: string[];
   disclaimer: string;
 }
 
