@@ -263,7 +263,7 @@ class AIAnalysis(BaseModel):
     unavailable_reason: Optional[str] = Field(
         None, description="When state is 'unavailable': timeout, rate_limited, auth_failed, request_rejected, "
                           "model_not_found, upstream_error, blocked, empty_output, truncated_output, malformed_output, "
-                          "invalid_output or policy_violation")
+                          "invalid_output, policy_violation or invalid_configuration")
     privacy_policy: Optional[str] = None
     pseudonymized: bool = False
     report: Optional[AIReport] = None
