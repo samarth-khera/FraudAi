@@ -360,3 +360,11 @@ textarea:focus-visible {
   }
 }
 
+
+/* Horizontally scrolling rows (section tabs, account chips) without a visible scrollbar */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

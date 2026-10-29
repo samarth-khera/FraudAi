@@ -24,6 +24,9 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
+# Tests run from the repository root or backend/; resolve data and artifacts from the repo.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
 try:
     from app.db.v2.models import AccountModel
     from app.main import app
@@ -43,7 +46,7 @@ def client() -> TestClient:
 
 @pytest.fixture(scope="module")
 def db_session():
-    engine = create_engine("sqlite:///data/v2_fraudshield.db")
+    engine = create_engine(f"sqlite:///{REPO_ROOT / 'data' / 'v2_fraudshield.db'}")
     with Session(engine) as session:
         yield session
 
@@ -106,7 +109,7 @@ def test_feature_builder_leakage_safeguards(db_session: Session):
 
 def test_paysim_benchmark_artifacts_and_metrics():
     """Verifies PaySim benchmark artifacts, feature schema, and held-out test evaluation."""
-    artifacts_dir = Path("ml/artifacts/v2/paysim_benchmark")
+    artifacts_dir = REPO_ROOT / "ml/artifacts/v2/paysim_benchmark"
     model_path = artifacts_dir / "model.joblib"
     schema_path = artifacts_dir / "feature_schema.json"
     meta_path = artifacts_dir / "metadata.json"
@@ -139,7 +142,7 @@ def test_paysim_benchmark_artifacts_and_metrics():
 
 def test_account_model_artifacts_and_metrics():
     """Verifies V2 account model artifacts, scenario separation, and metrics."""
-    artifacts_dir = Path("ml/artifacts/v2/account_model")
+    artifacts_dir = REPO_ROOT / "ml/artifacts/v2/account_model"
     model_path = artifacts_dir / "model.joblib"
     schema_path = artifacts_dir / "feature_schema.json"
     meta_path = artifacts_dir / "metadata.json"
@@ -183,7 +186,9 @@ def test_api_v2_models_status(client: TestClient):
     assert data["overall_status"] == "healthy"
     assert data["inference_ready"] is True
     assert data["account_model"]["available"] is True
-    assert data["account_model"]["version"] == "v2-account-1.0.0"
+    active_meta = json.loads((V2MLInferenceService.ACCOUNT_ARTIFACTS_DIR / "metadata.json").read_text())
+    assert data["account_model"]["version"] == active_meta["model_version"]
+    assert data["account_model"]["decision_threshold"] == active_meta["decision_threshold"]
     assert data["paysim_benchmark"]["available"] is True
     assert "disclaimer" in data
 

@@ -110,6 +110,26 @@ def test_alembic_migrations():
             os.remove(migration_db_path)
 
 
+def test_alembic_migrations_use_database_url_env(monkeypatch):
+    """`alembic upgrade head` as documented (no URL in alembic.ini) must read DATABASE_URL."""
+    backend_dir = Path(__file__).resolve().parent.parent
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+        migration_db_path = tmp.name
+    try:
+        migration_url = f"sqlite:///{migration_db_path}"
+        monkeypatch.setenv("DATABASE_URL", migration_url)
+        command.upgrade(Config(str(backend_dir / "alembic.ini")), "head")
+        from sqlalchemy import inspect
+
+        engine = create_engine(migration_url)
+        with engine.connect() as conn:
+            assert "fraud_cases" in inspect(conn).get_table_names()
+        engine.dispose()
+    finally:
+        if os.path.exists(migration_db_path):
+            os.remove(migration_db_path)
+
+
 def test_idempotent_seed_data(test_db):
     """Calling seed_demo_data multiple times must not duplicate cases, transactions, or accounts."""
     TestingSessionLocal, _ = test_db

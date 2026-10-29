@@ -176,12 +176,33 @@ class HealthResponse(BaseModel):
     synthetic_data: bool = True
 
 
+class CaseReviewProgress(BaseModel):
+    """Counts of recorded human decisions. Seeded placeholder states are not decisions."""
+
+    accounts_in_case: int
+    decisions_recorded: int
+    last_decision_at: Optional[datetime] = None
+
+
+class CaseOverview(FraudCase):
+    """A case plus where its account records come from and how far review has got."""
+
+    updated_at: Optional[datetime] = None
+    account_dataset: str = Field(
+        "case_ledger",
+        description="'case_ledger' (accounts exist only in the case records) or "
+        "'v2_synthetic_ledger' (accounts are the synthetic account ledger's own records).",
+    )
+    dataset_note: str = ""
+    review_progress: Optional[CaseReviewProgress] = None
+
+
 class CaseListResponse(BaseModel):
     count: int
     total: Optional[int] = None
     skip: Optional[int] = None
     limit: Optional[int] = None
-    cases: list[FraudCase]
+    cases: list[CaseOverview]
 
 
 class TransactionListResponse(BaseModel):

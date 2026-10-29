@@ -121,6 +121,17 @@ export interface V2SingleModelInfo {
   baseline_comparison?: Record<string, any> | null;
   leakage_protections?: string[] | null;
   features?: string[] | null;
+  /** Review threshold selected on validation data (0-1). Scores at or above it are "suspicious". */
+  decision_threshold?: number | null;
+  score_semantics?: string | null;
+  operational_notes?: {
+    demo_ledger_ordinary_accounts?: number;
+    demo_ledger_flag_rate_ordinary?: number;
+    demo_ledger_positive_accounts?: number;
+    demo_ledger_positives_flagged?: number;
+    demo_ledger_precision?: number;
+    note?: string;
+  } | null;
 }
 
 export interface V2ModelStatusResponse {
@@ -128,6 +139,7 @@ export interface V2ModelStatusResponse {
   paysim_benchmark: V2SingleModelInfo;
   overall_status: string;
   inference_ready: boolean;
+  status_detail?: string | null;
   disclaimer: string;
 }
 

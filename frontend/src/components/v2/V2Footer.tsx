@@ -1,36 +1,18 @@
 import React from 'react';
-import { ShieldAlert, BookOpen, ExternalLink, Lock } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const V2Footer: React.FC = () => {
   return (
-    <footer className="bg-[#FFFFFF]/95 backdrop-blur-sm border-t border-[#EAE3D6] text-[#6B655B] py-6 px-4 sm:px-6 lg:px-8 mt-auto shadow-[0_-2px_14px_rgba(180,150,120,0.04)]">
-      <div className="max-w-[1360px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
-        {/* Guardrail Disclaimer */}
-        <div className="flex items-start gap-2.5 max-w-2xl">
-          <ShieldAlert className="w-4 h-4 text-[#EA8500] shrink-0 mt-0.5" />
-          <p className="leading-relaxed text-[#6B655B]">
-            <strong className="text-[#1A1714] font-semibold">Ethical AI & Compliance Safeguard:</strong> FraudShield AI V2 provides decision-support risk signals and factual transaction graph traversal. Connection to a suspicious flow does not establish criminal culpability. Automated account freezing, denial of service, or punitive action is strictly prohibited.
-          </p>
-        </div>
-
-        {/* Links & Metadata */}
-        <div className="flex items-center gap-4 shrink-0 font-mono text-[11px]">
-          <span className="flex items-center gap-1.5 text-[#1A1714] font-medium">
-            <Lock className="w-3.5 h-3.5 text-[#EA8500]" />
-            Synthetic Core Ledger
-          </span>
-          <span className="text-[#EAE3D6]">|</span>
-          <a
-            href="/docs"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 text-[#6B655B] hover:text-[#EA8500] font-medium transition-colors"
-          >
-            <BookOpen className="w-3.5 h-3.5 text-[#A8A29E]" />
-            FastAPI OpenAPI
-            <ExternalLink className="w-3 h-3 text-[#A8A29E]" />
-          </a>
-        </div>
+    <footer className="mt-auto border-t border-[#EAE3D6] bg-white px-4 sm:px-6 lg:px-8 py-6 text-xs text-[#6B655B]">
+      <div className="max-w-[1280px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <p className="max-w-2xl leading-relaxed">
+          FraudShield AI supports investigators; it does not decide guilt or freeze accounts. Receiving money in a case is
+          not evidence of wrongdoing. All data in this environment is synthetic.
+        </p>
+        <nav aria-label="Footer" className="flex items-center gap-4 font-semibold">
+          <Link to="/cases" className="hover:text-[#B45309]">Investigations</Link>
+          <Link to="/tools" className="hover:text-[#B45309]">Tools</Link>
+        </nav>
       </div>
     </footer>
   );

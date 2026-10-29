@@ -234,7 +234,8 @@ def test_startup_lifespan_loads_model_without_training(artifact_dir, monkeypatch
 # ---------------- existing endpoints preserved ----------------
 def test_existing_endpoints_unchanged(risk_client):
     assert risk_client.get("/health").json()["phase"] == "1-synthetic"
-    assert risk_client.get("/api/cases").json()["count"] == 1
+    case_ids = {c["case_id"] for c in risk_client.get("/api/cases").json()["cases"]}
+    assert {"FS-1042", "FS-2001"} <= case_ids
     t = risk_client.get("/api/cases/FS-1042/trace").json()
     assert t["summary"]["traceable_amount"] == 50000 and len(t["paths"]) == 3
     assert len(risk_client.get("/api/cases/FS-1042/graph").json()["edges"]) == 7

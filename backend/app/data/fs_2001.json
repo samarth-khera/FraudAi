@@ -1,0 +1,172 @@
+{
+  "_notice": "SYNTHETIC DEMONSTRATION DATA built from the V2 synthetic account ledger (data/v2_fraudshield.db) by scripts/build_v2_sample_case.py. Transaction and account IDs are the ledger's own IDs. The complaint wording and report time are written for the demo; the transfers are not.",
+  "account_dataset": "v2_synthetic_ledger",
+  "derivation": {
+    "origin_transaction_id": "TXN-0062181",
+    "rule": "Starting from the reported transfer, include every outgoing transfer an account made within 6 hours of receiving money in the case, up to 4 hops.",
+    "excluded_inputs": [
+      "scenario_id",
+      "scenario_tag",
+      "is_suspicious_scenario",
+      "ground_truth_label"
+    ]
+  },
+  "cases": [
+    {
+      "case_id": "FS-2001",
+      "reported_origin_transaction_id": "TXN-0062181",
+      "reported_amount": 250000.0,
+      "currency": "INR",
+      "reported_at": "2026-01-16T11:40:00",
+      "investigation_status": "open",
+      "description": "Sample complaint: customer ACC-000001 reports being persuaded by a caller to send 250,000 INR by IMPS to ACC-000003. Downstream transfers come from the synthetic account ledger. Receiving money in this case is not a finding of wrongdoing."
+    }
+  ],
+  "accounts": [
+    {
+      "account_id": "ACC-000001",
+      "label": "Reporting customer (synthetic)",
+      "role": "reporting_victim",
+      "is_synthetic": true
+    },
+    {
+      "account_id": "ACC-000003",
+      "label": "Reported initial receiver (synthetic)",
+      "role": "reported_initial_receiver",
+      "is_synthetic": true
+    },
+    {
+      "account_id": "ACC-000002",
+      "label": "Intermediate recipient (synthetic)",
+      "role": "intermediate_recipient",
+      "is_synthetic": true
+    },
+    {
+      "account_id": "ACC-000005",
+      "label": "Intermediate recipient (synthetic)",
+      "role": "intermediate_recipient",
+      "is_synthetic": true
+    },
+    {
+      "account_id": "ACC-000009",
+      "label": "Recipient under review (synthetic)",
+      "role": "recipient",
+      "is_synthetic": true
+    },
+    {
+      "account_id": "ACC-000012",
+      "label": "Recipient under review (synthetic)",
+      "role": "recipient",
+      "is_synthetic": true
+    }
+  ],
+  "account_review_statuses": [
+    {
+      "account_id": "ACC-000001",
+      "case_id": "FS-2001",
+      "review_state": "reporting_victim",
+      "evidence_quality": "not_assessed",
+      "notes": "Reporting customer."
+    },
+    {
+      "account_id": "ACC-000003",
+      "case_id": "FS-2001",
+      "review_state": "not_reviewed",
+      "evidence_quality": "not_assessed",
+      "notes": null
+    },
+    {
+      "account_id": "ACC-000002",
+      "case_id": "FS-2001",
+      "review_state": "not_reviewed",
+      "evidence_quality": "not_assessed",
+      "notes": null
+    },
+    {
+      "account_id": "ACC-000005",
+      "case_id": "FS-2001",
+      "review_state": "not_reviewed",
+      "evidence_quality": "not_assessed",
+      "notes": null
+    },
+    {
+      "account_id": "ACC-000009",
+      "case_id": "FS-2001",
+      "review_state": "not_reviewed",
+      "evidence_quality": "not_assessed",
+      "notes": null
+    },
+    {
+      "account_id": "ACC-000012",
+      "case_id": "FS-2001",
+      "review_state": "not_reviewed",
+      "evidence_quality": "not_assessed",
+      "notes": null
+    }
+  ],
+  "transactions": [
+    {
+      "transaction_id": "TXN-0062181",
+      "timestamp": "2026-01-16T10:15:00",
+      "sender_account_id": "ACC-000001",
+      "receiver_account_id": "ACC-000003",
+      "amount": 250000.0,
+      "currency": "INR",
+      "transaction_type": "IMPS",
+      "case_linkage": {
+        "case_id": "FS-2001",
+        "linkage_type": "reported_origin"
+      },
+      "synthetic_lineage_metadata": {
+        "case_id": "FS-2001",
+        "attributed_amount": 250000.0,
+        "basis": "synthetic_scenario_assumption",
+        "note": "Amount claimed in the complaint; equals the recorded transfer."
+      }
+    },
+    {
+      "transaction_id": "TXN-0062200",
+      "timestamp": "2026-01-16T10:23:00",
+      "sender_account_id": "ACC-000003",
+      "receiver_account_id": "ACC-000002",
+      "amount": 120000.0,
+      "currency": "INR",
+      "transaction_type": "UPI",
+      "case_linkage": null,
+      "synthetic_lineage_metadata": null
+    },
+    {
+      "transaction_id": "TXN-0062205",
+      "timestamp": "2026-01-16T10:25:00",
+      "sender_account_id": "ACC-000003",
+      "receiver_account_id": "ACC-000005",
+      "amount": 125000.0,
+      "currency": "INR",
+      "transaction_type": "UPI",
+      "case_linkage": null,
+      "synthetic_lineage_metadata": null
+    },
+    {
+      "transaction_id": "TXN-0062239",
+      "timestamp": "2026-01-16T10:35:00",
+      "sender_account_id": "ACC-000002",
+      "receiver_account_id": "ACC-000009",
+      "amount": 118000.0,
+      "currency": "INR",
+      "transaction_type": "ATM_CASH_OUT",
+      "case_linkage": null,
+      "synthetic_lineage_metadata": null
+    },
+    {
+      "transaction_id": "TXN-0062252",
+      "timestamp": "2026-01-16T10:38:00",
+      "sender_account_id": "ACC-000005",
+      "receiver_account_id": "ACC-000012",
+      "amount": 123000.0,
+      "currency": "INR",
+      "transaction_type": "ATM_CASH_OUT",
+      "case_linkage": null,
+      "synthetic_lineage_metadata": null
+    }
+  ]
+}

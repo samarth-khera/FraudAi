@@ -49,8 +49,11 @@ from app.schemas.case_management import (
     CaseUpdateRequest,
     GlobalAuditResponse,
 )
+from app.data.case_sources import account_dataset_for, dataset_note_for
 from app.schemas.trace import (
     CaseListResponse,
+    CaseOverview,
+    CaseReviewProgress,
     ErrorResponse,
     GraphResponse,
     HealthResponse,
@@ -98,6 +101,24 @@ def _require_case(repo: CaseRepository, case_id: str) -> FraudCase:
     return case
 
 
+def _case_overview(repo: CaseRepository, case: FraudCase) -> CaseOverview:
+    dataset = account_dataset_for(case.case_id)
+    reviews = repo.get_review_statuses(case.case_id)
+    decisions = [e for e in repo.get_audit_events(case.case_id) if e.action == "account_review_recorded"]
+    get_updated = getattr(repo, "get_case_updated_at", None)
+    return CaseOverview(
+        **case.model_dump(),
+        updated_at=get_updated(case.case_id) if get_updated else None,
+        account_dataset=dataset,
+        dataset_note=dataset_note_for(dataset),
+        review_progress=CaseReviewProgress(
+            accounts_in_case=len(reviews),
+            decisions_recorded=len(decisions),
+            last_decision_at=decisions[-1].timestamp if decisions else None,
+        ),
+    )
+
+
 def _run_trace(repo: CaseRepository, case_id: str, max_depth: int) -> TraceResult:
     case = _require_case(repo, case_id)
     try:
@@ -130,7 +151,8 @@ def list_cases(
 ) -> CaseListResponse:
     """List all cases with pagination."""
     cases, total = repo.list_cases(skip=skip, limit=limit)
-    return CaseListResponse(count=len(cases), total=total, skip=skip, limit=limit, cases=cases)
+    overviews = [_case_overview(repo, c) for c in cases]
+    return CaseListResponse(count=len(overviews), total=total, skip=skip, limit=limit, cases=overviews)
 
 
 @router.post(
@@ -161,13 +183,13 @@ def create_case(
         raise HTTPException(status_code=409, detail={"code": exc.code, "message": exc.message})
 
 
-@router.get("/api/cases/{case_id}", response_model=FraudCase, responses=_ERRORS, tags=["cases"])
+@router.get("/api/cases/{case_id}", response_model=CaseOverview, responses=_ERRORS, tags=["cases"])
 def get_case(
     case_id: str = CaseIdPath,
     repo: CaseRepository = Depends(get_repository),
-) -> FraudCase:
-    """Retrieve details for a specific case."""
-    return _require_case(repo, case_id)
+) -> CaseOverview:
+    """Retrieve details for a specific case, its account dataset and review progress."""
+    return _case_overview(repo, _require_case(repo, case_id))
 
 
 @router.patch("/api/cases/{case_id}", response_model=FraudCase, responses=_ERRORS, tags=["cases"])

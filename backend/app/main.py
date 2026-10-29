@@ -13,7 +13,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.risk import router as risk_router
 from app.api.routes import router
-from app.db.seed import seed_demo_data
+from app.db.seed import seed_all_demo_data
 from app.db.session import Base, SessionLocal, engine
 from app.services.risk_scoring import get_risk_service
 
@@ -28,7 +28,7 @@ async def lifespan(_: FastAPI):
     # Initialize database tables and seed demo scenario idempotently
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
-        seed_demo_data(db)
+        seed_all_demo_data(db)
 
     # Load the saved model once at startup. Never trains. A failure is cached and the
     # rest of the API (case tracing) keeps working; /api/risk/score then returns 503.
@@ -50,7 +50,7 @@ def create_app() -> FastAPI:
     # Ensure database tables exist and seed demo data
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
-        seed_demo_data(db)
+        seed_all_demo_data(db)
 
     is_prod = os.getenv("ENVIRONMENT", "development").lower() == "production"
     enable_docs = os.getenv("ENABLE_API_DOCS", "false" if is_prod else "true").lower() == "true"

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -14,11 +16,13 @@ try:
     from app.db.v2.session import get_v2_db, get_v2_engine, init_v2_db
     from app.main import app
     from app.services.v2.live_analysis import AccountLiveAnalysisService
+    from app.services.v2.ml_service import V2MLInferenceService
 except ModuleNotFoundError:
     from backend.app.db.v2.models import AccountModel, TransactionModel
     from backend.app.db.v2.session import get_v2_db, get_v2_engine, init_v2_db
     from backend.app.main import app
     from backend.app.services.v2.live_analysis import AccountLiveAnalysisService
+    from backend.app.services.v2.ml_service import V2MLInferenceService
 
 
 @pytest.fixture
@@ -151,7 +155,8 @@ def test_live_analysis_orchestration(client: TestClient):
     assert data["account_id"] == "ACC-VICTIM"
     assert data["analysis_id"].startswith("RUN-")
     assert "analyzed_at" in data
-    assert data["model_version"] == "v2-account-1.0.0"
+    active_meta = json.loads((V2MLInferenceService.ACCOUNT_ARTIFACTS_DIR / "metadata.json").read_text())
+    assert data["model_version"] == active_meta["model_version"]
 
     # Ledger snapshot verification
     snapshot = data["ledger_snapshot"]
