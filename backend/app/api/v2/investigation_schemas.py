@@ -265,7 +265,7 @@ class AIAnalysis(BaseModel):
     message: str
     unavailable_reason: Optional[str] = Field(
         None, description="When state is 'unavailable': timeout, rate_limited, auth_failed, request_rejected, "
-                          "model_not_found, upstream_error, blocked, empty_output, truncated_output, malformed_output, "
+                          "model_not_found, service_unavailable (provider overloaded or down, HTTP 503), upstream_error, blocked, empty_output, truncated_output, malformed_output, "
                           "invalid_output, policy_violation or invalid_configuration")
     privacy_policy: Optional[str] = None
     pseudonymized: bool = False
