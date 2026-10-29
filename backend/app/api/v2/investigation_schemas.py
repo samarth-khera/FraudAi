@@ -37,6 +37,9 @@ class InvestigationRequest(BaseModel):
     trace_scope: Literal["flagged", "all"] = Field(
         "flagged", description="'flagged': trace the account's transfers flagged as unusual (largest ones if none are); 'all': every transfer in range")
     max_accounts_analyzed: int = Field(25, ge=1, le=60, description="Accounts given a full individual assessment")
+    ai_explanation: Literal["inline", "separate"] = Field(
+        "inline", description="'inline': wait for the AI analyst in this response. 'separate': return the report now "
+                              "with ai_analysis.state 'deferred'; get the explanation from POST /api/v2/investigations/explanation")
 
     @model_validator(mode="after")
     def _range(self) -> "InvestigationRequest":
@@ -223,7 +226,7 @@ class AnalystSection(BaseModel):
     claims: list[AnalystClaim]
 
 
-AIState = Literal["completed", "disabled", "not_configured", "skipped_privacy_policy", "unavailable"]
+AIState = Literal["completed", "disabled", "not_configured", "skipped_privacy_policy", "unavailable", "deferred"]
 ObservationBasis = Literal["observed", "rule", "model", "hypothesis", "limitation"]
 
 
@@ -254,7 +257,7 @@ class AIAnalysis(BaseModel):
         ..., description="completed: a Gemini response was received and passed validation. disabled: turned off by "
                          "configuration. not_configured: no API key. skipped_privacy_policy: the data source is not "
                          "verified synthetic and no opt-in is configured. unavailable: timeout, quota, provider or "
-                         "validation failure.")
+                         "validation failure. deferred: requested separately (ai_explanation='separate').")
     status: Literal["generated", "not_configured", "failed", "rejected"] = Field(
         ..., deprecated=True, description="Legacy summary of `state` kept for existing clients.")
     provider: Optional[str]
@@ -263,7 +266,7 @@ class AIAnalysis(BaseModel):
     unavailable_reason: Optional[str] = Field(
         None, description="When state is 'unavailable': timeout, rate_limited, auth_failed, request_rejected, "
                           "model_not_found, upstream_error, blocked, empty_output, truncated_output, malformed_output, "
-                          "invalid_output or policy_violation")
+                          "invalid_output, policy_violation or invalid_configuration")
     privacy_policy: Optional[str] = None
     pseudonymized: bool = False
     report: Optional[AIReport] = None
@@ -303,5 +306,18 @@ class InvestigationResponse(BaseModel):
     unknowns: list[str]
     records_to_request: list[str]
     ledger_rows_read: int = Field(..., description="Transaction rows read from the ledger for this investigation")
+    report_digest: str = Field(..., description="Digest of the deterministic report; the separate explanation carries the "
+                                                "same value when it explains an identical report")
     persisted: bool = Field(False, description="Always false: investigations are computed on request and not stored")
     disclaimer: str
+
+
+class InvestigationExplanationResponse(BaseModel):
+    """POST /api/v2/investigations/explanation: the AI analyst for a report the server recomputed itself."""
+
+    account_id: str
+    report_digest: str = Field(..., description="Digest of the report that was explained; show the explanation only "
+                                                "next to a report with the same digest")
+    data_as_of: Optional[str]
+    duration_ms: int
+    ai_analysis: AIAnalysis

@@ -9,6 +9,8 @@ Nothing is stored. Ground-truth labels and scenario tags in the synthetic ledger
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import json
 import statistics
 import time
 import uuid
@@ -21,7 +23,7 @@ from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
 try:
-    from app.api.v2.investigation_schemas import InvestigationRequest, InvestigationResponse
+    from app.api.v2.investigation_schemas import InvestigationExplanationResponse, InvestigationRequest, InvestigationResponse
     from app.db.v2.models import AccountModel, TransactionModel
     from app.services.v2 import ai_analyst, data_source
     from app.services.v2.graph_tracer import FlowEdge, ForensicGraphTracer
@@ -29,7 +31,7 @@ try:
     from app.services.v2.ml_service import ModelUnavailableException, V2MLInferenceService
     from app.services.v2.risk_assessment import AccountRiskAssessor
 except ModuleNotFoundError:
-    from backend.app.api.v2.investigation_schemas import InvestigationRequest, InvestigationResponse
+    from backend.app.api.v2.investigation_schemas import InvestigationExplanationResponse, InvestigationRequest, InvestigationResponse
     from backend.app.db.v2.models import AccountModel, TransactionModel
     from backend.app.services.v2 import ai_analyst, data_source
     from backend.app.services.v2.graph_tracer import FlowEdge, ForensicGraphTracer
@@ -159,6 +161,18 @@ def compute_flags(account_id: str, txns: list[TransactionModel]) -> dict[str, li
     return dict(flags)
 
 
+def report_digest(report: dict) -> str:
+    """Stable digest of everything deterministic in a report: same ledger state + same settings -> same digest."""
+    req = {k: v for k, v in report["request"].items() if k != "ai_explanation"}
+    src = report["data_source"]
+    basis = {
+        "request": req,
+        "source": [src["source_kind"], src["data_as_of"], src["transactions_count"], src["accounts_count"]],
+        **{k: report[k] for k in ("victim", "trace", "accounts", "findings", "exposure", "model_version", "model_review_threshold")},
+    }
+    return hashlib.sha256(json.dumps(basis, sort_keys=True, default=str).encode()).hexdigest()[:24]
+
+
 class InvestigationService:
     @classmethod
     async def run_async(cls, db: Session, req: InvestigationRequest, provider: Any = None) -> InvestigationResponse:
@@ -167,8 +181,24 @@ class InvestigationService:
         The analyst only adds `ai_analysis`; an AI failure never fails the investigation.
         """
         report, clock = await run_in_threadpool(cls.compute, db, req)
-        report["ai_analysis"] = await ai_analyst.analyze(report, provider)
+        if req.ai_explanation == "separate":
+            report["ai_analysis"] = ai_analyst.deferred()
+        else:
+            report["ai_analysis"] = await ai_analyst.analyze(report, provider)
         return cls._finish(report, clock)
+
+    @classmethod
+    async def explain_async(cls, db: Session, req: InvestigationRequest, provider: Any = None) -> InvestigationExplanationResponse:
+        """Recomputes the deterministic report on the server (the browser never supplies evidence) and explains it."""
+        report, clock = await run_in_threadpool(cls.compute, db, req)
+        ai = await ai_analyst.analyze(report, provider)
+        return InvestigationExplanationResponse(
+            account_id=report["victim"]["account_id"],
+            report_digest=report["report_digest"],
+            data_as_of=report["data_source"]["data_as_of"],
+            duration_ms=int((time.perf_counter() - clock) * 1000),
+            ai_analysis=ai,
+        )
 
     @classmethod
     def run(cls, db: Session, req: InvestigationRequest, provider: Any = None) -> InvestigationResponse:
@@ -784,4 +814,5 @@ class InvestigationService:
                 + (" All data is synthetic." if source["is_synthetic"] else "")
             ),
         }
+        report["report_digest"] = report_digest(report)
         return report, clock
