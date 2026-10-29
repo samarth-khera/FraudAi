@@ -466,6 +466,24 @@ def _gemini_module():
     return gemini_provider
 
 
+def preload_provider() -> bool:
+    """Imports the Gemini SDK at startup when the analyst is enabled, so the first investigation does not pay for it.
+
+    Only an import: no client, no key needed, no request. Never raises; on failure the analyst reports
+    `unavailable` per request as before. Returns whether the module is loaded.
+    """
+    if not AnalystConfig.from_env().enabled:
+        return False
+    started = time.perf_counter()
+    try:
+        _gemini_module()
+    except Exception as exc:  # noqa: BLE001 - startup must not fail because of the optional analyst
+        logger.warning("AI analyst SDK could not be loaded at startup: error_type=%s", type(exc).__name__)
+        return False
+    logger.info("AI analyst SDK loaded at startup in %d ms (no request made)", int((time.perf_counter() - started) * 1000))
+    return True
+
+
 async def analyze(report: dict, provider: Optional[Provider] = None, config: Optional[AnalystConfig] = None) -> dict:
     """Produces the ai_analysis block. Never raises; every outcome is reported with its real state.
 
@@ -485,8 +503,13 @@ async def analyze(report: dict, provider: Optional[Provider] = None, config: Opt
     started = time.perf_counter()
     name = getattr(provider, "name", "gemini")
 
-    def unavailable(reason: str) -> dict:
-        logger.warning("AI analyst unavailable: reason=%s", reason)
+    def unavailable(reason: str, http_status: Optional[int] = None, error_type: Optional[str] = None) -> dict:
+        # Safe diagnostics only: fixed reason code, numeric HTTP status, exception class name. Never messages or content.
+        logger.warning(
+            "AI analyst unavailable: reason=%s http_status=%s error_type=%s latency_ms=%d",
+            reason, http_status if http_status is not None else "none", error_type or "none",
+            int((time.perf_counter() - started) * 1000),
+        )
         return _result(
             "unavailable", f"{UNAVAILABLE_MESSAGES.get(reason, UNAVAILABLE_MESSAGES['upstream_error'])} The investigation results are unaffected.",
             config, provider=name, unavailable_reason=reason, pseudonymized=True,
@@ -507,7 +530,14 @@ async def analyze(report: dict, provider: Optional[Provider] = None, config: Opt
         reason = getattr(exc, "reason", None)
         if reason == "not_configured":
             return _result("not_configured", f"No Gemini API key is configured on the server. {template_note}", config)
-        return unavailable(reason if reason in UNAVAILABLE_MESSAGES else "upstream_error")
+        known = reason in UNAVAILABLE_MESSAGES
+        status = getattr(exc, "http_code", None)
+        return unavailable(
+            reason if known else "upstream_error",
+            http_status=status if isinstance(status, int) else None,
+            # A ProviderError's class says nothing new; for anything else the class name tells which layer failed.
+            error_type=None if known else type(exc).__name__,
+        )
 
     if out.blocked:
         return unavailable("blocked")

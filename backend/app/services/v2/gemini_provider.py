@@ -38,6 +38,10 @@ class ProviderOutput:
 
 def _reason_for_api_error(exc: errors.APIError) -> str:
     code = getattr(exc, "code", None)
+    # 504 / DEADLINE_EXCEEDED: Gemini stopped at its deadline. The SDK sends the configured timeout as the
+    # X-Server-Timeout header, so a slow answer usually ends here rather than as a client-side timeout.
+    if code == 504 or getattr(exc, "status", None) == "DEADLINE_EXCEEDED":
+        return "timeout"
     if code in (401, 403):
         return "auth_failed"
     if code == 429:
@@ -47,6 +51,11 @@ def _reason_for_api_error(exc: errors.APIError) -> str:
     if isinstance(exc, errors.ServerError) or (isinstance(code, int) and code >= 500):
         return "upstream_error"
     return "request_rejected"
+
+
+def http_status_of(exc: errors.APIError) -> Optional[int]:
+    code = getattr(exc, "code", None)
+    return code if isinstance(code, int) else None
 
 
 class GeminiProvider:
@@ -90,7 +99,7 @@ class GeminiProvider:
         except (asyncio.TimeoutError, httpx.TimeoutException):
             raise ProviderError("timeout")
         except errors.APIError as exc:
-            raise ProviderError(_reason_for_api_error(exc), getattr(exc, "code", None))
+            raise ProviderError(_reason_for_api_error(exc), http_status_of(exc))
         except (httpx.HTTPError, OSError):
             raise ProviderError("upstream_error")
 
