@@ -41,7 +41,7 @@ Open the site and choose **Start sample investigation**. That opens case **FS-20
 
 - A synthetic complaint: customer `ACC-000001` says a caller persuaded them to send **₹2,50,000** by IMPS to `ACC-000003`.
 - The records show `ACC-000003` sent ₹2,45,000 on to two accounts within 10 minutes, and both of those made ATM cash-outs shortly after.
-- Try this: open `ACC-000003` in **Accounts & risk**. The ledger rules score it **high (60/100)**, but the account model scores it **low (10%)**. Then open `ACC-000001`, the reporting customer, whom the model scores **76.5%**. The workspace explains why neither score is a finding.
+- Try this: open `ACC-000003` in **Accounts & risk**. The ledger rules score it **60/100 (high)** and the account model **71% (high)**. Then open `ACC-000002`: rules 60/100, model **18% (elevated)**, just over the model’s 18% review threshold. The workspace explains why neither score is a finding.
 - Record a decision in **Review & history**, refresh the page, and check that it is still there in the history.
 
 See [Presenting the demo](#presenting-the-demo) for a step-by-step script.
@@ -67,22 +67,34 @@ results, and the workspace says so rather than inventing them.
 | Check | What it is | Where it applies |
 |---|---|---|
 | **Ledger rules** | Fixed, readable rules about timing, size and spread of transfers (0–100). | Accounts in the synthetic account ledger. |
-| **Account model** (`v2-account-1.0.0`) | An XGBoost model over 26 behaviour features. Shows the six inputs that moved the score most (TreeSHAP), explained in plain words. | Accounts in the synthetic account ledger only. |
+| **Account model** (`v2-account-2.0.0`) | An XGBoost model over 26 behaviour features. Shows the six inputs that moved the score most (TreeSHAP), explained in plain words. | Accounts in the synthetic account ledger only. |
 | **Rule-based patterns** | Observations from the case’s own transfers, such as forwarding within minutes or splitting payments. | Every case. |
 
 Both automated checks run on an account’s **whole ledger history** (including activity after the case),
 computed when you open the account.
 
-**How good is the account model?** It was tested on 2,000 synthetic accounts that it never saw in training.
-Only **6** of them were suspicious. At its 50% threshold it caught **2 of those 6** (33%), and it flagged **4**
-accounts, of which **2** were suspicious (50%). With so few suspicious examples these figures are very rough:
-one more or one fewer catch changes them a lot. ROC-AUC is 0.99, but that number looks good mainly because
-almost every test account is ordinary; the precision-recall score (PR-AUC 0.46), which focuses on the rare
-suspicious accounts, is the more honest summary. The model was trained on only 26 suspicious accounts.
+**How good is the account model?** The model was rebuilt on 29 Oct 2026 after an audit
+([`docs/ACCOUNT_MODEL_AUDIT.md`](docs/ACCOUNT_MODEL_AUDIT.md)) found that the previous version had been trained
+on 26 suspicious accounts and tested on 6, and had in fact missed every money-forwarding account it was tested on.
 
-In plain terms: the model misses most suspicious accounts and some of its flags are wrong. Use its score as one
-prompt among several, never as a finding, and never treat a low score as clearing an account. The sample case’s
-scenario was held out of training, so its scores are genuine out-of-sample results.
+The current version was tested on a separate synthetic ledger it never trained on: **260 suspicious and 3,919
+ordinary accounts**, including two kinds of suspicious behaviour it never saw in training. A score of **18% or
+more** means “suggested for review”; that threshold was chosen on separate validation data. At that threshold:
+
+- it caught about **half** of the suspicious accounts (53%, 139 of 260);
+- about **one in three** of its flags were suspicious (33%); the rest were legitimate accounts that behave
+  similarly, such as students paying fees from a parent’s transfer or people paying rent as soon as their
+  salary lands;
+- on this app’s own ledger, where suspicious accounts are much rarer, it flags about **5% of ordinary accounts**,
+  so **most flags there are false alarms** (about 1 in 25 flags was a planted scenario account).
+
+It still ranks accounts better than the ledger rules (precision-recall score 0.38 against 0.10) and the previous
+model (0.22). The score is **not** a probability that an account is fraudulent: it is learned from synthetic
+labels and has not been calibrated against real outcomes. The synthetic data never puts a corporate account in a
+scenario, so the model tells you nothing about corporate accounts.
+
+In plain terms: use the score as one prompt among several. A high score is never a finding, and a low score
+never clears an account.
 
 ### What the PaySim benchmark does and does not prove
 
@@ -155,7 +167,8 @@ To rebuild them from the repository root:
 ```bash
 backend/.venv/bin/python scripts/generate_synthetic_bank_data.py --seed 42
 backend/.venv/bin/python scripts/ingest_v2_data.py --input-dir data/v2_synthetic --batch-size 10000 --replace
-PYTHONPATH=backend:. backend/.venv/bin/python ml/v2/train_account_model.py
+PYTHONPATH=backend:. backend/.venv/bin/python -m ml.v2.scenario_bank        # evaluation ledger (data/v2_model_eval/)
+PYTHONPATH=backend:. backend/.venv/bin/python -m ml.v2.account_model_eval   # trains v2-account-2.0.0 + evaluation report
 PYTHONPATH=. backend/.venv/bin/python ml/v2/paysim_benchmark.py   # needs the PaySim CSV in data/raw/
 ```
 
@@ -194,7 +207,10 @@ describe position in the money flow only.
 ## Limitations
 
 - **Synthetic data only.** Real payment systems, fraud patterns and customer behaviour differ.
-- **Small model test set.** The account model’s test results rest on 6 suspicious accounts.
+- **Model evaluated on synthetic data only.** The account model’s test set has 260 suspicious accounts, but
+  some behaviour families are still small (9–11 accounts), the synthetic suspicious rate (~6%) is far above real
+  life, and the account-level features cannot see who the counterparties are. See
+  [`docs/ACCOUNT_MODEL_AUDIT.md`](docs/ACCOUNT_MODEL_AUDIT.md).
 - **Reviewer identity is not verified.** Without an API key configured (`ADMIN_API_KEY`), the reviewer
   name is whatever is typed. The history labels it as unverified. Production use would need sign-in and roles.
 - **Audit history is append-only in the application, not tamper-proof.** Events are stored in SQLite with
@@ -226,10 +242,12 @@ disagree, and a review decision.
 3. **Money flow:** show the five transfers from left to right. Explain that the *sum of all transfers*
    (₹7,36,000) counts the same money at each hop and is not the loss. Click `ACC-000003`.
 4. **Open account details** (Accounts & risk): `ACC-000003` forwarded ₹2,45,000 within 10 minutes. The ledger
-   rules score it **60/100 (high)**; the account model scores it **10% (low)**. Read the “Why the model gave
-   this score” factors and the “About these results” limits aloud.
-5. Click `ACC-000001`, the reporting customer: the model scores them **76.5%**. Use this to explain that a
-   score describes unusual behaviour, not wrongdoing.
+   rules score it **60/100 (high)**; the account model scores it **71% (high)**. Read the “Why the model gave
+   this score” factors and the “About these results” limits aloud, especially that most flags on this ledger
+   are false alarms.
+5. Click `ACC-000002`: rules 60/100, model **18% (elevated)**, barely over the review threshold. Then click
+   `ACC-000001`, the reporting customer: model **7% (low)**. Use these to explain that the score is a prompt
+   to look closer, not a verdict either way.
 6. **Review & history:** choose `ACC-000003`, pick a decision, write your reasoning, type your name, click
    **Review before saving**, then **Save decision**. The green message appears only after the server confirms.
 7. Refresh the browser. The decision and its history entry are still there. Use Back and Forward to show the
@@ -237,11 +255,10 @@ disagree, and a review decision.
 8. Optional: open **FS-1042** → Accounts & risk to show that a case without ledger records gets **no** model
    score, with an explanation instead.
 
-**What not to claim.** The synthetic dataset’s own labels (which the workspace deliberately never shows)
-mark the three accounts that forwarded money in FS-2001 (`ACC-000003`, `ACC-000002`, `ACC-000005`) as part
-of the scam scenario, yet the model scores them low (10–15%).
-That is a real miss, consistent with the test results above. Do not present the model as able to find
-these accounts, and do not present the PaySim benchmark’s near-perfect scores as evidence about cases.
+**What not to claim.** Do not say the model “found” the FS-2001 accounts: four accounts prove nothing, and the
+model misses about half of suspicious accounts in testing. Do not say a flag means wrongdoing: on this app’s
+ledger most flags are false alarms. Do not present the PaySim benchmark’s near-perfect scores as evidence about
+cases or about the account model.
 
 ### Records already in the local demo database
 
