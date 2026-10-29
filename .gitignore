@@ -54,3 +54,6 @@ fraudshield.db
 test*.db
 node_modules/
 dist/
+
+# Vercel CLI project link (local only)
+.vercel

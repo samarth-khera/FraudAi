@@ -211,3 +211,17 @@ def test_cors_wildcard_never_allows_credentials(monkeypatch):
     r = client.get("/health", headers={"Origin": "https://anywhere.example"})
     assert r.headers.get("access-control-allow-origin") == "*"
     assert r.headers.get("access-control-allow-credentials") is None
+
+
+def test_live_analysis_is_read_only_and_available_when_writes_are_disabled(isolated, monkeypatch):
+    """The analyze endpoint stores nothing, so the production write lock must not block it."""
+    client, Session = isolated
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    assert client.get("/health").json()["write_access"] == "disabled_no_key_configured"
+    r = client.post("/api/v2/accounts/ACC-000003/analyze")
+    if r.status_code == 503 and r.json()["error"]["code"] == "model_unavailable":
+        pytest.skip("account model binary not present")
+    assert r.status_code == 200, r.text
+    assert r.json()["account_id"] == "ACC-000003"
+    # Real writes stay refused.
+    assert client.put(REVIEW_URL, json=REVIEW_BODY).status_code == 503
