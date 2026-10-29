@@ -160,6 +160,7 @@ class V2MLInferenceService:
             baseline_comparison=None,
             leakage_protections=paysim_meta.get("excluded_features"),
             features=paysim_meta.get("features"),
+            decision_threshold=paysim_meta.get("selected_threshold") if paysim_meta else None,
         )
 
         # Report readiness from an actual load attempt, not just file presence.

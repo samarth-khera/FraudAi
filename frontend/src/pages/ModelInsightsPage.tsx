@@ -34,6 +34,7 @@ import {
 } from 'recharts';
 import { v2Api } from '../services/v2Api';
 import { V2ModelStatusResponse, V2SingleModelInfo, V2AccountMLAssessmentResponse } from '../types/v2';
+import { accountEvaluation, formatModelScore, modelThreshold, thresholdPercent } from '../lib/modelScore';
 
 // -----------------------------------------------------------------------------
 // Verified Feature Definitions & Glossaries
@@ -57,7 +58,7 @@ const ACCOUNT_FEATURE_GLOSSARY: Record<string, FeatureGlossaryEntry> = {
     name: 'customer_type_student',
     category: 'profile',
     label: 'Student Account Indicator',
-    description: 'Binary flag for student KYC profiles; highly targeted by organized mule recruitment syndicates.',
+    description: 'Whether the account is registered as a student account.',
   },
   max_amount: {
     name: 'max_amount',
@@ -296,6 +297,14 @@ const PAYSIM_FEATURE_GLOSSARY: Record<string, FeatureGlossaryEntry> = {
 // Component
 // -----------------------------------------------------------------------------
 
+function falsePositiveRate(info: V2SingleModelInfo | null | undefined): string | null {
+  const m = info?.test_metrics as Record<string, number> | null | undefined;
+  const fp = m?.false_positives, tn = m?.true_negatives;
+  if (typeof fp !== 'number' || typeof tn !== 'number' || fp + tn === 0) return null;
+  const r = (fp / (fp + tn)) * 100;
+  return `${r < 0.1 ? r.toFixed(3) : r.toFixed(1)}%`;
+}
+
 function accountTestTotal(info: V2SingleModelInfo | null | undefined): string {
   const d = info?.dataset_info as Record<string, number> | null | undefined;
   if (!d || d.test_suspicious_count === undefined || d.test_normal_count === undefined) return '—';
@@ -392,6 +401,7 @@ export const ModelInsightsPage: React.FC = () => {
   }, [loading]);
 
   // Active Model Info
+  const accountEval = accountEvaluation(modelStatus);
   const activeModelInfo: V2SingleModelInfo | null = useMemo(() => {
     if (!modelStatus) return null;
     if (activeModelTab === 'v2_account') return modelStatus.account_model;
@@ -583,7 +593,7 @@ export const ModelInsightsPage: React.FC = () => {
             {activeModelTab === 'v2_account'
               ? 'The V2 Account Model evaluates entity-level risk across continuous banking network topologies. It is trained strictly on group-aware scenario splits and must not be conflated with point-in-time transaction classification.'
               : activeModelTab === 'paysim'
-              ? 'The PaySim Benchmark measures single-transaction fraud classification on public 2017 mobile money simulation logs. It isolates single payment records and does not inspect downstream network lineage or innocent mule accounts.'
+              ? 'The PaySim Benchmark measures single-transaction fraud classification on public 2017 mobile money simulation logs. It scores single payments and does not look at accounts or money flows, so it says nothing about the account model or investigations.'
               : 'Both models serve complementary but strictly separated forensic objectives. Account-level topological metrics and single-transaction benchmark scores operate on different feature distributions.'}
           </p>
         </div>
@@ -692,11 +702,13 @@ export const ModelInsightsPage: React.FC = () => {
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-3.5 px-4 font-semibold text-[#1A1714]">Calibrated Threshold</td>
+                        <td className="py-3.5 px-4 font-semibold text-[#1A1714]">Review threshold</td>
                         <td className="py-3.5 px-4 font-mono text-[#6B655B]">
-                          {modelStatus.account_model.decision_threshold ?? '—'} (chosen on validation data to maximise F2)
+                          {modelThreshold(modelStatus.account_model) ?? '—'} (chosen on validation data to maximise F2)
                         </td>
-                        <td className="py-3.5 px-4 font-mono text-[#6B655B]">0.65 (Calibrated on validation set)</td>
+                        <td className="py-3.5 px-4 font-mono text-[#6B655B]">
+                          {modelThreshold(modelStatus.paysim_benchmark) ?? '—'} (chosen on the benchmark’s validation data)
+                        </td>
                       </tr>
                       <tr>
                         <td className="py-3.5 px-4 font-semibold text-[#1A1714]">Held-Out Sample Size</td>
@@ -743,7 +755,7 @@ export const ModelInsightsPage: React.FC = () => {
                   <div className="text-2xl sm:text-3xl font-extrabold font-mono text-[#1A1714]">
                     {activeModelInfo.test_metrics?.roc_auc ?? 'N/A'}
                   </div>
-                  <span className="text-[11px] text-[#6B655B] block">Discrimination accuracy</span>
+                  <span className="text-[11px] text-[#6B655B] block">Ranking quality across all thresholds (0.5 = random)</span>
                 </div>
 
                 <div className="p-5 rounded-2xl bg-white border border-[#EAE3D6] shadow-xs space-y-1">
@@ -753,7 +765,11 @@ export const ModelInsightsPage: React.FC = () => {
                   <div className="text-2xl sm:text-3xl font-extrabold font-mono text-[#EA8500]">
                     {activeModelInfo.test_metrics?.pr_auc ?? 'N/A'}
                   </div>
-                  <span className="text-[11px] text-[#6B655B] block">Precision-Recall curve area</span>
+                  <span className="text-[11px] text-[#6B655B] block">
+                    How well suspicious cases are ranked above others when they are rare
+                    {activeModelTab === 'v2_account' && accountEval.prAucInterval &&
+                      ` (95% interval ${accountEval.prAucInterval[0].toFixed(2)}–${accountEval.prAucInterval[1].toFixed(2)})`}
+                  </span>
                 </div>
 
                 <div className="p-5 rounded-2xl bg-white border border-[#EAE3D6] shadow-xs space-y-1">
@@ -765,7 +781,7 @@ export const ModelInsightsPage: React.FC = () => {
                       ? `${(activeModelInfo.test_metrics.precision * 100).toFixed(1)}%`
                       : 'N/A'}
                   </div>
-                  <span className="text-[11px] text-[#6B655B] block">Fraction of flags correct</span>
+                  <span className="text-[11px] text-[#6B655B] block">Share of flagged test cases that were labelled suspicious</span>
                 </div>
 
                 <div className="p-5 rounded-2xl bg-white border border-[#EAE3D6] shadow-xs space-y-1">
@@ -777,7 +793,7 @@ export const ModelInsightsPage: React.FC = () => {
                       ? `${(activeModelInfo.test_metrics.recall * 100).toFixed(1)}%`
                       : 'N/A'}
                   </div>
-                  <span className="text-[11px] text-[#6B655B] block">Fraction of fraud detected</span>
+                  <span className="text-[11px] text-[#6B655B] block">Share of suspicious test cases the model flagged</span>
                 </div>
 
                 <div className="p-5 rounded-2xl bg-white border border-[#EAE3D6] shadow-xs space-y-1 col-span-2 lg:col-span-1">
@@ -789,9 +805,19 @@ export const ModelInsightsPage: React.FC = () => {
                       ? Number(activeModelInfo.test_metrics.f1_score).toFixed(3)
                       : 'N/A'}
                   </div>
-                  <span className="text-[11px] text-[#6B655B] block">Harmonic balance</span>
+                  <span className="text-[11px] text-[#6B655B] block">Balance of precision and recall</span>
                 </div>
               </div>
+
+              <p className="text-xs text-[#6B655B] leading-relaxed -mt-4" data-testid="evaluation-scope-note">
+                {activeModelTab === 'v2_account'
+                  ? `Measured once on ${accountEval.positives ?? '—'} suspicious and ${accountEval.negatives?.toLocaleString('en-IN') ?? '—'} ordinary synthetic test accounts the model never trained on${
+                      accountEval.prAucInterval
+                        ? `; the PR-AUC 95% interval (${accountEval.prAucInterval[0].toFixed(2)}–${accountEval.prAucInterval[1].toFixed(2)}) comes from resampling whole scenarios`
+                        : ''
+                    }. These are estimates on synthetic data, not guarantees for any new account or for real bank data.`
+                  : 'Measured on a public mobile-money simulation. These near-perfect results describe that simulation only; they say nothing about the account model or about investigations.'}
+              </p>
 
               {/* 4. Confusion Matrix & Threshold Rationale */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -822,7 +848,7 @@ export const ModelInsightsPage: React.FC = () => {
                           'N/A'}
                       </span>
                       <span className="text-[10px] text-[#065F46] font-semibold block">
-                        Legitimate Cleared
+                        Ordinary, not flagged
                       </span>
                     </div>
 
@@ -836,7 +862,7 @@ export const ModelInsightsPage: React.FC = () => {
                           'N/A'}
                       </span>
                       <span className="text-[10px] text-[#92400E] font-semibold block">
-                        False Alarms ({activeModelTab === 'v2_account' ? 'FPR: 0.10%' : 'FPR: 0.003%'})
+                        False alarms{falsePositiveRate(activeModelInfo) ? ` (${falsePositiveRate(activeModelInfo)} of ordinary cases)` : ''}
                       </span>
                     </div>
 
@@ -850,7 +876,7 @@ export const ModelInsightsPage: React.FC = () => {
                           'N/A'}
                       </span>
                       <span className="text-[10px] text-[#991B1B] font-semibold block">
-                        Missed Fraud
+                        Labelled suspicious, missed
                       </span>
                     </div>
 
@@ -864,7 +890,7 @@ export const ModelInsightsPage: React.FC = () => {
                           'N/A'}
                       </span>
                       <span className="text-[10px] text-[#065F46] font-semibold block">
-                        Correctly Flagged
+                        Labelled suspicious, flagged
                       </span>
                     </div>
                   </div>
@@ -883,32 +909,38 @@ export const ModelInsightsPage: React.FC = () => {
                 <div className="lg:col-span-6 p-6 rounded-2xl bg-white border border-[#EAE3D6] shadow-xs space-y-4">
                   <div className="pb-3 border-b border-[#EAE3D6]">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-bold text-[#1A1714]">Decision Threshold &amp; Calibration</h3>
+                      <h3 className="text-sm font-bold text-[#1A1714]">Review threshold</h3>
                       <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#FFF8F0] text-[#EA8500] border border-[#FDE68A]">
-                        Frozen Operational Value
+                        Fixed by the evaluation pipeline
                       </span>
                     </div>
                     <p className="text-[11px] text-[#6B655B]">
-                      Calibrated on validation split to establish operational precision/recall trade-offs.
+                      {activeModelTab === 'v2_account'
+                        ? 'Chosen on validation data (not the test set) to maximise F2, which counts finding suspicious accounts twice as much as avoiding false alarms. The scores themselves are not calibrated probabilities.'
+                        : 'Chosen on the benchmark’s validation data during training.'}
                     </p>
                   </div>
 
                   <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] font-mono uppercase text-[#8C857B] block">Operational Cutoff</span>
-                      <div className="text-3xl font-extrabold font-mono text-[#1A1714]">
-                        {activeModelInfo.test_metrics?.threshold ?? '0.50'}
+                      <span className="text-[10px] font-mono uppercase text-[#8C857B] block">Threshold (0–1 score scale)</span>
+                      <div className="text-3xl font-extrabold font-mono text-[#1A1714]" data-testid="served-threshold">
+                        {modelThreshold(activeModelInfo) ?? 'Unavailable'}
                       </div>
                       <span className="text-[11px] text-[#6B655B]">
-                        Accounts scoring ≥ {activeModelInfo.test_metrics?.threshold ?? '0.50'} flagged for human review
+                        {modelThreshold(activeModelInfo) !== null
+                          ? `Scores at or above this (${thresholdPercent(activeModelInfo)} on the percentage scale) are suggested for human review. It is not a chance of fraud.`
+                          : 'The served model did not report a threshold.'}
                       </span>
                     </div>
-                    <div className="text-right">
-                      <span className="text-[10px] font-mono uppercase text-[#8C857B] block">Sensitivity Bias</span>
-                      <span className="px-2 py-1 rounded-md text-[11px] font-semibold bg-white border border-[#EAE3D6] text-[#1A1714] inline-block mt-1">
-                        High Precision Focus
-                      </span>
-                    </div>
+                    {activeModelTab === 'v2_account' && (
+                      <div className="text-right">
+                        <span className="text-[10px] font-mono uppercase text-[#8C857B] block">Trade-off</span>
+                        <span className="px-2 py-1 rounded-md text-[11px] font-semibold bg-white border border-[#EAE3D6] text-[#1A1714] inline-block mt-1">
+                          Favours recall (F2)
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-3 text-xs text-[#6B655B]">
@@ -922,7 +954,7 @@ export const ModelInsightsPage: React.FC = () => {
                     <div className="p-3 rounded-xl bg-[#FFFBEB] border border-[#FDE68A] text-[11px] text-[#92400E] flex items-start gap-2.5">
                       <Sliders className="w-4 h-4 text-[#EA8500] flex-shrink-0 mt-0.5" />
                       <p className="leading-relaxed">
-                        <strong>Evaluation Integrity Note:</strong> The operational threshold is locked to prevent subjective analyst bias. Interactive slider simulation is omitted because reliable recalculation requires raw continuous probability arrays from held-out splits.
+                        <strong>Not adjustable here:</strong> the threshold can only change by re-running the evaluation pipeline (<code>ml/v2/account_model_eval.py</code>), which selects it on validation data and records it with the model.
                       </p>
                     </div>
                   </div>
@@ -1100,13 +1132,13 @@ export const ModelInsightsPage: React.FC = () => {
                           <span className="font-mono font-bold text-[#1A1714] text-sm">{drillAssessment.account_id}</span>
                         </div>
                         <div>
-                          <span className="text-[10px] text-[#8C857B] font-mono block">Calibrated Risk Score</span>
+                          <span className="text-[10px] text-[#8C857B] font-mono block">Model score</span>
                           <span className="font-mono font-bold text-[#EA8500] text-sm">
-                            {drillAssessment.risk_score} / 100
+                            {formatModelScore(drillAssessment.risk_score)}
                           </span>
                         </div>
                         <div>
-                          <span className="text-[10px] text-[#8C857B] font-mono block">Predicted Class</span>
+                          <span className="text-[10px] text-[#8C857B] font-mono block">Review suggestion</span>
                           <span
                             className={`px-2 py-0.5 rounded text-[11px] font-bold inline-block font-mono ${
                               drillAssessment.predicted_class === 'suspicious'
@@ -1114,7 +1146,7 @@ export const ModelInsightsPage: React.FC = () => {
                                 : 'bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0]'
                             }`}
                           >
-                            {drillAssessment.predicted_class.toUpperCase()}
+                            {drillAssessment.predicted_class === 'suspicious' ? 'Suggested for review' : 'Below threshold'}
                           </span>
                         </div>
                         <div className="text-right">
