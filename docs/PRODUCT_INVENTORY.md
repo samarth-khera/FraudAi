@@ -58,3 +58,13 @@ to assert the corrected behaviour. New coverage is in `caseWorkspace.test.tsx` a
 backend in `test_product_integrity.py`.
 
 No backend endpoint, database, dataset or model artifact was removed.
+
+## Demo-readiness acceptance (29 Oct 2026)
+
+| Finding | Fix |
+|---|---|
+| The documented `alembic upgrade head` crashed (`NameError: os` in `alembic/env.py`). The existing migration test injected a URL and never reached that code path. | Added the import, plus a test that runs migrations through `DATABASE_URL` the way the README does. |
+| The backend test suite wrote audit events (and, in earlier runs, test reviews) into the local demo database. | `tests/conftest.py` now points the case database at a temporary file before the app is imported. |
+| Four ML tests failed when run from `backend/` (paths relative to the repo root), although `ml/README.md` documents that command. | The paths are now resolved from the repository root. |
+| Legacy FS-1042 reviews of `ACC-000001` looked like valid current reviews. | The case history labels reviews of accounts outside the case's transfers as **Legacy record**. The stored records are unchanged. |
+| The main JavaScript bundle was 1,789 KB, mostly cytoscape (415 KB), recharts (~330 KB with its dependencies) and gsap (111 KB). | The six Tools pages are lazy-loaded. The main bundle is now 598 KB (190 KB gzipped), and cytoscape and recharts load only on Tools account and model pages. |

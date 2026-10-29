@@ -44,6 +44,8 @@ Open the site and choose **Start sample investigation**. That opens case **FS-20
 - Try this: open `ACC-000003` in **Accounts & risk**. The ledger rules score it **high (60/100)**, but the account model scores it **low (10%)**. Then open `ACC-000001`, the reporting customer, whom the model scores **76.5%**. The workspace explains why neither score is a finding.
 - Record a decision in **Review & history**, refresh the page, and check that it is still there in the history.
 
+See [Presenting the demo](#presenting-the-demo) for a step-by-step script.
+
 A second sample, **FS-1042** (a ₹50,000 complaint), uses older case-only records. It has no account-level model
 results, and the workspace says so rather than inventing them.
 
@@ -71,10 +73,16 @@ results, and the workspace says so rather than inventing them.
 Both automated checks run on an account’s **whole ledger history** (including activity after the case),
 computed when you open the account.
 
-**How good is the account model?** On held-out synthetic test accounts at its 50% threshold, it caught
-**33%** of suspicious accounts, and **50%** of the accounts it flagged were suspicious (ROC-AUC 0.99). The test
-set held only **6 suspicious accounts**, so these figures are rough. It misses cases and raises false alarms.
-The sample case’s scenario was held out of training, so its scores are out-of-sample.
+**How good is the account model?** It was tested on 2,000 synthetic accounts that it never saw in training.
+Only **6** of them were suspicious. At its 50% threshold it caught **2 of those 6** (33%), and it flagged **4**
+accounts, of which **2** were suspicious (50%). With so few suspicious examples these figures are very rough:
+one more or one fewer catch changes them a lot. ROC-AUC is 0.99, but that number looks good mainly because
+almost every test account is ordinary; the precision-recall score (PR-AUC 0.46), which focuses on the rare
+suspicious accounts, is the more honest summary. The model was trained on only 26 suspicious accounts.
+
+In plain terms: the model misses most suspicious accounts and some of its flags are wrong. Use its score as one
+prompt among several, never as a finding, and never treat a low score as clearing an account. The sample case’s
+scenario was held out of training, so its scores are genuine out-of-sample results.
 
 ### What the PaySim benchmark does and does not prove
 
@@ -154,10 +162,12 @@ PYTHONPATH=. backend/.venv/bin/python ml/v2/paysim_benchmark.py   # needs the Pa
 ### Running the tests
 
 ```bash
-backend/.venv/bin/python -m pytest backend/tests -q   # run from the repository root
+backend/.venv/bin/python -m pytest backend/tests -q   # from the repository root (or `pytest -q` inside backend/)
 backend/.venv/bin/python -m pytest ml/tests -q
 cd frontend && npm test && npm run build
 ```
+
+Backend tests use a temporary database, so running them never changes the local demo database.
 
 ---
 
@@ -189,12 +199,64 @@ describe position in the money flow only.
   name is whatever is typed. The history labels it as unverified. Production use would need sign-in and roles.
 - **Audit history is append-only in the application, not tamper-proof.** Events are stored in SQLite with
   server timestamps. They are not cryptographically signed or hash-chained.
-- **Older local data.** A database used with earlier builds may contain a review of `ACC-000001` under FS-1042
-  (made through a since-removed shortcut that linked the two datasets). It is kept as recorded history. New
-  reviews are only accepted for accounts that are actually in the case.
+- **Older local data.** A database used with earlier builds may contain reviews of `ACC-000001` under FS-1042
+  (made through a since-removed shortcut that linked the two datasets). They are kept unchanged as history, and
+  the case history labels them **Legacy record** because that account is not part of FS-1042’s transfers. They
+  still count towards the case’s “decisions recorded” total. New reviews are only accepted for accounts that are
+  actually in the case.
 - **Case creation** is available through the API (`POST /api/cases`) but not in the interface, because a new
   case also needs its transactions loaded.
-- **Large frontend bundle** (~1.8 MB before compression). Code splitting has not been done.
+- **Tools pages load separately.** The main journey downloads about 600 KB of JavaScript (190 KB compressed).
+  Opening an account page under Tools downloads a further ~950 KB, mostly the graph and chart libraries.
+
+---
+
+## Presenting the demo
+
+**Before you start:** run the backend and frontend (above) and open <http://localhost:5173>. The header should
+show **Model ready**. If it shows **Model unavailable** or **Server unreachable**, click it to see why.
+
+**Designated demonstration account: `ACC-000003`** in case **FS-2001** (the first receiver of the reported
+transfer). It shows every part of the workspace: recorded facts, rule patterns, two automated checks that
+disagree, and a review decision.
+
+1. **Home:** read the one-paragraph explanation, then click **Start sample investigation**.
+2. **Summary:** point out the complaint (₹2,50,000) next to the recorded transfer, the “matches” check, and the
+   **Still unknown** list.
+3. **Money flow:** show the five transfers from left to right. Explain that the *sum of all transfers*
+   (₹7,36,000) counts the same money at each hop and is not the loss. Click `ACC-000003`.
+4. **Open account details** (Accounts & risk): `ACC-000003` forwarded ₹2,45,000 within 10 minutes. The ledger
+   rules score it **60/100 (high)**; the account model scores it **10% (low)**. Read the “Why the model gave
+   this score” factors and the “About these results” limits aloud.
+5. Click `ACC-000001`, the reporting customer: the model scores them **76.5%**. Use this to explain that a
+   score describes unusual behaviour, not wrongdoing.
+6. **Review & history:** choose `ACC-000003`, pick a decision, write your reasoning, type your name, click
+   **Review before saving**, then **Save decision**. The green message appears only after the server confirms.
+7. Refresh the browser. The decision and its history entry are still there. Use Back and Forward to show the
+   case and account stay selected.
+8. Optional: open **FS-1042** → Accounts & risk to show that a case without ledger records gets **no** model
+   score, with an explanation instead.
+
+**What not to claim.** The synthetic dataset’s own labels (which the workspace deliberately never shows)
+mark the three accounts that forwarded money in FS-2001 (`ACC-000003`, `ACC-000002`, `ACC-000005`) as part
+of the scam scenario, yet the model scores them low (10–15%).
+That is a real miss, consistent with the test results above. Do not present the model as able to find
+these accounts, and do not present the PaySim benchmark’s near-perfect scores as evidence about cases.
+
+### Records already in the local demo database
+
+Reviews are permanent history, so earlier test runs remain visible. In the current local database
+(`backend/fraudshield.db`, not in git):
+
+| Case | Account | Recorded by | What it is |
+|---|---|---|---|
+| FS-1042 | C300 | `investigator_ui` | Two early test reviews (“under review”). Valid: C300 is in the case. |
+| FS-1042 | ACC-000001 | `test_investigator`, `SecAnalyst01` | Legacy reviews from the removed cross-dataset shortcut. Shown with a **Legacy record** label. |
+| FS-2001 | ACC-000002 | `chrome_verification` | Browser verification review (“keep under review”), 28 Oct 2026. |
+| FS-2001 | ACC-000003 | `acceptance_check` | Acceptance-test review, 29 Oct 2026. A live demo adds a newer decision on top. |
+
+To present from a clean history, stop the backend, move `backend/fraudshield.db` somewhere safe (keep it;
+it is the record), and start the backend again: it recreates the database with only the two sample cases.
 
 ---
 
