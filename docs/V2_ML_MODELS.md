@@ -1,3 +1,5 @@
+> **Superseded (29 Oct 2026):** the account-model figures below describe `v2-account-1.0.0`, which was replaced after an audit. See [`ACCOUNT_MODEL_AUDIT.md`](ACCOUNT_MODEL_AUDIT.md).
+
 # FraudShield AI V2 — Phase 4: Machine Learning Models & Evaluation
 
 ## Executive Overview

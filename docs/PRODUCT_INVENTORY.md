@@ -68,3 +68,8 @@ No backend endpoint, database, dataset or model artifact was removed.
 | Four ML tests failed when run from `backend/` (paths relative to the repo root), although `ml/README.md` documents that command. | The paths are now resolved from the repository root. |
 | Legacy FS-1042 reviews of `ACC-000001` looked like valid current reviews. | The case history labels reviews of accounts outside the case's transfers as **Legacy record**. The stored records are unchanged. |
 | The main JavaScript bundle was 1,789 KB, mostly cytoscape (415 KB), recharts (~330 KB with its dependencies) and gsap (111 KB). | The six Tools pages are lazy-loaded. The main bundle is now 598 KB (190 KB gzipped), and cytoscape and recharts load only on Tools account and model pages. |
+
+## Account model audit (29 Oct 2026)
+
+The account model was audited and replaced (`v2-account-1.0.0` → `v2-account-2.0.0`). Root cause, label defects,
+evaluation design and results are in [`ACCOUNT_MODEL_AUDIT.md`](ACCOUNT_MODEL_AUDIT.md).
