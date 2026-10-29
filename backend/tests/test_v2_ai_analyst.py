@@ -22,6 +22,14 @@ from tests.test_v2_investigation import investigate, ledger  # noqa: F401 - pyte
 FAKE_KEY = "test-key-not-a-real-secret-0123456789"
 
 
+@pytest.fixture(autouse=True)
+def _analyst_loggers_enabled():
+    """test_case_management runs Alembic, whose logging fileConfig() disables every logger created earlier in the
+    process. Re-enable ours so log assertions here see real output (the app never runs fileConfig at runtime)."""
+    for name in ("fraudshield.v2.ai_analyst", "fraudshield.v2.gemini"):
+        logging.getLogger(name).disabled = False
+
+
 def cfg(**over) -> AnalystConfig:
     base = dict(enabled=True, api_key_present=True, model="gemini-test-model", timeout_seconds=5, max_output_tokens=2048,
                 thinking_level="low", privacy_policy="synthetic_only")
@@ -426,6 +434,7 @@ def test_logs_never_contain_the_key_prompt_or_provider_text(ledger, gemini_on, c
     gemini_on(FakeProvider(good_reply))
     with caplog.at_level(logging.DEBUG):
         investigate(client)
+    assert "AI analyst completed" in caplog.text, "the absence checks below are only meaningful if logging works"
     assert FAKE_KEY not in caplog.text
     for marker in ("investigation_data", "PA-001", "drained most", "ACC-VIC", "Name ACC-"):
         assert marker not in caplog.text
@@ -450,3 +459,139 @@ def test_no_secret_or_key_reference_in_frontend_sources():
             text = path.read_text(encoding="utf-8")
             assert "GEMINI_API_KEY" not in text and not re.search(r"AIza[0-9A-Za-z_\-]{30,}", text), path
             assert "generativelanguage.googleapis.com" not in text, path
+
+
+# ---------------------------------------------------------------- status mapping and safe diagnostics
+@pytest.mark.parametrize("exc, reason, status", [
+    (api_error(errors.ServerError, 504, "DEADLINE_EXCEEDED"), "timeout", 504),
+    (errors.ServerError(0, {"error": {"status": "DEADLINE_EXCEEDED", "message": "secret detail"}}), "timeout", None),
+    (api_error(errors.ClientError, 429, "RESOURCE_EXHAUSTED"), "rate_limited", 429),
+    (api_error(errors.ClientError, 401, "UNAUTHENTICATED"), "auth_failed", 401),
+    (api_error(errors.ClientError, 403, "PERMISSION_DENIED"), "auth_failed", 403),
+    (api_error(errors.ClientError, 404, "NOT_FOUND"), "model_not_found", 404),
+    (api_error(errors.ServerError, 500, "INTERNAL"), "upstream_error", 500),
+    (api_error(errors.ServerError, 503, "UNAVAILABLE"), "upstream_error", 503),
+    (api_error(errors.ClientError, 400, "INVALID_ARGUMENT"), "request_rejected", 400),
+])
+def test_provider_maps_status_codes_and_keeps_the_numeric_status(monkeypatch, exc, reason, status):
+    async def fail(**kwargs):
+        raise exc
+
+    provider = stub_provider(monkeypatch, fail)
+    with pytest.raises(ProviderError) as e:
+        asyncio.run(provider.generate(system_instruction="s", contents="c", response_json_schema={}, max_output_tokens=512))
+    assert (e.value.reason, e.value.http_code) == (reason, status)
+    assert "secret detail" not in str(e.value) and FAKE_KEY not in str(e.value)
+
+
+@pytest.mark.parametrize("exc, expected", [
+    (api_error(errors.ServerError, 504, "DEADLINE_EXCEEDED"), "reason=timeout http_status=504 error_type=none"),
+    (api_error(errors.ServerError, 503, "UNAVAILABLE"), "reason=upstream_error http_status=503 error_type=none"),
+    (api_error(errors.ClientError, 429, "RESOURCE_EXHAUSTED"), "reason=rate_limited http_status=429 error_type=none"),
+    (httpx.ReadTimeout("read timed out"), "reason=timeout http_status=none error_type=none"),
+])
+def test_log_line_carries_reason_and_status_only(report, monkeypatch, caplog, exc, expected):
+    async def fail(**kwargs):
+        raise exc
+
+    with caplog.at_level(logging.DEBUG):
+        ai = asyncio.run(run_analysis(report, stub_provider(monkeypatch, fail)))
+    line = next(r.getMessage() for r in caplog.records if r.name == "fraudshield.v2.ai_analyst")
+    assert expected in line and "latency_ms=" in line
+    for leak in (FAKE_KEY, "secret detail", "timed out", "investigation_data", "ACC-VIC", "DEADLINE_EXCEEDED"):
+        assert leak not in caplog.text
+    # The browser gets the reason code and a fixed message, never the status or provider text.
+    body = json.dumps(ai)
+    assert "secret detail" not in body and "DEADLINE_EXCEEDED" not in body and "http_status" not in body
+
+
+def test_unexpected_failures_log_only_the_exception_class(report, caplog):
+    class Odd(Exception):
+        pass
+
+    with caplog.at_level(logging.DEBUG):
+        ai = asyncio.run(run_analysis(report, FakeProvider(raises=Odd(f"leaky {FAKE_KEY} ACC-VIC"))))
+    assert ai["unavailable_reason"] == "upstream_error"
+    assert "reason=upstream_error http_status=none error_type=Odd" in caplog.text
+    assert "leaky" not in caplog.text and FAKE_KEY not in caplog.text and "ACC-VIC" not in caplog.text
+
+
+def test_investigation_completes_when_gemini_hits_its_deadline(ledger, monkeypatch):  # noqa: F811
+    client, _, _ = ledger
+    baseline = investigate(client).json()
+
+    async def deadline(**kwargs):
+        raise api_error(errors.ServerError, 504, "DEADLINE_EXCEEDED")
+
+    def real_provider_with_stubbed_sdk(*args, **kwargs):
+        p = GeminiProvider(*args, **kwargs)
+        p._client = SimpleNamespace(aio=SimpleNamespace(models=SimpleNamespace(generate_content=deadline)))
+        return p
+
+    monkeypatch.setattr(ai_analyst, "_gemini_module", lambda: SimpleNamespace(GeminiProvider=real_provider_with_stubbed_sdk))
+    monkeypatch.setenv("GEMINI_ANALYST_ENABLED", "true")
+    monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+    r = investigate(client)
+    assert r.status_code == 200
+    body = r.json()
+    ai = body["ai_analysis"]
+    assert (ai["state"], ai["status"], ai["unavailable_reason"], ai["report"]) == ("unavailable", "failed", "timeout", None)
+    assert "did not answer within the time limit" in ai["message"]
+    assert deterministic(body) == deterministic(baseline)
+    assert "secret detail" not in r.text and "DEADLINE_EXCEEDED" not in r.text
+
+
+# ---------------------------------------------------------------- startup preload
+def test_startup_preloads_the_sdk_only_when_enabled_and_needs_no_key(monkeypatch, caplog):
+    from fastapi.testclient import TestClient
+    from google import genai
+
+    from app.main import create_app
+
+    def no_client(*a, **k):
+        raise AssertionError("startup must not create a Gemini client or make a request")
+
+    monkeypatch.setattr(genai, "Client", no_client)
+    loads = []
+    real_module = ai_analyst._gemini_module
+    monkeypatch.setattr(ai_analyst, "_gemini_module", lambda: loads.append(1) or real_module())
+
+    # Disabled: nothing is loaded.
+    with TestClient(create_app()) as client:
+        assert client.get("/health").status_code == 200
+    assert loads == []
+
+    # Enabled without a key: the module loads, startup succeeds, investigations report not_configured.
+    monkeypatch.setenv("GEMINI_ANALYST_ENABLED", "true")
+    with caplog.at_level(logging.INFO), TestClient(create_app()) as client:
+        assert client.get("/health").status_code == 200
+    assert loads == [1]
+    assert "AI analyst SDK loaded at startup" in caplog.text and "no request made" in caplog.text
+
+
+def test_startup_survives_an_sdk_import_failure(ledger, monkeypatch, caplog):  # noqa: F811
+    from fastapi.testclient import TestClient
+
+    from app.main import create_app
+
+    def broken():
+        raise ImportError(f"cannot import google.genai {FAKE_KEY}")
+
+    monkeypatch.setattr(ai_analyst, "_gemini_module", broken)
+    monkeypatch.setenv("GEMINI_ANALYST_ENABLED", "true")
+    with caplog.at_level(logging.WARNING), TestClient(create_app()) as client:
+        assert client.get("/health").status_code == 200
+    assert "AI analyst SDK could not be loaded at startup: error_type=ImportError" in caplog.text
+    assert FAKE_KEY not in caplog.text and "cannot import" not in caplog.text
+    assert ai_analyst.preload_provider() is False
+
+    # Requests still complete and say the analyst was unavailable.
+    client, _, _ = ledger
+    monkeypatch.setenv("GEMINI_API_KEY", FAKE_KEY)
+    body = investigate(client).json()
+    assert body["ai_analysis"]["state"] == "unavailable" and body["accounts"]
+
+
+def test_preload_is_a_no_op_when_disabled(monkeypatch):
+    monkeypatch.setattr(ai_analyst, "_gemini_module", lambda: (_ for _ in ()).throw(AssertionError("loaded while disabled")))
+    assert ai_analyst.preload_provider() is False
