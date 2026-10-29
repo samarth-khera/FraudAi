@@ -73,8 +73,12 @@ Gemini API free-tier data handling differs from paid-tier handling, so the defau
   - server-generated finding text, with IDs replaced and timestamps redacted
 - The prompt marks the data as untrusted and states the rules: no guilt, no freezing, no new facts, cite IDs.
   `<` and `>` are escaped so text inside the data cannot close the data block.
-- **What is logged:** only the state, reason code, model and latency. The prompt, payload, provider text and key are
-  never logged.
+- **What is logged:** the state or reason code, the provider's numeric HTTP status (for example
+  `reason=timeout http_status=504`), the exception class name for unexpected failures, the model and the latency.
+  The prompt, payload, provider text, exception messages and key are never logged. A 504 (`DEADLINE_EXCEEDED`)
+  means Gemini stopped at the deadline the SDK sends from `GEMINI_TIMEOUT_SECONDS`, so it is reported as `timeout`.
+- **Startup:** when the analyst is enabled, the SDK is imported at startup so the first investigation does not pay
+  for it. This is only an import: no key is needed, no request is made, and a failure there never stops the server.
 
 ## Validation
 
