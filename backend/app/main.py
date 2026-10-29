@@ -20,8 +20,10 @@ from app.services.risk_scoring import get_risk_service
 
 try:
     from app.api.v2.routes import router as v2_router
+    from app.services.v2.ai_analyst import preload_provider as preload_ai_analyst
 except ModuleNotFoundError:
     from backend.app.api.v2.routes import router as v2_router
+    from backend.app.services.v2.ai_analyst import preload_provider as preload_ai_analyst
 
 
 @asynccontextmanager
@@ -35,6 +37,9 @@ async def lifespan(_: FastAPI):
     # rest of the API (case tracing) keeps working; /api/risk/score then returns 503.
     get_risk_service().load()
     log_write_access_mode()
+    # Optional AI analyst: import its SDK now (only when enabled) so the first investigation is not slowed by it.
+    # No key is needed and no Gemini request is made.
+    preload_ai_analyst()
     yield
 
 
