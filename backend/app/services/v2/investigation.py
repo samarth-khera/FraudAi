@@ -8,6 +8,7 @@ Nothing is stored. Ground-truth labels and scenario tags in the synthetic ledger
 
 from __future__ import annotations
 
+import asyncio
 import statistics
 import time
 import uuid
@@ -17,6 +18,7 @@ from typing import Any, Optional
 
 from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
 try:
     from app.api.v2.investigation_schemas import InvestigationRequest, InvestigationResponse
@@ -159,7 +161,31 @@ def compute_flags(account_id: str, txns: list[TransactionModel]) -> dict[str, li
 
 class InvestigationService:
     @classmethod
+    async def run_async(cls, db: Session, req: InvestigationRequest, provider: Any = None) -> InvestigationResponse:
+        """Deterministic report (in a worker thread: the ledger queries are synchronous), then the AI analyst.
+
+        The analyst only adds `ai_analysis`; an AI failure never fails the investigation.
+        """
+        report, clock = await run_in_threadpool(cls.compute, db, req)
+        report["ai_analysis"] = await ai_analyst.analyze(report, provider)
+        return cls._finish(report, clock)
+
+    @classmethod
     def run(cls, db: Session, req: InvestigationRequest, provider: Any = None) -> InvestigationResponse:
+        """Synchronous entry point for scripts. Not for use inside a running event loop."""
+        report, clock = cls.compute(db, req)
+        report["ai_analysis"] = asyncio.run(ai_analyst.analyze(report, provider))
+        return cls._finish(report, clock)
+
+    @staticmethod
+    def _finish(report: dict, clock: float) -> InvestigationResponse:
+        report["completed_at"] = datetime.now(timezone.utc).isoformat()
+        report["duration_ms"] = int((time.perf_counter() - clock) * 1000)
+        return InvestigationResponse.model_validate(report)
+
+    @classmethod
+    def compute(cls, db: Session, req: InvestigationRequest) -> tuple[dict, float]:
+        """Everything except the AI explanation. Returns (report dict, perf_counter start)."""
         started = datetime.now(timezone.utc)
         clock = time.perf_counter()
         source = data_source.describe(db)  # raises DataSourceUnavailable with the precise blocker
@@ -758,7 +784,4 @@ class InvestigationService:
                 + (" All data is synthetic." if source["is_synthetic"] else "")
             ),
         }
-        report["ai_analysis"] = ai_analyst.run(report, provider)
-        report["completed_at"] = datetime.now(timezone.utc).isoformat()
-        report["duration_ms"] = int((time.perf_counter() - clock) * 1000)
-        return InvestigationResponse.model_validate(report)
+        return report, clock

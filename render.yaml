@@ -23,3 +23,5 @@ services:
       # Set to the deployed Vercel URL (no trailing slash) after the frontend exists.
       - key: CORS_ALLOWED_ORIGINS
         sync: false
+      # Optional AI analyst (docs/AI_ANALYST.md). Set GEMINI_API_KEY and GEMINI_ANALYST_ENABLED=true in the dashboard;
+      # model, timeout and privacy policy have safe defaults.

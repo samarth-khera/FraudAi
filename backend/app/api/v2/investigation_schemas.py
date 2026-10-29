@@ -223,12 +223,53 @@ class AnalystSection(BaseModel):
     claims: list[AnalystClaim]
 
 
+AIState = Literal["completed", "disabled", "not_configured", "skipped_privacy_policy", "unavailable"]
+ObservationBasis = Literal["observed", "rule", "model", "hypothesis", "limitation"]
+
+
+class AIObservation(BaseModel):
+    text: str
+    basis: ObservationBasis = Field(..., description="'hypothesis' and 'limitation' are not claims of fact")
+    evidence_ids: list[str] = Field(..., description="Transaction, account or finding IDs from this report")
+
+
+class AIManualCheck(BaseModel):
+    text: str
+    evidence_ids: list[str]
+
+
+class AIReport(BaseModel):
+    """Validated AI explanation. Every ID in it exists in this investigation; scores and amounts are not changed."""
+
+    summary: str
+    key_observations: list[AIObservation]
+    evidence_references: list[str]
+    reasoning_and_limitations: list[str]
+    recommended_manual_checks: list[AIManualCheck]
+    confidence_note: str = Field(..., description="Completeness of the evidence; not a probability of guilt")
+
+
 class AIAnalysis(BaseModel):
-    status: Literal["generated", "not_configured", "failed", "rejected"]
+    state: AIState = Field(
+        ..., description="completed: a Gemini response was received and passed validation. disabled: turned off by "
+                         "configuration. not_configured: no API key. skipped_privacy_policy: the data source is not "
+                         "verified synthetic and no opt-in is configured. unavailable: timeout, quota, provider or "
+                         "validation failure.")
+    status: Literal["generated", "not_configured", "failed", "rejected"] = Field(
+        ..., deprecated=True, description="Legacy summary of `state` kept for existing clients.")
     provider: Optional[str]
+    model: Optional[str] = None
     message: str
-    sections: list[AnalystSection] = Field(default_factory=list)
-    rejected_claims: int = 0
+    unavailable_reason: Optional[str] = Field(
+        None, description="When state is 'unavailable': timeout, rate_limited, auth_failed, request_rejected, "
+                          "model_not_found, upstream_error, blocked, empty_output, truncated_output, malformed_output, "
+                          "invalid_output or policy_violation")
+    privacy_policy: Optional[str] = None
+    pseudonymized: bool = False
+    report: Optional[AIReport] = None
+    sections: list[AnalystSection] = Field(default_factory=list, description="Legacy view of report.key_observations")
+    rejected_claims: int = Field(0, description="AI statements or references dropped because they cited unknown IDs or broke policy")
+    latency_ms: Optional[int] = None
 
 
 class Recommendation(BaseModel):
