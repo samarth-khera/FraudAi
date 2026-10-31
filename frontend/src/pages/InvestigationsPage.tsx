@@ -73,8 +73,8 @@ export const InvestigationsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">Investigations</h1>
-        <p className="mt-1.5 text-sm text-[#6B655B]">
+        <h1 className="font-display text-4xl font-bold tracking-tight">Cases</h1>
+        <p className="mt-1.5 text-sm text-[#5C6079]">
           Each case starts from one reported transfer. Open a case to trace the money and record review decisions.
         </p>
         <SyntheticDataNote className="mt-2" />
@@ -83,13 +83,13 @@ export const InvestigationsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row gap-3">
         <label className="relative flex-1">
           <span className="sr-only">Search cases</span>
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8C857B]" aria-hidden="true" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#868AA2]" aria-hidden="true" />
           <input
             type="search"
             value={query}
             onChange={(e) => setParam('q', e.target.value)}
             placeholder="Search by case ID or description"
-            className="w-full rounded-xl border border-[#EAE3D6] bg-white pl-10 pr-3 py-2.5 text-sm placeholder:text-[#8C857B] focus:border-[#EA8500]"
+            className="w-full rounded-xl border border-[#E4E5F0] bg-white pl-10 pr-3 py-2.5 text-sm placeholder:text-[#868AA2] focus:border-[#6246EA]"
           />
         </label>
         <label>
@@ -97,7 +97,7 @@ export const InvestigationsPage: React.FC = () => {
           <select
             value={status}
             onChange={(e) => setParam('status', e.target.value)}
-            className="w-full sm:w-auto rounded-xl border border-[#EAE3D6] bg-white px-3 py-2.5 text-sm font-medium"
+            className="w-full sm:w-auto rounded-xl border border-[#E4E5F0] bg-white px-3 py-2.5 text-sm font-medium"
           >
             {STATUS_FILTERS.map((f) => (
               <option key={f.value} value={f.value}>
@@ -139,17 +139,17 @@ export const InvestigationsPage: React.FC = () => {
                   <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono font-bold text-[#1A1714]">{c.case_id}</span>
+                        <span className="font-mono font-bold text-[#141526]">{c.case_id}</span>
                         <Pill tone={caseStatusTone(c.investigation_status)}>
                           {CASE_STATUS_LABELS[c.investigation_status] ?? c.investigation_status}
                         </Pill>
                         <Pill>{datasetLabel(c)}</Pill>
                       </div>
-                      <p className="mt-2 text-sm text-[#1A1714] leading-relaxed">{firstSentence(c.description)}</p>
-                      <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-[#6B655B]">
+                      <p className="mt-2 text-sm text-[#141526] leading-relaxed">{firstSentence(c.description)}</p>
+                      <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-[#5C6079]">
                         <div>
                           <dt className="inline">Reported amount: </dt>
-                          <dd className="inline font-semibold text-[#1A1714]">{formatMoney(c.reported_amount, c.currency)}</dd>
+                          <dd className="inline font-semibold text-[#141526]">{formatMoney(c.reported_amount, c.currency)}</dd>
                         </div>
                         <div>
                           <dt className="inline">Reported: </dt>
@@ -165,7 +165,7 @@ export const InvestigationsPage: React.FC = () => {
                         )}
                       </dl>
                     </div>
-                    <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#B45309] shrink-0">
+                    <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#4F33D6] shrink-0">
                       {next.label}
                       <ArrowRight className="w-4 h-4" aria-hidden="true" />
                     </span>

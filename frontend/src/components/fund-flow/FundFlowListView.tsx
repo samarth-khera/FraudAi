@@ -57,17 +57,17 @@ export const FundFlowListView: React.FC<FundFlowListViewProps> = ({
   }, [edges, searchTerm, selectedChannel, selectedHop]);
 
   return (
-    <div className="bg-white border border-[#EAE3D6] rounded-2xl p-5 shadow-xs space-y-4">
+    <div className="bg-white border border-[#E4E5F0] rounded-2xl p-5 shadow-xs space-y-4">
       {/* Top Filter Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
         <div className="relative flex-1 max-w-sm">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8C857B]" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#868AA2]" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by Account ID, TX ID, or Rail..."
-            className="w-full pl-9 pr-3 py-2 bg-[#FAF7F2] border border-[#EAE3D6] rounded-xl text-xs text-[#1A1714] placeholder:text-[#8C857B] focus:outline-none focus:border-[#EA8500] font-mono"
+            className="w-full pl-9 pr-3 py-2 bg-[#F6F6FC] border border-[#E4E5F0] rounded-xl text-xs text-[#141526] placeholder:text-[#868AA2] focus:outline-none focus:border-[#6246EA] font-mono"
           />
         </div>
 
@@ -76,7 +76,7 @@ export const FundFlowListView: React.FC<FundFlowListViewProps> = ({
           <select
             value={selectedChannel}
             onChange={(e) => setSelectedChannel(e.target.value)}
-            className="bg-[#FAF7F2] border border-[#EAE3D6] rounded-xl px-2.5 py-1.5 text-xs text-[#1A1714] font-medium focus:outline-none focus:border-[#EA8500] cursor-pointer"
+            className="bg-[#F6F6FC] border border-[#E4E5F0] rounded-xl px-2.5 py-1.5 text-xs text-[#141526] font-medium focus:outline-none focus:border-[#6246EA] cursor-pointer"
             aria-label="Filter by Rail"
           >
             <option value="all">All Payment Rails</option>
@@ -91,7 +91,7 @@ export const FundFlowListView: React.FC<FundFlowListViewProps> = ({
           <select
             value={selectedHop}
             onChange={(e) => setSelectedHop(e.target.value)}
-            className="bg-[#FAF7F2] border border-[#EAE3D6] rounded-xl px-2.5 py-1.5 text-xs text-[#1A1714] font-medium focus:outline-none focus:border-[#EA8500] cursor-pointer"
+            className="bg-[#F6F6FC] border border-[#E4E5F0] rounded-xl px-2.5 py-1.5 text-xs text-[#141526] font-medium focus:outline-none focus:border-[#6246EA] cursor-pointer"
             aria-label="Filter by Hop Depth"
           >
             <option value="all">All Hops</option>
@@ -102,16 +102,16 @@ export const FundFlowListView: React.FC<FundFlowListViewProps> = ({
             ))}
           </select>
 
-          <span className="font-mono text-[11px] text-[#6B655B] ml-1">
+          <span className="font-mono text-[11px] text-[#5C6079] ml-1">
             Showing {filteredEdges.length} of {edges.length} transfers
           </span>
         </div>
       </div>
 
       {/* Accessible Table */}
-      <div className="overflow-x-auto border border-[#EAE3D6] rounded-xl">
+      <div className="overflow-x-auto border border-[#E4E5F0] rounded-xl">
         <table className="w-full text-left text-xs">
-          <thead className="bg-[#FAF7F2] border-b border-[#EAE3D6] text-[#6B655B] font-bold font-mono text-[11px]">
+          <thead className="bg-[#F6F6FC] border-b border-[#E4E5F0] text-[#5C6079] font-bold font-mono text-[11px]">
             <tr>
               <th className="px-3.5 py-3">Hop</th>
               <th className="px-3.5 py-3">Transaction ID</th>
@@ -123,7 +123,7 @@ export const FundFlowListView: React.FC<FundFlowListViewProps> = ({
               <th className="px-3.5 py-3">Pattern</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#EAE3D6]/70 font-mono text-xs">
+          <tbody className="divide-y divide-[#E4E5F0]/70 font-mono text-xs">
             {filteredEdges.map((e) => {
               const isSelected = selectedEdgeId === e.id;
               return (
@@ -132,12 +132,12 @@ export const FundFlowListView: React.FC<FundFlowListViewProps> = ({
                   onClick={() => onSelectEdge(e)}
                   className={`cursor-pointer transition-colors ${
                     isSelected
-                      ? 'bg-[#FFF4E6] font-semibold text-[#C05621]'
-                      : 'hover:bg-[#FAF7F2]'
+                      ? 'bg-[#EFECFF] font-semibold text-[#4F33D6]'
+                      : 'hover:bg-[#F6F6FC]'
                   }`}
                 >
-                  <td className="px-3.5 py-2.5 text-[#6B655B] font-bold">Hop {e.hop}</td>
-                  <td className="px-3.5 py-2.5 text-[#1A1714] font-bold">{e.id}</td>
+                  <td className="px-3.5 py-2.5 text-[#5C6079] font-bold">Hop {e.hop}</td>
+                  <td className="px-3.5 py-2.5 text-[#141526] font-bold">{e.id}</td>
                   <td className="px-3.5 py-2.5">
                     <button
                       type="button"
@@ -145,7 +145,7 @@ export const FundFlowListView: React.FC<FundFlowListViewProps> = ({
                         ev.stopPropagation();
                         onSelectNodeById(e.source);
                       }}
-                      className="text-[#EA8500] hover:underline font-bold inline-flex items-center gap-0.5 cursor-pointer"
+                      className="text-[#6246EA] hover:underline font-bold inline-flex items-center gap-0.5 cursor-pointer"
                     >
                       <span>{e.source}</span>
                       <ArrowUpRight className="w-3 h-3" />
@@ -158,31 +158,31 @@ export const FundFlowListView: React.FC<FundFlowListViewProps> = ({
                         ev.stopPropagation();
                         onSelectNodeById(e.target);
                       }}
-                      className="text-[#EA8500] hover:underline font-bold inline-flex items-center gap-0.5 cursor-pointer"
+                      className="text-[#6246EA] hover:underline font-bold inline-flex items-center gap-0.5 cursor-pointer"
                     >
                       <span>{e.target}</span>
                       <ArrowUpRight className="w-3 h-3" />
                     </button>
                   </td>
-                  <td className="px-3.5 py-2.5 text-right font-bold text-[#1A1714] tabular-nums">
+                  <td className="px-3.5 py-2.5 text-right font-bold text-[#141526] tabular-nums">
                     ₹{e.amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-3.5 py-2.5 font-sans">
-                    <span className="px-2 py-0.5 rounded-lg bg-[#FAF7F2] border border-[#EAE3D6] text-[#6B655B] text-[11px] font-semibold">
+                    <span className="px-2 py-0.5 rounded-lg bg-[#F6F6FC] border border-[#E4E5F0] text-[#5C6079] text-[11px] font-semibold">
                       {e.channel}
                     </span>
                   </td>
-                  <td className="px-3.5 py-2.5 text-[#6B655B] text-[11px] whitespace-nowrap">
+                  <td className="px-3.5 py-2.5 text-[#5C6079] text-[11px] whitespace-nowrap">
                     {e.timestamp ? e.timestamp.replace('T', ' ') : 'N/A'}
                   </td>
                   <td className="px-3.5 py-2.5 font-sans">
                     {e.isCycle ? (
-                      <span className="px-2 py-0.5 rounded-md bg-[#FFF8EE] text-[#C05621] text-[10px] font-bold border border-[#FCD5B5] inline-flex items-center gap-1">
+                      <span className="px-2 py-0.5 rounded-md bg-[#F5F3FF] text-[#4F33D6] text-[10px] font-bold border border-[#D7CFFF] inline-flex items-center gap-1">
                         <Repeat className="w-2.5 h-2.5" />
                         <span>Loop</span>
                       </span>
                     ) : (
-                      <span className="text-[#8C857B] text-[11px]">Direct Hop</span>
+                      <span className="text-[#868AA2] text-[11px]">Direct Hop</span>
                     )}
                   </td>
                 </tr>
@@ -191,7 +191,7 @@ export const FundFlowListView: React.FC<FundFlowListViewProps> = ({
 
             {filteredEdges.length === 0 && (
               <tr>
-                <td colSpan={8} className="py-8 text-center text-[#8C857B] italic">
+                <td colSpan={8} className="py-8 text-center text-[#868AA2] italic">
                   No transaction legs match the selected filter criteria.
                 </td>
               </tr>

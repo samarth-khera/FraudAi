@@ -437,15 +437,15 @@ export const ModelInsightsPage: React.FC = () => {
   }, [activeModelInfo, featureCategoryFilter, activeModelTab]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8 text-[#1A1714]">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8 text-[#141526]">
       {/* 1. Header & Live Model Status */}
       <div
         ref={headerRef}
-        className="p-6 rounded-2xl bg-white border border-[#EAE3D6] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6"
+        className="p-6 rounded-2xl bg-white border border-[#E4E5F0] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6"
       >
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-[#EA8500] bg-[#FFF8F0] px-2 py-0.5 rounded-md border border-[#FDE68A]">
+            <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-[#6246EA] bg-[#F5F3FF] px-2 py-0.5 rounded-md border border-[#FDE68A]">
               MODEL INTELLIGENCE
             </span>
             <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0]">
@@ -458,10 +458,10 @@ export const ModelInsightsPage: React.FC = () => {
               </span>
             )}
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#1A1714]">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#141526]">
             Model Insights
           </h1>
-          <p className="text-xs sm:text-sm text-[#6B655B] max-w-2xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#5C6079] max-w-2xl leading-relaxed">
             Understand model performance, prediction drivers, and evaluation evidence.
           </p>
         </div>
@@ -469,8 +469,8 @@ export const ModelInsightsPage: React.FC = () => {
         <div className="flex items-center gap-3">
           {lastFetched && (
             <div className="text-right hidden sm:block">
-              <span className="text-[10px] text-[#8C857B] font-mono block">Last Verified</span>
-              <span className="font-mono text-xs font-semibold text-[#1A1714]">
+              <span className="text-[10px] text-[#868AA2] font-mono block">Last Verified</span>
+              <span className="font-mono text-xs font-semibold text-[#141526]">
                 {lastFetched.toLocaleTimeString()}
               </span>
             </div>
@@ -480,7 +480,7 @@ export const ModelInsightsPage: React.FC = () => {
             disabled={loading}
             className="btn-secondary py-2 px-4 text-xs font-semibold shadow-xs disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-[#EA8500] ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-[#6246EA] ${loading ? 'animate-spin' : ''}`} />
             <span>Refresh Models</span>
           </button>
         </div>
@@ -498,13 +498,13 @@ export const ModelInsightsPage: React.FC = () => {
       )}
 
       {/* 2. Model Selector (Model Registry Tabs) */}
-      <div className="p-1.5 rounded-2xl bg-white border border-[#EAE3D6] shadow-xs flex flex-wrap gap-1.5">
+      <div className="p-1.5 rounded-2xl bg-white border border-[#E4E5F0] shadow-xs flex flex-wrap gap-1.5">
         <button
           onClick={() => setActiveModelTab('v2_account')}
           className={`flex-1 min-w-[240px] px-4 py-3 rounded-xl text-left transition-all cursor-pointer ${
             activeModelTab === 'v2_account'
-              ? 'bg-[#1A1714] text-white shadow-xs'
-              : 'hover:bg-[#FAF7F2] text-[#6B655B]'
+              ? 'bg-[#141526] text-white shadow-xs'
+              : 'hover:bg-[#F6F6FC] text-[#5C6079]'
           }`}
         >
           <div className="flex items-center justify-between">
@@ -514,15 +514,15 @@ export const ModelInsightsPage: React.FC = () => {
             <span
               className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-bold ${
                 activeModelTab === 'v2_account'
-                  ? 'bg-[#EA8500] text-white'
-                  : 'bg-[#FAF7F2] text-[#1A1714] border border-[#EAE3D6]'
+                  ? 'bg-[#6246EA] text-white'
+                  : 'bg-[#F6F6FC] text-[#141526] border border-[#E4E5F0]'
               }`}
             >
               {modelStatus?.account_model?.version ?? 'account model'}
             </span>
           </div>
           <div className="text-sm font-bold mt-1">V2 Account-Level Fraud Model</div>
-          <div className={`text-[11px] mt-0.5 ${activeModelTab === 'v2_account' ? 'text-gray-300' : 'text-[#8C857B]'}`}>
+          <div className={`text-[11px] mt-0.5 ${activeModelTab === 'v2_account' ? 'text-gray-300' : 'text-[#868AA2]'}`}>
             Multi-hop network flow &amp; behavioral risk evaluation
           </div>
         </button>
@@ -531,8 +531,8 @@ export const ModelInsightsPage: React.FC = () => {
           onClick={() => setActiveModelTab('paysim')}
           className={`flex-1 min-w-[240px] px-4 py-3 rounded-xl text-left transition-all cursor-pointer ${
             activeModelTab === 'paysim'
-              ? 'bg-[#1A1714] text-white shadow-xs'
-              : 'hover:bg-[#FAF7F2] text-[#6B655B]'
+              ? 'bg-[#141526] text-white shadow-xs'
+              : 'hover:bg-[#F6F6FC] text-[#5C6079]'
           }`}
         >
           <div className="flex items-center justify-between">
@@ -542,15 +542,15 @@ export const ModelInsightsPage: React.FC = () => {
             <span
               className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-bold ${
                 activeModelTab === 'paysim'
-                  ? 'bg-[#EA8500] text-white'
-                  : 'bg-[#FAF7F2] text-[#1A1714] border border-[#EAE3D6]'
+                  ? 'bg-[#6246EA] text-white'
+                  : 'bg-[#F6F6FC] text-[#141526] border border-[#E4E5F0]'
               }`}
             >
               v2-benchmark-1.0.0
             </span>
           </div>
           <div className="text-sm font-bold mt-1">Transaction-Level PaySim Benchmark</div>
-          <div className={`text-[11px] mt-0.5 ${activeModelTab === 'paysim' ? 'text-gray-300' : 'text-[#8C857B]'}`}>
+          <div className={`text-[11px] mt-0.5 ${activeModelTab === 'paysim' ? 'text-gray-300' : 'text-[#868AA2]'}`}>
             Pre-transaction baseline evaluated on academic mobile money logs
           </div>
         </button>
@@ -559,8 +559,8 @@ export const ModelInsightsPage: React.FC = () => {
           onClick={() => setActiveModelTab('comparison')}
           className={`flex-1 min-w-[220px] px-4 py-3 rounded-xl text-left transition-all cursor-pointer ${
             activeModelTab === 'comparison'
-              ? 'bg-[#1A1714] text-white shadow-xs'
-              : 'hover:bg-[#FAF7F2] text-[#6B655B]'
+              ? 'bg-[#141526] text-white shadow-xs'
+              : 'hover:bg-[#F6F6FC] text-[#5C6079]'
           }`}
         >
           <div className="flex items-center justify-between">
@@ -570,25 +570,25 @@ export const ModelInsightsPage: React.FC = () => {
             <span
               className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-bold ${
                 activeModelTab === 'comparison'
-                  ? 'bg-[#EA8500] text-white'
-                  : 'bg-[#FAF7F2] text-[#1A1714] border border-[#EAE3D6]'
+                  ? 'bg-[#6246EA] text-white'
+                  : 'bg-[#F6F6FC] text-[#141526] border border-[#E4E5F0]'
               }`}
             >
               Matrix
             </span>
           </div>
           <div className="text-sm font-bold mt-1">Model Comparison &amp; Scope</div>
-          <div className={`text-[11px] mt-0.5 ${activeModelTab === 'comparison' ? 'text-gray-300' : 'text-[#8C857B]'}`}>
+          <div className={`text-[11px] mt-0.5 ${activeModelTab === 'comparison' ? 'text-gray-300' : 'text-[#868AA2]'}`}>
             Task boundaries, dataset differences, and non-conflation guardrails
           </div>
         </button>
       </div>
 
       {/* Model Scope Non-Conflation Banner */}
-      <div className="p-4 rounded-xl bg-[#FFF8F0] border border-[#FDE68A] text-xs text-[#92400E] flex items-start gap-3">
-        <Info className="w-5 h-5 text-[#EA8500] flex-shrink-0 mt-0.5" />
+      <div className="p-4 rounded-xl bg-[#F5F3FF] border border-[#FDE68A] text-xs text-[#92400E] flex items-start gap-3">
+        <Info className="w-5 h-5 text-[#6246EA] flex-shrink-0 mt-0.5" />
         <div className="space-y-0.5">
-          <span className="font-bold text-[#1A1714]">Methodological Separation Guardrail</span>
+          <span className="font-bold text-[#141526]">Methodological Separation Guardrail</span>
           <p className="leading-relaxed">
             {activeModelTab === 'v2_account'
               ? 'The V2 Account Model evaluates entity-level risk across continuous banking network topologies. It is trained strictly on group-aware scenario splits and must not be conflated with point-in-time transaction classification.'
@@ -601,9 +601,9 @@ export const ModelInsightsPage: React.FC = () => {
 
       {/* Loading Skeleton */}
       {loading && !modelStatus && (
-        <div className="p-12 text-center bg-white rounded-2xl border border-[#EAE3D6] space-y-3">
-          <div className="w-8 h-8 rounded-full border-3 border-[#EA8500] border-t-transparent animate-spin mx-auto" />
-          <p className="text-xs font-mono text-[#6B655B]">Inspecting model artifacts and evaluation metrics...</p>
+        <div className="p-12 text-center bg-white rounded-2xl border border-[#E4E5F0] space-y-3">
+          <div className="w-8 h-8 rounded-full border-3 border-[#6246EA] border-t-transparent animate-spin mx-auto" />
+          <p className="text-xs font-mono text-[#5C6079]">Inspecting model artifacts and evaluation metrics...</p>
         </div>
       )}
 
@@ -616,10 +616,10 @@ export const ModelInsightsPage: React.FC = () => {
               key="comparison"
               className="space-y-6"
             >
-              <div className="p-6 rounded-2xl bg-white border border-[#EAE3D6] shadow-xs space-y-4">
-                <div className="pb-3 border-b border-[#EAE3D6]">
-                  <h2 className="text-base font-bold text-[#1A1714]">Architecture &amp; Scope Comparison Matrix</h2>
-                  <p className="text-xs text-[#6B655B]">
+              <div className="p-6 rounded-2xl bg-white border border-[#E4E5F0] shadow-xs space-y-4">
+                <div className="pb-3 border-b border-[#E4E5F0]">
+                  <h2 className="text-base font-bold text-[#141526]">Architecture &amp; Scope Comparison Matrix</h2>
+                  <p className="text-xs text-[#5C6079]">
                     Side-by-side analysis of deployed model architectures, task targets, and evaluation methodologies.
                   </p>
                 </div>
@@ -627,107 +627,107 @@ export const ModelInsightsPage: React.FC = () => {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-[#EAE3D6] bg-[#FAF7F2] font-mono text-[11px] text-[#6B655B]">
+                      <tr className="border-b border-[#E4E5F0] bg-[#F6F6FC] font-mono text-[11px] text-[#5C6079]">
                         <th className="py-3 px-4">Evaluation Dimension</th>
-                        <th className="py-3 px-4 font-bold text-[#1A1714]">
+                        <th className="py-3 px-4 font-bold text-[#141526]">
                           V2 Account-Level Model ({modelStatus.account_model.version ?? 'unavailable'})
                         </th>
-                        <th className="py-3 px-4 font-bold text-[#1A1714]">
+                        <th className="py-3 px-4 font-bold text-[#141526]">
                           PaySim Benchmark (v2-benchmark-1.0.0)
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#EAE3D6]">
+                    <tbody className="divide-y divide-[#E4E5F0]">
                       <tr>
-                        <td className="py-3.5 px-4 font-semibold text-[#1A1714]">Forensic Task</td>
-                        <td className="py-3.5 px-4 text-[#6B655B]">
+                        <td className="py-3.5 px-4 font-semibold text-[#141526]">Forensic Task</td>
+                        <td className="py-3.5 px-4 text-[#5C6079]">
                           Entity-level behavioral risk &amp; mule ring detection
                         </td>
-                        <td className="py-3.5 px-4 text-[#6B655B]">
+                        <td className="py-3.5 px-4 text-[#5C6079]">
                           Single-transaction point-in-time fraud classification
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-3.5 px-4 font-semibold text-[#1A1714]">Algorithm</td>
-                        <td className="py-3.5 px-4 font-mono font-semibold text-[#1A1714]">
+                        <td className="py-3.5 px-4 font-semibold text-[#141526]">Algorithm</td>
+                        <td className="py-3.5 px-4 font-mono font-semibold text-[#141526]">
                           XGBClassifier (Tabular Gradient Boosting)
                         </td>
-                        <td className="py-3.5 px-4 font-mono font-semibold text-[#1A1714]">
+                        <td className="py-3.5 px-4 font-mono font-semibold text-[#141526]">
                           XGBoost Tree Classifier
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-3.5 px-4 font-semibold text-[#1A1714]">Dataset Source</td>
-                        <td className="py-3.5 px-4 text-[#6B655B]">
+                        <td className="py-3.5 px-4 font-semibold text-[#141526]">Dataset Source</td>
+                        <td className="py-3.5 px-4 text-[#5C6079]">
                           V2 Synthetic Banking Ledger (SQLite)
                         </td>
-                        <td className="py-3.5 px-4 text-[#6B655B]">
+                        <td className="py-3.5 px-4 text-[#5C6079]">
                           PaySim Academic Simulation (Kaggle)
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-3.5 px-4 font-semibold text-[#1A1714]">Split Strategy</td>
-                        <td className="py-3.5 px-4 text-[#6B655B]">
+                        <td className="py-3.5 px-4 font-semibold text-[#141526]">Split Strategy</td>
+                        <td className="py-3.5 px-4 text-[#5C6079]">
                           Group-Aware Scenario Separation (Zero scenario overlap)
                         </td>
-                        <td className="py-3.5 px-4 text-[#6B655B]">
+                        <td className="py-3.5 px-4 text-[#5C6079]">
                           Chronological Time-Split (Steps 1..500 train, 621..743 test)
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-3.5 px-4 font-semibold text-[#1A1714]">Feature Count</td>
-                        <td className="py-3.5 px-4 font-mono font-bold text-[#1A1714]">
+                        <td className="py-3.5 px-4 font-semibold text-[#141526]">Feature Count</td>
+                        <td className="py-3.5 px-4 font-mono font-bold text-[#141526]">
                           26 engineered features
                         </td>
-                        <td className="py-3.5 px-4 font-mono font-bold text-[#1A1714]">
+                        <td className="py-3.5 px-4 font-mono font-bold text-[#141526]">
                           14 pre-transaction features
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-3.5 px-4 font-semibold text-[#1A1714]">ROC-AUC</td>
-                        <td className="py-3.5 px-4 font-mono font-bold text-[#1A1714]">
+                        <td className="py-3.5 px-4 font-semibold text-[#141526]">ROC-AUC</td>
+                        <td className="py-3.5 px-4 font-mono font-bold text-[#141526]">
                           {modelStatus.account_model.test_metrics?.roc_auc ?? '—'}
                         </td>
-                        <td className="py-3.5 px-4 font-mono font-bold text-[#1A1714]">
+                        <td className="py-3.5 px-4 font-mono font-bold text-[#141526]">
                           {modelStatus.paysim_benchmark.test_metrics?.roc_auc ?? '1.000'}
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-3.5 px-4 font-semibold text-[#1A1714]">PR-AUC</td>
-                        <td className="py-3.5 px-4 font-mono font-bold text-[#EA8500]">
+                        <td className="py-3.5 px-4 font-semibold text-[#141526]">PR-AUC</td>
+                        <td className="py-3.5 px-4 font-mono font-bold text-[#6246EA]">
                           {modelStatus.account_model.test_metrics?.pr_auc ?? '—'}
                         </td>
-                        <td className="py-3.5 px-4 font-mono font-bold text-[#EA8500]">
+                        <td className="py-3.5 px-4 font-mono font-bold text-[#6246EA]">
                           {modelStatus.paysim_benchmark.test_metrics?.pr_auc ?? '0.9999'}
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-3.5 px-4 font-semibold text-[#1A1714]">Review threshold</td>
-                        <td className="py-3.5 px-4 font-mono text-[#6B655B]">
+                        <td className="py-3.5 px-4 font-semibold text-[#141526]">Review threshold</td>
+                        <td className="py-3.5 px-4 font-mono text-[#5C6079]">
                           {modelThreshold(modelStatus.account_model) ?? '—'} (chosen on validation data to maximise F2)
                         </td>
-                        <td className="py-3.5 px-4 font-mono text-[#6B655B]">
+                        <td className="py-3.5 px-4 font-mono text-[#5C6079]">
                           {modelThreshold(modelStatus.paysim_benchmark) ?? '—'} (chosen on the benchmark’s validation data)
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-3.5 px-4 font-semibold text-[#1A1714]">Held-Out Sample Size</td>
-                        <td className="py-3.5 px-4 font-mono text-[#6B655B]">
+                        <td className="py-3.5 px-4 font-semibold text-[#141526]">Held-Out Sample Size</td>
+                        <td className="py-3.5 px-4 font-mono text-[#5C6079]">
                           {accountTestSummary(modelStatus.account_model)}
                         </td>
-                        <td className="py-3.5 px-4 font-mono text-[#6B655B]">90,829 test transaction steps</td>
+                        <td className="py-3.5 px-4 font-mono text-[#5C6079]">90,829 test transaction steps</td>
                       </tr>
                       <tr>
-                        <td className="py-3.5 px-4 font-semibold text-[#1A1714]">Target Leakage Protections</td>
-                        <td className="py-3.5 px-4 text-[#6B655B]">
+                        <td className="py-3.5 px-4 font-semibold text-[#141526]">Target Leakage Protections</td>
+                        <td className="py-3.5 px-4 text-[#5C6079]">
                           Strict exclusion of ground_truth_label, scenario tags, and PII
                         </td>
-                        <td className="py-3.5 px-4 text-[#6B655B]">
+                        <td className="py-3.5 px-4 text-[#5C6079]">
                           Strict exclusion of post-transaction balances (newbalanceOrig/Dest)
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-3.5 px-4 font-semibold text-[#1A1714]">Explainability Method</td>
+                        <td className="py-3.5 px-4 font-semibold text-[#141526]">Explainability Method</td>
                         <td className="py-3.5 px-4 font-mono text-[#10B981]">
                           Local TreeSHAP Attribution per Account
                         </td>
@@ -748,68 +748,68 @@ export const ModelInsightsPage: React.FC = () => {
             >
               {/* 3. Performance Metric Cards */}
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                <div className="p-5 rounded-2xl bg-white border border-[#EAE3D6] shadow-xs space-y-1">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#8C857B] block">
+                <div className="p-5 rounded-2xl bg-white border border-[#E4E5F0] shadow-xs space-y-1">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#868AA2] block">
                     ROC-AUC
                   </span>
-                  <div className="text-2xl sm:text-3xl font-extrabold font-mono text-[#1A1714]">
+                  <div className="text-2xl sm:text-3xl font-extrabold font-mono text-[#141526]">
                     {activeModelInfo.test_metrics?.roc_auc ?? 'N/A'}
                   </div>
-                  <span className="text-[11px] text-[#6B655B] block">Ranking quality across all thresholds (0.5 = random)</span>
+                  <span className="text-[11px] text-[#5C6079] block">Ranking quality across all thresholds (0.5 = random)</span>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-white border border-[#EAE3D6] shadow-xs space-y-1">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#EA8500] block">
+                <div className="p-5 rounded-2xl bg-white border border-[#E4E5F0] shadow-xs space-y-1">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#6246EA] block">
                     PR-AUC (Primary)
                   </span>
-                  <div className="text-2xl sm:text-3xl font-extrabold font-mono text-[#EA8500]">
+                  <div className="text-2xl sm:text-3xl font-extrabold font-mono text-[#6246EA]">
                     {activeModelInfo.test_metrics?.pr_auc ?? 'N/A'}
                   </div>
-                  <span className="text-[11px] text-[#6B655B] block">
+                  <span className="text-[11px] text-[#5C6079] block">
                     How well suspicious cases are ranked above others when they are rare
                     {activeModelTab === 'v2_account' && accountEval.prAucInterval &&
                       ` (95% interval ${accountEval.prAucInterval[0].toFixed(2)}–${accountEval.prAucInterval[1].toFixed(2)})`}
                   </span>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-white border border-[#EAE3D6] shadow-xs space-y-1">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#8C857B] block">
+                <div className="p-5 rounded-2xl bg-white border border-[#E4E5F0] shadow-xs space-y-1">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#868AA2] block">
                     Precision
                   </span>
-                  <div className="text-2xl sm:text-3xl font-extrabold font-mono text-[#1A1714]">
+                  <div className="text-2xl sm:text-3xl font-extrabold font-mono text-[#141526]">
                     {activeModelInfo.test_metrics?.precision !== undefined
                       ? `${(activeModelInfo.test_metrics.precision * 100).toFixed(1)}%`
                       : 'N/A'}
                   </div>
-                  <span className="text-[11px] text-[#6B655B] block">Share of flagged test cases that were labelled suspicious</span>
+                  <span className="text-[11px] text-[#5C6079] block">Share of flagged test cases that were labelled suspicious</span>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-white border border-[#EAE3D6] shadow-xs space-y-1">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#8C857B] block">
+                <div className="p-5 rounded-2xl bg-white border border-[#E4E5F0] shadow-xs space-y-1">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#868AA2] block">
                     Recall
                   </span>
-                  <div className="text-2xl sm:text-3xl font-extrabold font-mono text-[#1A1714]">
+                  <div className="text-2xl sm:text-3xl font-extrabold font-mono text-[#141526]">
                     {activeModelInfo.test_metrics?.recall !== undefined
                       ? `${(activeModelInfo.test_metrics.recall * 100).toFixed(1)}%`
                       : 'N/A'}
                   </div>
-                  <span className="text-[11px] text-[#6B655B] block">Share of suspicious test cases the model flagged</span>
+                  <span className="text-[11px] text-[#5C6079] block">Share of suspicious test cases the model flagged</span>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-white border border-[#EAE3D6] shadow-xs space-y-1 col-span-2 lg:col-span-1">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#8C857B] block">
+                <div className="p-5 rounded-2xl bg-white border border-[#E4E5F0] shadow-xs space-y-1 col-span-2 lg:col-span-1">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#868AA2] block">
                     F1 Score
                   </span>
-                  <div className="text-2xl sm:text-3xl font-extrabold font-mono text-[#1A1714]">
+                  <div className="text-2xl sm:text-3xl font-extrabold font-mono text-[#141526]">
                     {activeModelInfo.test_metrics?.f1_score !== undefined
                       ? Number(activeModelInfo.test_metrics.f1_score).toFixed(3)
                       : 'N/A'}
                   </div>
-                  <span className="text-[11px] text-[#6B655B] block">Balance of precision and recall</span>
+                  <span className="text-[11px] text-[#5C6079] block">Balance of precision and recall</span>
                 </div>
               </div>
 
-              <p className="text-xs text-[#6B655B] leading-relaxed -mt-4" data-testid="evaluation-scope-note">
+              <p className="text-xs text-[#5C6079] leading-relaxed -mt-4" data-testid="evaluation-scope-note">
                 {activeModelTab === 'v2_account'
                   ? `Measured once on ${accountEval.positives ?? '—'} suspicious and ${accountEval.negatives?.toLocaleString('en-IN') ?? '—'} ordinary synthetic test accounts the model never trained on${
                       accountEval.prAucInterval
@@ -822,27 +822,27 @@ export const ModelInsightsPage: React.FC = () => {
               {/* 4. Confusion Matrix & Threshold Rationale */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* Left: 2x2 Confusion Matrix */}
-                <div className="lg:col-span-6 p-6 rounded-2xl bg-white border border-[#EAE3D6] shadow-xs space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-[#EAE3D6]">
+                <div className="lg:col-span-6 p-6 rounded-2xl bg-white border border-[#E4E5F0] shadow-xs space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-[#E4E5F0]">
                     <div>
-                      <h3 className="text-sm font-bold text-[#1A1714]">Held-Out Test Confusion Matrix</h3>
-                      <p className="text-[11px] text-[#6B655B]">
+                      <h3 className="text-sm font-bold text-[#141526]">Held-Out Test Confusion Matrix</h3>
+                      <p className="text-[11px] text-[#5C6079]">
                         {activeModelTab === 'v2_account'
                           ? `Evaluated on ${accountTestSummary(activeModelInfo)}`
                           : 'Evaluated on 90,829 held-out chronological transactions'}
                       </p>
                     </div>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#FAF7F2] text-[#1A1714] border border-[#EAE3D6]">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#F6F6FC] text-[#141526] border border-[#E4E5F0]">
                       {activeModelTab === 'v2_account' ? `${accountTestTotal(activeModelInfo)} Accounts` : '90,829 TXs'}
                     </span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 text-center text-xs">
-                    <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] space-y-1">
-                      <span className="text-[10px] font-mono font-bold text-[#8C857B] uppercase block">
+                    <div className="p-4 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0] space-y-1">
+                      <span className="text-[10px] font-mono font-bold text-[#868AA2] uppercase block">
                         True Negatives
                       </span>
-                      <span className="text-xl font-bold font-mono text-[#1A1714]">
+                      <span className="text-xl font-bold font-mono text-[#141526]">
                         {activeModelInfo.test_metrics?.true_negatives?.toLocaleString() ??
                           activeModelInfo.test_metrics?.confusion_matrix?.[0]?.[0]?.toLocaleString() ??
                           'N/A'}
@@ -895,8 +895,8 @@ export const ModelInsightsPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="p-3.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] text-[11px] text-[#6B655B] space-y-1 leading-relaxed">
-                    <span className="font-bold text-[#1A1714] block">Operational Interpretation:</span>
+                  <div className="p-3.5 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0] text-[11px] text-[#5C6079] space-y-1 leading-relaxed">
+                    <span className="font-bold text-[#141526] block">Operational Interpretation:</span>
                     <p>
                       {activeModelTab === 'v2_account'
                         ? `Suspicious accounts are a small minority of the test set (${accountTestSummary(activeModelInfo)}). The threshold favours recall because every flag goes to a person and nothing is automated, so false alarms are expected.`
@@ -906,28 +906,28 @@ export const ModelInsightsPage: React.FC = () => {
                 </div>
 
                 {/* Right: Calibrated Threshold Rationale */}
-                <div className="lg:col-span-6 p-6 rounded-2xl bg-white border border-[#EAE3D6] shadow-xs space-y-4">
-                  <div className="pb-3 border-b border-[#EAE3D6]">
+                <div className="lg:col-span-6 p-6 rounded-2xl bg-white border border-[#E4E5F0] shadow-xs space-y-4">
+                  <div className="pb-3 border-b border-[#E4E5F0]">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-bold text-[#1A1714]">Review threshold</h3>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#FFF8F0] text-[#EA8500] border border-[#FDE68A]">
+                      <h3 className="text-sm font-bold text-[#141526]">Review threshold</h3>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#F5F3FF] text-[#6246EA] border border-[#FDE68A]">
                         Fixed by the evaluation pipeline
                       </span>
                     </div>
-                    <p className="text-[11px] text-[#6B655B]">
+                    <p className="text-[11px] text-[#5C6079]">
                       {activeModelTab === 'v2_account'
                         ? 'Chosen on validation data (not the test set) to maximise F2, which counts finding suspicious accounts twice as much as avoiding false alarms. The scores themselves are not calibrated probabilities.'
                         : 'Chosen on the benchmark’s validation data during training.'}
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] flex items-center justify-between">
+                  <div className="p-4 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0] flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] font-mono uppercase text-[#8C857B] block">Threshold (0–1 score scale)</span>
-                      <div className="text-3xl font-extrabold font-mono text-[#1A1714]" data-testid="served-threshold">
+                      <span className="text-[10px] font-mono uppercase text-[#868AA2] block">Threshold (0–1 score scale)</span>
+                      <div className="text-3xl font-extrabold font-mono text-[#141526]" data-testid="served-threshold">
                         {modelThreshold(activeModelInfo) ?? 'Unavailable'}
                       </div>
-                      <span className="text-[11px] text-[#6B655B]">
+                      <span className="text-[11px] text-[#5C6079]">
                         {modelThreshold(activeModelInfo) !== null
                           ? `Scores at or above this (${thresholdPercent(activeModelInfo)} on the percentage scale) are suggested for human review. It is not a chance of fraud.`
                           : 'The served model did not report a threshold.'}
@@ -935,24 +935,24 @@ export const ModelInsightsPage: React.FC = () => {
                     </div>
                     {activeModelTab === 'v2_account' && (
                       <div className="text-right">
-                        <span className="text-[10px] font-mono uppercase text-[#8C857B] block">Trade-off</span>
-                        <span className="px-2 py-1 rounded-md text-[11px] font-semibold bg-white border border-[#EAE3D6] text-[#1A1714] inline-block mt-1">
+                        <span className="text-[10px] font-mono uppercase text-[#868AA2] block">Trade-off</span>
+                        <span className="px-2 py-1 rounded-md text-[11px] font-semibold bg-white border border-[#E4E5F0] text-[#141526] inline-block mt-1">
                           Favours recall (F2)
                         </span>
                       </div>
                     )}
                   </div>
 
-                  <div className="space-y-3 text-xs text-[#6B655B]">
-                    <div className="p-3.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] space-y-1.5">
-                      <span className="font-bold text-[#1A1714] block">Threshold Mechanics &amp; Guardrails:</span>
+                  <div className="space-y-3 text-xs text-[#5C6079]">
+                    <div className="p-3.5 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0] space-y-1.5">
+                      <span className="font-bold text-[#141526] block">Threshold Mechanics &amp; Guardrails:</span>
                       <p className="text-[11px] leading-relaxed">
                         Lowering the threshold captures more suspicious flows (higher recall) but increases false alarms on legitimate retail and student accounts. Raising the threshold reduces analyst fatigue but risks letting multi-hop mules pass uninspected.
                       </p>
                     </div>
 
                     <div className="p-3 rounded-xl bg-[#FFFBEB] border border-[#FDE68A] text-[11px] text-[#92400E] flex items-start gap-2.5">
-                      <Sliders className="w-4 h-4 text-[#EA8500] flex-shrink-0 mt-0.5" />
+                      <Sliders className="w-4 h-4 text-[#6246EA] flex-shrink-0 mt-0.5" />
                       <p className="leading-relaxed">
                         <strong>Not adjustable here:</strong> the threshold can only change by re-running the evaluation pipeline (<code>ml/v2/account_model_eval.py</code>), which selects it on validation data and records it with the model.
                       </p>
@@ -962,35 +962,35 @@ export const ModelInsightsPage: React.FC = () => {
               </div>
 
               {/* 5. What Influences Predictions? — Global Feature Importance */}
-              <div className="p-6 rounded-2xl bg-white border border-[#EAE3D6] shadow-xs space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#EAE3D6]">
+              <div className="p-6 rounded-2xl bg-white border border-[#E4E5F0] shadow-xs space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E4E5F0]">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-[10px] font-bold text-[#EA8500] uppercase tracking-wider bg-[#FFF8F0] px-2 py-0.5 rounded border border-[#FDE68A]">
+                      <span className="font-mono text-[10px] font-bold text-[#6246EA] uppercase tracking-wider bg-[#F5F3FF] px-2 py-0.5 rounded border border-[#FDE68A]">
                         WHAT INFLUENCES PREDICTIONS?
                       </span>
-                      <span className="text-xs font-mono text-[#8C857B]">
+                      <span className="text-xs font-mono text-[#868AA2]">
                         {featureChartData.length} features ranked
                       </span>
                     </div>
-                    <h3 className="text-base font-bold text-[#1A1714] mt-1">
+                    <h3 className="text-base font-bold text-[#141526] mt-1">
                       Global Feature Importance ({activeModelInfo.model_type?.includes('PaySim') ? 'PaySim XGBoost' : 'V2 Account XGBoost'})
                     </h3>
-                    <p className="text-xs text-[#6B655B]">
+                    <p className="text-xs text-[#5C6079]">
                       Relative contribution (gain) of each observable attribute across the trained gradient boosted trees.
                     </p>
                   </div>
 
                   {/* Category Filter Pills */}
-                  <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] self-start sm:self-center">
+                  <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0] self-start sm:self-center">
                     {(['all', 'network', 'profile', 'amount', 'velocity'] as const).map((cat) => (
                       <button
                         key={cat}
                         onClick={() => setFeatureCategoryFilter(cat)}
                         className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
                           featureCategoryFilter === cat
-                            ? 'bg-[#1A1714] text-white'
-                            : 'text-[#6B655B] hover:text-[#1A1714]'
+                            ? 'bg-[#141526] text-white'
+                            : 'text-[#5C6079] hover:text-[#141526]'
                         }`}
                       >
                         {cat.charAt(0).toUpperCase() + cat.slice(1)}
@@ -1005,41 +1005,41 @@ export const ModelInsightsPage: React.FC = () => {
                     {featureChartData.map((f, idx) => (
                       <div
                         key={f.key}
-                        className="p-3.5 rounded-xl bg-[#FAF7F2] hover:bg-[#F5F1E9] border border-[#EAE3D6] transition-colors space-y-1.5"
+                        className="p-3.5 rounded-xl bg-[#F6F6FC] hover:bg-[#F1F2F9] border border-[#E4E5F0] transition-colors space-y-1.5"
                       >
                         <div className="flex items-center justify-between text-xs">
                           <div className="flex items-center gap-2">
-                            <span className="font-mono text-[10px] font-bold text-[#8C857B] w-5">
+                            <span className="font-mono text-[10px] font-bold text-[#868AA2] w-5">
                               #{idx + 1}
                             </span>
-                            <span className="font-bold text-[#1A1714]">{f.label}</span>
-                            <code className="text-[10px] font-mono text-[#8C857B]">({f.key})</code>
+                            <span className="font-bold text-[#141526]">{f.label}</span>
+                            <code className="text-[10px] font-mono text-[#868AA2]">({f.key})</code>
                           </div>
-                          <span className="font-mono font-extrabold text-[#EA8500] text-xs">
+                          <span className="font-mono font-extrabold text-[#6246EA] text-xs">
                             {f.percentage}%
                           </span>
                         </div>
 
                         {/* Progress Bar */}
-                        <div className="w-full h-2 rounded-full bg-[#EAE3D6] overflow-hidden">
+                        <div className="w-full h-2 rounded-full bg-[#E4E5F0] overflow-hidden">
                           <div
-                            className="h-full rounded-full bg-[#EA8500] transition-all duration-500"
+                            className="h-full rounded-full bg-[#6246EA] transition-all duration-500"
                             style={{ width: `${Math.min(100, Math.max(2, parseFloat(f.percentage) * 3))}%` }}
                           />
                         </div>
 
-                        <p className="text-[11px] text-[#6B655B]">{f.description}</p>
+                        <p className="text-[11px] text-[#5C6079]">{f.description}</p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="p-8 text-center text-xs text-[#8C857B] bg-[#FAF7F2] rounded-xl border border-[#EAE3D6]">
+                  <div className="p-8 text-center text-xs text-[#868AA2] bg-[#F6F6FC] rounded-xl border border-[#E4E5F0]">
                     No features match the selected category filter.
                   </div>
                 )}
 
-                <div className="p-3.5 rounded-xl bg-white border border-[#EAE3D6] text-[11px] text-[#6B655B] flex items-start gap-2.5">
-                  <Info className="w-4 h-4 text-[#EA8500] flex-shrink-0 mt-0.5" />
+                <div className="p-3.5 rounded-xl bg-white border border-[#E4E5F0] text-[11px] text-[#5C6079] flex items-start gap-2.5">
+                  <Info className="w-4 h-4 text-[#6246EA] flex-shrink-0 mt-0.5" />
                   <p>
                     <strong>Causation Guardrail:</strong> Global feature importance measures correlation with historical labels across the training corpus. A high importance score does not independently prove fraudulent intent or criminal wrongdoing on any individual account.
                   </p>
@@ -1048,26 +1048,26 @@ export const ModelInsightsPage: React.FC = () => {
 
               {/* 6. Interactive Local TreeSHAP Explainability Drill-Down */}
               {activeModelTab === 'v2_account' && (
-                <div className="p-6 rounded-2xl bg-white border border-[#EAE3D6] shadow-xs space-y-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#EAE3D6]">
+                <div className="p-6 rounded-2xl bg-white border border-[#E4E5F0] shadow-xs space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E4E5F0]">
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-[10px] font-bold text-[#10B981] uppercase tracking-wider bg-[#ECFDF5] px-2 py-0.5 rounded border border-[#A7F3D0]">
                           LOCAL EXPLAINABILITY
                         </span>
-                        <span className="text-xs font-mono text-[#8C857B]">TreeSHAP Attribution</span>
+                        <span className="text-xs font-mono text-[#868AA2]">TreeSHAP Attribution</span>
                       </div>
-                      <h3 className="text-base font-bold text-[#1A1714] mt-1">
+                      <h3 className="text-base font-bold text-[#141526] mt-1">
                         Individual Account Prediction Explanation
                       </h3>
-                      <p className="text-xs text-[#6B655B]">
+                      <p className="text-xs text-[#5C6079]">
                         Inspect local TreeSHAP contribution scores showing exactly which observable attributes pushed an account score higher or lower.
                       </p>
                     </div>
 
                     {/* Account Quick Selector Pills */}
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-[#6B655B] hidden sm:inline">Inspect:</span>
+                      <span className="text-xs text-[#5C6079] hidden sm:inline">Inspect:</span>
                       {['ACC-000001', 'ACC-000002', 'ACC-000003'].map((id) => (
                         <button
                           key={id}
@@ -1077,8 +1077,8 @@ export const ModelInsightsPage: React.FC = () => {
                           }}
                           className={`px-2.5 py-1 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer ${
                             drillAccountId === id
-                              ? 'bg-[#1A1714] text-white shadow-xs'
-                              : 'bg-[#FAF7F2] hover:bg-[#EAE3D6] text-[#1A1714] border border-[#EAE3D6]'
+                              ? 'bg-[#141526] text-white shadow-xs'
+                              : 'bg-[#F6F6FC] hover:bg-[#E4E5F0] text-[#141526] border border-[#E4E5F0]'
                           }`}
                         >
                           {id}
@@ -1090,19 +1090,19 @@ export const ModelInsightsPage: React.FC = () => {
                   {/* Account Input & Action Bar */}
                   <div className="flex gap-2">
                     <div className="relative flex-1">
-                      <Search className="w-4 h-4 text-[#8C857B] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <Search className="w-4 h-4 text-[#868AA2] absolute left-3.5 top-1/2 -translate-y-1/2" />
                       <input
                         type="text"
                         value={drillAccountId}
                         onChange={(e) => setDrillAccountId(e.target.value)}
                         placeholder="Enter a synthetic-ledger account ID, e.g. ACC-000001"
-                        className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] text-xs font-mono text-[#1A1714] focus:outline-none focus:border-[#EA8500]"
+                        className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0] text-xs font-mono text-[#141526] focus:outline-none focus:border-[#6246EA]"
                       />
                     </div>
                     <button
                       onClick={() => fetchDrillAssessment(drillAccountId)}
                       disabled={drillLoading || !drillAccountId.trim()}
-                      className="px-4 py-2.5 rounded-xl bg-[#EA8500] hover:bg-[#D27400] text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                      className="px-4 py-2.5 rounded-xl bg-[#6246EA] hover:bg-[#4F33D6] text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
                     >
                       <Cpu className={`w-3.5 h-3.5 ${drillLoading ? 'animate-spin' : ''}`} />
                       <span>Explain with TreeSHAP</span>
@@ -1111,8 +1111,8 @@ export const ModelInsightsPage: React.FC = () => {
 
                   {/* Drill Assessment Result */}
                   {drillLoading && (
-                    <div className="p-8 text-center text-xs text-[#6B655B] bg-[#FAF7F2] rounded-xl border border-[#EAE3D6]">
-                      <div className="w-6 h-6 rounded-full border-2 border-[#EA8500] border-t-transparent animate-spin mx-auto mb-2" />
+                    <div className="p-8 text-center text-xs text-[#5C6079] bg-[#F6F6FC] rounded-xl border border-[#E4E5F0]">
+                      <div className="w-6 h-6 rounded-full border-2 border-[#6246EA] border-t-transparent animate-spin mx-auto mb-2" />
                       Computing exact TreeSHAP attribution paths for {drillAccountId}...
                     </div>
                   )}
@@ -1126,19 +1126,19 @@ export const ModelInsightsPage: React.FC = () => {
                   {drillAssessment && !drillLoading && (
                     <div className="space-y-4">
                       {/* Prediction Summary Strip */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] text-xs">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0] text-xs">
                         <div>
-                          <span className="text-[10px] text-[#8C857B] font-mono block">Account Target</span>
-                          <span className="font-mono font-bold text-[#1A1714] text-sm">{drillAssessment.account_id}</span>
+                          <span className="text-[10px] text-[#868AA2] font-mono block">Account Target</span>
+                          <span className="font-mono font-bold text-[#141526] text-sm">{drillAssessment.account_id}</span>
                         </div>
                         <div>
-                          <span className="text-[10px] text-[#8C857B] font-mono block">Model score</span>
-                          <span className="font-mono font-bold text-[#EA8500] text-sm">
+                          <span className="text-[10px] text-[#868AA2] font-mono block">Model score</span>
+                          <span className="font-mono font-bold text-[#6246EA] text-sm">
                             {formatModelScore(drillAssessment.risk_score)}
                           </span>
                         </div>
                         <div>
-                          <span className="text-[10px] text-[#8C857B] font-mono block">Review suggestion</span>
+                          <span className="text-[10px] text-[#868AA2] font-mono block">Review suggestion</span>
                           <span
                             className={`px-2 py-0.5 rounded text-[11px] font-bold inline-block font-mono ${
                               drillAssessment.predicted_class === 'suspicious'
@@ -1152,7 +1152,7 @@ export const ModelInsightsPage: React.FC = () => {
                         <div className="text-right">
                           <Link
                             to={`/tools/accounts/${encodeURIComponent(drillAssessment.account_id)}`}
-                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#EA8500] hover:underline"
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#6246EA] hover:underline"
                           >
                             <span>Open 360° Profile</span>
                             <ArrowRight className="w-3.5 h-3.5" />
@@ -1162,7 +1162,7 @@ export const ModelInsightsPage: React.FC = () => {
 
                       {/* TreeSHAP Contribution Waterfall List */}
                       <div className="space-y-2">
-                        <span className="text-xs font-bold text-[#1A1714] block">
+                        <span className="text-xs font-bold text-[#141526] block">
                           Top Feature Attributions (TreeSHAP Log-Odds Contributions)
                         </span>
                         {drillAssessment.top_contributions.map((c) => {
@@ -1179,14 +1179,14 @@ export const ModelInsightsPage: React.FC = () => {
                             >
                               <div className="space-y-0.5">
                                 <div className="flex items-center gap-2">
-                                  <span className="font-bold text-[#1A1714]">
+                                  <span className="font-bold text-[#141526]">
                                     {glossary?.label || c.feature_name}
                                   </span>
-                                  <code className="text-[10px] font-mono text-[#8C857B]">
+                                  <code className="text-[10px] font-mono text-[#868AA2]">
                                     {c.feature_name} = {typeof c.feature_value === 'number' ? c.feature_value.toLocaleString() : c.feature_value}
                                   </code>
                                 </div>
-                                <p className="text-[11px] text-[#6B655B]">
+                                <p className="text-[11px] text-[#5C6079]">
                                   {glossary?.description || 'Observable behavioral feature.'}
                                 </p>
                               </div>
@@ -1194,12 +1194,12 @@ export const ModelInsightsPage: React.FC = () => {
                               <div className="flex items-center gap-2 self-start sm:self-center font-mono text-xs">
                                 <span
                                   className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                    increases ? 'bg-[#EA8500] text-white' : 'bg-[#10B981] text-white'
+                                    increases ? 'bg-[#6246EA] text-white' : 'bg-[#10B981] text-white'
                                   }`}
                                 >
                                   {increases ? '+ INCREASES RISK' : '- DECREASES RISK'}
                                 </span>
-                                <span className="font-bold text-[#1A1714]">
+                                <span className="font-bold text-[#141526]">
                                   {c.contribution_score > 0 ? `+${c.contribution_score}` : c.contribution_score}
                                 </span>
                               </div>
@@ -1213,55 +1213,55 @@ export const ModelInsightsPage: React.FC = () => {
               )}
 
               {/* 7. Dataset & Evaluation Transparency */}
-              <div className="p-6 rounded-2xl bg-white border border-[#EAE3D6] shadow-xs space-y-4">
-                <div className="pb-3 border-b border-[#EAE3D6]">
+              <div className="p-6 rounded-2xl bg-white border border-[#E4E5F0] shadow-xs space-y-4">
+                <div className="pb-3 border-b border-[#E4E5F0]">
                   <div className="flex items-center gap-2">
-                    <Database className="w-4 h-4 text-[#EA8500]" />
-                    <h3 className="text-sm font-bold text-[#1A1714]">Dataset &amp; Evaluation Provenance</h3>
+                    <Database className="w-4 h-4 text-[#6246EA]" />
+                    <h3 className="text-sm font-bold text-[#141526]">Dataset &amp; Evaluation Provenance</h3>
                   </div>
-                  <p className="text-xs text-[#6B655B]">
+                  <p className="text-xs text-[#5C6079]">
                     Transparent recording of training corpora, data splits, and leakage safeguards.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                  <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] space-y-2">
-                    <span className="font-bold text-[#1A1714] block">Evaluation Cohort &amp; Source</span>
-                    <div className="space-y-1 font-mono text-[11px] text-[#6B655B]">
-                      <div>Source: <strong className="text-[#1A1714]">{activeModelInfo.dataset_info?.source || 'Verified Artifact'}</strong></div>
+                  <div className="p-4 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0] space-y-2">
+                    <span className="font-bold text-[#141526] block">Evaluation Cohort &amp; Source</span>
+                    <div className="space-y-1 font-mono text-[11px] text-[#5C6079]">
+                      <div>Source: <strong className="text-[#141526]">{activeModelInfo.dataset_info?.source || 'Verified Artifact'}</strong></div>
                       {activeModelInfo.dataset_info?.strategy && (
-                        <div>Strategy: <strong className="text-[#1A1714]">{activeModelInfo.dataset_info.strategy}</strong></div>
+                        <div>Strategy: <strong className="text-[#141526]">{activeModelInfo.dataset_info.strategy}</strong></div>
                       )}
                       {activeModelInfo.dataset_info?.train_accounts_count && (
-                        <div>Train Accounts: <strong className="text-[#1A1714]">{activeModelInfo.dataset_info.train_accounts_count.toLocaleString()}</strong></div>
+                        <div>Train Accounts: <strong className="text-[#141526]">{activeModelInfo.dataset_info.train_accounts_count.toLocaleString()}</strong></div>
                       )}
                       {activeModelInfo.dataset_info?.test_accounts_count && (
-                        <div>Test Accounts: <strong className="text-[#1A1714]">{activeModelInfo.dataset_info.test_accounts_count.toLocaleString()}</strong></div>
+                        <div>Test Accounts: <strong className="text-[#141526]">{activeModelInfo.dataset_info.test_accounts_count.toLocaleString()}</strong></div>
                       )}
                       {activeModelInfo.dataset_info?.chronological_split && (
-                        <div>Chronological Steps: <strong className="text-[#1A1714]">{JSON.stringify(activeModelInfo.dataset_info.chronological_split)}</strong></div>
+                        <div>Chronological Steps: <strong className="text-[#141526]">{JSON.stringify(activeModelInfo.dataset_info.chronological_split)}</strong></div>
                       )}
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] space-y-2">
-                    <span className="font-bold text-[#1A1714] block">Target Leakage Safeguards</span>
+                  <div className="p-4 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0] space-y-2">
+                    <span className="font-bold text-[#141526] block">Target Leakage Safeguards</span>
                     {activeModelInfo.leakage_protections && activeModelInfo.leakage_protections.length > 0 ? (
-                      <ul className="space-y-1 list-disc pl-4 text-[11px] text-[#6B655B]">
+                      <ul className="space-y-1 list-disc pl-4 text-[11px] text-[#5C6079]">
                         {activeModelInfo.leakage_protections.map((prot, idx) => (
                           <li key={idx}>{prot}</li>
                         ))}
                       </ul>
                     ) : (
-                      <p className="text-[11px] text-[#8C857B]">No explicit exclusions recorded.</p>
+                      <p className="text-[11px] text-[#868AA2]">No explicit exclusions recorded.</p>
                     )}
                   </div>
                 </div>
 
                 {/* Model Limitations & Responsible AI Guardrail */}
-                <div className="p-4 rounded-xl bg-[#FFF8F0] border border-[#FDE68A] text-xs text-[#92400E] space-y-1">
-                  <span className="font-bold text-[#1A1714] flex items-center gap-1.5">
-                    <ShieldAlert className="w-4 h-4 text-[#EA8500]" />
+                <div className="p-4 rounded-xl bg-[#F5F3FF] border border-[#FDE68A] text-xs text-[#92400E] space-y-1">
+                  <span className="font-bold text-[#141526] flex items-center gap-1.5">
+                    <ShieldAlert className="w-4 h-4 text-[#6246EA]" />
                     <span>Non-Punitive Advisory Guardrail</span>
                   </span>
                   <p className="leading-relaxed text-[11px]">

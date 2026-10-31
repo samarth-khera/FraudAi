@@ -27,7 +27,7 @@ class ChunkErrorBoundary extends React.Component<{ children: React.ReactNode }, 
     return (
       <div role="alert" className="max-w-xl space-y-3 py-10 px-4 mx-auto">
         <h1 className="font-display text-xl font-bold">This page could not be loaded</h1>
-        <p className="text-sm text-[#6B655B]">Part of the application failed to download. Reload the page to try again.</p>
+        <p className="text-sm text-mute">Part of the application failed to download. Reload the page to try again.</p>
         <button type="button" className="btn-primary" onClick={() => window.location.reload()}>
           Reload
         </button>
@@ -53,10 +53,10 @@ const Redirect: React.FC<{ to: string | ((params: Record<string, string | undefi
 const NotFoundPage: React.FC = () => (
   <div className="max-w-xl space-y-4 py-10">
     <h1 className="font-display text-2xl font-extrabold">Page not found</h1>
-    <p className="text-sm text-[#6B655B]">There is no page at this address.</p>
+    <p className="text-sm text-[#5C6079]">There is no page at this address.</p>
     <div className="flex gap-3">
-      <Link to="/" className="btn-primary">Home</Link>
-      <Link to="/cases" className="btn-secondary">Investigations</Link>
+      <Link to="/investigate" className="btn-primary">Investigate an account</Link>
+      <Link to="/" className="btn-secondary">Overview</Link>
     </div>
   </div>
 );
@@ -75,12 +75,10 @@ export const AppRoutes: React.FC = () => (
       <Route path="/tools/audit" element={<Lazy><AuditPage /></Lazy>} />
       <Route path="/tools/fund-flow" element={<Lazy><FundFlowPage /></Lazy>} />
       <Route path="/tools/transaction-model" element={<Lazy><TransactionCheckPage /></Lazy>} />
+      <Route path="/tools/accounts" element={<Lazy><V2SearchPage /></Lazy>} />
+      <Route path="/tools/accounts/:accountId" element={<Lazy><V2AccountDetailPage /></Lazy>} />
       <Route path="*" element={<NotFoundPage />} />
     </Route>
-
-    {/* Account lookup pages render their own header and footer. */}
-    <Route path="/tools/accounts" element={<Lazy><V2SearchPage /></Lazy>} />
-    <Route path="/tools/accounts/:accountId" element={<Lazy><V2AccountDetailPage /></Lazy>} />
 
     {/* Legacy routes kept as redirects. */}
     <Route path="/guided-investigation" element={<Redirect to={`/cases/${SAMPLE_CASE_ID}`} />} />

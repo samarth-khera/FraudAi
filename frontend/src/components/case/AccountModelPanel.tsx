@@ -89,23 +89,23 @@ export const AccountModelPanel: React.FC<Props> = ({ accountId, isReportingCusto
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-[#EAE3D6] bg-[#FAF7F2] p-4 text-sm">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[#8C857B]">Synthetic ledger record</p>
+      <div className="rounded-xl border border-[#E4E5F0] bg-[#F6F6FC] p-4 text-sm">
+        <p className="text-xs font-semibold uppercase tracking-wide text-[#868AA2]">Synthetic ledger record</p>
         <dl className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div>
-            <dt className="text-xs text-[#6B655B]">Customer type</dt>
+            <dt className="text-xs text-[#5C6079]">Customer type</dt>
             <dd className="font-semibold capitalize">{profile.customer_type}</dd>
           </div>
           <div>
-            <dt className="text-xs text-[#6B655B]">KYC</dt>
+            <dt className="text-xs text-[#5C6079]">KYC</dt>
             <dd className="font-semibold">{profile.kyc_tier.replace(/_/g, ' ').replace(/^tier (\d)/, 'Tier $1 ·')}</dd>
           </div>
           <div>
-            <dt className="text-xs text-[#6B655B]">Ledger transactions</dt>
+            <dt className="text-xs text-[#5C6079]">Ledger transactions</dt>
             <dd className="font-semibold">{profile.metrics.total_incoming_txns + profile.metrics.total_outgoing_txns}</dd>
           </div>
           <div>
-            <dt className="text-xs text-[#6B655B]">Activity</dt>
+            <dt className="text-xs text-[#5C6079]">Activity</dt>
             <dd className="font-semibold text-xs">
               {formatDateTime(profile.metrics.first_activity_at).split(',')[0]} – {formatDateTime(profile.metrics.last_activity_at).split(',')[0]}
             </dd>
@@ -114,28 +114,28 @@ export const AccountModelPanel: React.FC<Props> = ({ accountId, isReportingCusto
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-xl border border-[#EAE3D6] p-4" data-testid="rule-score-card">
-          <p className="flex items-center gap-1.5 text-xs font-semibold text-[#6B655B]">
+        <div className="rounded-xl border border-[#E4E5F0] p-4" data-testid="rule-score-card">
+          <p className="flex items-center gap-1.5 text-xs font-semibold text-[#5C6079]">
             <Scale className="w-3.5 h-3.5" aria-hidden="true" /> {RULE_SCORE_LABEL} <span className="font-normal">· fixed rules</span>
           </p>
           {rules ? (
             <>
               <p className="mt-1 flex items-baseline gap-2">
                 <span className="text-2xl font-bold">{Math.round(rules.risk_score)}</span>
-                <span className="text-xs text-[#6B655B]">points of 100</span>
+                <span className="text-xs text-[#5C6079]">points of 100</span>
                 <Pill tone={LEVEL_TONE[rules.risk_level]}>{LEVEL_LABEL[rules.risk_level]}</Pill>
               </p>
-              <p className="mt-1 text-xs font-medium text-[#1A1714]">
+              <p className="mt-1 text-xs font-medium text-[#141526]">
                 {ruleSuggestsReview(rules.risk_level) ? 'Suggests review' : 'Does not suggest review'}
               </p>
-              <p className="mt-1 text-xs text-[#6B655B]">{RULE_SCORE_MEANING}</p>
+              <p className="mt-1 text-xs text-[#5C6079]">{RULE_SCORE_MEANING}</p>
             </>
           ) : (
-            <p className="mt-1 text-sm text-[#6B655B]">{describeError(data.rules.ok ? null : data.rules.error, 'Rule check unavailable.')}</p>
+            <p className="mt-1 text-sm text-[#5C6079]">{describeError(data.rules.ok ? null : data.rules.error, 'Rule check unavailable.')}</p>
           )}
         </div>
-        <div className="rounded-xl border border-[#EAE3D6] p-4" data-testid="model-score-card">
-          <p className="flex items-center gap-1.5 text-xs font-semibold text-[#6B655B]">
+        <div className="rounded-xl border border-[#E4E5F0] p-4" data-testid="model-score-card">
+          <p className="flex items-center gap-1.5 text-xs font-semibold text-[#5C6079]">
             <Cpu className="w-3.5 h-3.5" aria-hidden="true" /> {MODEL_SCORE_LABEL} <span className="font-normal">· machine learning</span>
             {model && <span className="font-mono font-normal">{model.model_version}</span>}
           </p>
@@ -145,18 +145,18 @@ export const AccountModelPanel: React.FC<Props> = ({ accountId, isReportingCusto
                 <span className="text-2xl font-bold">{formatModelScore(model.risk_score)}</span>
                 <Pill tone={LEVEL_TONE[model.risk_level]}>{LEVEL_LABEL[model.risk_level]}</Pill>
               </p>
-              <p className="mt-1 text-xs font-medium text-[#1A1714]">
+              <p className="mt-1 text-xs font-medium text-[#141526]">
                 {modelSuggests
                   ? `At or above the ${evaluation.thresholdLabel ?? 'review'} review threshold: suggested for review, not confirmed fraud.`
                   : `Below the ${evaluation.thresholdLabel ?? 'review'} review threshold. This does not clear the account.`}
               </p>
-              <p className="mt-1 text-xs text-[#6B655B]">
+              <p className="mt-1 text-xs text-[#5C6079]">
                 {MODEL_SCORE_MEANING} Shown on a 0–100% scale: higher means the account behaves more like the suspicious
                 accounts the model learned from.
               </p>
             </>
           ) : (
-            <p className="mt-1 text-sm text-[#6B655B]">
+            <p className="mt-1 text-sm text-[#5C6079]">
               {describeError(data.model.ok ? null : data.model.error, 'The account model could not assess this account.')}
             </p>
           )}
@@ -169,7 +169,7 @@ export const AccountModelPanel: React.FC<Props> = ({ accountId, isReportingCusto
           className={`rounded-xl border p-3 text-xs leading-relaxed ${
             comparison === 'model_only' || comparison === 'rules_only'
               ? 'border-[#FDE68A] bg-[#FFFBEB] text-[#92400E]'
-              : 'border-[#EAE3D6] bg-[#FAF7F2] text-[#6B655B]'
+              : 'border-[#E4E5F0] bg-[#F6F6FC] text-[#5C6079]'
           }`}
         >
           {COMPARISON_TEXT[comparison]} The two scores use different scales, so their numbers should not be compared
@@ -184,12 +184,12 @@ export const AccountModelPanel: React.FC<Props> = ({ accountId, isReportingCusto
       )}
 
       {model && (
-        <section aria-labelledby={`why-${accountId}`} className="rounded-xl border border-[#EAE3D6] p-4">
+        <section aria-labelledby={`why-${accountId}`} className="rounded-xl border border-[#E4E5F0] p-4">
           <h4 id={`why-${accountId}`} className="text-sm font-semibold">
             Why the model gave this score
           </h4>
           {model.top_contributions.length === 0 ? (
-            <p className="mt-2 text-sm text-[#6B655B]">
+            <p className="mt-2 text-sm text-[#5C6079]">
               The explanation could not be computed for this result, so the factors behind the score are unknown.
             </p>
           ) : (
@@ -208,19 +208,19 @@ export const AccountModelPanel: React.FC<Props> = ({ accountId, isReportingCusto
                         {up ? 'Raised score' : 'Lowered score'}
                       </span>
                     </div>
-                    <div className="mt-1 h-1.5 rounded-full bg-[#EFECE6] overflow-hidden" aria-hidden="true">
+                    <div className="mt-1 h-1.5 rounded-full bg-[#EEEFF7] overflow-hidden" aria-hidden="true">
                       <div
                         className={`h-full rounded-full ${up ? 'bg-[#F43F5E]' : 'bg-[#22C55E]'}`}
                         style={{ width: `${(Math.abs(f.contribution_score) / maxContribution) * 100}%` }}
                       />
                     </div>
-                    <p className="mt-1 text-xs text-[#6B655B]">{info.meaning}</p>
+                    <p className="mt-1 text-xs text-[#5C6079]">{info.meaning}</p>
                   </li>
                 );
               })}
             </ul>
           )}
-          <p className="mt-3 text-xs text-[#8C857B] leading-relaxed">
+          <p className="mt-3 text-xs text-[#868AA2] leading-relaxed">
             The six inputs with the largest effect on this account’s score (TreeSHAP values from the model itself). Bars
             are relative to each other.
           </p>
@@ -229,9 +229,9 @@ export const AccountModelPanel: React.FC<Props> = ({ accountId, isReportingCusto
 
       <section
         data-testid="model-limits"
-        className="rounded-xl border border-[#EAE3D6] bg-[#FAF7F2] p-4 text-xs text-[#6B655B] space-y-2 leading-relaxed"
+        className="rounded-xl border border-[#E4E5F0] bg-[#F6F6FC] p-4 text-xs text-[#5C6079] space-y-2 leading-relaxed"
       >
-        <p className="flex items-center gap-1.5 font-semibold text-[#1A1714]">
+        <p className="flex items-center gap-1.5 font-semibold text-[#141526]">
           <Info className="w-3.5 h-3.5" aria-hidden="true" /> About these results
         </p>
         <p>
@@ -244,7 +244,7 @@ export const AccountModelPanel: React.FC<Props> = ({ accountId, isReportingCusto
           alarms. A high score does not show intent; a low score does not show innocence.
         </p>
         <details className="group">
-          <summary className="cursor-pointer font-semibold text-[#B45309] hover:text-[#EA8500]">How was this measured?</summary>
+          <summary className="cursor-pointer font-semibold text-[#4F33D6] hover:text-[#6246EA]">How was this measured?</summary>
           <ul className="mt-2 list-disc pl-5 space-y-1">
             <li>
               Test set: {evaluation.positives ?? '—'} suspicious and {evaluation.negatives?.toLocaleString('en-IN') ?? '—'}{' '}
@@ -263,7 +263,7 @@ export const AccountModelPanel: React.FC<Props> = ({ accountId, isReportingCusto
             <li>These are results on synthetic data. They do not show how the model would perform on real bank accounts.</li>
           </ul>
         </details>
-        <Link to="/tools/model" className="inline-block font-semibold text-[#B45309] hover:text-[#EA8500]">
+        <Link to="/tools/model" className="inline-block font-semibold text-[#4F33D6] hover:text-[#6246EA]">
           Full model evaluation →
         </Link>
       </section>

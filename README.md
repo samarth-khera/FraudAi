@@ -23,16 +23,17 @@ block or flag any account by itself.
 
 ## The investigation workflow
 
-The site has three main destinations, **Home**, **Investigate** and **Investigations**, plus a secondary **Tools** area.
+The sidebar has four main destinations, **Overview**, **Investigate**, **Accounts** and **Cases**, plus a **Reference** group (fund-flow explorer, model performance, audit log, transaction model check).
 
 ### Live investigation (Investigate)
 
-Enter a victim account ID (for example `ACC-000001`, or just `1`) and press **Start Investigation**. The server
+Open an account (for example `ACC-000001`, or just `1`) to see its summary, then press **Start fund investigation**. The server
 queries the ledger at that moment and returns a report. It contains the account's transfers that are unusual for it,
 the money flow traced in both directions with time order respected, and each linked account assessed on its own
 records by the rules and the model. It also gives a balance-based exposure range, findings labelled
-*observed / rule / model / limit* that cite transaction IDs, and advisory next steps. Click a graph node or edge for
-its evidence. Nothing is precomputed or stored, and the report says plainly that the data is synthetic. When enabled on the
+*observed / rule / model / limit* that cite transaction IDs, and advisory next steps. The page walks through it in five
+stages (overview, fund trail, risk evidence, AI analyst, next steps); the fund trail follows each branch transfer by
+transfer, with an inspector for every transfer and account. Nothing is precomputed or stored, and the report says plainly that the data is synthetic. When enabled on the
 server, a Google Gemini explanation is added after the checks finish. It is labelled as AI-generated, cites the
 report's own records and never changes a score, and the report states plainly when it did not run.
 Details: [docs/LIVE_INVESTIGATION.md](docs/LIVE_INVESTIGATION.md) and [docs/AI_ANALYST.md](docs/AI_ANALYST.md).
