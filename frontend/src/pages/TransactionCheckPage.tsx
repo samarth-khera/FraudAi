@@ -168,17 +168,17 @@ export const TransactionCheckPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Workbench Header */}
-      <div className="flex flex-wrap items-end justify-between gap-4 pb-4 border-b border-[#D6D3CD]">
+      <div className="flex flex-wrap items-end justify-between gap-4 pb-4 border-b border-[#D5D7E6]">
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#0F766E]">
+            <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#4F33D6]">
               Tools · PaySim benchmark
             </span>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#0B1322] text-[#2DD4BF] border border-[#1C2B45]">
+            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#141526] text-[#2DD4BF] border border-[#1C2B45]">
               XGBOOST + TREESHAP
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#0B1322] tracking-tight mt-0.5">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#141526] tracking-tight mt-0.5">
             Transaction model check
           </h1>
           <p className="text-xs text-[#475569] mt-0.5">
@@ -190,8 +190,8 @@ export const TransactionCheckPage: React.FC = () => {
 
       {/* Benchmark example selector */}
       <div className="forensic-panel p-4 space-y-3.5">
-        <div className="pb-2.5 border-b border-[#E2DFD7] space-y-1.5">
-          <span className="font-mono text-[11px] font-bold text-[#0B1322] uppercase tracking-wider">
+        <div className="pb-2.5 border-b border-[#DEE0EC] space-y-1.5">
+          <span className="font-mono text-[11px] font-bold text-[#141526] uppercase tracking-wider">
             1. Load an example transaction
           </span>
           <p className="text-xs text-[#475569] leading-relaxed">
@@ -216,12 +216,12 @@ export const TransactionCheckPage: React.FC = () => {
                 }}
                 className={`p-3 text-left rounded-md border transition-colors ${
                   isSelected
-                    ? 'bg-[#0B1322] text-white border-[#0D9488]'
-                    : 'bg-[#FAF9F6] hover:bg-[#F0FDFA] text-[#0B1322] border-[#D6D3CD] hover:border-[#0D9488]'
+                    ? 'bg-[#141526] text-white border-[#6246EA]'
+                    : 'bg-[#F7F7FC] hover:bg-[#F0FDFA] text-[#141526] border-[#D5D7E6] hover:border-[#6246EA]'
                 }`}
               >
                 <div className="flex items-center justify-between gap-2 mb-1">
-                  <span className={`font-mono text-[10px] font-bold ${isSelected ? 'text-[#2DD4BF]' : 'text-[#0F766E]'}`}>
+                  <span className={`font-mono text-[10px] font-bold ${isSelected ? 'text-[#2DD4BF]' : 'text-[#4F33D6]'}`}>
                     {p.tag}
                   </span>
                   <span className={`font-mono text-[10px] ${isSelected ? 'text-slate-300' : 'text-[#64748B]'}`}>
@@ -245,9 +245,9 @@ export const TransactionCheckPage: React.FC = () => {
         <div className="lg:col-span-5 space-y-4">
           <div className="forensic-panel p-5">
             <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-              <div className="pb-3 border-b border-[#E2DFD7] flex items-center justify-between">
-                <h2 className="text-sm font-bold text-[#0B1322] flex items-center gap-2">
-                  <SearchCheck className="w-4 h-4 text-[#0D9488]" />
+              <div className="pb-3 border-b border-[#DEE0EC] flex items-center justify-between">
+                <h2 className="text-sm font-bold text-[#141526] flex items-center gap-2">
+                  <SearchCheck className="w-4 h-4 text-[#6246EA]" />
                   <span>Pre-Transaction Features Schema</span>
                 </h2>
                 <span className="font-mono text-[10px] text-[#64748B]">5 RAW INPUTS</span>
@@ -255,7 +255,7 @@ export const TransactionCheckPage: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label htmlFor="risk-step-input" className="block text-xs font-semibold text-[#0B1322] mb-1">
+                  <label htmlFor="risk-step-input" className="block text-xs font-semibold text-[#141526] mb-1">
                     Simulation Step (Hour)
                   </label>
                   <input
@@ -265,7 +265,7 @@ export const TransactionCheckPage: React.FC = () => {
                     step="1"
                     value={formData.step}
                     onChange={(e) => handleInputChange('step', e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-md bg-[#FAF9F6] border border-[#D6D3CD] focus:bg-white focus:border-[#0D9488] outline-none font-mono"
+                    className="w-full px-3 py-2 text-xs rounded-md bg-[#F7F7FC] border border-[#D5D7E6] focus:bg-white focus:border-[#6246EA] outline-none font-mono"
                     required
                   />
                   <span className="text-[10px] font-mono text-[#64748B] mt-0.5 block">
@@ -274,14 +274,14 @@ export const TransactionCheckPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="risk-type-select" className="block text-xs font-semibold text-[#0B1322] mb-1">
+                  <label htmlFor="risk-type-select" className="block text-xs font-semibold text-[#141526] mb-1">
                     Transaction Rail / Type
                   </label>
                   <select
                     id="risk-type-select"
                     value={formData.type}
                     onChange={(e) => handleInputChange('type', e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-md bg-[#FAF9F6] border border-[#D6D3CD] focus:bg-white focus:border-[#0D9488] outline-none font-mono font-semibold"
+                    className="w-full px-3 py-2 text-xs rounded-md bg-[#F7F7FC] border border-[#D5D7E6] focus:bg-white focus:border-[#6246EA] outline-none font-mono font-semibold"
                     required
                   >
                     <option value="TRANSFER">TRANSFER</option>
@@ -297,7 +297,7 @@ export const TransactionCheckPage: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="risk-amount-input" className="block text-xs font-semibold text-[#0B1322] mb-1">
+                <label htmlFor="risk-amount-input" className="block text-xs font-semibold text-[#141526] mb-1">
                   Transaction Amount (₹)
                 </label>
                 <input
@@ -307,7 +307,7 @@ export const TransactionCheckPage: React.FC = () => {
                   step="0.01"
                   value={formData.amount}
                   onChange={(e) => handleInputChange('amount', e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-md bg-[#FAF9F6] border border-[#D6D3CD] focus:bg-white focus:border-[#0D9488] outline-none font-mono font-semibold"
+                  className="w-full px-3 py-2 text-xs rounded-md bg-[#F7F7FC] border border-[#D5D7E6] focus:bg-white focus:border-[#6246EA] outline-none font-mono font-semibold"
                   required
                 />
                 <span className="text-[10px] font-mono text-[#64748B] mt-0.5 block">
@@ -317,7 +317,7 @@ export const TransactionCheckPage: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label htmlFor="risk-oldorg-input" className="block text-xs font-semibold text-[#0B1322] mb-1">
+                  <label htmlFor="risk-oldorg-input" className="block text-xs font-semibold text-[#141526] mb-1">
                     Origin Balance Before TX (₹)
                   </label>
                   <input
@@ -327,7 +327,7 @@ export const TransactionCheckPage: React.FC = () => {
                     step="0.01"
                     value={formData.oldbalanceOrg}
                     onChange={(e) => handleInputChange('oldbalanceOrg', e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-md bg-[#FAF9F6] border border-[#D6D3CD] focus:bg-white focus:border-[#0D9488] outline-none font-mono"
+                    className="w-full px-3 py-2 text-xs rounded-md bg-[#F7F7FC] border border-[#D5D7E6] focus:bg-white focus:border-[#6246EA] outline-none font-mono"
                     required
                   />
                   <span className="text-[10px] font-mono text-[#64748B] mt-0.5 block">
@@ -336,7 +336,7 @@ export const TransactionCheckPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="risk-olddest-input" className="block text-xs font-semibold text-[#0B1322] mb-1">
+                  <label htmlFor="risk-olddest-input" className="block text-xs font-semibold text-[#141526] mb-1">
                     Destination Balance Before TX (₹)
                   </label>
                   <input
@@ -346,7 +346,7 @@ export const TransactionCheckPage: React.FC = () => {
                     step="0.01"
                     value={formData.oldbalanceDest}
                     onChange={(e) => handleInputChange('oldbalanceDest', e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-md bg-[#FAF9F6] border border-[#D6D3CD] focus:bg-white focus:border-[#0D9488] outline-none font-mono"
+                    className="w-full px-3 py-2 text-xs rounded-md bg-[#F7F7FC] border border-[#D5D7E6] focus:bg-white focus:border-[#6246EA] outline-none font-mono"
                     required
                   />
                   <span className="text-[10px] font-mono text-[#64748B] mt-0.5 block">
@@ -356,20 +356,20 @@ export const TransactionCheckPage: React.FC = () => {
               </div>
 
               {/* Live Derived Pre-Transaction Ratios */}
-              <div className="p-3 rounded-md bg-[#FAF9F6] border border-[#E2DFD7] space-y-1.5 text-[11px] font-mono">
+              <div className="p-3 rounded-md bg-[#F7F7FC] border border-[#DEE0EC] space-y-1.5 text-[11px] font-mono">
                 <div className="flex items-center justify-between text-[#475569]">
                   <span>Amount-to-Origin Ratio:</span>
-                  <span className="font-bold text-[#0B1322]">{derivedRatio}</span>
+                  <span className="font-bold text-[#141526]">{derivedRatio}</span>
                 </div>
                 <div className="flex items-center justify-between text-[#475569]">
                   <span>Full Origin Balance Drain:</span>
-                  <span className={isFullDrain ? 'font-bold text-red-700' : 'text-[#0B1322]'}>
+                  <span className={isFullDrain ? 'font-bold text-red-700' : 'text-[#141526]'}>
                     {isFullDrain ? 'YES (100% Drain Signal)' : 'NO'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-[#475569]">
                   <span>Zero Destination Balance:</span>
-                  <span className={formData.oldbalanceDest === 0 ? 'font-bold text-amber-800' : 'text-[#0B1322]'}>
+                  <span className={formData.oldbalanceDest === 0 ? 'font-bold text-amber-800' : 'text-[#141526]'}>
                     {formData.oldbalanceDest === 0 ? 'YES (oldbalanceDest = 0)' : 'NO'}
                   </span>
                 </div>
@@ -384,7 +384,7 @@ export const TransactionCheckPage: React.FC = () => {
                     setResult(null);
                     setError(null);
                   }}
-                  className="px-3 py-2 rounded-md border border-[#D6D3CD] bg-white hover:bg-[#FAF9F6] text-xs font-semibold text-[#475569] hover:text-[#0B1322] flex items-center gap-1.5"
+                  className="px-3 py-2 rounded-md border border-[#D5D7E6] bg-white hover:bg-[#F7F7FC] text-xs font-semibold text-[#475569] hover:text-[#141526] flex items-center gap-1.5"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>Reset</span>
@@ -393,7 +393,7 @@ export const TransactionCheckPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 py-2.5 px-4 rounded-md bg-[#0D9488] hover:bg-[#0F766E] text-white font-semibold text-xs flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                  className="flex-1 py-2.5 px-4 rounded-md bg-[#6246EA] hover:bg-[#4F33D6] text-white font-semibold text-xs flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                 >
                   {loading ? (
                     <span>Scoring &amp; Explaining...</span>
@@ -409,7 +409,7 @@ export const TransactionCheckPage: React.FC = () => {
           </div>
 
           {/* Leakage-Safe Constraint Notice */}
-          <div className="p-4 rounded-md bg-[#0B1322] text-slate-300 border border-[#1C2B45] text-xs space-y-1.5">
+          <div className="p-4 rounded-md bg-[#141526] text-slate-300 border border-[#1C2B45] text-xs space-y-1.5">
             <div className="font-mono text-[11px] font-semibold text-[#2DD4BF] flex items-center gap-1.5">
               <Info className="w-3.5 h-3.5" />
               <span>LEAKAGE-SAFE PRE-TRANSACTION PIPELINE</span>
@@ -451,8 +451,8 @@ export const TransactionCheckPage: React.FC = () => {
 
           {loading && (
             <div className="forensic-panel p-10 text-center space-y-3">
-              <div className="w-7 h-7 rounded-full border-2 border-[#0D9488] border-t-transparent animate-spin mx-auto" />
-              <div className="text-sm font-bold text-[#0B1322]">
+              <div className="w-7 h-7 rounded-full border-2 border-[#6246EA] border-t-transparent animate-spin mx-auto" />
+              <div className="text-sm font-bold text-[#141526]">
                 Running XGBoost Inference &amp; TreeSHAP Decomposition...
               </div>
               <p className="text-xs text-[#64748B]">
@@ -465,7 +465,7 @@ export const TransactionCheckPage: React.FC = () => {
             <div className="space-y-4">
               {/* Top Prediction & Decision-Support Banner */}
               <div className="forensic-panel overflow-hidden">
-                <div className="px-5 py-3 bg-[#0B1322] text-white border-b border-[#1C2B45] flex flex-wrap items-center justify-between gap-2">
+                <div className="px-5 py-3 bg-[#141526] text-white border-b border-[#1C2B45] flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#2DD4BF]">
                       Prediction Summary
@@ -488,7 +488,7 @@ export const TransactionCheckPage: React.FC = () => {
 
                 <div className="p-5 space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                    <div className="md:col-span-5 p-4 rounded-md bg-[#FAF9F6] border border-[#E2DFD7]">
+                    <div className="md:col-span-5 p-4 rounded-md bg-[#F7F7FC] border border-[#DEE0EC]">
                       <div className="text-[11px] font-mono uppercase text-[#64748B]">
                         Predicted Fraud Risk Score
                       </div>
@@ -534,12 +534,12 @@ export const TransactionCheckPage: React.FC = () => {
                   </div>
 
                   {/* Additive Log-Odds Equation Strip */}
-                  <div className="grid grid-cols-3 gap-2.5 p-3 rounded-md bg-[#FAF9F6] border border-[#E2DFD7] text-xs font-mono">
+                  <div className="grid grid-cols-3 gap-2.5 p-3 rounded-md bg-[#F7F7FC] border border-[#DEE0EC] text-xs font-mono">
                     <div>
                       <span className="text-[10px] font-sans text-[#64748B] block">
                         Baseline Log-Odds (base_value)
                       </span>
-                      <span className="font-bold text-[#0B1322]">
+                      <span className="font-bold text-[#141526]">
                         {result.base_value >= 0 ? `+${result.base_value.toFixed(4)}` : result.base_value.toFixed(4)}
                       </span>
                     </div>
@@ -547,7 +547,7 @@ export const TransactionCheckPage: React.FC = () => {
                       <span className="text-[10px] font-sans text-[#64748B] block">
                         Net Feature Shift (∑ ϕ_i)
                       </span>
-                      <span className="font-bold text-[#0F766E]">
+                      <span className="font-bold text-[#4F33D6]">
                         {result.raw_margin - result.base_value >= 0
                           ? `+${(result.raw_margin - result.base_value).toFixed(4)}`
                           : (result.raw_margin - result.base_value).toFixed(4)}
@@ -557,7 +557,7 @@ export const TransactionCheckPage: React.FC = () => {
                       <span className="text-[10px] font-sans text-[#64748B] block">
                         Final Log-Odds → σ(raw_margin)
                       </span>
-                      <span className="font-bold text-[#0B1322]">
+                      <span className="font-bold text-[#141526]">
                         {result.raw_margin.toFixed(4)} → {(result.risk_score * 100).toFixed(2)}%
                       </span>
                     </div>
@@ -567,10 +567,10 @@ export const TransactionCheckPage: React.FC = () => {
 
               {/* Local Feature Contributions Waterfall Card */}
               <div className="forensic-panel p-5 space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#E2DFD7]">
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#DEE0EC]">
                   <div>
-                    <h3 className="text-sm font-bold text-[#0B1322] flex items-center gap-2">
-                      <BarChart3 className="w-4 h-4 text-[#0D9488]" />
+                    <h3 className="text-sm font-bold text-[#141526] flex items-center gap-2">
+                      <BarChart3 className="w-4 h-4 text-[#6246EA]" />
                       <span>Local Feature Contributions ({result.prediction_scale} scale)</span>
                     </h3>
                     <p className="text-[11px] text-[#64748B] mt-0.5">
@@ -578,14 +578,14 @@ export const TransactionCheckPage: React.FC = () => {
                     </p>
                   </div>
 
-                  <div className="flex items-center p-0.5 rounded-md bg-[#E2DFD7] text-[11px] font-semibold">
+                  <div className="flex items-center p-0.5 rounded-md bg-[#DEE0EC] text-[11px] font-semibold">
                     <button
                       type="button"
                       onClick={() => setContributionView('engineered')}
                       className={`px-2.5 py-1 rounded transition-colors ${
                         contributionView === 'engineered'
-                          ? 'bg-[#0B1322] text-white'
-                          : 'text-[#475569] hover:text-[#0B1322]'
+                          ? 'bg-[#141526] text-white'
+                          : 'text-[#475569] hover:text-[#141526]'
                       }`}
                     >
                       Engineered Features ({result.feature_contributions.length})
@@ -595,8 +595,8 @@ export const TransactionCheckPage: React.FC = () => {
                       onClick={() => setContributionView('encoded')}
                       className={`px-2.5 py-1 rounded transition-colors ${
                         contributionView === 'encoded'
-                          ? 'bg-[#0B1322] text-white'
-                          : 'text-[#475569] hover:text-[#0B1322]'
+                          ? 'bg-[#141526] text-white'
+                          : 'text-[#475569] hover:text-[#141526]'
                       }`}
                     >
                       One-Hot &amp; Encoded ({result.encoded_contributions.length})
@@ -614,16 +614,16 @@ export const TransactionCheckPage: React.FC = () => {
                       return (
                         <div
                           key={fc.feature}
-                          className="p-3 rounded-md bg-[#FAF9F6] border border-[#E2DFD7] space-y-1.5"
+                          className="p-3 rounded-md bg-[#F7F7FC] border border-[#DEE0EC] space-y-1.5"
                         >
                           <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                             <div className="flex flex-wrap items-center gap-2">
-                              <span className="font-bold text-[#0B1322]">{fc.label}</span>
-                              <code className="text-[10px] px-1.5 py-0.5 rounded bg-white border border-[#D6D3CD] text-[#334155] font-mono">
+                              <span className="font-bold text-[#141526]">{fc.label}</span>
+                              <code className="text-[10px] px-1.5 py-0.5 rounded bg-white border border-[#D5D7E6] text-[#334155] font-mono">
                                 {fc.feature} = {typeof fc.value === 'number' ? fc.value.toLocaleString() : fc.value}
                               </code>
                               {fc.encoding === 'one_hot_summed' && (
-                                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#F0FDFA] text-[#0F766E] border border-[#CCFBF1]">
+                                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#F0FDFA] text-[#4F33D6] border border-[#CCFBF1]">
                                   One-Hot Summed
                                 </span>
                               )}
@@ -636,12 +636,12 @@ export const TransactionCheckPage: React.FC = () => {
                                   <span>+{fc.contribution.toFixed(4)} (Increases Risk)</span>
                                 </span>
                               ) : isNeg ? (
-                                <span className="inline-flex items-center gap-1 text-[#0F766E] bg-[#F0FDFA] px-2 py-0.5 rounded border border-[#CCFBF1]">
+                                <span className="inline-flex items-center gap-1 text-[#4F33D6] bg-[#F0FDFA] px-2 py-0.5 rounded border border-[#CCFBF1]">
                                   <TrendingDown className="w-3.5 h-3.5" aria-hidden="true" />
                                   <span>{fc.contribution.toFixed(4)} (Decreases Risk)</span>
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 text-[#64748B] bg-[#EFECE6] px-2 py-0.5 rounded">
+                                <span className="inline-flex items-center gap-1 text-[#64748B] bg-[#EEEFF7] px-2 py-0.5 rounded">
                                   <Minus className="w-3.5 h-3.5" aria-hidden="true" />
                                   <span>0.0000 (Neutral)</span>
                                 </span>
@@ -649,11 +649,11 @@ export const TransactionCheckPage: React.FC = () => {
                             </div>
                           </div>
 
-                          <div className="w-full h-2 bg-[#E2DFD7] rounded-xs overflow-hidden flex">
+                          <div className="w-full h-2 bg-[#DEE0EC] rounded-xs overflow-hidden flex">
                             <div
                               style={{ width: `${Math.max(pct, 2)}%` }}
                               className={`h-full ${
-                                isPos ? 'bg-red-600' : isNeg ? 'bg-[#0D9488]' : 'bg-slate-400'
+                                isPos ? 'bg-red-600' : isNeg ? 'bg-[#6246EA]' : 'bg-slate-400'
                               }`}
                             />
                           </div>
@@ -670,23 +670,23 @@ export const TransactionCheckPage: React.FC = () => {
                       return (
                         <div
                           key={ec.feature}
-                          className="p-2.5 rounded-md bg-[#FAF9F6] border border-[#E2DFD7] flex items-center justify-between gap-4 text-xs"
+                          className="p-2.5 rounded-md bg-[#F7F7FC] border border-[#DEE0EC] flex items-center justify-between gap-4 text-xs"
                         >
                           <div className="min-w-48 font-mono">
-                            <span className="font-bold text-[#0B1322]">{ec.feature}</span>
+                            <span className="font-bold text-[#141526]">{ec.feature}</span>
                             <span className="text-[#64748B] ml-2">(val: {ec.encoded_value})</span>
                           </div>
-                          <div className="flex-1 h-2 bg-[#E2DFD7] rounded-xs overflow-hidden">
+                          <div className="flex-1 h-2 bg-[#DEE0EC] rounded-xs overflow-hidden">
                             <div
                               style={{ width: `${Math.max(pct, 2)}%` }}
                               className={`h-full ${
-                                isPos ? 'bg-red-600' : isNeg ? 'bg-[#0D9488]' : 'bg-slate-400'
+                                isPos ? 'bg-red-600' : isNeg ? 'bg-[#6246EA]' : 'bg-slate-400'
                               }`}
                             />
                           </div>
                           <div
                             className={`font-mono font-bold w-24 text-right ${
-                              isPos ? 'text-red-700' : isNeg ? 'text-[#0F766E]' : 'text-[#64748B]'
+                              isPos ? 'text-red-700' : isNeg ? 'text-[#4F33D6]' : 'text-[#64748B]'
                             }`}
                           >
                             {ec.contribution >= 0 ? `+${ec.contribution.toFixed(4)}` : ec.contribution.toFixed(4)}
@@ -697,9 +697,9 @@ export const TransactionCheckPage: React.FC = () => {
                   </div>
                 )}
 
-                <div className="p-4 rounded-md bg-[#FAF9F6] border border-[#E2DFD7] space-y-2 text-[11px] text-[#475569]">
-                  <div className="font-bold text-[#0B1322] flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5 text-[#0D9488]" />
+                <div className="p-4 rounded-md bg-[#F7F7FC] border border-[#DEE0EC] space-y-2 text-[11px] text-[#475569]">
+                  <div className="font-bold text-[#141526] flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5 text-[#6246EA]" />
                     <span>Feature Representation &amp; Scope Limitations</span>
                   </div>
                   <p className="leading-relaxed">{result.representation_notes}</p>
@@ -708,8 +708,8 @@ export const TransactionCheckPage: React.FC = () => {
                       <li key={i}>{lim}</li>
                     ))}
                   </ul>
-                  <div className="pt-1.5 border-t border-[#E2DFD7] text-[#64748B]">
-                    <strong className="text-[#0B1322]">Decision-Support Disclaimer:</strong> {result.disclaimer}
+                  <div className="pt-1.5 border-t border-[#DEE0EC] text-[#64748B]">
+                    <strong className="text-[#141526]">Decision-Support Disclaimer:</strong> {result.disclaimer}
                   </div>
                 </div>
               </div>
@@ -717,7 +717,7 @@ export const TransactionCheckPage: React.FC = () => {
           ) : (
             !loading && (
               <div className="forensic-panel overflow-hidden">
-                <div className="px-5 py-3 bg-[#0B1322] text-white border-b border-[#1C2B45] flex items-center justify-between">
+                <div className="px-5 py-3 bg-[#141526] text-white border-b border-[#1C2B45] flex items-center justify-between">
                   <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#2DD4BF]">
                     Pre-Flight Feature Vector &amp; Calibration Preview
                   </span>
@@ -728,11 +728,11 @@ export const TransactionCheckPage: React.FC = () => {
 
                 <div className="p-5 space-y-4">
                   <div className="flex items-start gap-3">
-                    <div className="p-2 rounded bg-[#F0FDFA] text-[#0F766E] border border-[#CCFBF1]">
+                    <div className="p-2 rounded bg-[#F0FDFA] text-[#4F33D6] border border-[#CCFBF1]">
                       <Sliders className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-[#0B1322]">
+                      <h3 className="text-sm font-bold text-[#141526]">
                         Staged Transaction Vector ({formData.type} · ₹{formData.amount.toLocaleString()})
                       </h3>
                       <p className="text-xs text-[#475569] mt-0.5 leading-relaxed">
@@ -742,29 +742,29 @@ export const TransactionCheckPage: React.FC = () => {
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs font-mono">
-                    <div className="p-3 rounded bg-[#FAF9F6] border border-[#E2DFD7]">
+                    <div className="p-3 rounded bg-[#F7F7FC] border border-[#DEE0EC]">
                       <span className="text-[10px] text-[#64748B] block">step / hour_of_day</span>
-                      <span className="font-bold text-[#0B1322]">
+                      <span className="font-bold text-[#141526]">
                         {formData.step} ({derivedHour}:00 UTC)
                       </span>
                     </div>
-                    <div className="p-3 rounded bg-[#FAF9F6] border border-[#E2DFD7]">
+                    <div className="p-3 rounded bg-[#F7F7FC] border border-[#DEE0EC]">
                       <span className="text-[10px] text-[#64748B] block">type (One-Hot)</span>
-                      <span className="font-bold text-[#0F766E]">{formData.type}</span>
+                      <span className="font-bold text-[#4F33D6]">{formData.type}</span>
                     </div>
-                    <div className="p-3 rounded bg-[#FAF9F6] border border-[#E2DFD7]">
+                    <div className="p-3 rounded bg-[#F7F7FC] border border-[#DEE0EC]">
                       <span className="text-[10px] text-[#64748B] block">amount_to_orig_ratio</span>
-                      <span className="font-bold text-[#0B1322]">{derivedRatio}</span>
+                      <span className="font-bold text-[#141526]">{derivedRatio}</span>
                     </div>
-                    <div className="p-3 rounded bg-[#FAF9F6] border border-[#E2DFD7]">
+                    <div className="p-3 rounded bg-[#F7F7FC] border border-[#DEE0EC]">
                       <span className="text-[10px] text-[#64748B] block">oldbalanceOrg</span>
-                      <span className="font-bold text-[#0B1322]">₹{formData.oldbalanceOrg.toLocaleString()}</span>
+                      <span className="font-bold text-[#141526]">₹{formData.oldbalanceOrg.toLocaleString()}</span>
                     </div>
-                    <div className="p-3 rounded bg-[#FAF9F6] border border-[#E2DFD7]">
+                    <div className="p-3 rounded bg-[#F7F7FC] border border-[#DEE0EC]">
                       <span className="text-[10px] text-[#64748B] block">oldbalanceDest</span>
-                      <span className="font-bold text-[#0B1322]">₹{formData.oldbalanceDest.toLocaleString()}</span>
+                      <span className="font-bold text-[#141526]">₹{formData.oldbalanceDest.toLocaleString()}</span>
                     </div>
-                    <div className="p-3 rounded bg-[#FAF9F6] border border-[#E2DFD7]">
+                    <div className="p-3 rounded bg-[#F7F7FC] border border-[#DEE0EC]">
                       <span className="text-[10px] text-[#64748B] block">Review threshold</span>
                       <span className="font-bold text-amber-800">0.9983 (99.83%)</span>
                     </div>

@@ -105,32 +105,32 @@ export const MoneyFlowSection: React.FC<Props> = ({ data, selectedAccountId, onS
 
   return (
     <div className="space-y-5">
-      <section className="rounded-2xl border border-[#EAE3D6] bg-white p-5 sm:p-6">
+      <section className="rounded-2xl border border-[#E4E5F0] bg-white p-5 sm:p-6">
         <h2 className="font-display text-lg font-bold">Recorded transfers from the reporting customer</h2>
-        <p className="mt-1.5 text-sm text-[#6B655B] leading-relaxed max-w-3xl">
+        <p className="mt-1.5 text-sm text-[#5C6079] leading-relaxed max-w-3xl">
           Each box is an account. Arrows are recorded transfers, starting from the reporting customer on the left. “Hop 2”
           means the money reached that account two transfers after leaving the customer. Select an account or a
           transfer to see its details.
         </p>
         <dl className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-          <div className="rounded-xl bg-[#FFF4E6] border border-[#FCD5B5] p-3">
-            <dt className="text-xs text-[#B45309]">Reported loss (complaint)</dt>
+          <div className="rounded-xl bg-[#EFECFF] border border-[#D7CFFF] p-3">
+            <dt className="text-xs text-[#4F33D6]">Reported loss (complaint)</dt>
             <dd className="mt-0.5 font-bold">{formatMoney(c.reported_amount, c.currency)}</dd>
           </div>
-          <div className="rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] p-3">
-            <dt className="text-xs text-[#6B655B]">Recorded transfers</dt>
+          <div className="rounded-xl bg-[#F6F6FC] border border-[#E4E5F0] p-3">
+            <dt className="text-xs text-[#5C6079]">Recorded transfers</dt>
             <dd className="mt-0.5 font-bold">{flow.edges.length}</dd>
           </div>
-          <div className="rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] p-3">
-            <dt className="text-xs text-[#6B655B]">Accounts involved</dt>
+          <div className="rounded-xl bg-[#F6F6FC] border border-[#E4E5F0] p-3">
+            <dt className="text-xs text-[#5C6079]">Accounts involved</dt>
             <dd className="mt-0.5 font-bold">{flow.nodes.length}</dd>
           </div>
-          <div className="rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] p-3">
-            <dt className="text-xs text-[#6B655B]">Sum of all transfers*</dt>
+          <div className="rounded-xl bg-[#F6F6FC] border border-[#E4E5F0] p-3">
+            <dt className="text-xs text-[#5C6079]">Sum of all transfers*</dt>
             <dd className="mt-0.5 font-bold">{summary ? formatMoney(summary.gross_observed_transaction_value, c.currency) : '—'}</dd>
           </div>
         </dl>
-        <p className="mt-2 text-xs text-[#8C857B]">
+        <p className="mt-2 text-xs text-[#868AA2]">
           *Counts the same money once per hop, so it is larger than the loss. The records do not show which rupees in
           later transfers came from the reported payment.
         </p>
@@ -138,7 +138,7 @@ export const MoneyFlowSection: React.FC<Props> = ({ data, selectedAccountId, onS
 
       <div className="grid gap-5 grid-cols-[minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_340px]">
         <section className="min-w-0 space-y-3" aria-label="Money flow">
-          <div className="inline-flex rounded-xl border border-[#EAE3D6] bg-white p-1" role="group" aria-label="View">
+          <div className="inline-flex rounded-xl border border-[#E4E5F0] bg-white p-1" role="group" aria-label="View">
             {(
               [
                 ['diagram', 'Diagram', GitBranch],
@@ -151,7 +151,7 @@ export const MoneyFlowSection: React.FC<Props> = ({ data, selectedAccountId, onS
                 aria-pressed={view === value}
                 onClick={() => setView(value)}
                 className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors cursor-pointer ${
-                  view === value ? 'bg-[#FFF4E6] text-[#B45309]' : 'text-[#6B655B] hover:text-[#1A1714]'
+                  view === value ? 'bg-[#EFECFF] text-[#4F33D6]' : 'text-[#5C6079] hover:text-[#141526]'
                 }`}
               >
                 <Icon className="w-4 h-4" aria-hidden="true" />
@@ -193,37 +193,37 @@ export const MoneyFlowSection: React.FC<Props> = ({ data, selectedAccountId, onS
           )}
         </section>
 
-        <aside className="rounded-2xl border border-[#EAE3D6] bg-white p-5 h-fit xl:sticky xl:top-36" aria-live="polite">
+        <aside className="rounded-2xl border border-[#E4E5F0] bg-white p-5 h-fit xl:sticky xl:top-36" aria-live="polite">
           {selectedAccount ? (
             <div className="space-y-4">
               <div>
-                <p className="text-xs text-[#6B655B]">Selected account</p>
+                <p className="text-xs text-[#5C6079]">Selected account</p>
                 <p className="font-mono font-bold text-lg">{selectedAccount.account_id}</p>
-                <p className="text-sm text-[#6B655B]">
+                <p className="text-sm text-[#5C6079]">
                   {roleLabel(selectedAccount.graph_position.role)}
                   {stepsFromReporter(selectedAccount) > 0 && ` · hop ${stepsFromReporter(selectedAccount)}`}
                 </p>
               </div>
               <dl className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <dt className="text-xs text-[#6B655B]">Received in this case</dt>
+                  <dt className="text-xs text-[#5C6079]">Received in this case</dt>
                   <dd className="font-semibold">{formatMoney(selectedAccount.observed_movement.observed_inbound_value, c.currency)}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-[#6B655B]">Sent on in this case</dt>
+                  <dt className="text-xs text-[#5C6079]">Sent on in this case</dt>
                   <dd className="font-semibold">{formatMoney(selectedAccount.observed_movement.observed_outbound_value, c.currency)}</dd>
                 </div>
               </dl>
-              <ul className="space-y-1.5 text-xs text-[#6B655B]">
+              <ul className="space-y-1.5 text-xs text-[#5C6079]">
                 {caseTransactions(selectedAccount).map((t) => {
                   const inbound = t.receiver_account_id === selectedAccount.account_id;
                   return (
                     <li key={t.transaction_id} className="flex justify-between gap-2">
                       <span>
                         {inbound ? 'From' : 'To'}{' '}
-                        <span className="font-mono text-[#1A1714]">{inbound ? t.sender_account_id : t.receiver_account_id}</span>
+                        <span className="font-mono text-[#141526]">{inbound ? t.sender_account_id : t.receiver_account_id}</span>
                       </span>
-                      <span className="font-semibold text-[#1A1714]">
+                      <span className="font-semibold text-[#141526]">
                         {inbound ? '+' : '−'}
                         {formatMoney(t.amount, t.currency)}
                       </span>
@@ -245,7 +245,7 @@ export const MoneyFlowSection: React.FC<Props> = ({ data, selectedAccountId, onS
             </div>
           ) : selectedEdge ? (
             <div className="space-y-3 text-sm">
-              <p className="text-xs text-[#6B655B]">Selected transfer</p>
+              <p className="text-xs text-[#5C6079]">Selected transfer</p>
               <p className="font-mono font-bold">{selectedEdge.id}</p>
               <dl className="space-y-2">
                 {(
@@ -259,7 +259,7 @@ export const MoneyFlowSection: React.FC<Props> = ({ data, selectedAccountId, onS
                   ] as const
                 ).map(([k, v, mono]) => (
                   <div key={k} className="flex justify-between gap-3">
-                    <dt className="text-[#6B655B]">{k}</dt>
+                    <dt className="text-[#5C6079]">{k}</dt>
                     <dd className={`font-semibold text-right ${mono ? 'font-mono' : ''}`}>{v}</dd>
                   </div>
                 ))}
@@ -269,8 +269,8 @@ export const MoneyFlowSection: React.FC<Props> = ({ data, selectedAccountId, onS
               </button>
             </div>
           ) : (
-            <div className="text-sm text-[#6B655B]">
-              <p className="font-semibold text-[#1A1714]">Nothing selected</p>
+            <div className="text-sm text-[#5C6079]">
+              <p className="font-semibold text-[#141526]">Nothing selected</p>
               <p className="mt-1">Select an account or a transfer to see what the records show about it.</p>
             </div>
           )}

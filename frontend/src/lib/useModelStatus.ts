@@ -43,35 +43,48 @@ export function describeModelStatus(status: V2ModelStatusResponse | null, failed
   };
 }
 
+type Snapshot = { status: V2ModelStatusResponse | null; failed: boolean };
+
+// One poller shared by every component that shows the model status (sidebar, top bar, overview), so the server
+// gets one status request per interval however many indicators are on screen.
+const EMPTY: Snapshot = { status: null, failed: false };
+let snapshot: Snapshot = EMPTY;
+const listeners = new Set<(s: Snapshot) => void>();
+let timer: ReturnType<typeof setTimeout> | undefined;
+let generation = 0;
+
+function poll() {
+  const gen = generation;
+  v2Api
+    .getModelsStatus()
+    .then((s) => publish(gen, { status: s, failed: false }, 60000))
+    .catch(() => publish(gen, { status: null, failed: true }, 10000));
+}
+
+function publish(gen: number, next: Snapshot, retryMs: number) {
+  if (gen !== generation || !listeners.size) return;
+  snapshot = next;
+  listeners.forEach((l) => l(next));
+  clearTimeout(timer);
+  timer = setTimeout(poll, retryMs);
+}
+
 export function useModelStatus(): ModelStatusView {
-  const [status, setStatus] = useState<V2ModelStatusResponse | null>(null);
-  const [failed, setFailed] = useState(false);
+  const [snap, setSnap] = useState<Snapshot>(snapshot);
 
   useEffect(() => {
-    let active = true;
-    let timer: ReturnType<typeof setTimeout>;
-    const check = () => {
-      v2Api
-        .getModelsStatus()
-        .then((s) => {
-          if (!active) return;
-          setStatus(s);
-          setFailed(false);
-          timer = setTimeout(check, 60000);
-        })
-        .catch(() => {
-          if (!active) return;
-          setStatus(null);
-          setFailed(true);
-          timer = setTimeout(check, 10000);
-        });
-    };
-    check();
+    listeners.add(setSnap);
+    if (listeners.size === 1) poll();
     return () => {
-      active = false;
-      clearTimeout(timer);
+      listeners.delete(setSnap);
+      if (!listeners.size) {
+        // Nobody is watching: stop polling and forget the last answer, so the next viewer starts fresh.
+        clearTimeout(timer);
+        generation += 1;
+        snapshot = EMPTY;
+      }
     };
   }, []);
 
-  return describeModelStatus(status, failed);
+  return describeModelStatus(snap.status, snap.failed);
 }

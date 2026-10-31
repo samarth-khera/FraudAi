@@ -268,7 +268,8 @@ export interface InvestigationExplanationResponse {
 
 /** Client-side state of the separately requested AI explanation. */
 export type ExplanationView =
-  | { phase: 'pending' }
+  /** `since`: when the request was sent (ms since epoch), for an honest elapsed-time display. */
+  | { phase: 'pending'; since?: number }
   | { phase: 'done'; analysis: AIAnalysis }
   | { phase: 'stale' }
   | { phase: 'failed'; message: string };
