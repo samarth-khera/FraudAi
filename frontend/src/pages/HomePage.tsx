@@ -1,140 +1,163 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowRight, FileText, GitBranch, UserSearch, ClipboardCheck, FolderOpen } from 'lucide-react';
-import { SyntheticDataNote } from '../components/ui/StateViews';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowRight, Database, FolderOpen, Users } from 'lucide-react';
+import { AccountEntry } from '../components/investigation/InvestigationForm';
+import { STAGES } from '../components/investigation/CaseView';
+import { formatDateTime } from '../lib/format';
+import { useModelStatus } from '../lib/useModelStatus';
+import { v2Api } from '../services/v2Api';
+import { DataSourceInfo } from '../types/investigation';
 
 export const SAMPLE_CASE_ID = 'FS-2001';
 
-const STEPS = [
-  {
-    icon: FileText,
-    title: 'Summary',
-    text: 'Read what was reported and compare the complaint with the recorded transfer.',
-  },
-  {
-    icon: GitBranch,
-    title: 'Money flow',
-    text: 'Follow the recorded transfers from the reporting customer to every account that received money.',
-  },
-  {
-    icon: UserSearch,
-    title: 'Accounts & risk',
-    text: 'For each account, see what the records show and what automated checks say, with their reasons and limits.',
-  },
-  {
-    icon: ClipboardCheck,
-    title: 'Review & history',
-    text: 'Record your decision and reasoning. Every decision is saved to the case history.',
-  },
-];
+const LedgerStatus: React.FC = () => {
+  const [source, setSource] = useState<DataSourceInfo | null>(null);
+  const [failed, setFailed] = useState(false);
+  const model = useModelStatus();
 
-export const HomePage: React.FC = () => {
-  const reduceMotion = useReducedMotion();
-  const fadeUp = (delay: number) =>
-    reduceMotion
-      ? {}
-      : { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.4, delay, ease: [0.16, 1, 0.3, 1] as const } };
+  useEffect(() => {
+    let live = true;
+    v2Api
+      .getDataSource()
+      .then((s) => live && setSource(s))
+      .catch(() => live && setFailed(true));
+    return () => {
+      live = false;
+    };
+  }, []);
 
   return (
-    <div className="space-y-14 sm:space-y-20">
-      <section className="pt-4 sm:pt-10 max-w-3xl">
-        <motion.p {...fadeUp(0)} className="text-sm font-semibold text-[#B45309]">
-          Fraud investigation workspace
-        </motion.p>
-        <motion.h1
-          {...fadeUp(0.05)}
-          className="mt-3 font-display text-3xl sm:text-5xl font-extrabold tracking-tight text-[#1A1714] leading-[1.1]"
-        >
-          Follow reported money across connected accounts, then record what you decide.
-        </motion.h1>
-        <motion.p {...fadeUp(0.1)} className="mt-5 text-base sm:text-lg text-[#6B655B] leading-relaxed">
-          When a customer reports a fraudulent transfer, FraudShield AI shows where the money went next, which
-          accounts may need attention and why, and keeps a history of every review decision. It supports an
-          investigator’s judgement; it does not prove intent or take action on accounts.
-        </motion.p>
-        <motion.div {...fadeUp(0.15)} className="mt-8 flex flex-col sm:flex-row gap-3">
-          <Link to="/investigate" className="btn-primary text-sm px-6 min-h-[3rem]">
-            Investigate an account
-            <ArrowRight className="w-4 h-4" aria-hidden="true" />
-          </Link>
-          <Link to={`/cases/${SAMPLE_CASE_ID}`} className="btn-secondary text-sm px-6 min-h-[3rem]">
-            Open sample case
-          </Link>
-          <Link to="/cases" className="btn-secondary text-sm px-6 min-h-[3rem]">
-            <FolderOpen className="w-4 h-4" aria-hidden="true" />
-            Open investigations
-          </Link>
-        </motion.div>
-        <motion.div {...fadeUp(0.2)}>
-          <SyntheticDataNote className="mt-4">
-            Investigations run on a synthetic account ledger. The sample case, {SAMPLE_CASE_ID}, is a synthetic complaint
-            about a ₹2,50,000 transfer through that ledger.
-          </SyntheticDataNote>
-        </motion.div>
+    <section aria-labelledby="ledger-h" className="panel p-5">
+      <h2 id="ledger-h" className="flex items-center gap-2 text-sm font-semibold text-ink">
+        <Database className="w-4 h-4 text-faint" aria-hidden="true" /> Ledger and model
+      </h2>
+      {source ? (
+        <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-4">
+          <div>
+            <dt className="text-xs text-mute">Accounts</dt>
+            <dd className="mt-0.5 font-display text-2xl font-bold">{source.accounts_count.toLocaleString('en-IN')}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-mute">Transactions</dt>
+            <dd className="mt-0.5 font-display text-2xl font-bold">{source.transactions_count.toLocaleString('en-IN')}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-mute">Data as of</dt>
+            <dd className="mt-0.5 text-sm font-semibold">{formatDateTime(source.data_as_of)}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-mute">Account model</dt>
+            <dd className="mt-0.5 text-sm font-semibold">{model.label}</dd>
+          </div>
+        </dl>
+      ) : failed ? (
+        <p className="mt-3 text-sm text-mute">The server could not be reached. The free server sleeps when idle; it can take about a minute to wake.</p>
+      ) : (
+        <div className="mt-4 grid grid-cols-2 gap-3" role="status" aria-label="Loading ledger status">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="h-12 rounded-lg bg-well animate-pulse" />
+          ))}
+        </div>
+      )}
+      <p className="mt-4 text-xs text-mute leading-relaxed">
+        {source?.is_synthetic === false
+          ? source.disclosure
+          : 'Investigations run on a synthetic account ledger. No real customers or bank records are involved.'}
+      </p>
+    </section>
+  );
+};
+
+export const HomePage: React.FC = () => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="space-y-14">
+      <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] items-start pt-2">
+        <div className="rise-in">
+          <h1 className="font-display text-4xl sm:text-[56px] font-bold tracking-tight text-ink leading-[1.02] max-w-[16ch]">
+            Follow reported money, one transfer at a time.
+          </h1>
+          <p className="mt-5 text-[17px] leading-relaxed text-mute max-w-[58ch]">
+            FraudShield traces where an account’s money went and where it came from, shows the evidence behind every risk signal, and
+            suggests what to examine next. It supports an investigator’s judgement; it does not prove intent or act on accounts.
+          </p>
+          <div className="mt-8 max-w-2xl">
+            <AccountEntry onOpen={(id) => navigate(`/investigate?account=${encodeURIComponent(id)}`)} />
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link to="/investigate" className="btn-ghost">
+              Investigate an account
+            </Link>
+            <Link to={`/cases/${SAMPLE_CASE_ID}`} className="btn-ghost">
+              Open sample case
+            </Link>
+          </div>
+        </div>
+        <LedgerStatus />
       </section>
 
-      <section aria-labelledby="how-heading">
-        <h2 id="how-heading" className="font-display text-xl sm:text-2xl font-bold text-[#1A1714]">
-          How an investigation works
-        </h2>
-        <p className="mt-2 text-sm text-[#6B655B] max-w-2xl">
-          Every case opens in the same four sections, in this order. You can move between them at any time without
-          losing your place.
-        </p>
-        <ol className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {STEPS.map((step, i) => {
-            const Icon = step.icon;
-            return (
-              <li key={step.title} className="rounded-2xl border border-[#EAE3D6] bg-white p-5">
-                <div className="flex items-center gap-3">
-                  <span className="w-9 h-9 rounded-xl bg-[#FFF4E6] text-[#EA8500] flex items-center justify-center">
-                    <Icon className="w-4.5 h-4.5" aria-hidden="true" />
-                  </span>
-                  <span className="text-xs font-semibold text-[#8C857B]">Step {i + 1}</span>
-                </div>
-                <h3 className="mt-4 font-semibold text-[#1A1714]">{step.title}</h3>
-                <p className="mt-1.5 text-sm text-[#6B655B] leading-relaxed">{step.text}</p>
-              </li>
-            );
-          })}
+      <section aria-labelledby="journey-h">
+        <h2 id="journey-h" className="font-display text-2xl font-bold text-ink">How an investigation unfolds</h2>
+        <p className="mt-1.5 text-[15px] text-mute max-w-2xl">One question at a time, in the order an investigator needs the answers.</p>
+        <ol className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {STAGES.map((s, i) => (
+            <li key={s.id} className="panel-quiet bg-white/70 p-4">
+              <span className="w-7 h-7 rounded-full bg-gradient-to-br from-iris to-ice text-white text-xs font-bold flex items-center justify-center" aria-hidden="true">
+                {i + 1}
+              </span>
+              <p className="mt-3 font-semibold text-ink">{s.label}</p>
+              <p className="mt-1 text-sm text-mute leading-relaxed">{s.question}</p>
+            </li>
+          ))}
         </ol>
       </section>
 
-      <section aria-labelledby="limits-heading" className="grid gap-6 lg:grid-cols-2">
+      <section className="grid gap-4 md:grid-cols-2">
+        <Link to="/cases" className="card-interactive p-5 flex items-start gap-4">
+          <span className="w-10 h-10 rounded-xl bg-iris-soft text-iris flex items-center justify-center shrink-0">
+            <FolderOpen className="w-5 h-5" aria-hidden="true" />
+          </span>
+          <span className="min-w-0">
+            <span className="flex items-center gap-1.5 font-semibold text-ink">
+              Open investigations <ArrowRight className="w-4 h-4 text-faint" aria-hidden="true" />
+            </span>
+            <span className="mt-1 block text-sm text-mute">Saved cases built from customer complaints, with every review decision and its history.</span>
+          </span>
+        </Link>
+        <Link to="/tools/accounts" className="card-interactive p-5 flex items-start gap-4">
+          <span className="w-10 h-10 rounded-xl bg-ice-soft text-ice flex items-center justify-center shrink-0">
+            <Users className="w-5 h-5" aria-hidden="true" />
+          </span>
+          <span className="min-w-0">
+            <span className="flex items-center gap-1.5 font-semibold text-ink">
+              Look up an account <ArrowRight className="w-4 h-4 text-faint" aria-hidden="true" />
+            </span>
+            <span className="mt-1 block text-sm text-mute">Any ledger account’s full history and automated checks, outside an investigation.</span>
+          </span>
+        </Link>
+      </section>
+
+      <section aria-labelledby="limits-heading" className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
         <div>
-          <h2 id="limits-heading" className="font-display text-xl sm:text-2xl font-bold text-[#1A1714]">
-            What the results mean
-          </h2>
-          <p className="mt-2 text-sm text-[#6B655B] leading-relaxed max-w-xl">
-            Transfers come from transaction records. Risk scores come from rules and a machine-learning model and are
-            prompts for review, not findings. The workspace always labels which is which.
+          <h2 id="limits-heading" className="font-display text-2xl font-bold text-ink">What the results mean</h2>
+          <p className="mt-2 text-[15px] text-mute leading-relaxed max-w-xl">
+            Transfers come from transaction records. Risk signals come from rules and a machine-learning model and are prompts for
+            review, not findings. Every screen labels which is which.
           </p>
         </div>
-        <ul className="space-y-3 text-sm">
+        <ul className="grid gap-3 sm:grid-cols-3 text-sm">
           {[
             ['Receiving money is not wrongdoing.', 'Accounts downstream of a complaint may belong to people who did nothing wrong.'],
             ['A high score is not proof.', 'The account model was trained and tested only on synthetic data, and it misses cases.'],
             ['Nothing happens automatically.', 'No account is frozen or flagged without a person recording a decision.'],
           ].map(([title, text]) => (
-            <li key={title} className="rounded-2xl border border-[#EAE3D6] bg-[#FAF7F2] p-4">
-              <p className="font-semibold text-[#1A1714]">{title}</p>
-              <p className="mt-0.5 text-[#6B655B]">{text}</p>
+            <li key={title} className="panel p-4">
+              <p className="font-semibold text-ink">{title}</p>
+              <p className="mt-1 text-mute">{text}</p>
             </li>
           ))}
         </ul>
-      </section>
-
-      <section className="rounded-2xl border border-[#EAE3D6] bg-white p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="font-semibold text-[#1A1714]">Looking for model metrics or the full audit log?</h2>
-          <p className="mt-1 text-sm text-[#6B655B]">
-            Model evaluation, audit search and other technical views are under Tools.
-          </p>
-        </div>
-        <Link to="/tools" className="btn-secondary shrink-0">
-          Open tools
-        </Link>
       </section>
     </div>
   );

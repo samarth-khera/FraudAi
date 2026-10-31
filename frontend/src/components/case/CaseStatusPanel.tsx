@@ -46,10 +46,10 @@ export const CaseStatusPanel: React.FC<{ caseData: FraudCase; onChanged: () => P
   };
 
   return (
-    <section className="rounded-2xl border border-[#EAE3D6] bg-white p-5" aria-labelledby="case-status-heading">
+    <section className="rounded-2xl border border-[#E4E5F0] bg-white p-5" aria-labelledby="case-status-heading">
       <h2 id="case-status-heading" className="font-semibold">Case status</h2>
-      <p className="mt-1 text-sm text-[#6B655B]">
-        Currently <span className="font-semibold text-[#1A1714]">{CASE_STATUS_LABELS[caseData.investigation_status]}</span>.{' '}
+      <p className="mt-1 text-sm text-[#5C6079]">
+        Currently <span className="font-semibold text-[#141526]">{CASE_STATUS_LABELS[caseData.investigation_status]}</span>.{' '}
         {STATUS_HELP[caseData.investigation_status]}
       </p>
       <div className="mt-3 flex flex-col sm:flex-row gap-2">
@@ -62,7 +62,7 @@ export const CaseStatusPanel: React.FC<{ caseData: FraudCase; onChanged: () => P
               setConfirming(false);
               setSavedTo(null);
             }}
-            className="w-full rounded-xl border border-[#EAE3D6] bg-white px-3 py-2.5 text-sm"
+            className="w-full rounded-xl border border-[#E4E5F0] bg-white px-3 py-2.5 text-sm"
           >
             {Object.entries(CASE_STATUS_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
@@ -91,10 +91,10 @@ export const CaseStatusPanel: React.FC<{ caseData: FraudCase; onChanged: () => P
               onChange={(e) => setReviewer(e.target.value)}
               maxLength={100}
               placeholder="Your name or reviewer ID"
-              className="mt-1 w-full rounded-xl border border-[#EAE3D6] bg-white px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-xl border border-[#E4E5F0] bg-white px-3 py-2 text-sm"
             />
           </label>
-          <p className="text-xs text-[#6B655B]">{STATUS_HELP[next]} The change is added to the case history.</p>
+          <p className="text-xs text-[#5C6079]">{STATUS_HELP[next]} The change is added to the case history.</p>
         </div>
       )}
       {savedTo && !changed && (

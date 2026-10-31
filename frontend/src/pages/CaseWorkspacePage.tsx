@@ -115,12 +115,12 @@ export const CaseWorkspacePage: React.FC = () => {
   return (
     <div ref={topRef} className="space-y-6 scroll-mt-20">
       <div className="space-y-3">
-        <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-xs text-[#6B655B]">
-          <Link to="/cases" className="hover:text-[#B45309] font-medium">
-            Investigations
+        <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-xs text-[#5C6079]">
+          <Link to="/cases" className="hover:text-[#4F33D6] font-medium">
+            Cases
           </Link>
           <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
-          <span className="font-mono text-[#1A1714]">{c.case_id}</span>
+          <span className="font-mono text-[#141526]">{c.case_id}</span>
         </nav>
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
           <div>
@@ -133,8 +133,8 @@ export const CaseWorkspacePage: React.FC = () => {
                 {usesAccountLedger(c) ? 'Synthetic account ledger' : 'Case records only'}
               </Pill>
             </div>
-            <p className="mt-1 text-sm text-[#6B655B]">
-              Reported loss <span className="font-semibold text-[#1A1714]">{formatMoney(c.reported_amount, c.currency)}</span>
+            <p className="mt-1 text-sm text-[#5C6079]">
+              Reported loss <span className="font-semibold text-[#141526]">{formatMoney(c.reported_amount, c.currency)}</span>
               {' · '}Synthetic demonstration case
             </p>
           </div>
@@ -143,7 +143,7 @@ export const CaseWorkspacePage: React.FC = () => {
 
       <nav
         aria-label="Investigation sections"
-        className="sticky top-16 z-30 -mx-4 sm:mx-0 px-4 sm:px-1.5 py-1.5 bg-[#F8F6F0]/95 backdrop-blur sm:rounded-2xl sm:border sm:border-[#EAE3D6] sm:bg-white/95"
+        className="sticky top-16 z-30 -mx-4 sm:mx-0 px-4 sm:px-1.5 py-1.5 bg-[#F3F4FB]/95 backdrop-blur sm:rounded-2xl sm:border sm:border-[#E4E5F0] sm:bg-white/95"
       >
         <ol className="flex gap-1 overflow-x-auto no-scrollbar">
           {SECTIONS.map((s, i) => {
@@ -155,27 +155,27 @@ export const CaseWorkspacePage: React.FC = () => {
                   onClick={() => navigate(s.id)}
                   aria-current={active ? 'step' : undefined}
                   className={`relative isolate w-full rounded-xl px-3.5 py-2 text-left transition-colors cursor-pointer ${
-                    active ? 'text-[#1A1714]' : 'text-[#6B655B] hover:text-[#1A1714] hover:bg-[#FAF7F2]'
+                    active ? 'text-[#141526]' : 'text-[#5C6079] hover:text-[#141526] hover:bg-[#F6F6FC]'
                   }`}
                 >
                   {active && (
                     <motion.span
                       layoutId={reduceMotion ? undefined : 'case-section'}
-                      className="absolute inset-0 -z-10 rounded-xl bg-[#FFF4E6] border border-[#FCD5B5]"
+                      className="absolute inset-0 -z-10 rounded-xl bg-[#EFECFF] border border-[#D7CFFF]"
                       transition={{ type: 'spring', stiffness: 420, damping: 36 }}
                     />
                   )}
                   <span className="flex items-center gap-2">
                     <span
                       className={`w-5 h-5 rounded-full text-[11px] font-bold flex items-center justify-center ${
-                        active ? 'bg-[#EA8500] text-white' : 'bg-[#EFECE6] text-[#6B655B]'
+                        active ? 'bg-[#6246EA] text-white' : 'bg-[#EEEFF7] text-[#5C6079]'
                       }`}
                     >
                       {i + 1}
                     </span>
                     <span className="text-sm font-semibold whitespace-nowrap">{s.title}</span>
                   </span>
-                  <span className="hidden lg:block mt-0.5 pl-7 text-xs text-[#8C857B]">{s.question}</span>
+                  <span className="hidden lg:block mt-0.5 pl-7 text-xs text-[#868AA2]">{s.question}</span>
                 </button>
               </li>
             );
@@ -206,7 +206,7 @@ export const CaseWorkspacePage: React.FC = () => {
         )}
       </motion.div>
 
-      <div className="flex items-center justify-between gap-3 border-t border-[#EAE3D6] pt-5">
+      <div className="flex items-center justify-between gap-3 border-t border-[#E4E5F0] pt-5">
         {prev ? (
           <button type="button" className="btn-ghost" onClick={() => navigate(prev.id)}>
             <ArrowLeft className="w-4 h-4" aria-hidden="true" />

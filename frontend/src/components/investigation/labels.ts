@@ -88,3 +88,37 @@ export const BASIS: Record<ObservationBasis, { label: string; tone: Tone }> = {
   hypothesis: { label: 'Hypothesis', tone: 'amber' },
   limitation: { label: 'Limitation', tone: 'neutral' },
 };
+
+/** The eight forensic rule signals, plus the rules' non-signal outcomes, in plain language. */
+export const SIGNAL_LABEL: Record<string, string> = {
+  RAPID_PASS_THROUGH: 'Rapid pass-through',
+  HIGH_FLOW_THROUGH: 'High flow-through',
+  UNUSUAL_AMOUNT_SPIKE: 'Unusual amount spike',
+  FAN_IN_AGGREGATION: 'Fan-in from many senders',
+  FAN_OUT_DISPERSAL: 'Fan-out to many recipients',
+  DORMANT_ACCOUNT_AWAKENED: 'Dormant account reactivated',
+  CYCLIC_TRANSFERS: 'Money moving in a cycle',
+  UNVERIFIED_KYC: 'Basic KYC only',
+  NORMAL_ACTIVITY: 'No rule signal',
+  LIMITED_HISTORY: 'Limited history',
+  NO_ACTIVITY: 'No activity',
+  NO_TRANSACTION_HISTORY: 'No transaction history',
+  DEVICE_TELEMETRY_UNAVAILABLE: 'No device or session data',
+  EXTERNAL_PERIMETER_BLINDSPOT: 'Money leaves the ledger',
+};
+
+export const RULE_RECOMMENDATION: Record<string, string> = {
+  routine_monitoring: 'Routine monitoring',
+  standard_triage_queue: 'Standard triage',
+  enhanced_compliance_review: 'Enhanced review',
+  priority_forensic_investigation: 'Priority investigation',
+};
+
+/** "CODE: explanation" strings from the rule engine, split into a label and the server's own explanation. */
+export function splitCoded(text: string): { code: string | null; label: string; detail: string } {
+  const m = /^([A-Za-z_]+):\s*(.*)$/s.exec(text);
+  if (!m) return { code: null, label: text, detail: '' };
+  const code = m[1];
+  const label = SIGNAL_LABEL[code] ?? RULE_RECOMMENDATION[code] ?? code.replace(/_/g, ' ').toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+  return { code, label, detail: m[2] };
+}

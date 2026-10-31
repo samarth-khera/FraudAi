@@ -1,7 +1,7 @@
 # AI analyst (Google Gemini)
 
 After a live investigation finishes, the server can ask Gemini to explain the result in plain language. The
-explanation appears as `ai_analysis` in `POST /api/v2/investigations` and in the **Explanation** section of
+explanation appears as `ai_analysis` in `POST /api/v2/investigations` and in the **AI analyst** stage of
 `/investigate`. It never changes a score, amount, exposure range or finding. The browser never talks to Gemini and
 never sees the key.
 

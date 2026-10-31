@@ -44,7 +44,7 @@ export const ToolsPage: React.FC = () => (
   <div className="space-y-6">
     <div>
       <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">Tools</h1>
-      <p className="mt-1.5 text-sm text-[#6B655B] max-w-2xl">
+      <p className="mt-1.5 text-sm text-[#5C6079] max-w-2xl">
         Technical views for checking the models and the raw records. You do not need them to work a case; everything an
         investigation needs is inside the case itself.
       </p>
@@ -56,14 +56,14 @@ export const ToolsPage: React.FC = () => (
           <li key={t.to}>
             <Link to={t.to} className="card-interactive flex h-full flex-col p-5">
               <span className="flex items-center gap-3">
-                <span className="w-9 h-9 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6] text-[#6B655B] flex items-center justify-center">
+                <span className="w-9 h-9 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0] text-[#5C6079] flex items-center justify-center">
                   <Icon className="w-4.5 h-4.5" aria-hidden="true" />
                 </span>
-                <span className="font-semibold text-[#1A1714]">{t.title}</span>
+                <span className="font-semibold text-[#141526]">{t.title}</span>
               </span>
-              <span className="mt-3 text-sm text-[#1A1714] leading-relaxed">{t.text}</span>
-              <span className="mt-2 text-xs text-[#6B655B] leading-relaxed">{t.caveat}</span>
-              <span className="mt-auto pt-4 inline-flex items-center gap-1 text-sm font-semibold text-[#B45309]">
+              <span className="mt-3 text-sm text-[#141526] leading-relaxed">{t.text}</span>
+              <span className="mt-2 text-xs text-[#5C6079] leading-relaxed">{t.caveat}</span>
+              <span className="mt-auto pt-4 inline-flex items-center gap-1 text-sm font-semibold text-[#4F33D6]">
                 Open <ArrowRight className="w-4 h-4" aria-hidden="true" />
               </span>
             </Link>
