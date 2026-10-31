@@ -84,24 +84,24 @@ const ReviewForm: React.FC<{
 
   return (
     <div className="space-y-5">
-      <div className="rounded-xl border border-[#EAE3D6] bg-[#FAF7F2] p-4 text-sm">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[#8C857B]">Current recorded decision</p>
+      <div className="rounded-xl border border-[#E4E5F0] bg-[#F6F6FC] p-4 text-sm">
+        <p className="text-xs font-semibold uppercase tracking-wide text-[#868AA2]">Current recorded decision</p>
         {hasDecision ? (
           <div className="mt-1.5 space-y-1">
             <p>
               <span className="font-semibold">{REVIEW_STATE_LABELS[rev.review_state] ?? rev.review_state}</span> by{' '}
               <span className="font-semibold">{rev.reviewer_id}</span> · {evidenceQualityLabel(rev.evidence_quality)}
             </p>
-            {rev.notes && <p className="text-[#6B655B] whitespace-pre-wrap">“{rev.notes}”</p>}
+            {rev.notes && <p className="text-[#5C6079] whitespace-pre-wrap">“{rev.notes}”</p>}
           </div>
         ) : (
-          <p className="mt-1.5 text-[#6B655B]">No decision has been recorded for this account yet.</p>
+          <p className="mt-1.5 text-[#5C6079]">No decision has been recorded for this account yet.</p>
         )}
       </div>
 
-      <div className="rounded-xl border border-[#EAE3D6] p-4 text-sm">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[#8C857B]">Evidence to consider</p>
-        <ul className="mt-2 space-y-1.5 text-[#1A1714]">
+      <div className="rounded-xl border border-[#E4E5F0] p-4 text-sm">
+        <p className="text-xs font-semibold uppercase tracking-wide text-[#868AA2]">Evidence to consider</p>
+        <ul className="mt-2 space-y-1.5 text-[#141526]">
           <li>
             Received {formatMoney(account.observed_movement.observed_inbound_value)} and sent on{' '}
             {formatMoney(account.observed_movement.observed_outbound_value)} in this case.
@@ -110,12 +110,12 @@ const ReviewForm: React.FC<{
             <li key={s.code}>{s.description}</li>
           ))}
           {account.evidence_assessment.evidence_gaps.slice(0, 2).map((g) => (
-            <li key={g} className="text-[#6B655B]">
+            <li key={g} className="text-[#5C6079]">
               Gap: {g}
             </li>
           ))}
         </ul>
-        <p className="mt-2 text-xs text-[#6B655B]">
+        <p className="mt-2 text-xs text-[#5C6079]">
           The automated checks in Accounts &amp; risk are also available, but they are not evidence on their own.
         </p>
       </div>
@@ -137,7 +137,7 @@ const ReviewForm: React.FC<{
                 <label
                   key={d.value}
                   className={`rounded-xl border p-3.5 cursor-pointer transition-all ${
-                    decision === d.value ? 'border-[#EA8500] bg-[#FFFBF6] shadow-[0_0_0_3px_rgba(234,133,0,0.12)]' : 'border-[#EAE3D6] hover:border-[#EA8500]/50'
+                    decision === d.value ? 'border-[#6246EA] bg-[#FAFAFE] shadow-[0_0_0_3px_rgba(98, 70, 234,0.12)]' : 'border-[#E4E5F0] hover:border-[#6246EA]/50'
                   }`}
                 >
                   <span className="flex items-center gap-2">
@@ -147,11 +147,11 @@ const ReviewForm: React.FC<{
                       value={d.value}
                       checked={decision === d.value}
                       onChange={() => setDecision(d.value)}
-                      className="accent-[#EA8500]"
+                      className="accent-[#6246EA]"
                     />
                     <span className="text-sm font-semibold">{d.label}</span>
                   </span>
-                  <span className="mt-1 block text-xs text-[#6B655B] leading-relaxed">{d.help}</span>
+                  <span className="mt-1 block text-xs text-[#5C6079] leading-relaxed">{d.help}</span>
                 </label>
               ))}
             </div>
@@ -163,7 +163,7 @@ const ReviewForm: React.FC<{
               <select
                 value={evidenceQuality}
                 onChange={(e) => setEvidenceQuality(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-[#EAE3D6] bg-white px-3 py-2.5 text-sm"
+                className="mt-1.5 w-full rounded-xl border border-[#E4E5F0] bg-white px-3 py-2.5 text-sm"
               >
                 {EVIDENCE_QUALITY_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -180,9 +180,9 @@ const ReviewForm: React.FC<{
                 maxLength={100}
                 placeholder="Your name or reviewer ID"
                 autoComplete="name"
-                className="mt-1.5 w-full rounded-xl border border-[#EAE3D6] bg-white px-3 py-2.5 text-sm"
+                className="mt-1.5 w-full rounded-xl border border-[#E4E5F0] bg-white px-3 py-2.5 text-sm"
               />
-              <span className="mt-1 block text-xs text-[#8C857B]">Recorded as typed. Without sign-in it is not verified.</span>
+              <span className="mt-1 block text-xs text-[#868AA2]">Recorded as typed. Without sign-in it is not verified.</span>
             </label>
           </div>
 
@@ -194,7 +194,7 @@ const ReviewForm: React.FC<{
               rows={4}
               maxLength={5000}
               placeholder="What did you look at, and why does it support this decision?"
-              className="mt-1.5 w-full rounded-xl border border-[#EAE3D6] bg-white px-3 py-2.5 text-sm"
+              className="mt-1.5 w-full rounded-xl border border-[#E4E5F0] bg-white px-3 py-2.5 text-sm"
             />
           </label>
 
@@ -208,17 +208,17 @@ const ReviewForm: React.FC<{
                     <label
                       key={t.transaction_id}
                       className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs cursor-pointer ${
-                        on ? 'border-[#EA8500] bg-[#FFF4E6]' : 'border-[#EAE3D6] bg-white'
+                        on ? 'border-[#6246EA] bg-[#EFECFF]' : 'border-[#E4E5F0] bg-white'
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={on}
                         onChange={() => setCited((p) => (on ? p.filter((x) => x !== t.transaction_id) : [...p, t.transaction_id]))}
-                        className="accent-[#EA8500]"
+                        className="accent-[#6246EA]"
                       />
                       <span className="font-mono">{t.transaction_id}</span>
-                      <span className="text-[#6B655B]">{formatMoney(t.amount, t.currency)}</span>
+                      <span className="text-[#5C6079]">{formatMoney(t.amount, t.currency)}</span>
                     </label>
                   );
                 })}
@@ -227,7 +227,7 @@ const ReviewForm: React.FC<{
           )}
 
           <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input type="checkbox" checked={moreInfo} onChange={(e) => setMoreInfo(e.target.checked)} className="accent-[#EA8500]" />
+            <input type="checkbox" checked={moreInfo} onChange={(e) => setMoreInfo(e.target.checked)} className="accent-[#6246EA]" />
             More information is needed (for example statements or KYC documents)
           </label>
 
@@ -245,35 +245,35 @@ const ReviewForm: React.FC<{
           </button>
         </form>
       ) : (
-        <div className="rounded-xl border-2 border-[#FCD5B5] bg-[#FFFBF6] p-5 space-y-4" role="region" aria-label="Confirm decision">
+        <div className="rounded-xl border-2 border-[#D7CFFF] bg-[#FAFAFE] p-5 space-y-4" role="region" aria-label="Confirm decision">
           <p className="font-semibold">Confirm this decision</p>
           <dl className="grid gap-2 text-sm sm:grid-cols-[160px_1fr]">
-            <dt className="text-[#6B655B]">Case</dt>
+            <dt className="text-[#5C6079]">Case</dt>
             <dd className="font-mono font-semibold">{caseId}</dd>
-            <dt className="text-[#6B655B]">Account</dt>
+            <dt className="text-[#5C6079]">Account</dt>
             <dd className="font-mono font-semibold">{account.account_id}</dd>
-            <dt className="text-[#6B655B]">Decision</dt>
+            <dt className="text-[#5C6079]">Decision</dt>
             <dd className="font-semibold">{decisionInfo?.label}</dd>
-            <dt className="text-[#6B655B]">Evidence</dt>
+            <dt className="text-[#5C6079]">Evidence</dt>
             <dd>{evidenceQualityLabel(evidenceQuality)}</dd>
-            <dt className="text-[#6B655B]">Reviewer</dt>
+            <dt className="text-[#5C6079]">Reviewer</dt>
             <dd>{reviewer.trim()}</dd>
-            <dt className="text-[#6B655B]">Reasoning</dt>
+            <dt className="text-[#5C6079]">Reasoning</dt>
             <dd className="whitespace-pre-wrap">{rationale.trim()}</dd>
             {cited.length > 0 && (
               <>
-                <dt className="text-[#6B655B]">Cited transfers</dt>
+                <dt className="text-[#5C6079]">Cited transfers</dt>
                 <dd className="font-mono">{cited.join(', ')}</dd>
               </>
             )}
             {moreInfo && (
               <>
-                <dt className="text-[#6B655B]">Follow-up</dt>
+                <dt className="text-[#5C6079]">Follow-up</dt>
                 <dd>More information needed</dd>
               </>
             )}
           </dl>
-          <p className="text-xs text-[#6B655B]">
+          <p className="text-xs text-[#5C6079]">
             Saving adds a permanent entry to the case history. It does not freeze, block or notify any account.
           </p>
           {error && <ErrorState title="Decision not saved" message={error} />}
@@ -294,7 +294,7 @@ const ReviewForm: React.FC<{
 
 const WRITE_ACCESS_TEXT: Record<WriteAccessMode, { tone: string; text: string }> = {
   open_local_development: {
-    tone: 'border-[#EAE3D6] bg-[#FAF7F2] text-[#6B655B]',
+    tone: 'border-[#E4E5F0] bg-[#F6F6FC] text-[#5C6079]',
     text: 'This is a local server with no API key, so anyone who can reach it can record decisions. Reviewer names are typed, not verified.',
   },
   api_key_required: {
@@ -341,9 +341,9 @@ export const ReviewHistorySection: React.FC<Props> = ({ data, selectedAccountId,
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-[#EAE3D6] bg-white p-5 sm:p-6" aria-labelledby="review-heading">
+      <section className="rounded-2xl border border-[#E4E5F0] bg-white p-5 sm:p-6" aria-labelledby="review-heading">
         <h2 id="review-heading" className="font-display text-lg font-bold">Record a review decision</h2>
-        <p className="mt-1 text-sm text-[#6B655B]">
+        <p className="mt-1 text-sm text-[#5C6079]">
           Decisions are yours. FraudShield records them with your reasoning; it never decides or acts on its own.
         </p>
         <WriteAccessNotice mode={writeAccess} />
@@ -363,7 +363,7 @@ export const ReviewHistorySection: React.FC<Props> = ({ data, selectedAccountId,
               <select
                 value={selected?.account_id ?? ''}
                 onChange={(e) => onSelectAccount(e.target.value || null)}
-                className="mt-1.5 w-full rounded-xl border border-[#EAE3D6] bg-white px-3 py-2.5 text-sm font-mono"
+                className="mt-1.5 w-full rounded-xl border border-[#E4E5F0] bg-white px-3 py-2.5 text-sm font-mono"
               >
                 <option value="">Choose an account…</option>
                 {reviewable.map((a) => (
@@ -402,7 +402,7 @@ export const ReviewHistorySection: React.FC<Props> = ({ data, selectedAccountId,
                 />
               </>
             ) : (
-              <p className="text-sm text-[#6B655B]">Choose an account to see its evidence and record a decision.</p>
+              <p className="text-sm text-[#5C6079]">Choose an account to see its evidence and record a decision.</p>
             )}
           </div>
         )}

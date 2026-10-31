@@ -4,7 +4,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { V2ModelDivergenceAlert } from '../components/v2/V2ModelDivergenceAlert';
 import { V2TreeShapBreakdown } from '../components/v2/V2TreeShapBreakdown';
-import { V2MoneyFlowVisual } from '../components/v2/V2MoneyFlowVisual';
 import { V2SearchPage, normalizeAccountId } from '../pages/v2/V2SearchPage';
 import { V2AccountDetailPage } from '../pages/v2/V2AccountDetailPage';
 import { v2Api, ApiError } from '../services/v2Api';
@@ -164,7 +163,7 @@ describe('V2SearchPage Component', () => {
     expect(screen.getAllByText('ACC-000001').length).toBeGreaterThan(0);
     expect(screen.getByText('Aditi Joshi')).toBeInTheDocument();
     expect(screen.getAllByText('ACC-000002').length).toBeGreaterThan(0);
-    // The money-flow toggles name accounts, not training labels.
+    // Example accounts are named by ID and case role, never by training label.
     expect(screen.getByRole('button', { name: 'ACC-000002' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Mule' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Victim' })).toBeNull();
@@ -516,20 +515,5 @@ describe('V2AccountDetailPage Component', () => {
     expect(screen.getByText(/Those accounts are not in the synthetic ledger/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Open investigations/i })).toHaveAttribute('href', '/cases');
     expect(screen.queryByRole('link', { name: /FS-1042/i })).not.toBeInTheDocument();
-  });
-});
-
-
-
-describe('V2MoneyFlowVisual', () => {
-  it('clears placeholder accounts and says so when the live trace fails', async () => {
-    vi.mocked(v2Api.getTrace).mockRejectedValue(new ApiError(503, 'unavailable', 'down'));
-    render(
-      <MemoryRouter>
-        <V2MoneyFlowVisual />
-      </MemoryRouter>
-    );
-    expect(await screen.findByText(/Live money flow could not be loaded/)).toBeInTheDocument();
-    expect(screen.queryByText('FreshMart Express')).toBeNull();
   });
 });

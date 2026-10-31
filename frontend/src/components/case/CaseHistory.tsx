@@ -27,7 +27,7 @@ export const ActorLine: React.FC<{ event: AuditEvent }> = ({ event }) => {
   return (
     <span className="inline-flex flex-wrap items-center gap-1.5">
       <UserRound className="w-3.5 h-3.5" aria-hidden="true" />
-      <span className="font-semibold text-[#1A1714]">{event.performed_by}</span>
+      <span className="font-semibold text-[#141526]">{event.performed_by}</span>
       {knownSelfReported ? (
         <span>· name typed by the reviewer, not verified</span>
       ) : (
@@ -52,17 +52,17 @@ const EventDetails: React.FC<{ event: AuditEvent; caseAccountIds?: string[] }> =
         <p>
           <span className="font-mono font-semibold">{d.account_id}</span>: {from} → <span className="font-semibold">{to}</span>
         </p>
-        {d.evidence_quality && <p className="text-xs text-[#6B655B]">Evidence: {evidenceQualityLabel(d.evidence_quality)}</p>}
-        {d.notes && <p className="rounded-lg bg-[#FAF7F2] p-2.5 text-[#1A1714] whitespace-pre-wrap">{d.notes}</p>}
+        {d.evidence_quality && <p className="text-xs text-[#5C6079]">Evidence: {evidenceQualityLabel(d.evidence_quality)}</p>}
+        {d.notes && <p className="rounded-lg bg-[#F6F6FC] p-2.5 text-[#141526] whitespace-pre-wrap">{d.notes}</p>}
         {Array.isArray(d.decision_reasons) && d.decision_reasons.length > 0 && (
-          <p className="text-xs text-[#6B655B]">Reasons: {d.decision_reasons.join('; ')}</p>
+          <p className="text-xs text-[#5C6079]">Reasons: {d.decision_reasons.join('; ')}</p>
         )}
         {Array.isArray(d.supporting_transaction_ids) && d.supporting_transaction_ids.length > 0 && (
-          <p className="text-xs text-[#6B655B]">
+          <p className="text-xs text-[#5C6079]">
             Cited transfers: <span className="font-mono">{d.supporting_transaction_ids.join(', ')}</span>
           </p>
         )}
-        {d.additional_info_needed && <p className="text-xs font-semibold text-[#B45309]">More information requested</p>}
+        {d.additional_info_needed && <p className="text-xs font-semibold text-[#4F33D6]">More information requested</p>}
         {caseAccountIds && d.account_id && !caseAccountIds.includes(d.account_id) && (
           <p className="rounded-lg border border-[#FDE68A] bg-[#FFFBEB] p-2.5 text-xs text-[#92400E] leading-relaxed">
             Legacy record: {d.account_id} is not part of this case’s recorded transfers. An earlier version of FraudShield
@@ -74,7 +74,7 @@ const EventDetails: React.FC<{ event: AuditEvent; caseAccountIds?: string[] }> =
   }
   if (event.action === 'case_metadata_updated') {
     return (
-      <ul className="mt-2 text-xs text-[#6B655B] space-y-0.5">
+      <ul className="mt-2 text-xs text-[#5C6079] space-y-0.5">
         {Object.entries(d).map(([k, v]) => (
           <li key={k}>
             {k.replace(/_/g, ' ')}: {typeof v === 'object' ? JSON.stringify(v) : String(v)}
@@ -84,7 +84,7 @@ const EventDetails: React.FC<{ event: AuditEvent; caseAccountIds?: string[] }> =
     );
   }
   if (event.action === 'trace_paths_persisted' && typeof d.path_count === 'number') {
-    return <p className="mt-1 text-xs text-[#6B655B]">{d.path_count} money-flow paths stored.</p>;
+    return <p className="mt-1 text-xs text-[#5C6079]">{d.path_count} money-flow paths stored.</p>;
   }
   return null;
 };
@@ -118,15 +118,15 @@ export const CaseHistory: React.FC<{ caseId: string; refreshKey: number; caseAcc
   const hiddenCount = (events ?? []).filter((e) => e.action === 'trace_paths_persisted').length;
 
   return (
-    <section className="rounded-2xl border border-[#EAE3D6] bg-white p-5 sm:p-6" aria-labelledby="history-heading">
+    <section className="rounded-2xl border border-[#E4E5F0] bg-white p-5 sm:p-6" aria-labelledby="history-heading">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="history-heading" className="font-display text-lg font-bold flex items-center gap-2">
-          <History className="w-5 h-5 text-[#EA8500]" aria-hidden="true" />
+          <History className="w-5 h-5 text-[#6246EA]" aria-hidden="true" />
           Case history
         </h2>
         {hiddenCount > 0 && (
-          <label className="inline-flex items-center gap-2 text-xs text-[#6B655B] cursor-pointer">
-            <input type="checkbox" checked={showSystem} onChange={(e) => setShowSystem(e.target.checked)} className="accent-[#EA8500]" />
+          <label className="inline-flex items-center gap-2 text-xs text-[#5C6079] cursor-pointer">
+            <input type="checkbox" checked={showSystem} onChange={(e) => setShowSystem(e.target.checked)} className="accent-[#6246EA]" />
             Show {hiddenCount} system calculation event{hiddenCount === 1 ? '' : 's'}
           </label>
         )}
@@ -139,22 +139,22 @@ export const CaseHistory: React.FC<{ caseId: string; refreshKey: number; caseAcc
           <EmptyState title="Nothing recorded yet" message="No decisions or case changes have been recorded for this case." />
         )}
         {visible.length > 0 && (
-          <ol className="relative border-l border-[#EAE3D6] ml-2 space-y-5">
+          <ol className="relative border-l border-[#E4E5F0] ml-2 space-y-5">
             {visible.map((e) => (
               <li key={e.event_id ?? `${e.timestamp}-${e.action}`} className="pl-5 relative">
                 <span
                   className={`absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full ${
-                    e.action === 'account_review_recorded' ? 'bg-[#EA8500]' : 'bg-[#DDD4C4]'
+                    e.action === 'account_review_recorded' ? 'bg-[#6246EA]' : 'bg-[#D5D7E6]'
                   }`}
                   aria-hidden="true"
                 />
                 <div className="flex flex-wrap items-baseline justify-between gap-x-3">
                   <p className="font-semibold text-sm">{auditActionLabel(e.action)}</p>
-                  <time dateTime={e.timestamp} className="text-xs text-[#6B655B]">
+                  <time dateTime={e.timestamp} className="text-xs text-[#5C6079]">
                     {formatServerTime(e.timestamp)}
                   </time>
                 </div>
-                <p className="mt-0.5 text-xs text-[#6B655B]">
+                <p className="mt-0.5 text-xs text-[#5C6079]">
                   <ActorLine event={e} />
                 </p>
                 <EventDetails event={e} caseAccountIds={caseAccountIds} />
@@ -164,10 +164,10 @@ export const CaseHistory: React.FC<{ caseId: string; refreshKey: number; caseAcc
         )}
       </div>
 
-      <p className="mt-5 text-xs text-[#8C857B] leading-relaxed">
+      <p className="mt-5 text-xs text-[#868AA2] leading-relaxed">
         Events are added, never edited, by the application, with server timestamps (shown in your local time). The log is
         stored in the application database and is not cryptographically signed.{' '}
-        <Link to="/tools/audit" className="font-semibold text-[#B45309] hover:text-[#EA8500]">
+        <Link to="/tools/audit" className="font-semibold text-[#4F33D6] hover:text-[#6246EA]">
           Search all cases’ history
         </Link>
       </p>

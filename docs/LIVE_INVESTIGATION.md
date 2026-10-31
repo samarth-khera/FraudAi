@@ -1,7 +1,7 @@
 # Live investigation engine
 
-`/investigate` in the app, `POST /api/v2/investigations` in the API. An investigator enters the account that lost
-money and presses **Start Investigation**. The server then queries the configured ledger, traces the money, assesses
+`/investigate` in the app, `POST /api/v2/investigations` in the API. An investigator opens the account that lost
+money and presses **Start fund investigation**. The server then queries the configured ledger, traces the money, assesses
 every linked account and returns an evidence-referenced report. Nothing is precomputed and nothing is stored.
 
 ## What runs, in order
@@ -77,6 +77,30 @@ every linked account and returns an evidence-referenced report. Nothing is preco
       a slow model never delays the report. See [AI_ANALYST.md](AI_ANALYST.md).
 
 Ground-truth labels and scenario tags are never read. A test scrambles them and checks that the report is unchanged.
+
+## How the page presents a report
+
+`/investigate` answers one question at a time instead of showing every section at once.
+
+1. **Account summary** (before anything is traced). Opening `/investigate?account=ACC-000001` reads the account, its
+   rule assessment and the data source (`GET /api/v2/accounts/{id}`, `/accounts/{id}/assessment`, `/data-source`).
+   Nothing is traced until **Start fund investigation** is pressed, which sends one `POST /api/v2/investigations`.
+2. **Overview.** "What happened", written from the report by fixed rules (not AI), then the transfers where the trace
+   starts. A flagged transfer is presented as a starting point, not a confirmed fraudulent event.
+3. **Fund trail.** The trace is split into branches using `parent_transaction_id`: one root-to-leaf path each, in the
+   order the money moved. Each branch is told step by step (account, transfer, account…), drawn as a left-to-right
+   tree (senders, then the investigated account, then recipients), and every transfer and account opens an inspector.
+   Each branch ends with the reason the data gives: depth limit, a cycle, money already traced on another branch, or
+   no further transfer found in the window. A stop is never presented as money recovered, lost or settled.
+4. **Risk evidence.** Accounts grouped by rule severity; each answers what was detected, what it relates to, the
+   evidence, why it matters and what is not known. Every finding, grouped by kind, and the template summary follow.
+5. **AI analyst.** Requested separately (`ai_explanation: "separate"`) and shown only for the same `report_digest`.
+   Every other stage is usable while it is pending.
+6. **Next steps.** Advisory recommendations, most direct first, each with the evidence it rests on. When the depth limit
+   cut the trace short, a deeper re-run is offered; it runs only when pressed.
+
+The trail model (`frontend/src/components/investigation/trail.ts`) only rearranges transfers that are in the response;
+a test checks that every branch transfer is in the response and every response transfer is on a branch.
 
 ## Data source today
 

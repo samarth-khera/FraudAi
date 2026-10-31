@@ -2,8 +2,8 @@ import React from 'react';
 import { AlertTriangle, Inbox, RefreshCw } from 'lucide-react';
 
 export const LoadingState: React.FC<{ label: string; className?: string }> = ({ label, className = '' }) => (
-  <div role="status" aria-live="polite" className={`flex items-center gap-3 py-10 justify-center text-sm text-[#6B655B] ${className}`}>
-    <span className="w-4 h-4 rounded-full border-2 border-[#EA8500] border-t-transparent animate-spin" aria-hidden="true" />
+  <div role="status" aria-live="polite" className={`flex items-center gap-3 py-10 justify-center text-sm text-[#5C6079] ${className}`}>
+    <span className="w-4 h-4 rounded-full border-2 border-[#6246EA] border-t-transparent animate-spin" aria-hidden="true" />
     <span>{label}</span>
   </div>
 );
@@ -18,7 +18,7 @@ export const ErrorState: React.FC<{
     <div className="flex items-start gap-3">
       <AlertTriangle className="w-5 h-5 shrink-0 text-[#BE123C] mt-0.5" aria-hidden="true" />
       <div className="space-y-2 min-w-0">
-        <p className="font-semibold text-[#1A1714]">{title}</p>
+        <p className="font-semibold text-[#141526]">{title}</p>
         <p className="leading-relaxed">{message}</p>
         {children}
         {onRetry && (
@@ -37,10 +37,10 @@ export const EmptyState: React.FC<{ title: string; message: string; action?: Rea
   message,
   action,
 }) => (
-  <div className="rounded-2xl border border-dashed border-[#DDD4C4] bg-[#FAF7F2] p-8 text-center">
-    <Inbox className="w-6 h-6 mx-auto text-[#8C857B]" aria-hidden="true" />
-    <p className="mt-3 font-semibold text-[#1A1714]">{title}</p>
-    <p className="mt-1 text-sm text-[#6B655B] max-w-md mx-auto">{message}</p>
+  <div className="rounded-2xl border border-dashed border-[#D5D7E6] bg-[#F6F6FC] p-8 text-center">
+    <Inbox className="w-6 h-6 mx-auto text-[#868AA2]" aria-hidden="true" />
+    <p className="mt-3 font-semibold text-[#141526]">{title}</p>
+    <p className="mt-1 text-sm text-[#5C6079] max-w-md mx-auto">{message}</p>
     {action && <div className="mt-4">{action}</div>}
   </div>
 );
@@ -48,8 +48,8 @@ export const EmptyState: React.FC<{ title: string; message: string; action?: Rea
 type PillTone = 'neutral' | 'orange' | 'green' | 'blue' | 'rose' | 'amber';
 
 const TONES: Record<PillTone, string> = {
-  neutral: 'bg-[#FAF7F2] text-[#6B655B] border-[#EAE3D6]',
-  orange: 'bg-[#FFF4E6] text-[#B45309] border-[#FCD5B5]',
+  neutral: 'bg-[#F6F6FC] text-[#5C6079] border-[#E4E5F0]',
+  orange: 'bg-[#EFECFF] text-[#4F33D6] border-[#D7CFFF]',
   green: 'bg-[#EAF7EE] text-[#166534] border-[#BBF7D0]',
   blue: 'bg-[#EBF5FF] text-[#1E40AF] border-[#BFDBFE]',
   rose: 'bg-[#FFF0F2] text-[#BE123C] border-[#FECDD3]',
@@ -92,8 +92,8 @@ export function caseStatusTone(status: string | null | undefined): PillTone {
 }
 
 export const SyntheticDataNote: React.FC<{ className?: string; children?: React.ReactNode }> = ({ className = '', children }) => (
-  <p className={`text-xs text-[#6B655B] ${className}`}>
-    <span className="font-semibold text-[#1A1714]">Demonstration data.</span>{' '}
+  <p className={`text-xs text-[#5C6079] ${className}`}>
+    <span className="font-semibold text-[#141526]">Demonstration data.</span>{' '}
     {children ?? 'Every account, transaction and complaint here is synthetic. No real customers or bank records are involved.'}
   </p>
 );

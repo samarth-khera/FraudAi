@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { AppRoutes } from '../App';
 import { UnifiedHeader } from '../components/layout/UnifiedHeader';
@@ -60,25 +60,50 @@ describe('Home page', () => {
 });
 
 describe('Main navigation', () => {
-  it('has exactly Home, Investigate, Investigations and Tools', () => {
+  it('leads with the investigator’s work and keeps reference tools separate', () => {
     render(
       <MemoryRouter initialEntries={['/cases']}>
         <UnifiedHeader />
       </MemoryRouter>
     );
     const nav = screen.getByRole('navigation', { name: 'Main' });
-    const links = Array.from(nav.querySelectorAll('a')).map((a) => a.textContent?.trim());
-    expect(links).toEqual(['Home', 'Investigate', 'Investigations', 'Tools']);
-    expect(screen.getByRole('link', { name: 'Investigations' })).toHaveAttribute('aria-current', 'page');
+    expect(Array.from(nav.querySelectorAll('a')).map((a) => a.textContent?.trim())).toEqual(['Overview', 'Investigate', 'Accounts', 'Cases']);
+    const reference = screen.getByRole('navigation', { name: 'Reference' });
+    expect(Array.from(reference.querySelectorAll('a')).map((a) => a.textContent?.trim())).toEqual([
+      'Fund-flow explorer',
+      'Model performance',
+      'Audit log',
+      'Transaction model check',
+    ]);
+    expect(within(nav).getByRole('link', { name: 'Cases' })).toHaveAttribute('aria-current', 'page');
   });
 
-  it('marks Tools active on advanced pages', () => {
-    render(
+  it('marks the right item active on reference and account pages', () => {
+    const { unmount } = render(
       <MemoryRouter initialEntries={['/tools/model']}>
         <UnifiedHeader />
       </MemoryRouter>
     );
-    expect(screen.getByRole('link', { name: 'Tools' })).toHaveAttribute('aria-current', 'page');
+    expect(within(screen.getByRole('navigation', { name: 'Reference' })).getByRole('link', { name: 'Model performance' })).toHaveAttribute('aria-current', 'page');
+    unmount();
+    render(
+      <MemoryRouter initialEntries={['/tools/accounts/ACC-000003']}>
+        <UnifiedHeader />
+      </MemoryRouter>
+    );
+    expect(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('link', { name: 'Accounts' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('opens and closes the small-screen menu', () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <UnifiedHeader />
+      </MemoryRouter>
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    expect(screen.getByRole('navigation', { name: 'Main mobile' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Close menu' }));
+    expect(screen.queryByRole('navigation', { name: 'Main mobile' })).toBeNull();
   });
 });
 
@@ -109,7 +134,8 @@ describe('Model status indicator', () => {
         <UnifiedHeader />
       </MemoryRouter>
     );
-    const button = await screen.findByRole('button', { name: /Account model status: Model unavailable/i });
+    // The sidebar and the small-screen bar each show the status; both come from one shared request.
+    const [button] = await screen.findAllByRole('button', { name: /Account model status: Model unavailable/i });
     fireEvent.click(button);
     expect(screen.getByRole('dialog')).toHaveTextContent(/model file is missing/i);
     expect(screen.getByRole('link', { name: /Model performance details/i })).toHaveAttribute('href', '/tools/model');
@@ -122,7 +148,8 @@ describe('Model status indicator', () => {
         <UnifiedHeader />
       </MemoryRouter>
     );
-    expect(await screen.findByRole('button', { name: /Server unreachable/i })).toBeInTheDocument();
+    expect((await screen.findAllByRole('button', { name: /Server unreachable/i })).length).toBeGreaterThan(0);
+    expect(v2Api.getModelsStatus).toHaveBeenCalledTimes(1);
   });
 });
 

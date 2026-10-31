@@ -58,22 +58,22 @@ export const V2NextStepsRecommendation: React.FC<V2NextStepsRecommendationProps>
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-[#EAE3D6] p-6 space-y-5">
+    <div className="bg-white rounded-2xl border border-[#E4E5F0] p-6 space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#FAF7F2] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#F6F6FC] pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-base font-bold text-[#1A1714] font-display flex items-center gap-2">
-              <ShieldAlert className="w-5 h-5 text-[#EA8500]" />
+            <h3 className="text-base font-bold text-[#141526] font-display flex items-center gap-2">
+              <ShieldAlert className="w-5 h-5 text-[#6246EA]" />
               What Should the Investigator Do Next?
             </h3>
             {humanReviewRecommended && (
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FFF4E6] text-[#EA8500] border border-[#FCD5B5] uppercase tracking-wider">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#EFECFF] text-[#6246EA] border border-[#D7CFFF] uppercase tracking-wider">
                 Human Review Recommended
               </span>
             )}
           </div>
-          <p className="text-xs text-[#6B655B] mt-1">
+          <p className="text-xs text-[#5C6079] mt-1">
             Tailored advisory actions derived from observable ledger facts, model attributions, and known data gaps.
           </p>
         </div>
@@ -81,7 +81,7 @@ export const V2NextStepsRecommendation: React.FC<V2NextStepsRecommendationProps>
         {onNavigateToTab && (
           <button
             onClick={() => onNavigateToTab('review')}
-            className="self-start sm:self-center inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-[#EA8500] hover:bg-[#D27400] transition-colors shadow-xs"
+            className="self-start sm:self-center inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-[#6246EA] hover:bg-[#4F33D6] transition-colors shadow-xs"
           >
             <span>Record Adjudication</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -100,8 +100,8 @@ export const V2NextStepsRecommendation: React.FC<V2NextStepsRecommendationProps>
               key={action.action_id}
               className={`rounded-2xl border transition-all ${
                 isExpanded
-                  ? 'border-[#EA8500] bg-[#FFFBF5] shadow-xs'
-                  : 'border-[#EAE3D6] bg-white hover:border-[#DDD4C4]'
+                  ? 'border-[#6246EA] bg-[#FAFAFE] shadow-xs'
+                  : 'border-[#E4E5F0] bg-white hover:border-[#D5D7E6]'
               }`}
             >
               {/* Card Title Bar */}
@@ -113,13 +113,13 @@ export const V2NextStepsRecommendation: React.FC<V2NextStepsRecommendationProps>
                   <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border uppercase tracking-wide shrink-0 ${badge.className}`}>
                     {badge.label}
                   </span>
-                  <span className="text-sm font-bold text-[#1A1714]">
+                  <span className="text-sm font-bold text-[#141526]">
                     {action.title}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2 self-end sm:self-center text-xs text-[#6B655B]">
-                  <span className="text-[11px] text-[#8C857B]">
+                <div className="flex items-center gap-2 self-end sm:self-center text-xs text-[#5C6079]">
+                  <span className="text-[11px] text-[#868AA2]">
                     {isExpanded ? 'Hide explanation' : 'View rationale & evidence'}
                   </span>
                   {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -128,42 +128,42 @@ export const V2NextStepsRecommendation: React.FC<V2NextStepsRecommendationProps>
 
               {/* Expanded Detail Panel */}
               {isExpanded && (
-                <div className="px-4 pb-4 pt-1 border-t border-[#FAF7F2] space-y-3 text-xs">
+                <div className="px-4 pb-4 pt-1 border-t border-[#F6F6FC] space-y-3 text-xs">
                   {/* Rationale */}
                   <div>
-                    <span className="text-[11px] font-bold text-[#1A1714] block mb-1">
+                    <span className="text-[11px] font-bold text-[#141526] block mb-1">
                       Why this action is recommended:
                     </span>
-                    <p className="text-[#6B655B] leading-relaxed">
+                    <p className="text-[#5C6079] leading-relaxed">
                       {action.rationale}
                     </p>
                   </div>
 
                   {/* 3-Column Supporting Context */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-[#EAE3D6]">
-                    <div className="bg-white rounded-xl p-3 border border-[#EAE3D6]">
-                      <span className="text-[10px] uppercase font-bold text-[#EA8500] block mb-1 flex items-center gap-1">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-[#E4E5F0]">
+                    <div className="bg-white rounded-xl p-3 border border-[#E4E5F0]">
+                      <span className="text-[10px] uppercase font-bold text-[#6246EA] block mb-1 flex items-center gap-1">
                         <Search className="w-3 h-3" /> Supporting Evidence
                       </span>
-                      <p className="text-[#1A1714] text-[11px] leading-snug">
+                      <p className="text-[#141526] text-[11px] leading-snug">
                         {action.supporting_evidence}
                       </p>
                     </div>
 
-                    <div className="bg-white rounded-xl p-3 border border-[#EAE3D6]">
+                    <div className="bg-white rounded-xl p-3 border border-[#E4E5F0]">
                       <span className="text-[10px] uppercase font-bold text-[#2563EB] block mb-1 flex items-center gap-1">
                         <FileText className="w-3 h-3" /> Additional Records Needed
                       </span>
-                      <p className="text-[#1A1714] text-[11px] leading-snug">
+                      <p className="text-[#141526] text-[11px] leading-snug">
                         {action.suggested_records}
                       </p>
                     </div>
 
-                    <div className="bg-white rounded-xl p-3 border border-[#EAE3D6]">
-                      <span className="text-[10px] uppercase font-bold text-[#8C857B] block mb-1 flex items-center gap-1">
+                    <div className="bg-white rounded-xl p-3 border border-[#E4E5F0]">
+                      <span className="text-[10px] uppercase font-bold text-[#868AA2] block mb-1 flex items-center gap-1">
                         <HelpCircle className="w-3 h-3" /> Remaining Uncertainty
                       </span>
-                      <p className="text-[#1A1714] text-[11px] leading-snug">
+                      <p className="text-[#141526] text-[11px] leading-snug">
                         {action.remaining_uncertainty}
                       </p>
                     </div>
@@ -176,10 +176,10 @@ export const V2NextStepsRecommendation: React.FC<V2NextStepsRecommendationProps>
       </div>
 
       {/* Non-Punitive Regulatory Notice */}
-      <div className="bg-[#FAF7F2] rounded-xl p-3.5 border border-[#EAE3D6] text-[11px] text-[#6B655B] flex items-start gap-2.5">
+      <div className="bg-[#F6F6FC] rounded-xl p-3.5 border border-[#E4E5F0] text-[11px] text-[#5C6079] flex items-start gap-2.5">
         <ShieldCheck className="w-4 h-4 text-[#059669] shrink-0 mt-0.5" />
         <p className="leading-relaxed">
-          <strong className="text-[#1A1714] font-semibold">Investigator Guardrail:</strong> Recommendations represent advisory next steps for human compliance investigators. Automated account freezing, denial of banking services, or legal accusations without independent corroboration are strictly prohibited.
+          <strong className="text-[#141526] font-semibold">Investigator Guardrail:</strong> Recommendations represent advisory next steps for human compliance investigators. Automated account freezing, denial of banking services, or legal accusations without independent corroboration are strictly prohibited.
         </p>
       </div>
     </div>

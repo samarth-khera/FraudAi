@@ -1,89 +1,90 @@
 @import "tailwindcss";
 
+/*
+ * FraudShield design system.
+ * Cool lavender canvas, white panels, charcoal ink, one violet accent. The violet-to-ice-blue gradient is reserved
+ * for money movement (fund-trail connectors, the primary action), so it keeps a meaning instead of decorating.
+ */
+@theme {
+  --font-sans: 'Schibsted Grotesk', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --color-canvas: #F3F4FB;
+  --color-well: #F6F6FC;
+  --color-panel: #FFFFFF;
+  --color-line: #E4E5F0;
+  --color-line-strong: #D5D7E6;
+  --color-ink: #141526;
+  --color-ink-soft: #33364B;
+  --color-mute: #5C6079;
+  --color-faint: #868AA2;
+
+  --color-iris: #6246EA;
+  --color-iris-deep: #4F33D6;
+  --color-iris-soft: #EFECFF;
+  --color-iris-line: #D7CFFF;
+  --color-ice: #3B82F6;
+  --color-ice-soft: #EAF2FF;
+
+  /* Severity: used only for risk labels, never as decoration. */
+  --color-sev-critical: #BE123C;
+  --color-sev-critical-soft: #FFF1F3;
+  --color-sev-high: #C2410C;
+  --color-sev-high-soft: #FFF4EC;
+  --color-sev-elevated: #A16207;
+  --color-sev-elevated-soft: #FEF9E7;
+  --color-sev-low: #475569;
+  --color-sev-low-soft: #F1F3F8;
+
+  --shadow-float: 0 1px 2px rgba(20, 21, 38, 0.04), 0 12px 32px -12px rgba(72, 64, 140, 0.16);
+  --shadow-lift: 0 2px 4px rgba(20, 21, 38, 0.05), 0 24px 48px -20px rgba(72, 64, 140, 0.28);
+
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 @layer base {
   :root {
-    --font-sans: 'IBM Plex Sans', 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-display: 'Plus Jakarta Sans', 'IBM Plex Sans', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-
-    /* Core Forensic Art Direction Tokens */
-    --bg-canvas: #F8F6F0;
-    --bg-surface: #FFFFFF;
-    --bg-recessed: #FAF7F2;
-    --bg-muted: #EFECE6;
-    --border-subtle: #EAE3D6;
-    --border-strong: #DDD4C4;
-
-    /* V2 Warm Cream & Vivid Orange Design System Tokens */
-    --v2-canvas: #F8F6F0;
+    /* Legacy variable names kept for components that read them directly. */
+    --v2-canvas: #F3F4FB;
     --v2-surface: #FFFFFF;
-    --v2-surface-warm: #FFFEFA;
-    --v2-recessed: #FAF7F2;
-    --v2-border: #EAE3D6;
-    --v2-border-strong: #DDD4C4;
-    --v2-orange: #EA8500;
-    --v2-orange-hover: #D27400;
-    --v2-orange-light: #FFF4E6;
-    --v2-orange-border: #FCD5B5;
-    --v2-text: #1A1714;
-    --v2-muted: #6B655B;
-    --v2-subtle: #8C857B;
+    --v2-recessed: #F6F6FC;
+    --v2-border: #E4E5F0;
+    --v2-orange: #6246EA;
+    --v2-text: #141526;
+    --v2-muted: #5C6079;
+    --v2-subtle: #868AA2;
+    color-scheme: light;
+  }
 
-    /* Supporting Accents */
-    --v2-mint-bg: #EAF7EE;
-    --v2-mint-text: #166534;
-    --v2-mint-border: #BBF7D0;
-
-    --v2-blue-bg: #EBF5FF;
-    --v2-blue-text: #1E40AF;
-    --v2-blue-border: #BFDBFE;
-
-    --v2-lavender-bg: #F5EEFD;
-    --v2-lavender-text: #7E22CE;
-    --v2-lavender-border: #E9D5FF;
-
-    --v2-peach-bg: #FFF4E6;
-    --v2-peach-text: #C05621;
-    --v2-peach-border: #FCD5B5;
-
-    --v2-rose-bg: #FFF0F2;
-    --v2-rose-text: #BE123C;
-    --v2-rose-border: #FECDD3;
-
-    --navy-950: #070C16;
-    --navy-900: #0B1322;
-    --navy-800: #111C30;
-    --navy-700: #1C2B45;
-
-    --teal-600: #0D9488;
-    --teal-700: #0F766E;
-    --teal-500: #14B8A6;
-    --teal-400: #2DD4BF;
-
-    --amber-600: #D97706;
-    --amber-700: #B45309;
-    --crimson-600: #DC2626;
-    --crimson-700: #B91C1C;
-    --emerald-600: #059669;
+  html {
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
     font-family: var(--font-sans);
-    background-color: var(--v2-canvas);
-    color: var(--v2-text);
+    background-color: var(--color-canvas);
+    background-image:
+      radial-gradient(1200px 520px at 8% -10%, rgba(124, 99, 255, 0.10), transparent 60%),
+      radial-gradient(900px 480px at 100% -5%, rgba(59, 130, 246, 0.09), transparent 60%);
+    background-attachment: fixed;
+    color: var(--color-ink);
     min-height: 100vh;
     margin: 0;
     overflow-x: hidden;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
   h1, h2, h3, h4, .font-display {
     font-family: var(--font-display);
+    letter-spacing: -0.02em;
   }
 
   code, pre, .font-mono {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
   }
 
   #root {
@@ -91,228 +92,171 @@
     display: flex;
     flex-direction: column;
   }
+
+  ::selection {
+    background: rgba(98, 70, 234, 0.18);
+  }
 }
 
-/* Forensic Workspace Surfaces */
-.forensic-panel {
-  background-color: #FFFFFF;
-  border: 1px solid #EAE3D6;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 2px rgba(26, 23, 20, 0.04);
+/* Schibsted Grotesk's tabular figures also widen commas and full stops ("10 , 000"), so numbers in the sans face
+   stay proportional; IDs and other mono text keep true tabular figures. */
+.tabular-nums:not(.font-mono) {
+  font-variant-numeric: proportional-nums !important;
 }
 
-.forensic-panel-recessed {
-  background-color: #FAF7F2;
-  border: 1px solid #EAE3D6;
-  border-radius: 0.5rem;
+/* ------------------------------------------------------------------ surfaces */
+.panel {
+  background: var(--color-panel);
+  border: 1px solid var(--color-line);
+  border-radius: 1.125rem;
+  box-shadow: var(--shadow-float);
 }
 
-.forensic-panel-navy {
-  background-color: #0B1322;
-  border: 1px solid #1C2B45;
-  border-radius: 0.5rem;
-  color: #F8FAFC;
+.panel-quiet {
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid var(--color-line);
+  border-radius: 1rem;
 }
 
-.glass-card {
-  background-color: #FFFFFF;
-  border: 1px solid #EAE3D6;
-  box-shadow: 0 1px 2px rgba(26, 23, 20, 0.04);
+.well {
+  background: var(--color-well);
+  border: 1px solid var(--color-line);
+  border-radius: 0.875rem;
 }
 
-.glass-card-hover {
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
-}
-
-.glass-card-hover:hover {
-  border-color: #EA8500;
-  box-shadow: 0 4px 12px -2px rgba(234, 133, 0, 0.08);
-}
-
-.navy-sidebar {
-  background-color: #070C16;
-  border-right: 1px solid #1C2B45;
-}
-
-/* Technical Blueprint Dot Grid for Graph & Hero Stages */
-.blueprint-grid {
-  background-color: #FAF7F2;
-  background-image: radial-gradient(#DDD4C4 1px, transparent 1px);
-  background-size: 20px 20px;
-}
-
-.blueprint-grid-warm {
-  background-color: #FAF7F2;
-  background-image:
-    linear-gradient(to right, rgba(234, 227, 214, 0.75) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(234, 227, 214, 0.75) 1px, transparent 1px);
-  background-size: 24px 24px;
-}
-
-/* Custom warm scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #F8F6F0;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #DDD4C4;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #C7C2B6;
-}
-
-/* Keyboard accessibility & focus ring in vivid orange (#EA8500) */
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid #EA8500;
-  outline-offset: 2px;
-}
-
-/* V2 Warm Cream & Orange Surfaces */
+/* Legacy surface names, restyled to the same system. */
+.forensic-panel,
+.glass-card,
 .v2-card,
 .fintech-card {
   background-color: #FFFFFF;
-  border: 1px solid #EAE3D6;
-  border-radius: 1.5rem;
-  box-shadow: 0 4px 24px rgba(180, 150, 120, 0.06), 0 2px 6px -1px rgba(26, 23, 20, 0.03);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid #E4E5F0;
+  border-radius: 1.125rem;
+  box-shadow: var(--shadow-float);
 }
 
-.v2-card-interactive:hover,
-.fintech-card-interactive:hover {
-  border-color: rgba(234, 133, 0, 0.45);
-  box-shadow: 0 16px 36px -4px rgba(180, 150, 120, 0.12), 0 4px 12px -2px rgba(26, 23, 20, 0.04);
-  transform: translateY(-2px);
+.forensic-panel-recessed {
+  background-color: #F6F6FC;
+  border: 1px solid #E4E5F0;
+  border-radius: 0.875rem;
 }
 
-/* Focus-visible & A11y Rings */
-:focus-visible {
-  outline: 2px solid #EA8500 !important;
-  outline-offset: 2px !important;
+.forensic-panel-navy {
+  background-color: #141526;
+  border: 1px solid #33364B;
+  border-radius: 0.875rem;
+  color: #F7F7FC;
 }
 
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid #EA8500 !important;
-  outline-offset: 2px !important;
+.navy-sidebar {
+  background-color: #141526;
+  border-right: 1px solid #33364B;
 }
 
-/* Unified Button Design System */
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background-color: #EA8500;
-  color: #FFFFFF;
-  font-weight: 700;
-  font-size: 0.8125rem;
-  line-height: 1.25rem;
-  letter-spacing: -0.01em;
-  padding: 0.625rem 1.25rem;
-  min-height: 2.5rem;
-  border-radius: 0.75rem;
-  border: 1px solid #EA8500;
-  box-shadow: 0 2px 8px rgba(234, 133, 0, 0.22), 0 1px 2px rgba(26, 23, 20, 0.05);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  user-select: none;
+.glass-card-hover,
+.v2-card-interactive,
+.fintech-card-interactive,
+.card-interactive {
+  transition: border-color 0.18s var(--ease-out-soft), box-shadow 0.18s var(--ease-out-soft), transform 0.18s var(--ease-out-soft);
 }
 
-.btn-primary:hover:not(:disabled) {
-  background-color: #D27400;
-  border-color: #D27400;
-  box-shadow: 0 6px 18px rgba(234, 133, 0, 0.32), 0 2px 4px rgba(26, 23, 20, 0.06);
-  transform: translateY(-1.5px);
-}
-
-.btn-primary:active:not(:disabled) {
-  transform: translateY(0.5px) scale(0.99);
-  box-shadow: 0 1px 4px rgba(234, 133, 0, 0.2);
-}
-
-.btn-primary:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  pointer-events: none;
-  transform: none;
-  box-shadow: none;
-}
-
-.btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+.card-interactive {
   background-color: #FFFFFF;
-  color: #1A1714;
-  font-weight: 600;
-  font-size: 0.8125rem;
-  line-height: 1.25rem;
-  padding: 0.625rem 1.125rem;
-  min-height: 2.5rem;
-  border-radius: 0.75rem;
-  border: 1px solid #EAE3D6;
-  box-shadow: 0 1px 3px rgba(26, 23, 20, 0.04);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  user-select: none;
+  border: 1px solid #E4E5F0;
+  border-radius: 1.125rem;
 }
 
-.btn-secondary:hover:not(:disabled) {
-  background-color: #FAF7F2;
-  border-color: #D5CDC0;
-  color: #1A1714;
-  box-shadow: 0 4px 12px rgba(26, 23, 20, 0.06);
+.glass-card-hover:hover,
+.v2-card-interactive:hover,
+.fintech-card-interactive:hover,
+.card-interactive:hover {
+  border-color: var(--color-iris-line);
+  box-shadow: var(--shadow-lift);
   transform: translateY(-1px);
 }
 
-.btn-secondary:active:not(:disabled) {
-  transform: translateY(0.5px) scale(0.99);
+.blueprint-grid,
+.blueprint-grid-warm {
+  background-color: #F8F8FD;
+  background-image: radial-gradient(rgba(98, 70, 234, 0.13) 1px, transparent 1px);
+  background-size: 22px 22px;
 }
 
-.btn-secondary:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
+/* ------------------------------------------------------------------ buttons */
+.btn-primary,
+.btn-secondary,
 .btn-ghost {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.375rem;
-  background-color: transparent;
-  color: #6B655B;
+  gap: 0.5rem;
   font-weight: 600;
-  font-size: 0.75rem;
-  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.16s var(--ease-out-soft), border-color 0.16s var(--ease-out-soft),
+    box-shadow 0.16s var(--ease-out-soft), transform 0.16s var(--ease-out-soft), color 0.16s ease;
+}
+
+.btn-primary {
+  color: #FFFFFF;
+  padding: 0.625rem 1.125rem;
+  min-height: 2.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid transparent;
+  background: linear-gradient(135deg, #6246EA 0%, #4F6BF0 60%, #3B82F6 100%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 6px 16px -6px rgba(98, 70, 234, 0.55);
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 10px 24px -8px rgba(98, 70, 234, 0.65);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  color: var(--color-ink);
+  background: #FFFFFF;
+  padding: 0.625rem 1rem;
+  min-height: 2.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-line-strong);
+  box-shadow: 0 1px 2px rgba(20, 21, 38, 0.04);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--color-iris-line);
+  background: #FBFAFF;
+  color: var(--color-iris-deep);
+}
+
+.btn-ghost {
+  color: var(--color-mute);
+  background: transparent;
+  padding: 0.5rem 0.75rem;
   border-radius: 0.625rem;
   border: 1px solid transparent;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.15s ease;
+  font-size: 0.8125rem;
 }
 
 .btn-ghost:hover:not(:disabled) {
-  background-color: #FAF7F2;
-  border-color: #EAE3D6;
-  color: #1A1714;
+  background: var(--color-iris-soft);
+  color: var(--color-iris-deep);
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-ghost:disabled,
+.btn-icon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .btn-icon {
@@ -322,31 +266,69 @@ textarea:focus-visible {
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 0.625rem;
-  background-color: #FFFFFF;
-  border: 1px solid #EAE3D6;
-  color: #6B655B;
+  background: #FFFFFF;
+  border: 1px solid var(--color-line);
+  color: var(--color-mute);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .btn-icon:hover:not(:disabled) {
-  background-color: #FFF4E6;
-  border-color: #FCD5B5;
-  color: #EA8500;
-  transform: translateY(-1px);
+  background: var(--color-iris-soft);
+  border-color: var(--color-iris-line);
+  color: var(--color-iris-deep);
 }
 
-.card-interactive {
-  background-color: #FFFFFF;
-  border: 1px solid #EAE3D6;
-  border-radius: 1rem;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+/* ------------------------------------------------------------------ form fields */
+.field {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-line-strong);
+  background: #FFFFFF;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-ink);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.card-interactive:hover {
-  border-color: rgba(234, 133, 0, 0.5);
-  box-shadow: 0 12px 28px -4px rgba(180, 150, 120, 0.12), 0 4px 10px -2px rgba(26, 23, 20, 0.04);
-  transform: translateY(-2px);
+.field:focus {
+  outline: none;
+  border-color: var(--color-iris);
+  box-shadow: 0 0 0 4px rgba(98, 70, 234, 0.14);
+}
+
+/* ------------------------------------------------------------------ focus */
+:focus-visible {
+  outline: 2px solid #6246EA !important;
+  outline-offset: 2px !important;
+  border-radius: 0.375rem;
+}
+
+/* ------------------------------------------------------------------ fund-trail connectors */
+.trail-link {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  transition: opacity 0.2s ease, stroke-width 0.2s ease;
+}
+
+/* ------------------------------------------------------------------ motion */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+.rise-in {
+  animation: rise-in 0.36s var(--ease-out-soft) both;
+}
+
+@keyframes drawer-in {
+  from { transform: translateX(24px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+.drawer-in {
+  animation: drawer-in 0.24s var(--ease-out-soft) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -360,6 +342,22 @@ textarea:focus-visible {
   }
 }
 
+/* ------------------------------------------------------------------ utilities */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D5D7E6;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
 
 /* Horizontally scrolling rows (section tabs, account chips) without a visible scrollbar */
 .no-scrollbar {

@@ -198,27 +198,27 @@ export const FundFlowPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* 1. Page Header & Ethical Safeguard Banner */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-[#EAE3D6]">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-[#E4E5F0]">
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#EA8500]">
+            <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#6246EA]">
               FUND FLOW EXPLORER · HIERARCHICAL TREE
             </span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#FFF4E6] text-[#C05621] border border-[#FCD5B5]">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#EFECFF] text-[#4F33D6] border border-[#D7CFFF]">
               {traceMode === 'account' ? 'ACCOUNT TRACE (V2)' : 'CASE TRACE (FS-1042)'}
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#1A1714] font-display tracking-tight mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#141526] font-display tracking-tight mt-1">
             Follow the money
           </h1>
-          <p className="text-xs sm:text-sm text-[#6B655B] mt-1 max-w-2xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#5C6079] mt-1 max-w-2xl leading-relaxed">
             See where money moved from an account, inspect connected recipients, and follow each transfer step by step.
           </p>
         </div>
 
         {/* View Mode & Reload Controls */}
         <div className="flex items-center gap-2 self-start md:self-end">
-          <div className="flex rounded-xl border border-[#EAE3D6] overflow-hidden bg-[#FAF7F2] p-0.5 text-xs" role="tablist" aria-label="View mode">
+          <div className="flex rounded-xl border border-[#E4E5F0] overflow-hidden bg-[#F6F6FC] p-0.5 text-xs" role="tablist" aria-label="View mode">
             <button
               type="button"
               role="tab"
@@ -229,8 +229,8 @@ export const FundFlowPage: React.FC = () => {
               }}
               className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-bold transition-all cursor-pointer ${
                 viewMode === 'graph'
-                  ? 'bg-[#EA8500] text-white shadow-2xs'
-                  : 'text-[#6B655B] hover:text-[#1A1714]'
+                  ? 'bg-[#6246EA] text-white shadow-2xs'
+                  : 'text-[#5C6079] hover:text-[#141526]'
               }`}
             >
               <Network className="w-3.5 h-3.5" />
@@ -246,8 +246,8 @@ export const FundFlowPage: React.FC = () => {
               }}
               className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-bold transition-all cursor-pointer ${
                 viewMode === 'list'
-                  ? 'bg-[#EA8500] text-white shadow-2xs'
-                  : 'text-[#6B655B] hover:text-[#1A1714]'
+                  ? 'bg-[#6246EA] text-white shadow-2xs'
+                  : 'text-[#5C6079] hover:text-[#141526]'
               }`}
             >
               <List className="w-3.5 h-3.5" />
@@ -259,59 +259,59 @@ export const FundFlowPage: React.FC = () => {
             type="button"
             onClick={() => fetchFlowData(traceMode, targetId, direction, maxDepth)}
             disabled={loading}
-            className="p-2 rounded-xl bg-white border border-[#EAE3D6] hover:bg-[#FAF7F2] text-[#1A1714] transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
+            className="p-2 rounded-xl bg-white border border-[#E4E5F0] hover:bg-[#F6F6FC] text-[#141526] transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
             title="Reload Flow"
             aria-label="Reload Flow Data"
           >
-            <RefreshCw className={`w-4 h-4 text-[#EA8500] ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 text-[#6246EA] ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
 
       {/* Contextual Guidance: How to read the money flow tree */}
-      <div className="p-3.5 rounded-2xl bg-white border border-[#EAE3D6] text-xs space-y-2 shadow-2xs">
+      <div className="p-3.5 rounded-2xl bg-white border border-[#E4E5F0] text-xs space-y-2 shadow-2xs">
         <div className="flex items-center justify-between">
-          <span className="font-bold text-[#1A1714] flex items-center gap-1.5">
-            <Info className="w-4 h-4 text-[#EA8500]" />
+          <span className="font-bold text-[#141526] flex items-center gap-1.5">
+            <Info className="w-4 h-4 text-[#6246EA]" />
             <span>How to navigate and interpret this money flow tree:</span>
           </span>
-          <span className="font-mono text-[11px] text-[#8C857B]">Left-to-Right Hierarchy</span>
+          <span className="font-mono text-[11px] text-[#868AA2]">Left-to-Right Hierarchy</span>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-[#6B655B] text-[11px] leading-relaxed">
-          <div className="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6]">
-            <strong className="text-[#1A1714] block font-semibold mb-0.5">1. Nodes = Accounts</strong>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-[#5C6079] text-[11px] leading-relaxed">
+          <div className="p-2.5 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0]">
+            <strong className="text-[#141526] block font-semibold mb-0.5">1. Nodes = Accounts</strong>
             Cards represent accounts in the core ledger. Badges show where each account sits relative to the starting account.
           </div>
-          <div className="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6]">
-            <strong className="text-[#1A1714] block font-semibold mb-0.5">2. Arrows = Transfers</strong>
+          <div className="p-2.5 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0]">
+            <strong className="text-[#141526] block font-semibold mb-0.5">2. Arrows = Transfers</strong>
             Lines show direction and payment rails (UPI, IMPS, NEFT) with transferred amount and attribution share.
           </div>
-          <div className="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6]">
-            <strong className="text-[#1A1714] block font-semibold mb-0.5">3. Hop Distance</strong>
+          <div className="p-2.5 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0]">
+            <strong className="text-[#141526] block font-semibold mb-0.5">3. Hop Distance</strong>
             Hops count steps from the root. Intermediate nodes with low dwell time indicate potential layering conduits.
           </div>
-          <div className="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#EAE3D6]">
-            <strong className="text-[#1A1714] block font-semibold mb-0.5">4. Inspect & Open</strong>
+          <div className="p-2.5 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0]">
+            <strong className="text-[#141526] block font-semibold mb-0.5">4. Inspect & Open</strong>
             Click any account node to open the side inspector, view counterparty details, or launch full Account Intelligence.
           </div>
         </div>
       </div>
 
       {/* Ethical Safeguard Notice */}
-      <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#FFFBF6] border border-[#FCD5B5] text-xs text-[#C05621]">
-        <Scale className="w-4 h-4 text-[#EA8500] shrink-0" />
+      <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#FAFAFE] border border-[#D7CFFF] text-xs text-[#4F33D6]">
+        <Scale className="w-4 h-4 text-[#6246EA] shrink-0" />
         <span className="leading-tight">
           <strong>Fairness Safeguard:</strong> An account's connection to a suspicious transfer does not prove wrongdoing. All findings require appropriate review.
         </span>
       </div>
 
       {/* 2. Interactive Trace Controls Toolbar */}
-      <div className="bg-white border border-[#EAE3D6] rounded-2xl p-4 sm:p-5 shadow-xs space-y-4">
+      <div className="bg-white border border-[#E4E5F0] rounded-2xl p-4 sm:p-5 shadow-xs space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           {/* Target Search & Mode Toggle */}
           <div className="flex flex-wrap items-center gap-2.5 flex-1 max-w-xl">
             {/* Mode Selector Pill Toggle */}
-            <div className="flex rounded-xl border border-[#EAE3D6] bg-[#FAF7F2] p-0.5 text-xs">
+            <div className="flex rounded-xl border border-[#E4E5F0] bg-[#F6F6FC] p-0.5 text-xs">
               <button
                 type="button"
                 onClick={() => {
@@ -322,8 +322,8 @@ export const FundFlowPage: React.FC = () => {
                 }}
                 className={`px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                   traceMode === 'account'
-                    ? 'bg-white text-[#EA8500] shadow-2xs font-bold border border-[#EAE3D6]'
-                    : 'text-[#6B655B] hover:text-[#1A1714]'
+                    ? 'bg-white text-[#6246EA] shadow-2xs font-bold border border-[#E4E5F0]'
+                    : 'text-[#5C6079] hover:text-[#141526]'
                 }`}
               >
                 <Users className="w-3.5 h-3.5" />
@@ -339,8 +339,8 @@ export const FundFlowPage: React.FC = () => {
                 }}
                 className={`px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                   traceMode === 'case'
-                    ? 'bg-white text-[#EA8500] shadow-2xs font-bold border border-[#EAE3D6]'
-                    : 'text-[#6B655B] hover:text-[#1A1714]'
+                    ? 'bg-white text-[#6246EA] shadow-2xs font-bold border border-[#E4E5F0]'
+                    : 'text-[#5C6079] hover:text-[#141526]'
                 }`}
               >
                 <FolderGit2 className="w-3.5 h-3.5" />
@@ -350,17 +350,17 @@ export const FundFlowPage: React.FC = () => {
 
             {/* Root Search Form */}
             <form onSubmit={handleSearchSubmit} className="relative flex-1 min-w-[200px]">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8C857B]" />
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#868AA2]" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={traceMode === 'account' ? 'Enter Account ID (e.g. ACC-000001)...' : 'Enter Case ID (e.g. FS-1042)...'}
-                className="w-full pl-9 pr-14 py-2 bg-[#FAF7F2] border border-[#EAE3D6] rounded-xl text-xs text-[#1A1714] font-mono focus:outline-none focus:border-[#EA8500] focus:ring-2 focus:ring-[#EA8500]/15"
+                className="w-full pl-9 pr-14 py-2 bg-[#F6F6FC] border border-[#E4E5F0] rounded-xl text-xs text-[#141526] font-mono focus:outline-none focus:border-[#6246EA] focus:ring-2 focus:ring-[#6246EA]/15"
               />
               <button
                 type="submit"
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-[#EA8500] hover:bg-[#D27400] text-white text-[11px] font-bold rounded-lg transition-colors cursor-pointer"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-[#6246EA] hover:bg-[#4F33D6] text-white text-[11px] font-bold rounded-lg transition-colors cursor-pointer"
               >
                 Trace
               </button>
@@ -370,8 +370,8 @@ export const FundFlowPage: React.FC = () => {
           {/* Flow Direction & Depth Controls */}
           <div className="flex flex-wrap items-center gap-3 text-xs">
             {/* Flow Direction Toggle */}
-            <div className="flex items-center gap-1.5 bg-[#FAF7F2] px-2 py-1 rounded-xl border border-[#EAE3D6]">
-              <span className="text-[11px] font-mono text-[#8C857B] pl-1">FLOW:</span>
+            <div className="flex items-center gap-1.5 bg-[#F6F6FC] px-2 py-1 rounded-xl border border-[#E4E5F0]">
+              <span className="text-[11px] font-mono text-[#868AA2] pl-1">FLOW:</span>
               {(['outgoing', 'incoming', 'both'] as const).map((dir) => (
                 <button
                   key={dir}
@@ -382,8 +382,8 @@ export const FundFlowPage: React.FC = () => {
                   }}
                   className={`px-2 py-0.5 rounded-lg text-xs font-semibold capitalize transition-colors cursor-pointer ${
                     direction === dir
-                      ? 'bg-white text-[#EA8500] shadow-2xs border border-[#EAE3D6] font-bold'
-                      : 'text-[#6B655B] hover:text-[#1A1714]'
+                      ? 'bg-white text-[#6246EA] shadow-2xs border border-[#E4E5F0] font-bold'
+                      : 'text-[#5C6079] hover:text-[#141526]'
                   }`}
                 >
                   {dir}
@@ -392,8 +392,8 @@ export const FundFlowPage: React.FC = () => {
             </div>
 
             {/* Depth Selector */}
-            <div className="flex items-center gap-2 bg-[#FAF7F2] px-3 py-1.5 rounded-xl border border-[#EAE3D6]">
-              <span className="text-[11px] font-mono text-[#8C857B]">HOPS:</span>
+            <div className="flex items-center gap-2 bg-[#F6F6FC] px-3 py-1.5 rounded-xl border border-[#E4E5F0]">
+              <span className="text-[11px] font-mono text-[#868AA2]">HOPS:</span>
               <select
                 value={maxDepth}
                 onChange={(e) => {
@@ -401,7 +401,7 @@ export const FundFlowPage: React.FC = () => {
                   setMaxDepth(d);
                   syncUrlParams({ depth: d });
                 }}
-                className="text-xs font-mono font-bold text-[#1A1714] bg-transparent outline-none cursor-pointer"
+                className="text-xs font-mono font-bold text-[#141526] bg-transparent outline-none cursor-pointer"
                 aria-label="Max Hop Depth"
               >
                 <option value={1}>1 Hop (Direct)</option>
@@ -415,8 +415,8 @@ export const FundFlowPage: React.FC = () => {
         </div>
 
         {/* Curated Demo Account Jump Ribbon */}
-        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-[#FAF7F2] text-xs">
-          <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#8C857B] mr-1">
+        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-[#F6F6FC] text-xs">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#868AA2] mr-1">
             Demo Presets:
           </span>
           {CURATED_DEMO_PRESETS.map((preset) => {
@@ -428,8 +428,8 @@ export const FundFlowPage: React.FC = () => {
                 onClick={() => handleSelectPreset(preset)}
                 className={`px-2.5 py-1 rounded-xl text-xs font-mono font-semibold border transition-all cursor-pointer inline-flex items-center gap-1.5 ${
                   isActive
-                    ? 'bg-[#FFF4E6] text-[#C05621] border-[#EA8500] shadow-2xs font-bold ring-2 ring-[#EA8500]/15'
-                    : 'bg-[#FAF7F2] hover:bg-white text-[#6B655B] hover:text-[#1A1714] border-[#EAE3D6]'
+                    ? 'bg-[#EFECFF] text-[#4F33D6] border-[#6246EA] shadow-2xs font-bold ring-2 ring-[#6246EA]/15'
+                    : 'bg-[#F6F6FC] hover:bg-white text-[#5C6079] hover:text-[#141526] border-[#E4E5F0]'
                 }`}
               >
                 <span>{preset.id}</span>
@@ -458,55 +458,55 @@ export const FundFlowPage: React.FC = () => {
 
       {/* 3. Summary Metrics Strip */}
       {flowData && (
-        <div className="bg-white border border-[#EAE3D6] rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
+        <div className="bg-white border border-[#E4E5F0] rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 text-xs">
             <div>
-              <span className="text-[#8C857B] font-mono text-[10px] uppercase block">Origin Account</span>
-              <span className="text-sm sm:text-base font-bold font-mono text-[#1A1714] truncate block">
+              <span className="text-[#868AA2] font-mono text-[10px] uppercase block">Origin Account</span>
+              <span className="text-sm sm:text-base font-bold font-mono text-[#141526] truncate block">
                 {flowData.summary.rootAccountId}
               </span>
-              <span className="text-[10px] text-[#6B655B] truncate block">
+              <span className="text-[10px] text-[#5C6079] truncate block">
                 {flowData.summary.rootCustomerName}
               </span>
             </div>
 
             <div>
-              <span className="text-[#8C857B] font-mono text-[10px] uppercase block">
+              <span className="text-[#868AA2] font-mono text-[10px] uppercase block">
                 Direct Outflow (Hop 1)
               </span>
-              <span className="text-sm sm:text-base font-bold font-mono text-[#1A1714] tabular-nums">
+              <span className="text-sm sm:text-base font-bold font-mono text-[#141526] tabular-nums">
                 ₹{flowData.summary.directTransferAmount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
               </span>
-              <span className="text-[10px] text-[#6B655B] block">Initial disbursement</span>
+              <span className="text-[10px] text-[#5C6079] block">Initial disbursement</span>
             </div>
 
             <div>
-              <span className="text-[#8C857B] font-mono text-[10px] uppercase flex items-center gap-1">
+              <span className="text-[#868AA2] font-mono text-[10px] uppercase flex items-center gap-1">
                 Attributed Exposure
                 <span title="Initial flow originating from root. Downstream re-transfers are not added to this exposure total.">
-                  <Info className="w-3 h-3 text-[#EA8500]" />
+                  <Info className="w-3 h-3 text-[#6246EA]" />
                 </span>
               </span>
-              <span className="text-sm sm:text-base font-bold font-mono text-[#EA8500] tabular-nums">
+              <span className="text-sm sm:text-base font-bold font-mono text-[#6246EA] tabular-nums">
                 ₹{flowData.summary.attributedExposureUpperBound.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
               </span>
-              <span className="text-[10px] text-[#6B655B] block">Bounded scenario exposure</span>
+              <span className="text-[10px] text-[#5C6079] block">Bounded scenario exposure</span>
             </div>
 
             <div>
-              <span className="text-[#8C857B] font-mono text-[10px] uppercase block">Ledger Movement</span>
-              <span className="text-sm sm:text-base font-bold font-mono text-[#1A1714] tabular-nums">
+              <span className="text-[#868AA2] font-mono text-[10px] uppercase block">Ledger Movement</span>
+              <span className="text-sm sm:text-base font-bold font-mono text-[#141526] tabular-nums">
                 ₹{flowData.summary.observedTotalTransferred.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
               </span>
-              <span className="text-[10px] text-[#6B655B] block">All visible legs summed</span>
+              <span className="text-[10px] text-[#5C6079] block">All visible legs summed</span>
             </div>
 
             <div>
-              <span className="text-[#8C857B] font-mono text-[10px] uppercase block">Explored Scope</span>
-              <span className="text-sm sm:text-base font-bold font-mono text-[#1A1714]">
+              <span className="text-[#868AA2] font-mono text-[10px] uppercase block">Explored Scope</span>
+              <span className="text-sm sm:text-base font-bold font-mono text-[#141526]">
                 {flowData.summary.accountsCount} Accs · {flowData.summary.edgesCount} Legs
               </span>
-              <span className="text-[10px] text-[#6B655B] block">
+              <span className="text-[10px] text-[#5C6079] block">
                 Max Hop {flowData.summary.maxHopDepth} reached
               </span>
             </div>
@@ -514,9 +514,9 @@ export const FundFlowPage: React.FC = () => {
 
           {/* Truncation Notice (if perimeter hit configured limits) */}
           {flowData.summary.isTruncated && (
-            <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-[#FFF8EE] border border-[#FCD5B5] text-[#C05621] text-xs">
+            <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-[#F5F3FF] border border-[#D7CFFF] text-[#4F33D6] text-xs">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-[#EA8500] shrink-0" />
+                <AlertTriangle className="w-4 h-4 text-[#6246EA] shrink-0" />
                 <span>
                   <strong>Exploration Perimeter Truncated:</strong> {flowData.summary.truncationReason}
                 </span>
@@ -529,7 +529,7 @@ export const FundFlowPage: React.FC = () => {
                     setMaxDepth(newDepth);
                     syncUrlParams({ depth: newDepth });
                   }}
-                  className="px-2.5 py-1 bg-[#EA8500] text-white font-bold rounded-lg text-xs hover:bg-[#D27400] transition-colors shrink-0 cursor-pointer"
+                  className="px-2.5 py-1 bg-[#6246EA] text-white font-bold rounded-lg text-xs hover:bg-[#4F33D6] transition-colors shrink-0 cursor-pointer"
                 >
                   Increase to {maxDepth + 1} Hops
                 </button>
@@ -564,8 +564,8 @@ export const FundFlowPage: React.FC = () => {
                 height="600px"
               />
             ) : (
-              <div className="h-[560px] rounded-2xl border border-[#EAE3D6] bg-white flex flex-col items-center justify-center text-xs font-mono text-[#8C857B] gap-2">
-                <RefreshCw className={`w-5 h-5 text-[#EA8500] ${loading ? 'animate-spin' : ''}`} />
+              <div className="h-[560px] rounded-2xl border border-[#E4E5F0] bg-white flex flex-col items-center justify-center text-xs font-mono text-[#868AA2] gap-2">
+                <RefreshCw className={`w-5 h-5 text-[#6246EA] ${loading ? 'animate-spin' : ''}`} />
                 <span>{loading ? 'Building hierarchical money flow tree...' : 'No flow records found.'}</span>
               </div>
             )
@@ -581,7 +581,7 @@ export const FundFlowPage: React.FC = () => {
               onSelectNodeById={handleSelectNodeById}
             />
           ) : (
-            <div className="p-8 text-center text-xs text-[#8C857B]">Loading transactions list...</div>
+            <div className="p-8 text-center text-xs text-[#868AA2]">Loading transactions list...</div>
           )}
         </div>
 
