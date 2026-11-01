@@ -6,15 +6,21 @@ import { AppRoutes } from '../App';
 import { InvestigatePage } from '../pages/InvestigatePage';
 import { toRequest, DEFAULT_FORM } from '../components/investigation/formModel';
 import { buildTrail, layoutTrail, TREE } from '../components/investigation/trail';
+import { whatHappened } from '../components/investigation/narrative';
 import { v2Api } from '../services/v2Api';
 import { InvestigationExplanationResponse, InvestigationResponse } from '../types/investigation';
 import { V2AccountProfileResponse } from '../types/v2';
+import { DatasetAccount, DynamicReport } from '../types/dynamic';
 import fixture from './fixtures/investigation.json';
+import dynamicFixture from './fixtures/dynamic.json';
 
 vi.mock('../services/v2Api', () => ({
   v2Api: {
-    runInvestigation: vi.fn(),
-    explainInvestigation: vi.fn(),
+    runDynamicInvestigation: vi.fn(),
+    explainDynamicInvestigation: vi.fn(),
+    getDatasetAccount: vi.fn(),
+    listDatasets: vi.fn(() => new Promise(() => {})),
+    getSampleAccounts: vi.fn(() => new Promise(() => {})),
     getModelsStatus: vi.fn(() => new Promise(() => {})),
     getAccount: vi.fn(),
     getAssessment: vi.fn(),
@@ -32,8 +38,48 @@ vi.mock('../services/v2Api', () => ({
 }));
 
 const REPORT = fixture as unknown as InvestigationResponse;
-const run = vi.mocked(v2Api.runInvestigation);
-const explain = vi.mocked(v2Api.explainInvestigation);
+const DYN = dynamicFixture as unknown as DynamicReport;
+const run = vi.mocked(v2Api.runDynamicInvestigation);
+const explain = vi.mocked(v2Api.explainDynamicInvestigation);
+const getDatasetAccount = vi.mocked(v2Api.getDatasetAccount);
+
+/** A trace report wrapped as a dynamic investigation with nothing model-flagged (consistent with its own IDs). */
+function dyn(report: InvestigationResponse): DynamicReport {
+  const root = report.victim.account_id;
+  const restriction = {
+    account_id: root, state: 'insufficient_evidence_to_recommend' as const, label: 'Insufficient evidence to recommend restriction',
+    rationale: 'The evidence does not support a recommendation either way.', supporting_evidence: [], relevant_transaction_ids: [],
+    may_be_victim: false, victim_note: null, innocent_explanations: [], verification_needed: [], missing_information: ['Intent is not recorded.'],
+    funds_may_still_be_held: null, human_review_required: true as const, automatic_action_taken: false as const,
+  };
+  return {
+    ...DYN,
+    investigation_id: report.investigation_id,
+    dataset: { ...DYN.dataset, dataset_id: 'demo-ledger', title: 'FraudShield demo ledger', source: report.data_source },
+    account_summary: { ...DYN.account_summary, account_id: root },
+    victim_assessment: { ...DYN.victim_assessment, account_id: root },
+    suspicious_transactions: [],
+    uncorroborated_rule_flags: [],
+    transaction_scores: [],
+    fund_trace: { ...DYN.fund_trace, branches: [] },
+    affected_accounts: { potential_victims: [], potential_secondary_victims: [], potential_intermediaries: [], suspicious_accounts: [],
+      ordinary_counterparties: [], unknown_roles: [], cash_withdrawal_points: [] },
+    role_assessments: [],
+    network_findings: [],
+    restriction_recommendation: restriction,
+    model_validation: { validated_for_this_dataset: false, note: 'Models are not validated on this dataset; shown for reference only.' },
+    transaction_scoring: { ...DYN.transaction_scoring, model_used_as_evidence: false },
+    investigation: report,
+  };
+}
+
+const datasetAccount = (id: string): DatasetAccount => ({
+  dataset_id: 'demo-ledger', dataset_title: 'FraudShield demo ledger', account_id: id, exists: true, customer_type: 'retail',
+  account_opened_at: '2025-01-01T00:00:00', transactions: 10, outgoing: 9, incoming: 1, first_transaction_at: '2026-01-10T00:00:00',
+  last_transaction_at: '2026-01-13T10:00:00', history_sufficient: true, minimum_history: 5, coverage_note: 'Enough history for the account behaviour model.',
+  models: { transaction_model: { available: true, model_version: 'v3-transaction-1.0.0' }, account_model: { available: true, model_version: 'v3-account-1.0.0' } },
+  synthetic: true,
+});
 const getAccount = vi.mocked(v2Api.getAccount);
 const getAssessment = vi.mocked(v2Api.getAssessment);
 const getDataSource = vi.mocked(v2Api.getDataSource);
@@ -83,7 +129,7 @@ async function openBrief(id = 'ACC-VIC', extra = '') {
 }
 
 async function showReport(report: InvestigationResponse = REPORT) {
-  run.mockResolvedValueOnce(report);
+  run.mockResolvedValueOnce(dyn(report));
   await openBrief();
   fireEvent.click(screen.getByRole('button', { name: 'Start fund investigation' }));
   return screen.findByTestId('investigation-report');
@@ -107,6 +153,8 @@ beforeEach(() => {
   getAccount.mockReset();
   getAssessment.mockReset();
   getDataSource.mockReset();
+  getDatasetAccount.mockReset();
+  getDatasetAccount.mockImplementation(async (_d, id: string) => datasetAccount(id));
   getAccount.mockImplementation(async (id: string) => profile(id));
   getAssessment.mockResolvedValue(REPORT.accounts[0].rule_assessment!);
   getDataSource.mockResolvedValue(REPORT.data_source);
@@ -144,8 +192,10 @@ describe('fund trail model', () => {
 
   it('states honestly why each branch ends', () => {
     const [o1, o2, i1] = trail.branches;
-    expect(o1.ending.kind).toBe('depth_limit');
-    expect(o1.ending.detail).toMatch(/ACC-ATM was not followed further/);
+    // An ATM cash-out ends the branch as a cash withdrawal even at the depth limit (as the server orders it).
+    expect(o1.ending.kind).toBe('no_onward');
+    expect(o1.ending.reason).toBe('cash_withdrawal_recorded');
+    expect(o1.ending.detail).toMatch(/ACC-M2A as a cash withdrawal; the ledger cannot follow cash/);
     expect(o2.ending.kind).toBe('cycle');
     expect(i1.ending.kind).toBe('no_onward');
     expect(i1.ending.detail).toMatch(/in the available ledger data/);
@@ -214,7 +264,7 @@ describe('input-first investigation flow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Open account' }));
     await screen.findByTestId('account-brief');
     expect(screen.getByTestId('location')).toHaveTextContent('/investigate?account=ACC-000001');
-    expect(getAccount).toHaveBeenCalledWith('ACC-000001');
+    expect(getAccount).toHaveBeenCalledWith('ACC-000001', expect.any(AbortSignal));
     expect(run).not.toHaveBeenCalled();
   });
 
@@ -234,7 +284,7 @@ describe('input-first investigation flow', () => {
     [Object.assign(new Error('nope'), { status: 404, code: 'not_found' }), 'Account not found', false],
     [new TypeError('Failed to fetch'), 'The server could not be reached', true],
   ])('reports an account that cannot be loaded (%#)', async (err, title, retry) => {
-    getAccount.mockRejectedValueOnce(err);
+    getDatasetAccount.mockRejectedValueOnce(err);
     renderPage('/investigate?account=ACC-X');
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent(title);
@@ -243,18 +293,23 @@ describe('input-first investigation flow', () => {
   });
 
   it('shows an honest loading state, then the report, with one request that does not wait for the AI', async () => {
-    const d = deferred<InvestigationResponse>();
+    const d = deferred<DynamicReport>();
     run.mockReturnValueOnce(d.promise);
     await openBrief('ACC-VIC', '&depth=4');
     fireEvent.click(screen.getByRole('button', { name: 'Start fund investigation' }));
     expect(run).toHaveBeenCalledTimes(1);
-    expect(run.mock.calls[0][0]).toMatchObject({ account_id: 'ACC-VIC', max_depth: 4, trace_scope: 'flagged', ai_explanation: 'separate' });
+    expect(run.mock.calls[0][0]).toEqual({
+      account_id: 'ACC-VIC', dataset_id: 'demo-ledger', max_depth: 4, max_nodes: 200, onward_window_hours: 72, max_accounts_analyzed: 25,
+      ai_explanation: 'separate',
+    });
     const status = screen.getByTestId('investigation-running');
     expect(status).toHaveTextContent('Investigating ACC-VIC');
+    // The engine's steps are listed, never animated as a fake progress bar or a claimed current step.
+    expect(status).toHaveTextContent('Tracing funds');
     expect(status.textContent).not.toMatch(/%|step \d/i);
     expect(screen.getByRole('button', { name: /Investigating/ })).toBeDisabled();
 
-    d.resolve(REPORT);
+    d.resolve(dyn(REPORT));
     await screen.findByTestId('investigation-report');
     expect(screen.getByTestId('location')).toHaveTextContent('/investigate?account=ACC-VIC&depth=4');
     expect(run).toHaveBeenCalledTimes(1);
@@ -283,7 +338,7 @@ describe('input-first investigation flow', () => {
     fireEvent.change(screen.getByLabelText('Account ID'), { target: { value: 'ACC-M1' } });
     fireEvent.click(screen.getByRole('button', { name: 'Open account' }));
     await screen.findByTestId('account-brief');
-    run.mockResolvedValueOnce({ ...REPORT, investigation_id: 'INV-SECOND' });
+    run.mockResolvedValueOnce(dyn({ ...REPORT, investigation_id: 'INV-SECOND' }));
     fireEvent.click(screen.getByRole('button', { name: 'Start fund investigation' }));
     await screen.findByText('Investigation INV-SECOND');
     expect(run).toHaveBeenCalledTimes(2);
@@ -293,12 +348,13 @@ describe('input-first investigation flow', () => {
 
 // ---------------------------------------------------------------- the staged report
 describe('investigation stages', () => {
-  it('guides through five stages in order, starting with what happened', async () => {
+  it('guides through six stages in order, starting with what happened', async () => {
     await showReport();
     const tabs = screen.getAllByRole('tab').map((t) => t.textContent);
-    expect(tabs.map((t) => t?.replace(/^\d/, '').split(/What|Where|A plain|What to/)[0])).toEqual([
+    expect(tabs.map((t) => t?.replace(/^\d/, '').split(/What|Where|Who else|A plain|What to/)[0])).toEqual([
       'Overview',
       'Fund trail',
+      'Affected accounts',
       'Risk evidence',
       'AI analyst',
       'Next steps',
@@ -337,7 +393,8 @@ describe('investigation stages', () => {
     expect(within(story).getByText('Step 1: Investigated account')).toBeInTheDocument();
     expect(within(story).getByText('Step 2: First recipient')).toBeInTheDocument();
     expect(within(story).getByText('Step 4: Onward recipient, hop 3')).toBeInTheDocument();
-    expect(screen.getByTestId('branch-ending')).toHaveAttribute('data-kind', 'depth_limit');
+    expect(screen.getByTestId('branch-ending')).toHaveAttribute('data-kind', 'no_onward');
+    expect(screen.getByTestId('branch-ending')).toHaveTextContent('Cash withdrawal recorded');
 
     // A transfer in the story opens the inspector with its ledger facts.
     fireEvent.click(within(story).getByRole('button', { name: /ACC-M1 → ACC-M2A/ }));
@@ -401,7 +458,8 @@ describe('investigation stages', () => {
     await showReport();
     stage(/Fund trail/);
     const groups = screen.getAllByTestId('ending-group').map((g) => g.getAttribute('data-kind'));
-    expect(groups.sort()).toEqual(['cycle', 'depth_limit', 'no_onward']);
+    // Outflow 1 now ends as a cash withdrawal, grouped apart from the inflow with nothing earlier (same kind, different title).
+    expect(groups.sort()).toEqual(['cycle', 'no_onward', 'no_onward']);
     expect(screen.getByText(/A stop is not proof the money stayed, was lost or was recovered/)).toBeInTheDocument();
     expect(screen.getByText(REPORT.trace.truncation_notes[0])).toBeInTheDocument();
   });
@@ -412,22 +470,32 @@ describe('investigation stages', () => {
     expect(screen.getByRole('region', { name: 'High severity' })).toBeInTheDocument();
     const m2a = screen.getByTestId('evidence-ACC-M2A');
     for (const part of ['What was detected', 'What it relates to', 'Evidence', 'Why it matters', 'What is not known']) expect(m2a).toHaveTextContent(part);
-    for (const f of REPORT.findings) expect(document.getElementById(`finding-${f.finding_id}`)).toHaveTextContent(f.statement);
+    // Every finding is listed, except the trace report's own model findings: a dynamic investigation's account model supersedes them.
+    for (const f of REPORT.findings.filter((x) => x.kind !== 'model')) expect(document.getElementById(`finding-${f.finding_id}`)).toHaveTextContent(f.statement);
+    for (const f of REPORT.findings.filter((x) => x.kind === 'model')) expect(document.getElementById(`finding-${f.finding_id}`)).toBeNull();
+    expect(screen.getByTestId('v2-model-superseded')).toHaveTextContent('older account model is not shown');
     expect(screen.getByText(/not by an AI model/)).toBeInTheDocument();
     for (const s of REPORT.evidence_summary) expect(screen.getAllByText(s.question).length).toBeGreaterThan(0);
     expect(screen.getByText(/A severity is a prompt for review, not proof of fraud/)).toBeInTheDocument();
   });
 
   it('reports a missing model instead of showing scores', async () => {
-    await showReport({
+    const reason = 'The account risk model file is missing on the server.';
+    const noModel: InvestigationResponse = {
       ...REPORT,
       model_available: false,
-      model_unavailable_reason: 'The account risk model file is missing on the server.',
+      model_unavailable_reason: reason,
       model_review_threshold: null,
       accounts: REPORT.accounts.map((a) => ({ ...a, model_assessment: null, model_suggests_review: null, checks_disagree: null })),
-    });
+    };
+    // A dynamic investigation reports its own account model, so the alert follows its model metadata.
+    const base = dyn(noModel);
+    run.mockResolvedValueOnce({ ...base, model_metadata: { ...base.model_metadata, account_model: { available: false, purpose: 'Account behaviour', unavailable_reason: reason } } });
+    await openBrief();
+    fireEvent.click(screen.getByRole('button', { name: 'Start fund investigation' }));
+    await screen.findByTestId('investigation-report');
     stage(/Risk evidence/);
-    expect(screen.getByText(/The account model did not run/)).toBeInTheDocument();
+    expect(screen.getByText(/The account model did not run/).parentElement).toHaveTextContent(reason);
     // No model score badge is shown for any account (server-written finding text is left as the server wrote it).
     expect(screen.queryByText(/^Model \d/)).toBeNull();
   });
@@ -446,7 +514,7 @@ describe('investigation stages', () => {
   it('offers a deeper re-run only when the depth limit cut the trace, and runs it only on request', async () => {
     await showReport();
     stage(/Next steps/);
-    run.mockResolvedValueOnce({ ...REPORT, investigation_id: 'INV-DEEPER' });
+    run.mockResolvedValueOnce(dyn({ ...REPORT, investigation_id: 'INV-DEEPER' }));
     fireEvent.click(screen.getByRole('button', { name: 'Re-run with depth 4' }));
     await screen.findByText('Investigation INV-DEEPER');
     expect(run).toHaveBeenCalledTimes(2);
@@ -484,7 +552,7 @@ describe('AI analyst stage', () => {
     expect(ai).toHaveTextContent(message);
     expect(within(ai).queryByText(/AI-generated/)).toBeNull();
     stage(/Risk evidence/);
-    for (const f of REPORT.findings) expect(document.getElementById(`finding-${f.finding_id}`)).toBeInTheDocument();
+    for (const f of REPORT.findings.filter((x) => x.kind !== 'model')) expect(document.getElementById(`finding-${f.finding_id}`)).toBeInTheDocument();
   });
 
   it('renders a completed Gemini report, labelled as AI-generated, with clickable evidence', async () => {
@@ -603,7 +671,7 @@ describe('separately requested AI explanation', () => {
     expect(screen.getByTestId('ai-status')).toHaveTextContent('could not be reached for the AI explanation');
     expect(screen.queryByText(/AI-generated/)).toBeNull();
     stage(/Risk evidence/);
-    for (const f of REPORT.findings) expect(document.getElementById(`finding-${f.finding_id}`)).toBeInTheDocument();
+    for (const f of REPORT.findings.filter((x) => x.kind !== 'model')) expect(document.getElementById(`finding-${f.finding_id}`)).toBeInTheDocument();
   });
 
   it('shows an unavailable explanation as unavailable', async () => {
@@ -635,6 +703,267 @@ describe('separately requested AI explanation', () => {
     expect(explain).not.toHaveBeenCalled();
     stage(/AI analyst/);
     expect(screen.getByTestId('ai-status')).toHaveAttribute('data-state', 'disabled');
+  });
+});
+
+// ---------------------------------------------------------------- model-driven investigation
+describe('dynamic investigation', () => {
+  const victim = DYN.account_summary.account_id;
+
+  async function showDynamic() {
+    explain.mockReturnValue(new Promise(() => {}));
+    run.mockResolvedValueOnce(DYN);
+    renderPage(`/investigate?account=${victim}&dataset=forensic-scenarios`);
+    await screen.findByTestId('account-brief');
+    fireEvent.click(screen.getByRole('button', { name: 'Start fund investigation' }));
+    return screen.findByTestId('investigation-report');
+  }
+
+  it('looks the account up only inside the chosen dataset and shows coverage, not a prediction', async () => {
+    renderPage(`/investigate?account=${victim}&dataset=forensic-scenarios`);
+    const brief = await screen.findByTestId('account-brief');
+    expect(getDatasetAccount).toHaveBeenCalledWith('forensic-scenarios', victim, expect.any(AbortSignal));
+    expect(getAccount).not.toHaveBeenCalled();
+    expect(within(brief).getByTestId('history-coverage')).toHaveTextContent('Enough history');
+    expect(brief).toHaveTextContent('v3-transaction-1.0.0');
+    expect(brief.textContent).not.toMatch(/Potential victim|calibrated/i);
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it('reports an account that is not in the selected dataset', async () => {
+    getDatasetAccount.mockRejectedValueOnce(Object.assign(new Error("Account 'FS-0' is not in the forensic scenario ledger. Account IDs can only be searched inside the selected synthetic dataset."), { status: 404, code: 'account_not_found' }));
+    renderPage('/investigate?account=FS-0&dataset=forensic-scenarios');
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Account not found');
+    expect(alert).toHaveTextContent('only be searched inside the selected synthetic dataset');
+  });
+
+  it('flags insufficient history before anything runs', async () => {
+    getDatasetAccount.mockImplementationOnce(async (_d, id) => ({ ...datasetAccount(id), transactions: 3, history_sufficient: false,
+      coverage_note: 'Fewer than 5 transfers: models will abstain and report insufficient history.' }));
+    renderPage('/investigate?account=FS-1&dataset=forensic-scenarios');
+    expect(await screen.findByTestId('history-coverage')).toHaveTextContent('models will abstain');
+  });
+
+  it('sends one dynamic request for the chosen dataset and shows the account assessment first', async () => {
+    await showDynamic();
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(run.mock.calls[0][0]).toMatchObject({ account_id: victim, dataset_id: 'forensic-scenarios', ai_explanation: 'separate' });
+    expect(screen.getByTestId('victim-assessment')).toHaveTextContent(DYN.victim_assessment.label);
+    const flagged = screen.getAllByTestId('scored-transfer');
+    expect(flagged).toHaveLength(Math.min(3, DYN.suspicious_transactions.length));
+    expect(flagged[0]).toHaveTextContent('Calibrated score');
+    expect(flagged[0]).toHaveTextContent(DYN.suspicious_transactions[0].model_factors[0].label);
+    expect(screen.getByTestId('processing-steps')).toHaveTextContent('Tracing funds');
+    expect(screen.getByTestId('data-coverage')).toHaveTextContent(DYN.dataset.title);
+  });
+
+  it('groups affected accounts by possible role, each with its own evidence and sources kept apart', async () => {
+    await showDynamic();
+    stage(/Affected accounts/);
+    for (const [key, ids] of Object.entries(DYN.affected_accounts)) {
+      if (ids.length) expect(screen.getByTestId(`group-${key}`)).toHaveTextContent(ids[0]);
+    }
+    const mid = DYN.role_assessments.find((a) => a.role_candidate === 'potential_intermediary')!;
+    const card = document.getElementById(`role-${mid.account_id}`)!;
+    expect(card).toHaveTextContent('Recorded fact');
+    expect(card).toHaveTextContent('Model output');
+    expect(card).toHaveTextContent('does not establish that the holder knowingly took part');
+    expect(card).toHaveTextContent('How did this account become connected?');
+    expect(within(card).getByTestId('restriction')).toHaveAttribute('data-state', mid.restriction.state);
+    const ordinary = DYN.affected_accounts.ordinary_counterparties[0];
+    expect(document.getElementById(`role-${ordinary}`)).toHaveTextContent('No restriction recommendation');
+  });
+
+  it('discusses restriction with human-approval language and offers no action that changes an account', async () => {
+    await showDynamic();
+    stage(/Next steps/);
+    const panel = screen.getAllByTestId('restriction')[0];
+    expect(panel).toHaveAttribute('data-state', DYN.restriction_recommendation.state);
+    expect(panel).toHaveTextContent('A person at the authorised institution decides');
+    expect(panel).toHaveTextContent('took no action on this account');
+    expect(screen.queryByRole('button', { name: /freeze|block|restrict|suspend/i })).toBeNull();
+    // Connected-account checks come from the role assessment, so they cannot contradict it.
+    const mid = DYN.role_assessments.find((a) => a.role_candidate === 'potential_intermediary')!;
+    const checks = screen.getByTestId('role-next-checks');
+    expect(checks).toHaveTextContent(mid.account_id);
+    expect(checks).toHaveTextContent(mid.recommended_next_check);
+  });
+
+  it('keeps rule flags the validated model does not support visible, apart from the suspicious transactions', async () => {
+    const t = { ...DYN.suspicious_transactions[0], transaction_id: 'TX-RULE-ONLY', model_flag: false, risk_category: 'low' as const,
+      rule_flags: [{ code: 'AMOUNT_ABOVE_OWN_HISTORY', explanation: 'Far above its own earlier transfers.' }] };
+    explain.mockReturnValue(new Promise(() => {}));
+    run.mockResolvedValueOnce({ ...DYN, uncorroborated_rule_flags: [t] });
+    renderPage(`/investigate?account=${victim}&dataset=forensic-scenarios`);
+    await screen.findByTestId('account-brief');
+    fireEvent.click(screen.getByRole('button', { name: 'Start fund investigation' }));
+    await screen.findByTestId('investigation-report');
+    expect(screen.getByText(/1 transfer\(s\) flagged by the fixed rules but not by the validated transaction model/)).toBeInTheDocument();
+    expect(screen.getByTestId('uncorroborated')).toHaveTextContent('not treated as suspicious activity');
+  });
+
+  it('shows the closest unflagged transfers as context only when nothing was flagged', async () => {
+    const near = { transaction_id: 'TX-NEAR-1', timestamp: '2026-02-01T10:00:00', receiver_account_id: 'FS-NEAR0001', amount: 6662.49,
+      transaction_type: 'TRANSFER', channel: 'UPI', calibrated_probability: 0.000978, threshold: 0.001302, share_of_threshold: 0.75,
+      evidence_use: 'evidence' as const };
+    explain.mockReturnValue(new Promise(() => {}));
+    run.mockResolvedValueOnce({ ...DYN, suspicious_transactions: [], closest_unflagged_transfers: [near] });
+    renderPage(`/investigate?account=${victim}&dataset=forensic-scenarios`);
+    await screen.findByTestId('account-brief');
+    fireEvent.click(screen.getByRole('button', { name: 'Start fund investigation' }));
+    await screen.findByTestId('investigation-report');
+    const panel = screen.getByTestId('closest-unflagged');
+    expect(panel).toHaveTextContent('TX-NEAR-1');
+    expect(panel).toHaveTextContent('not a finding');
+    expect(panel).toHaveTextContent('Score 0.098% vs threshold 0.130%');
+  });
+
+  it('hides the closest unflagged transfers when suspicious transactions exist', async () => {
+    const near = { transaction_id: 'TX-NEAR-2', timestamp: '2026-02-01T10:00:00', receiver_account_id: 'FS-NEAR0002', amount: 10,
+      transaction_type: 'TRANSFER', channel: null, calibrated_probability: 0.0001, threshold: 0.0013 };
+    explain.mockReturnValue(new Promise(() => {}));
+    run.mockResolvedValueOnce({ ...DYN, closest_unflagged_transfers: [near] });
+    renderPage(`/investigate?account=${victim}&dataset=forensic-scenarios`);
+    await screen.findByTestId('account-brief');
+    fireEvent.click(screen.getByRole('button', { name: 'Start fund investigation' }));
+    await screen.findByTestId('investigation-report');
+    expect(screen.queryByTestId('closest-unflagged')).toBeNull();
+  });
+
+  it('marks model outputs as reference only on a dataset the models were not validated on', async () => {
+    await showReport();
+    expect(screen.getByTestId('model-not-validated')).toHaveTextContent('reference only');
+  });
+
+  it('shows the transaction model next to the rules in the transfer inspector', async () => {
+    await showDynamic();
+    stage(/Fund trail/);
+    const t = DYN.transaction_scores.find((x) => x.model_flag)!;
+    fireEvent.click(screen.getAllByRole('button', { name: new RegExp(`${t.transaction_id}`) })[0]);
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toHaveTextContent('Flagged by the transaction model');
+    expect(dialog).toHaveTextContent('Transaction model (decision-time)');
+  });
+
+  // An account the trace report calls 'Recipient under review' but the dynamic role assessment clears.
+  const cleared = DYN.role_assessments.find(
+    (r) => r.role_candidate === 'no_suspicious_linkage_observed' &&
+      DYN.investigation.accounts.find((a) => a.account_id === r.account_id)?.role_assessment === 'recipient_under_review',
+  )!;
+
+  it('labels accounts with the dynamic role assessment in the fund trail and the risk evidence, not the trace report', async () => {
+    await showDynamic();
+    stage(/Fund trail/);
+    fireEvent.click(screen.getAllByRole('option', { name: new RegExp(cleared.account_id) })[0]);
+    const step = within(screen.getByTestId('branch-story')).getByRole('button', { name: new RegExp(`^Step \\d+: .*${cleared.account_id}`) });
+    expect(step).toHaveTextContent(cleared.role_label);
+    expect(step).not.toHaveTextContent('Recipient under review');
+
+    stage(/Risk evidence/);
+    const evidence = screen.getByTestId(`evidence-${cleared.account_id}`);
+    expect(evidence).toHaveTextContent(cleared.role_label);
+    expect(evidence).not.toHaveTextContent('Recipient under review');
+    // The dynamic account model replaces the trace report's model score and its disagreement note.
+    expect(within(evidence).getByTestId('account-model-v3')).toHaveAttribute('data-status', cleared.account_model.status);
+    const v2 = DYN.investigation.accounts.find((a) => a.account_id === cleared.account_id)!;
+    if (v2.disagreement_note) expect(evidence).not.toHaveTextContent(v2.disagreement_note);
+  });
+
+  it('keeps the transaction model out of the rule flags and shows it as a model output', async () => {
+    await showDynamic();
+    const t = DYN.investigation.trace.edges.find((e) => e.flags.some((f) => f.code === 'MODEL_TRANSACTION_RISK'))!;
+    expect(screen.getAllByTestId('model-flag')[0]).toHaveTextContent('Transaction model');
+    stage(/Fund trail/);
+    fireEvent.click(screen.getAllByRole('button', { name: new RegExp(t.transaction_id) })[0]);
+    const dialog = await screen.findByRole('dialog');
+    const rules = within(dialog).getByTestId('rule-flags');
+    expect(within(rules).getAllByRole('listitem')).toHaveLength(t.flags.length - 1);
+    expect(rules).not.toHaveTextContent('Transaction model');
+  });
+
+  it('shows the AI state from an explanation response that explained nothing, instead of calling it stale', async () => {
+    explain.mockResolvedValueOnce({ account_id: victim, report_digest: '', data_as_of: null, duration_ms: 0,
+      ai_analysis: { ...REPORT.ai_analysis, state: 'disabled', status: 'not_configured', report: null, message: 'The AI analyst is turned off on this server.' } });
+    run.mockResolvedValueOnce(DYN);
+    renderPage(`/investigate?account=${victim}&dataset=forensic-scenarios`);
+    await screen.findByTestId('account-brief');
+    fireEvent.click(screen.getByRole('button', { name: 'Start fund investigation' }));
+    await screen.findByTestId('investigation-report');
+    stage(/AI analyst/);
+    await waitFor(() => expect(screen.getByTestId('ai-status')).toHaveAttribute('data-state', 'disabled'));
+  });
+
+  it('makes no explanation request when the report says the analyst cannot run', async () => {
+    run.mockResolvedValueOnce({ ...DYN, investigation: { ...DYN.investigation, ai_analysis: { ...DYN.investigation.ai_analysis, state: 'not_configured', status: 'not_configured' } } });
+    renderPage(`/investigate?account=${victim}&dataset=forensic-scenarios`);
+    await screen.findByTestId('account-brief');
+    fireEvent.click(screen.getByRole('button', { name: 'Start fund investigation' }));
+    await screen.findByTestId('investigation-report');
+    expect(explain).not.toHaveBeenCalled();
+  });
+
+  it('says before the run that the trace starts from the fixed rules when the models are not validated on the dataset', async () => {
+    getDatasetAccount.mockImplementationOnce(async (_d, id) => ({ ...datasetAccount(id), models_validated: false, model_note: 'Shown for reference only on this ledger.' }));
+    const brief = await openBrief();
+    expect(brief).toHaveTextContent('The trace starts from the ones flagged by the fixed rules');
+    expect(brief).not.toHaveTextContent('flagged by the model or the fixed rules');
+    expect(within(brief).getByRole('list', { name: 'Model availability' })).toHaveTextContent('reference only, not validated on this dataset');
+    expect(screen.getByTestId('models-reference-only')).toHaveTextContent('Shown for reference only on this ledger.');
+  });
+
+  it('moves through the dataset radio group with the arrow keys and lists sample reasons as text', async () => {
+    vi.mocked(v2Api.getSampleAccounts).mockResolvedValueOnce({ dataset_id: 'forensic-scenarios', basis: 'Observable activity only.',
+      accounts: [{ account_id: 'FS-AAAA0001', reason: 'One transfer took 98% of its balance.' }] });
+    renderPage();
+    const [demo, forensic] = screen.getAllByRole('radio');
+    expect(demo).toHaveAttribute('tabindex', '0');
+    expect(forensic).toHaveAttribute('tabindex', '-1');
+    fireEvent.keyDown(demo, { key: 'ArrowRight' });
+    expect(screen.getByTestId('location')).toHaveTextContent('dataset=forensic-scenarios');
+    expect(screen.getAllByRole('radio')[1]).toHaveFocus();
+    const sample = await screen.findByRole('button', { name: 'FS-AAAA0001' });
+    expect(sample).toHaveAccessibleDescription('One transfer took 98% of its balance.');
+    expect(screen.getByTestId('sample-accounts')).toHaveTextContent('One transfer took 98% of its balance.');
+  });
+
+  it('shows the account model from the role assessment even when the trace report has no rule assessment', async () => {
+    const mid = DYN.role_assessments.find((a) => a.role_candidate === 'potential_intermediary')!;
+    explain.mockReturnValue(new Promise(() => {}));
+    run.mockResolvedValueOnce({ ...DYN, investigation: { ...DYN.investigation,
+      accounts: DYN.investigation.accounts.map((a) => (a.account_id === mid.account_id ? { ...a, rule_assessment: null } : a)) } });
+    renderPage(`/investigate?account=${victim}&dataset=forensic-scenarios`);
+    await screen.findByTestId('account-brief');
+    fireEvent.click(screen.getByRole('button', { name: 'Start fund investigation' }));
+    await screen.findByTestId('investigation-report');
+    stage(/Fund trail/);
+    fireEvent.click(within(screen.getByTestId('branch-story')).getAllByRole('button', { name: new RegExp(`^Step \\d+: .*${mid.account_id}`) })[0]);
+    const box = within(await screen.findByRole('dialog')).getByTestId('inspector-account-model');
+    expect(box).toHaveTextContent(`${((mid.account_model.calibrated_probability ?? 0) * 100).toFixed(1)}%`);
+    expect(screen.getByRole('dialog')).toHaveTextContent(mid.recommended_next_check);
+  });
+
+  it('says which check flagged a seed transfer: the rules, the transaction model or both', () => {
+    const seed = REPORT.victim.flagged_transfers[0];
+    const withFlags = (flags: typeof seed.flags): InvestigationResponse => ({
+      ...REPORT, victim: { ...REPORT.victim, flagged_transfers: [{ ...seed, flags }, ...REPORT.victim.flagged_transfers.slice(1)] },
+    });
+    const model = { code: 'MODEL_TRANSACTION_RISK', explanation: 'At or above the threshold.' };
+    const rule = seed.flags.find((f) => f.code !== 'MODEL_TRANSACTION_RISK')!;
+    const story = (r: InvestigationResponse) => whatHappened(r, buildTrail(r))[0];
+    expect(story(withFlags([model]))).toContain('The transaction model flags this transfer for review.');
+    expect(story(withFlags([model]))).not.toContain('rules');
+    expect(story(withFlags([rule]))).toContain('The rules flag this transfer as unusual');
+    expect(story(withFlags([rule, model]))).toContain('and the transaction model flags it for review');
+  });
+
+  it('cancels the account lookups when the brief is left', async () => {
+    const { unmount } = renderPage(`/investigate?account=${victim}&dataset=forensic-scenarios`);
+    await screen.findByTestId('account-brief');
+    const signal = getDatasetAccount.mock.calls[0][2]!;
+    expect(signal.aborted).toBe(false);
+    unmount();
+    expect(signal.aborted).toBe(true);
   });
 });
 

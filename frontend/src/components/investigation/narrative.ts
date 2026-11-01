@@ -2,11 +2,30 @@
  * "What happened", written from the report by fixed rules. Every number and ID comes from the response; nothing is
  * inferred beyond what the trace and the rules already state.
  */
-import { InvestigationResponse } from '../../types/investigation';
-import { channelLabel, formatDateTime, formatMoney } from '../../lib/format';
+import { InvestigationResponse, TransferFlag } from '../../types/investigation';
+import { channelLabel, formatDateTime, formatMoney, formatDuration } from '../../lib/format';
 import { Trail } from './trail';
+import { MODEL_FLAG_CODE } from './labels';
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+
+/** Which check flagged these transfers: the fixed rules, the transaction model, or both. Never one for the other. */
+function flagSource(ts: { flags: TransferFlag[] }[]): 'rules' | 'model' | 'both' {
+  const model = ts.some((t) => t.flags.some((f) => f.code === MODEL_FLAG_CODE));
+  const rules = ts.some((t) => t.flags.some((f) => f.code !== MODEL_FLAG_CODE));
+  return model && rules ? 'both' : model ? 'model' : 'rules';
+}
+
+const ONE_FLAG = {
+  rules: 'The rules flag this transfer as unusual for this account.',
+  model: 'The transaction model flags this transfer for review.',
+  both: 'The rules flag this transfer as unusual for this account, and the transaction model flags it for review.',
+};
+const MANY_FLAGGED = {
+  rules: 'that the rules flag as unusual for this account',
+  model: 'that the transaction model flags for review',
+  both: 'that the rules, the transaction model or both flag for review',
+};
 
 export function whatHappened(report: InvestigationResponse, trail: Trail): string[] {
   const v = report.victim;
@@ -17,15 +36,15 @@ export function whatHappened(report: InvestigationResponse, trail: Trail): strin
   if (flaggedOut.length === 1) {
     const t = flaggedOut[0];
     out.push(
-      `On ${formatDateTime(t.timestamp)}, ${v.account_id} sent ${formatMoney(t.amount, t.currency)} to ${t.destination_account_id} by ${channelLabel(t.channel)}. The rules flag this transfer as unusual for this account.`,
+      `On ${formatDateTime(t.timestamp)}, ${v.account_id} sent ${formatMoney(t.amount, t.currency)} to ${t.destination_account_id} by ${channelLabel(t.channel)}. ${ONE_FLAG[flagSource([t])]}`,
     );
   } else if (flaggedOut.length > 1) {
     const total = flaggedOut.reduce((s, t) => s + t.amount, 0);
     out.push(
-      `${v.account_id} made ${plural(flaggedOut.length, 'transfer')} that the rules flag as unusual for this account, ${formatMoney(total)} in total, starting ${formatDateTime(flaggedOut[0].timestamp)}.`,
+      `${v.account_id} made ${plural(flaggedOut.length, 'transfer')} ${MANY_FLAGGED[flagSource(flaggedOut)]}, ${formatMoney(total)} in total, starting ${formatDateTime(flaggedOut[0].timestamp)}.`,
     );
   } else if (flaggedIn.length) {
-    out.push(`${v.account_id} received ${plural(flaggedIn.length, 'transfer')} that the rules flag as unusual for this account; none of its outgoing transfers were flagged.`);
+    out.push(`${v.account_id} received ${plural(flaggedIn.length, 'transfer')} ${MANY_FLAGGED[flagSource(flaggedIn)]}; none of its outgoing transfers were flagged.`);
   } else {
     out.push(`No transfer was flagged as unusual for ${v.account_id}. ${report.trace.seed_selection}`);
   }
@@ -35,7 +54,7 @@ export function whatHappened(report: InvestigationResponse, trail: Trail): strin
     const kids = first.children.map((c) => c.edge!);
     const soonest = Math.min(...kids.map((k) => k.minutes_from_parent ?? Infinity));
     const total = kids.reduce((s, k) => s + k.amount, 0);
-    const when = Number.isFinite(soonest) ? `Starting ${Math.round(soonest)} min later` : 'Afterwards';
+    const when = Number.isFinite(soonest) ? `Starting ${formatDuration(soonest)} later` : 'Afterwards';
     out.push(`${when}, ${first.accountId} sent ${formatMoney(total)} on to ${plural(new Set(kids.map((k) => k.destination_account_id)).size, 'account')}.`);
   }
 

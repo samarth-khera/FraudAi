@@ -1,0 +1,475 @@
+{
+  "dataset": {
+    "name": "PaySim (Kaggle ealaxi/paysim1)",
+    "license": "CC BY-SA 4.0",
+    "file": "data/raw/PS_20174392719_1491204439457_log.csv",
+    "sha256": "16910f90577b0d981bf8ff289714510bb89bc71bff7d3f220f024e287e4eea6b"
+  },
+  "environment": {
+    "python": "3.12.4",
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "scikit_learn": "1.9.1",
+    "xgboost": "3.4.1",
+    "platform": "macOS-27.0.1",
+    "trained_at": "2026-10-31T17:20:04Z",
+    "seed": 20261031
+  },
+  "validation": {
+    "rows_in": 6362620,
+    "rows_valid": 6362604,
+    "errors": {
+      "invalid_amount": 16
+    },
+    "warnings": {
+      "sender_balance_below_amount": 4079080,
+      "channel_missing": 6362604
+    }
+  },
+  "account_history_profile": {
+    "senders": 6353307,
+    "senders_appearing_once_share": 0.99854,
+    "receivers": 2722362,
+    "fraud_rows_where_amount_equals_sender_balance": 0.9782,
+    "non_fraud_rows_where_amount_equals_sender_balance": 1e-06,
+    "fraud_by_type": {
+      "CASH_IN": 0,
+      "CASH_OUT": 4116,
+      "DEBIT": 0,
+      "PAYMENT": 0,
+      "TRANSFER": 4097
+    }
+  },
+  "splits": {
+    "train": {
+      "steps": "1-323",
+      "rows": 1951895,
+      "positives": 3643,
+      "prevalence": 0.00187
+    },
+    "validation": {
+      "steps": "324-378",
+      "rows": 427991,
+      "positives": 564,
+      "prevalence": 0.00132
+    },
+    "test": {
+      "steps": "379-743",
+      "rows": 390523,
+      "positives": 4006,
+      "prevalence": 0.01026
+    },
+    "test_senders_seen_in_train": 350,
+    "test_receivers_seen_in_train_share": 0.6375
+  },
+  "results": {
+    "decision_time_features": {
+      "candidates": [
+        {
+          "family": "logistic_regression",
+          "train_rows": 76503,
+          "validation": {
+            "pr_auc": 0.1806,
+            "roc_auc": 0.9029
+          },
+          "train": {
+            "pr_auc": 0.5785,
+            "roc_auc": 0.9135
+          }
+        },
+        {
+          "family": "random_forest",
+          "train_rows": 76503,
+          "validation": {
+            "pr_auc": 0.9473,
+            "roc_auc": 0.9999
+          },
+          "train": {
+            "pr_auc": 0.9976,
+            "roc_auc": 0.9998
+          }
+        },
+        {
+          "family": "xgboost",
+          "train_rows": 1951895,
+          "validation": {
+            "pr_auc": 0.9406,
+            "roc_auc": 0.9999
+          },
+          "train": {
+            "pr_auc": 0.9572,
+            "roc_auc": 0.9999
+          }
+        }
+      ],
+      "selected": "random_forest",
+      "threshold": {
+        "value": 0.5128512693125942,
+        "rule": "lowest validation threshold with precision >= 50%",
+        "on": "uncalibrated score"
+      },
+      "validation": {
+        "split": "validation",
+        "n": 427991,
+        "positives": 564,
+        "negatives": 427427,
+        "prevalence": 0.00132,
+        "threshold": 0.512851,
+        "precision": 0.5321,
+        "recall": 0.9982,
+        "f1": 0.6942,
+        "false_positive_rate": 0.001158,
+        "confusion_matrix": {
+          "tn": 426932,
+          "fp": 495,
+          "fn": 1,
+          "tp": 563
+        },
+        "pr_auc": 0.9473,
+        "roc_auc": 0.9999,
+        "brier": 0.012147,
+        "ece": 0.07257,
+        "precision_at_k": {
+          "50": 1.0,
+          "100": 1.0,
+          "500": 0.914
+        },
+        "recall_at_precision": [
+          {
+            "precision_target": 0.5,
+            "recall": 0.9982,
+            "threshold": 0.5128512693125942
+          },
+          {
+            "precision_target": 0.8,
+            "recall": 0.883,
+            "threshold": 0.7543623890600338
+          },
+          {
+            "precision_target": 0.9,
+            "recall": 0.8121,
+            "threshold": 0.8092000132621483
+          }
+        ]
+      },
+      "test": {
+        "split": "test (scored once)",
+        "n": 390523,
+        "positives": 4006,
+        "negatives": 386517,
+        "prevalence": 0.01026,
+        "threshold": 0.512851,
+        "precision": 0.8247,
+        "recall": 0.9968,
+        "f1": 0.9026,
+        "false_positive_rate": 0.002197,
+        "confusion_matrix": {
+          "tn": 385668,
+          "fp": 849,
+          "fn": 13,
+          "tp": 3993
+        },
+        "pr_auc": 0.9868,
+        "roc_auc": 0.9998,
+        "brier": 0.015106,
+        "ece": 0.07886,
+        "precision_at_k": {
+          "50": 1.0,
+          "100": 1.0,
+          "500": 1.0
+        },
+        "recall_at_precision": [
+          {
+            "precision_target": 0.5,
+            "recall": 0.998,
+            "threshold": 0.42654194640831833
+          },
+          {
+            "precision_target": 0.8,
+            "recall": 0.9978,
+            "threshold": 0.5011468566033773
+          },
+          {
+            "precision_target": 0.9,
+            "recall": 0.978,
+            "threshold": 0.6458261620386778
+          }
+        ]
+      },
+      "calibration_curve_test": [
+        {
+          "n": 39053,
+          "mean_score": 0.0187,
+          "observed_rate": 0.0
+        },
+        {
+          "n": 39053,
+          "mean_score": 0.0261,
+          "observed_rate": 0.0
+        },
+        {
+          "n": 39053,
+          "mean_score": 0.0288,
+          "observed_rate": 0.0
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.032,
+          "observed_rate": 0.0
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.0363,
+          "observed_rate": 0.0
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.0442,
+          "observed_rate": 0.0
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.0606,
+          "observed_rate": 0.0
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.0937,
+          "observed_rate": 0.0
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.164,
+          "observed_rate": 0.0
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.3868,
+          "observed_rate": 0.1026
+        }
+      ],
+      "feature_importance": {
+        "amount_to_sender_balance": 0.5115,
+        "r_in_n_24h": 0.0886,
+        "log_amount": 0.0793,
+        "r_history_days": 0.0583,
+        "first_time_pair": 0.0566,
+        "r_prior_out_n": 0.0423,
+        "r_balance_before_log": 0.0389,
+        "type_TRANSFER": 0.0362,
+        "is_weekend": 0.0352,
+        "r_distinct_senders": 0.0259,
+        "hour_sin": 0.0251,
+        "hour_cos": 0.0019,
+        "s_history_days": 0.0,
+        "s_amount_vs_prior_max": 0.0,
+        "s_distinct_recipients": 0.0
+      }
+    },
+    "without_balance_drain_ratio": {
+      "candidates": [
+        {
+          "family": "logistic_regression",
+          "train_rows": 76503,
+          "validation": {
+            "pr_auc": 0.1912,
+            "roc_auc": 0.8644
+          },
+          "train": {
+            "pr_auc": 0.5428,
+            "roc_auc": 0.8843
+          }
+        },
+        {
+          "family": "random_forest",
+          "train_rows": 76503,
+          "validation": {
+            "pr_auc": 0.2425,
+            "roc_auc": 0.9334
+          },
+          "train": {
+            "pr_auc": 0.7653,
+            "roc_auc": 0.9641
+          }
+        },
+        {
+          "family": "xgboost",
+          "train_rows": 1951895,
+          "validation": {
+            "pr_auc": 0.4596,
+            "roc_auc": 0.9351
+          },
+          "train": {
+            "pr_auc": 0.5103,
+            "roc_auc": 0.9499
+          }
+        }
+      ],
+      "selected": "xgboost",
+      "threshold": {
+        "value": 0.6705906987190247,
+        "rule": "lowest validation threshold with precision >= 50%",
+        "on": "uncalibrated score"
+      },
+      "validation": {
+        "split": "validation",
+        "n": 427991,
+        "positives": 564,
+        "negatives": 427427,
+        "prevalence": 0.00132,
+        "threshold": 0.670591,
+        "precision": 0.4264,
+        "recall": 0.4415,
+        "f1": 0.4338,
+        "false_positive_rate": 0.000784,
+        "confusion_matrix": {
+          "tn": 427092,
+          "fp": 335,
+          "fn": 315,
+          "tp": 249
+        },
+        "pr_auc": 0.4596,
+        "roc_auc": 0.9351,
+        "brier": 0.004186,
+        "ece": 0.02358,
+        "precision_at_k": {
+          "50": 1.0,
+          "100": 1.0,
+          "500": 0.488
+        },
+        "recall_at_precision": [
+          {
+            "precision_target": 0.5,
+            "recall": 0.4326,
+            "threshold": 0.6705906987190247
+          },
+          {
+            "precision_target": 0.8,
+            "recall": 0.4096,
+            "threshold": 0.7119998931884766
+          },
+          {
+            "precision_target": 0.9,
+            "recall": 0.3422,
+            "threshold": 0.8073460459709167
+          }
+        ]
+      },
+      "test": {
+        "split": "test (scored once)",
+        "n": 390523,
+        "positives": 4006,
+        "negatives": 386517,
+        "prevalence": 0.01026,
+        "threshold": 0.670591,
+        "precision": 0.4409,
+        "recall": 0.4838,
+        "f1": 0.4613,
+        "false_positive_rate": 0.006359,
+        "confusion_matrix": {
+          "tn": 384059,
+          "fp": 2458,
+          "fn": 2068,
+          "tp": 1938
+        },
+        "pr_auc": 0.4792,
+        "roc_auc": 0.9386,
+        "brier": 0.011215,
+        "ece": 0.02675,
+        "precision_at_k": {
+          "50": 1.0,
+          "100": 1.0,
+          "500": 0.98
+        },
+        "recall_at_precision": [
+          {
+            "precision_target": 0.5,
+            "recall": 0.4458,
+            "threshold": 0.7319575548171997
+          },
+          {
+            "precision_target": 0.8,
+            "recall": 0.182,
+            "threshold": 0.9041363596916199
+          },
+          {
+            "precision_target": 0.9,
+            "recall": 0.1782,
+            "threshold": 0.9046227931976318
+          }
+        ]
+      },
+      "calibration_curve_test": [
+        {
+          "n": 39053,
+          "mean_score": 0.0101,
+          "observed_rate": 0.0
+        },
+        {
+          "n": 39053,
+          "mean_score": 0.0126,
+          "observed_rate": 0.0002
+        },
+        {
+          "n": 39053,
+          "mean_score": 0.0136,
+          "observed_rate": 0.0013
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.0139,
+          "observed_rate": 0.0017
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.0143,
+          "observed_rate": 0.0017
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.0153,
+          "observed_rate": 0.0018
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.0181,
+          "observed_rate": 0.0015
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.0221,
+          "observed_rate": 0.0026
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.0272,
+          "observed_rate": 0.0033
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.2228,
+          "observed_rate": 0.0885
+        }
+      ],
+      "feature_importance": {
+        "r_balance_before_log": 0.2182,
+        "type_TRANSFER": 0.212,
+        "hour_sin": 0.1502,
+        "log_amount": 0.1497,
+        "type_CASH_OUT": 0.0782,
+        "hour_cos": 0.0706,
+        "r_prior_in_n": 0.0527,
+        "r_history_days": 0.0284,
+        "is_weekend": 0.0161,
+        "r_distinct_senders": 0.016,
+        "r_in_n_24h": 0.0077,
+        "s_amount_vs_prior_max": 0.0,
+        "r_prior_out_n": 0.0,
+        "s_hours_since_last_out": 0.0,
+        "s_history_days": 0.0
+      }
+    }
+  },
+  "reading": "PaySim fraud is generated by emptying the sender's balance, so the balance-drain ratio nearly determines the label; the second feature set shows performance without it. Near-perfect PaySim scores describe the simulator, not real-world detection.",
+  "runtime_seconds": 76.0
+}
