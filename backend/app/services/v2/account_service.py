@@ -47,6 +47,16 @@ def _mask_email(email: Optional[str]) -> str:
     return f"{masked_local}@{domain}"
 
 
+def _mask_upi(upi: Optional[str]) -> str:
+    """UPI IDs are personal identifiers like e-mail addresses (QA-10): the handle before '@' is masked the same way; the
+    payment-provider suffix after it is kept."""
+    if not upi:
+        return ""
+    if "@" not in upi:
+        return "****"
+    return _mask_email(upi)
+
+
 def _mask_tax_identifier(tax_id: Optional[str]) -> str:
     if not tax_id:
         return ""
@@ -134,7 +144,7 @@ class AccountService:
             kyc_tier=account.kyc_tier,
             phone_number=_mask_phone(account.phone_number),
             email=_mask_email(account.email),
-            upi_id=account.upi_id,
+            upi_id=_mask_upi(account.upi_id),
             tax_identifier=_mask_tax_identifier(account.tax_identifier),
             initial_balance=round(account.initial_balance, 2),
             current_balance=round(account.current_balance, 2),

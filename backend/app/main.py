@@ -102,6 +102,17 @@ def create_app() -> FastAPI:
         if h.strip()
     ]
 
+    @app.middleware("http")
+    async def contain_unhandled_errors(request: Request, call_next):
+        # Added first, so it is the innermost middleware: an unhandled exception becomes the JSON 500 here and the
+        # response still passes back through CORS and the security headers. Starlette's own last-resort handler runs
+        # outside every middleware, so its 500s carried neither (QA-15).
+        try:
+            return await call_next(request)
+        except Exception as exc:  # noqa: BLE001 - logged with its traceback; the client gets the fixed error body
+            logger.error("Unhandled server error at %s: %s", request.url.path, exc, exc_info=True)
+            return _error(500, "internal_server_error", "An unexpected error occurred while processing the request.")
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allowed_origins if not is_wildcard else ["*"],
@@ -110,14 +121,23 @@ def create_app() -> FastAPI:
         allow_headers=cors_headers if not is_wildcard else ["*"],
     )
 
+    docs_paths = ("/docs", "/redoc", "/openapi.json")
+
     @app.middleware("http")
     async def add_security_headers(request: Request, call_next):
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
-        response.headers["X-XSS-Protection"] = "1; mode=block"
+        # The legacy XSS auditor is deprecated and can itself be abused; "0" turns it off (OWASP guidance).
+        response.headers["X-XSS-Protection"] = "0"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+        # The API serves JSON only: nothing may be loaded, framed or run from its responses. The optional API docs
+        # (off in production unless ENABLE_API_DOCS=true) load Swagger UI from a CDN, so they are left out.
+        if not request.url.path.startswith(docs_paths):
+            response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"
+        if is_prod:
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return response
 
     app.include_router(router)

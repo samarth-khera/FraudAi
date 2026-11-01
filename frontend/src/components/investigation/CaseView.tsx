@@ -31,7 +31,9 @@ export const CaseView: React.FC<{
   explanation: ExplanationView | null;
   onNew: () => void;
   onRerun: (r: InvestigationRequest) => void;
-}> = ({ report, intel = null, explanation, onNew, onRerun }) => {
+  /** Present only when the server can produce an explanation; nothing is requested until the investigator asks. */
+  onRequestExplanation?: () => void;
+}> = ({ report, intel = null, explanation, onNew, onRerun, onRequestExplanation }) => {
   // Branch endings come from the dynamic investigation of the same account when it is present (matched by transfers).
   const serverBranches = intel && intel.account_summary?.account_id === report.victim.account_id ? intel.fund_trace?.branches : null;
   const trail = useMemo(() => buildTrail(report, serverBranches), [report, serverBranches]);
@@ -224,7 +226,7 @@ export const CaseView: React.FC<{
           )}
           {stage === 'accounts' && <AffectedAccountsStage onInspect={showInTrail} />}
           {stage === 'risk' && <RiskStage onInspect={showInTrail} />}
-          {stage === 'ai' && <AIStage ai={report.ai_analysis} explanation={explanation} />}
+          {stage === 'ai' && <AIStage ai={report.ai_analysis} explanation={explanation} onRequest={onRequestExplanation} />}
           {stage === 'next' && <NextStepsStage onInspect={showInTrail} onRerun={onRerun} />}
         </div>
 

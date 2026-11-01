@@ -20,6 +20,8 @@ V2AccountIdPath = Path(
 
 try:
     from app.api.v2.schemas import (
+        InvestigationDatasetSupport,
+        InvestigationModelsInfo,
         AccountAssessmentResponse,
         AccountLiveAnalysisResponse,
         AccountMLAssessmentResponse,
@@ -39,6 +41,8 @@ try:
     from app.services.v2.risk_assessment import AccountRiskAssessor
 except ModuleNotFoundError:
     from backend.app.api.v2.schemas import (
+        InvestigationDatasetSupport,
+        InvestigationModelsInfo,
         AccountAssessmentResponse,
         AccountLiveAnalysisResponse,
         AccountMLAssessmentResponse,
@@ -181,7 +185,36 @@ def trace_funds(
     description="Returns availability, versions, feature dimensions, and evaluation metrics for V2 models.",
 )
 def get_models_status() -> ModelStatusResponse:
-    return V2MLInferenceService.get_model_status()
+    out = V2MLInferenceService.get_model_status()
+    out.account_model_scope = ("The v2 account model above is used only by the Accounts tool and the case review on the demo "
+                               "ledger. Investigations on the Investigate page use the v3 models in investigation_models.")
+    out.investigation_models = _investigation_models()
+    return out
+
+
+def _investigation_models() -> Optional[InvestigationModelsInfo]:
+    """The v3 transaction and account models behind dynamic investigations (versions, thresholds, held-out results) and
+    their support state per dataset. Reads only the model artifacts' metadata; scores nothing."""
+    try:
+        try:
+            from app.intelligence import engine
+            from app.intelligence.datasets import DATASETS
+        except ModuleNotFoundError:
+            from backend.app.intelligence import engine
+            from backend.app.intelligence.datasets import DATASETS
+        tm, am, err = engine._load_models()
+        return InvestigationModelsInfo(
+            used_by="Investigate page (dynamic investigations)",
+            ready=tm is not None and am is not None,
+            transaction_model=engine.model_metadata(tm, err["transaction_model"], "Risk of each transfer at the time it was made"),
+            account_model=engine.model_metadata(am, err["account_model"], "Whether an account's own history looks like receiving "
+                                                "and passing on or collecting scenario money"),
+            datasets=[InvestigationDatasetSupport(dataset_id=d.dataset_id, title=d.title, model_support=d.model_support)
+                      for d in DATASETS.values()],
+        )
+    except Exception as exc:  # noqa: BLE001 - the status endpoint reports, it never fails because of this section
+        logger.warning("Investigation model status unavailable: %s", type(exc).__name__)
+        return None
 
 
 @router.get(

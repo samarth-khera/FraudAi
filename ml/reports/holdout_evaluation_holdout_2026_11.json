@@ -1,0 +1,267 @@
+{
+  "protocol": "Untouched hold-out evaluation protocol for the role engine and models.",
+  "evaluated_at": "2026-11-01T19:45:20.857031+00:00",
+  "manifest": {
+    "sha256": "2f12b680cded11e048a9277f54b319098cf7de76365c01faa263f8329db4da5d",
+    "files": {
+      "backend/app/api/v2/dynamic_routes.py": "0ce753d38fafb1429cab1ec0ead35b979d2e566bede6683816dea578ba78ce3c",
+      "backend/app/intelligence/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "backend/app/intelligence/datasets.py": "c388a5d92507a2dd776ff7a9bcaf2ec34eda4a707b0b6f0534b6fa6a11152869",
+      "backend/app/intelligence/engine.py": "f86436280964ed62de1ac02f8b89c34c37b928c7e76dd1b7067bb04cec9a85dd",
+      "backend/app/intelligence/explain.py": "0a0441edd893ed0ea8800347c29e621c099318e279111bfd5fce6d62faf050c3",
+      "backend/app/intelligence/features.py": "5616f865c9a8a903f6db74004dedcddf99ed55e2665608d126baab04f7106d71",
+      "backend/app/intelligence/ledger.py": "bba2b96bb358219b8af7411f338d0303292cadbb28afaf798a823d95c55c3630",
+      "backend/app/intelligence/models.py": "03fa5e7ef451ea0a03811d430515fbbd243e6244fae9ae9f00de94e14d46d2d8",
+      "backend/app/intelligence/roles.py": "2c7d4c6e5448c379ba67fafd7bc72c421cf6c897d95c62eb59d24adb6b3aa940",
+      "backend/app/intelligence/schema.py": "0ef4e72d35ce896a5d47c5be6709700690cc0c85f127141c1dc64d776cb620ed",
+      "backend/app/services/v2/graph_tracer.py": "0ec46f1b9c98321bb90ee2ce49771e6c57a2790ced088d1639bb5245a7c1bb37",
+      "backend/app/services/v2/investigation.py": "4af958ab4d2e5ac5d246246ec67e4da49c1b9ca85ed4b719b7ad3af653d87209",
+      "ml/artifacts/v3/account_model/metadata.json": "ab995a979e75918755527355055952eb367dd759e312e95392e171aabc24f43b",
+      "ml/artifacts/v3/account_model/model.json": "cc6177b629b5b76ab47503ce730ec426bf1218cb85b6ea1ce155bc1916b4a995",
+      "ml/artifacts/v3/transaction_model/metadata.json": "e92503d0948d0a030c925908d3e6b7c4a5fb2cf70191ce60a59d72045fead2eb",
+      "ml/artifacts/v3/transaction_model/model.json": "aa623f97d8b6c27bde5a189775c61f6530a5396b5c3a707a735a4433b28df98d",
+      "ml/forensics/evaluate_investigations.py": "20fe169e2911296cb6279425b11210e2ded5d31d048291638c1d33f0b914e18a",
+      "ml/forensics/generator.py": "c8543b580a20fa757d68fab1101a0409ea86c9bf63172d48a951b45d627670dd"
+    }
+  },
+  "summary": {
+    "ledger": "forensic generator seed 505 (holdout_2026_11); never used for any design, tuning or threshold choice",
+    "investigations": 125,
+    "victims": {
+      "n": 54,
+      "status_counts": {
+        "potential_victim": 47,
+        "no_suspicious_activity_observed": 4,
+        "suspicious_activity_victim_status_unconfirmed": 3
+      },
+      "potential_victim_rate": 0.8704,
+      "suspicious_activity_detected_rate": 0.9259
+    },
+    "victims_by_pattern": {
+      "chain:standard": {
+        "n": 10,
+        "detected": 0.9
+      },
+      "circular:standard": {
+        "n": 3,
+        "detected": 0.6667
+      },
+      "consolidation:standard": {
+        "n": 6,
+        "detected": 1.0
+      },
+      "direct:standard": {
+        "n": 7,
+        "detected": 1.0
+      },
+      "multi_hop:slow": {
+        "n": 2,
+        "detected": 1.0
+      },
+      "multi_hop:standard": {
+        "n": 4,
+        "detected": 1.0
+      },
+      "multi_victim:standard": {
+        "n": 8,
+        "detected": 0.875
+      },
+      "split:standard": {
+        "n": 6,
+        "detected": 0.8333
+      },
+      "takeover:after_dormancy": {
+        "n": 2,
+        "detected": 1.0
+      },
+      "takeover:standard": {
+        "n": 6,
+        "detected": 1.0
+      }
+    },
+    "ordinary_accounts": {
+      "n": 60,
+      "status_counts": {
+        "no_suspicious_activity_observed": 46,
+        "insufficient_evidence": 9,
+        "potential_victim": 3,
+        "suspicious_activity_victim_status_unconfirmed": 2
+      }
+    },
+    "lookalikes": {
+      "n": 10,
+      "status_counts": {
+        "insufficient_evidence": 6,
+        "no_suspicious_activity_observed": 2,
+        "suspicious_activity_victim_status_unconfirmed": 1,
+        "potential_victim": 1
+      }
+    },
+    "unknown_account": "account_not_found raised (correct)",
+    "insufficient_history_case": [
+      {
+        "account_id": "FS-6213B36D",
+        "status": "insufficient_evidence"
+      }
+    ],
+    "connected_account_roles_by_ground_truth": {
+      "intermediary": {
+        "potential_intermediary": 66,
+        "unknown_role": 23,
+        "no_suspicious_linkage_observed": 1,
+        "potential_secondary_victim": 1,
+        "potentially_suspicious_account": 21,
+        "suspicious_activity_victim_unconfirmed": 1
+      },
+      "attacker_controlled": {
+        "unknown_role": 23,
+        "potentially_suspicious_account": 5,
+        "no_suspicious_linkage_observed": 2,
+        "potential_intermediary": 7
+      },
+      "role_in_other_scenario": {
+        "no_suspicious_linkage_observed": 56,
+        "unknown_role": 13
+      },
+      "cash_network": {
+        "cash_withdrawal_point": 128
+      },
+      "innocent_counterparty": {
+        "no_suspicious_linkage_observed": 21,
+        "unknown_role": 2
+      },
+      "no_scenario_role": {
+        "no_suspicious_linkage_observed": 646,
+        "unknown_role": 63,
+        "potential_victim": 10
+      },
+      "secondary_victim": {
+        "suspicious_activity_victim_unconfirmed": 3,
+        "potential_secondary_victim": 1
+      },
+      "victim": {
+        "potential_victim": 9,
+        "unknown_role": 4
+      }
+    },
+    "restriction_states_by_ground_truth": {
+      "intermediary": {
+        "consider_temporary_restriction_review": 44,
+        "urgent_manual_review_recommended": 38,
+        "insufficient_evidence_to_recommend": 23,
+        "additional_verification_recommended": 7,
+        "no_restriction_recommendation": 1
+      },
+      "attacker_controlled": {
+        "insufficient_evidence_to_recommend": 23,
+        "consider_temporary_restriction_review": 8,
+        "no_restriction_recommendation": 2,
+        "urgent_manual_review_recommended": 4
+      },
+      "role_in_other_scenario": {
+        "no_restriction_recommendation": 56,
+        "insufficient_evidence_to_recommend": 13
+      },
+      "cash_network": {
+        "no_restriction_recommendation": 128
+      },
+      "innocent_counterparty": {
+        "no_restriction_recommendation": 21,
+        "insufficient_evidence_to_recommend": 2
+      },
+      "no_scenario_role": {
+        "no_restriction_recommendation": 646,
+        "insufficient_evidence_to_recommend": 63,
+        "urgent_manual_review_recommended": 10
+      },
+      "secondary_victim": {
+        "urgent_manual_review_recommended": 4
+      },
+      "victim": {
+        "urgent_manual_review_recommended": 9,
+        "insufficient_evidence_to_recommend": 4
+      }
+    },
+    "safety": {
+      "restriction_review_for_innocent_or_ordinary": 0,
+      "restriction_review_for_victims": 0,
+      "innocent_counterparties_labelled_suspicious": 0,
+      "innocent_counterparties_seen": 23,
+      "accounts_without_scenario_role_labelled_suspicious": 0,
+      "accounts_without_scenario_role_seen": 719
+    },
+    "secondary_victims": {
+      "materialised_secondary_victims": 7,
+      "reached_by_trace": 4,
+      "original_criterion_met": 1,
+      "exploratory_criterion_met": 4,
+      "labelled_intermediary_or_suspicious": 0,
+      "given_restriction_review": 0
+    }
+  },
+  "secondary_victim_accounts": [
+    {
+      "account_id": "FS-49D1E517",
+      "scenario_id": "SC-CHAIN-0016",
+      "root": "FS-01F24E4B",
+      "reached": true,
+      "role": "suspicious_activity_victim_unconfirmed",
+      "may_be_victim": true,
+      "restriction": "urgent_manual_review_recommended",
+      "original_criterion_met": false,
+      "exploratory_criterion_met": true
+    },
+    {
+      "account_id": "FS-131B1DBF",
+      "scenario_id": "SC-CHAIN-0017",
+      "root": "FS-3D786A29",
+      "reached": true,
+      "role": "suspicious_activity_victim_unconfirmed",
+      "may_be_victim": true,
+      "restriction": "urgent_manual_review_recommended",
+      "original_criterion_met": false,
+      "exploratory_criterion_met": true
+    },
+    {
+      "account_id": "FS-99AFE9A1",
+      "scenario_id": "SC-CHAIN-0018",
+      "root": "FS-B9B9F6E0",
+      "reached": true,
+      "role": "potential_secondary_victim",
+      "may_be_victim": true,
+      "restriction": "urgent_manual_review_recommended",
+      "original_criterion_met": true,
+      "exploratory_criterion_met": true
+    },
+    {
+      "account_id": "FS-66778D40",
+      "scenario_id": "SC-MULTI-HOP-0023",
+      "reached": false,
+      "note": "no victim root"
+    },
+    {
+      "account_id": "FS-97C996C8",
+      "scenario_id": "SC-MULTI-HOP-0023",
+      "reached": false,
+      "note": "no victim root"
+    },
+    {
+      "account_id": "FS-50A7B8AF",
+      "scenario_id": "SC-MULTI-HOP-0024",
+      "reached": false,
+      "note": "no victim root"
+    },
+    {
+      "account_id": "FS-FB94CF49",
+      "scenario_id": "SC-MULTI-HOP-0026",
+      "root": "FS-61E66B7A",
+      "reached": true,
+      "role": "suspicious_activity_victim_unconfirmed",
+      "may_be_victim": true,
+      "restriction": "urgent_manual_review_recommended",
+      "original_criterion_met": false,
+      "exploratory_criterion_met": true
+    }
+  ],
+  "runtime_seconds": 46.3
+}

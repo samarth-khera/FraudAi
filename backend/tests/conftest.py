@@ -78,5 +78,9 @@ def custom_client():
 def _no_live_gemini(monkeypatch):
     """Tests never reach Gemini: the analyst is off and no key is visible unless a test opts in with a fake provider."""
     for name in ("GEMINI_ANALYST_ENABLED", "GEMINI_API_KEY", "GEMINI_MODEL", "GEMINI_PRIVACY_POLICY",
-                 "GEMINI_TIMEOUT_SECONDS", "GEMINI_MAX_OUTPUT_TOKENS", "GEMINI_THINKING_LEVEL"):
+                 "GEMINI_TIMEOUT_SECONDS", "GEMINI_MAX_OUTPUT_TOKENS", "GEMINI_THINKING_LEVEL",
+                 "GEMINI_ANALYST_PRODUCTION_APPROVED", "GEMINI_MAX_CALLS_PER_HOUR"):
         monkeypatch.delenv(name, raising=False)
+    # Each test starts with an empty explanation cache and call budget (the guard is process-wide state).
+    from app.services.v2 import ai_analyst
+    monkeypatch.setattr(ai_analyst, "_GUARD", ai_analyst.ExplanationGuard())

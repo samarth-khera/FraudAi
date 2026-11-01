@@ -77,20 +77,34 @@ const AccountCard: React.FC<{ a: RoleAssessmentV3; onInspect: (t: Target) => voi
           </div>
         </div>
 
-        <div className="grid gap-5 md:grid-cols-2">
-          <div>
-            <h4 className="text-sm font-semibold text-ink">Evidence for this role</h4>
-            <p className="text-xs text-mute">{STRENGTH_LABEL[a.evidence_strength]}</p>
+        <div className="grid gap-5 md:grid-cols-3">
+          <div data-testid="block-observed">
+            <h4 className="text-sm font-semibold text-ink">What the records show</h4>
+            <p className="text-xs text-mute">Each item says whether it is a recorded fact, a model output or a fixed rule.</p>
             <div className="mt-2">
               <EvidenceList items={a.evidence_items} empty="No supporting evidence found in the available data." />
             </div>
           </div>
-          <div>
-            <h4 className="text-sm font-semibold text-ink">Against it, and what is unknown</h4>
+          <div data-testid="block-interpretation">
+            <h4 className="text-sm font-semibold text-ink">Interpretation</h4>
+            <p className="mt-1 text-sm text-ink-soft">
+              Possible role: <RoleBadge role={a.role_candidate} label={a.role_label} /> <span className="text-xs text-mute">({STRENGTH_LABEL[a.evidence_strength].toLowerCase()})</span>
+            </p>
+            <p className="mt-1 text-xs text-mute">A candidate for human review from documented rules; not a finding about the holder.</p>
+            {a.contradictory_evidence.length > 0 && (
+              <>
+                <h5 className="mt-3 text-xs font-semibold text-ink">Against it</h5>
+                <ul className="mt-1 space-y-1.5 text-sm text-ink-soft list-disc pl-4">
+                  {a.contradictory_evidence.map((c) => <li key={c}>{c}</li>)}
+                </ul>
+              </>
+            )}
+          </div>
+          <div data-testid="block-unknown">
+            <h4 className="text-sm font-semibold text-ink">Unknown</h4>
             <ul className="mt-2 space-y-1.5 text-sm text-ink-soft list-disc pl-4">
-              {a.contradictory_evidence.map((c) => <li key={c}>{c}</li>)}
               {a.uncertainty_reason && <li>{a.uncertainty_reason}</li>}
-              {!a.contradictory_evidence.length && !a.uncertainty_reason && <li>Whether the holder authorised or knew about these transfers.</li>}
+              <li>Whether the holder authorised, knew about or was deceived into these transfers.</li>
             </ul>
           </div>
         </div>

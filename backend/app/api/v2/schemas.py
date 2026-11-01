@@ -189,6 +189,22 @@ class SingleModelInfo(BaseModel):
     operational_notes: Optional[dict[str, Any]] = None
 
 
+class InvestigationDatasetSupport(BaseModel):
+    dataset_id: str
+    title: str
+    model_support: str = Field(..., description="validated_in_distribution | unsupported_distribution_shift | unsupported_not_checked")
+
+
+class InvestigationModelsInfo(BaseModel):
+    """The v3 models that every Investigate-page (dynamic) investigation uses. The v2 account model above is a separate,
+    older model used only by the Accounts tool and the case review."""
+    used_by: str
+    ready: bool = Field(..., description="Both v3 models are loaded, so investigations can score transfers and accounts")
+    transaction_model: dict[str, Any]
+    account_model: dict[str, Any]
+    datasets: list[InvestigationDatasetSupport]
+
+
 class ModelStatusResponse(BaseModel):
     account_model: SingleModelInfo
     paysim_benchmark: SingleModelInfo
@@ -196,6 +212,9 @@ class ModelStatusResponse(BaseModel):
     inference_ready: bool
     status_detail: Optional[str] = None
     disclaimer: str
+    account_model_scope: Optional[str] = Field(
+        None, description="Where the v2 account model is used (it is not the model behind the Investigate page)")
+    investigation_models: Optional[InvestigationModelsInfo] = None
 
 
 # ------------------------------------------------------------------------------

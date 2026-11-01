@@ -6,7 +6,7 @@ import { AppRoutes } from '../App';
 import { InvestigatePage } from '../pages/InvestigatePage';
 import { toRequest, DEFAULT_FORM } from '../components/investigation/formModel';
 import { buildTrail, layoutTrail, TREE } from '../components/investigation/trail';
-import { whatHappened } from '../components/investigation/narrative';
+import { suspiciousHeading, whatHappened } from '../components/investigation/narrative';
 import { v2Api } from '../services/v2Api';
 import { InvestigationExplanationResponse, InvestigationResponse } from '../types/investigation';
 import { V2AccountProfileResponse } from '../types/v2';
@@ -533,7 +533,10 @@ describe('AI analyst stage', () => {
     expect(ai).toHaveAttribute('data-state', 'disabled');
     expect(ai).toHaveTextContent('AI analyst: turned off');
     expect(ai).toHaveTextContent(REPORT.ai_analysis.message);
+    expect(ai).toHaveTextContent('Nothing from this investigation was sent to an AI provider.');
     expect(within(ai).queryByText(/AI-generated/)).toBeNull();
+    expect(screen.queryByTestId('ai-request')).toBeNull();
+    expect(explain).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -629,11 +632,36 @@ describe('separately requested AI explanation', () => {
     account_id: 'ACC-VIC', report_digest: REPORT.report_digest!, data_as_of: null, duration_ms: 1, ai_analysis: COMPLETED, ...over,
   });
 
+  /** QA-01: the explanation is only ever requested by an explicit click in the AI stage. */
+  const requestIt = () => {
+    stage(/AI analyst/);
+    fireEvent.click(screen.getByTestId('ai-request'));
+  };
+
+  it('never requests an explanation on its own; it says so and offers the request', async () => {
+    await showReport(DEFERRED);
+    await new Promise((r) => setTimeout(r, 20));
+    expect(explain).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: /AI explanation: on request/ })).toBeInTheDocument();
+    for (const st of [/Fund trail/, /Risk evidence/, /Next steps/]) stage(st);
+    expect(explain).not.toHaveBeenCalled();
+    stage(/AI analyst/);
+    const ai = screen.getByTestId('ai-status');
+    expect(ai).toHaveAttribute('data-state', 'deferred');
+    expect(ai).toHaveTextContent('AI analyst: available on request');
+    expect(ai).toHaveTextContent('It is never generated automatically');
+    expect(ai).toHaveTextContent('nothing from this investigation is sent to an AI provider');
+    expect(explain).not.toHaveBeenCalled();
+  });
+
   it('shows the report at once, keeps every stage usable while the AI writes, then shows the explanation', async () => {
     const d = deferred<InvestigationExplanationResponse>();
     explain.mockReturnValueOnce(d.promise);
     await showReport(DEFERRED);
     expect(run.mock.calls[0][0]).toMatchObject({ account_id: 'ACC-VIC', ai_explanation: 'separate' });
+    expect(explain).not.toHaveBeenCalled();
+    requestIt();
+    stage(/Overview/);
     expect(explain).toHaveBeenCalledTimes(1);
     expect(explain).toHaveBeenCalledWith(expect.objectContaining({ account_id: 'ACC-VIC', ai_explanation: 'separate' }), expect.any(AbortSignal));
     expect(screen.getByRole('button', { name: /AI analyst writing/ })).toBeInTheDocument();
@@ -657,21 +685,27 @@ describe('separately requested AI explanation', () => {
   it('does not show an explanation of a different report', async () => {
     explain.mockResolvedValueOnce(answer({ report_digest: 'something-else' }));
     await showReport(DEFERRED);
-    stage(/AI analyst/);
+    requestIt();
     await waitFor(() => expect(screen.getByTestId('ai-status')).toHaveAttribute('data-state', 'stale'));
     expect(screen.getByTestId('ai-status')).toHaveTextContent('different version of this report');
     expect(screen.queryByText(/AI-generated/)).toBeNull();
   });
 
-  it('reports a failed explanation request without touching the report', async () => {
+  it('reports a failed explanation request without touching the report, and retries only on request', async () => {
     explain.mockRejectedValueOnce(new TypeError('Failed to fetch'));
     await showReport(DEFERRED);
-    stage(/AI analyst/);
+    requestIt();
     await waitFor(() => expect(screen.getByTestId('ai-status')).toHaveAttribute('data-state', 'failed'));
     expect(screen.getByTestId('ai-status')).toHaveTextContent('could not be reached for the AI explanation');
     expect(screen.queryByText(/AI-generated/)).toBeNull();
+    expect(explain).toHaveBeenCalledTimes(1);
     stage(/Risk evidence/);
     for (const f of REPORT.findings.filter((x) => x.kind !== 'model')) expect(document.getElementById(`finding-${f.finding_id}`)).toBeInTheDocument();
+    explain.mockResolvedValueOnce(answer());
+    stage(/AI analyst/);
+    fireEvent.click(screen.getByRole('button', { name: 'Try the AI explanation again' }));
+    await waitFor(() => expect(screen.getByTestId('ai-status')).toHaveAttribute('data-state', 'completed'));
+    expect(explain).toHaveBeenCalledTimes(2);
   });
 
   it('shows an unavailable explanation as unavailable', async () => {
@@ -680,7 +714,7 @@ describe('separately requested AI explanation', () => {
         message: 'The AI provider reported that it is temporarily overloaded or unavailable. The investigation results are unaffected.' },
     }));
     await showReport(DEFERRED);
-    stage(/AI analyst/);
+    requestIt();
     await waitFor(() => expect(screen.getByTestId('ai-status')).toHaveAttribute('data-state', 'unavailable'));
     expect(screen.getByTestId('ai-status')).toHaveTextContent('temporarily overloaded or unavailable');
     expect(screen.queryByText(/AI-generated/)).toBeNull();
@@ -693,6 +727,7 @@ describe('separately requested AI explanation', () => {
       return new Promise(() => {});
     });
     await showReport(DEFERRED);
+    requestIt();
     fireEvent.click(screen.getByRole('button', { name: /New investigation/ }));
     expect(signal?.aborted).toBe(true);
     expect(screen.queryByTestId('investigation-report')).toBeNull();
@@ -773,6 +808,67 @@ describe('dynamic investigation', () => {
     expect(within(card).getByTestId('restriction')).toHaveAttribute('data-state', mid.restriction.state);
     const ordinary = DYN.affected_accounts.ordinary_counterparties[0];
     expect(document.getElementById(`role-${ordinary}`)).toHaveTextContent('No restriction recommendation');
+  });
+
+  it('shows innocent explanations, verification and missing information for every connected account (QA-05)', async () => {
+    await showDynamic();
+    stage(/Affected accounts/);
+    const withSafeguards = DYN.role_assessments.filter((a) => a.account_id !== victim && a.restriction.innocent_explanations.length > 0);
+    expect(withSafeguards.length).toBeGreaterThan(0);
+    for (const a of withSafeguards) {
+      const card = document.getElementById(`role-${a.account_id}`)!;
+      const panel = within(card).getByTestId('restriction');
+      expect(within(panel).getByTestId('restriction-innocent')).toHaveTextContent(a.restriction.innocent_explanations[0]);
+      if (a.restriction.missing_information.length) {
+        expect(within(panel).getByTestId('restriction-missing')).toHaveTextContent(a.restriction.missing_information[0]);
+      }
+      if (a.restriction.verification_needed.length) {
+        expect(within(panel).getByTestId('restriction-verification')).toHaveTextContent(a.restriction.verification_needed[0]);
+      }
+      expect(panel).toHaveTextContent('A person at the authorised institution decides');
+    }
+    // The same safeguards in the Inspector, for an account selected in the fund trail.
+    const mid = DYN.role_assessments.find((a) => a.role_candidate === 'potential_intermediary')!;
+    stage(/Fund trail/);
+    fireEvent.click(within(screen.getByTestId('branch-story')).getAllByRole('button', { name: new RegExp(`^Step \\d+: .*${mid.account_id}`) })[0]);
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByTestId('restriction-innocent')).toHaveTextContent(mid.restriction.innocent_explanations[0]);
+    expect(within(dialog).getByTestId('restriction-missing')).toHaveTextContent(mid.restriction.missing_information[0]);
+    if (mid.uncertainty_reason) expect(dialog).toHaveTextContent(mid.uncertainty_reason);
+  });
+
+  it('keeps what the records show, the interpretation and the unknowns apart for each account (QA-03)', async () => {
+    await showDynamic();
+    stage(/Affected accounts/);
+    const mid = DYN.role_assessments.find((a) => a.role_candidate === 'potential_intermediary')!;
+    const card = document.getElementById(`role-${mid.account_id}`)!;
+    expect(within(card).getByTestId('block-observed')).toHaveTextContent('Recorded fact');
+    const interp = within(card).getByTestId('block-interpretation');
+    expect(interp).toHaveTextContent(`Possible role: ${mid.role_label}`);
+    expect(interp).toHaveTextContent('not a finding about the holder');
+    expect(within(card).getByTestId('block-unknown')).toHaveTextContent('Whether the holder authorised, knew about or was deceived');
+    if (mid.uncertainty_reason) expect(within(card).getByTestId('block-unknown')).toHaveTextContent(mid.uncertainty_reason);
+  });
+
+  it('asks the victim question only for a victim-side result and explains what a calibrated score is (QA-12)', async () => {
+    await showDynamic();
+    expect(screen.getByTestId('assessment-question')).toHaveTextContent(
+      DYN.victim_assessment.status === 'potential_victim' ? 'potentially a victim?' : 'What the records show about');
+    const first = screen.getAllByTestId('scored-transfer')[0];
+    expect(first).toHaveTextContent('A model score, not a probability of fraud');
+    expect(first).toHaveTextContent(`review threshold ${((DYN.model_metadata.transaction_model.threshold ?? 0) * 100).toFixed(2)}%`);
+  });
+
+  it('gives an abstaining or forwarding result a neutral heading', async () => {
+    explain.mockReturnValue(new Promise(() => {}));
+    run.mockResolvedValueOnce({ ...DYN, victim_assessment: { ...DYN.victim_assessment, status: 'insufficient_evidence', label: 'Insufficient evidence',
+      role_candidate: 'unknown_role', headline: 'Its flagged outgoing transfer(s) were paid out of money it had just received.' } });
+    renderPage(`/investigate?account=${victim}&dataset=forensic-scenarios`);
+    await screen.findByTestId('account-brief');
+    fireEvent.click(screen.getByRole('button', { name: 'Start fund investigation' }));
+    await screen.findByTestId('investigation-report');
+    expect(screen.getByTestId('assessment-question')).toHaveTextContent(`What the records show about ${victim}`);
+    expect(screen.getByTestId('assessment-question')).not.toHaveTextContent('victim');
   });
 
   it('discusses restriction with human-approval language and offers no action that changes an account', async () => {
@@ -891,6 +987,8 @@ describe('dynamic investigation', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Start fund investigation' }));
     await screen.findByTestId('investigation-report');
     stage(/AI analyst/);
+    expect(explain).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByTestId('ai-request'));
     await waitFor(() => expect(screen.getByTestId('ai-status')).toHaveAttribute('data-state', 'disabled'));
   });
 
@@ -910,6 +1008,19 @@ describe('dynamic investigation', () => {
     expect(brief).not.toHaveTextContent('flagged by the model or the fixed rules');
     expect(within(brief).getByRole('list', { name: 'Model availability' })).toHaveTextContent('reference only, not validated on this dataset');
     expect(screen.getByTestId('models-reference-only')).toHaveTextContent('Shown for reference only on this ledger.');
+  });
+
+  it('says on each dataset card whether the models count as evidence there, before any account is chosen (QA-16)', async () => {
+    vi.mocked(v2Api.listDatasets).mockResolvedValueOnce([
+      { dataset_id: 'demo-ledger', title: 'FraudShield demo ledger', description: 'd', evaluation_labels_note: '', available: true,
+        model_support: 'unsupported_distribution_shift', model_note: 'Out of distribution.' },
+      { dataset_id: 'forensic-scenarios', title: 'Forensic scenario ledger', description: 'f', evaluation_labels_note: '', available: true,
+        model_support: 'validated_in_distribution', model_note: 'Same generator family.' },
+    ]);
+    renderPage();
+    expect(await screen.findByTestId('model-support-demo-ledger')).toHaveTextContent('Models reference only: out of distribution');
+    expect(screen.getByTestId('model-support-forensic-scenarios')).toHaveTextContent('Models validated on this dataset');
+    expect(getDatasetAccount).not.toHaveBeenCalled();
   });
 
   it('moves through the dataset radio group with the arrow keys and lists sample reasons as text', async () => {
@@ -955,6 +1066,33 @@ describe('dynamic investigation', () => {
     expect(story(withFlags([model]))).not.toContain('rules');
     expect(story(withFlags([rule]))).toContain('The rules flag this transfer as unusual');
     expect(story(withFlags([rule, model]))).toContain('and the transaction model flags it for review');
+  });
+
+  it('never mixes model-flagged and rule-only transfers in one count (QA-06)', async () => {
+    // The FS-10B80A33 shape: one transfer flagged by the validated model, one flagged only by a fixed rule.
+    const seed = REPORT.victim.flagged_transfers[0];
+    const model = { code: 'MODEL_TRANSACTION_RISK', explanation: 'At or above the threshold.' };
+    const rule = seed.flags.find((f) => f.code !== 'MODEL_TRANSACTION_RISK')!;
+    const second = { ...seed, transaction_id: 'TX-RULE-ONLY', amount: 50843, timestamp: seed.timestamp, flags: [rule] };
+    const mixed: InvestigationResponse = {
+      ...REPORT,
+      victim: { ...REPORT.victim, flagged_transfers: [{ ...seed, amount: 30124, flags: [model] }, second] },
+    };
+    const [line] = whatHappened(mixed, buildTrail(mixed), true);
+    expect(line).toContain('made 2 flagged transfers');
+    expect(line).toContain('1 transfer (₹30,124) flagged by the transaction model and 1 (₹50,843) by a fixed rule only');
+    expect(line).toContain('which the validated transaction model does not support');
+    expect(line).not.toMatch(/₹80,967 in total/);
+
+    const t = { ...DYN.suspicious_transactions[0], transaction_id: 'TX-RULE-ONLY', model_flag: false, risk_category: 'low' as const,
+      rule_flags: [{ code: 'AMOUNT_ABOVE_OWN_HISTORY', explanation: 'Far above its own earlier transfers.' }] };
+    const one = { ...DYN, suspicious_transactions: DYN.suspicious_transactions.slice(0, 1), uncorroborated_rule_flags: [t] };
+    expect(suspiciousHeading(one)).toBe(
+      "1 of this account's transfers was flagged by the validated transaction model. 1 more was flagged by a fixed rule only; it is listed below and not treated as suspicious. Each was scored using only records from before it.",
+    );
+    const unvalidated = { ...one, transaction_scoring: { ...one.transaction_scoring, model_used_as_evidence: false } };
+    expect(suspiciousHeading(unvalidated)).toContain('flagged by the fixed rules (the transaction model is not validated on this dataset');
+    expect(suspiciousHeading(unvalidated)).not.toContain('transaction model or');
   });
 
   it('cancels the account lookups when the brief is left', async () => {

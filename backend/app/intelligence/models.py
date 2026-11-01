@@ -78,15 +78,25 @@ class ScoringModel:
         return out
 
     def out_of_range(self, X: pd.DataFrame) -> np.ndarray:
-        """Number of features outside the [0.5th, 99.5th] percentile range seen in training (NaN never counts)."""
+        """Number of features outside the [0.5th, 99.5th] percentile range seen in training (NaN never counts).
+
+        The bounds are inclusive with a relative tolerance of RANGE_TOLERANCE: a value one floating-point step beyond a
+        stored bound (e.g. log1p(2) computed as 1.0986122886681096 against a stored 1.0986122886681098) is the same
+        number computed on another platform, not an out-of-range input (QA-09)."""
         rng = self.meta.get("training_ranges") or {}
         n = np.zeros(len(X), dtype=int)
         for f, (lo, hi) in rng.items():
             if f in X:
                 v = X[f].to_numpy(dtype=float)
-                n += ((v < lo) | (v > hi)).astype(int)
+                tol_lo = RANGE_TOLERANCE * max(1.0, abs(float(lo)))
+                tol_hi = RANGE_TOLERANCE * max(1.0, abs(float(hi)))
+                n += ((v < lo - tol_lo) | (v > hi + tol_hi)).astype(int)
         return n
 
+
+# Relative tolerance for the training-range check: far below any real difference in these features (counts, logs of
+# counts, ratios), far above floating-point noise between platforms (about 1e-16 relative).
+RANGE_TOLERANCE = 1e-9
 
 _cache: dict[str, ScoringModel] = {}
 _lock = threading.Lock()

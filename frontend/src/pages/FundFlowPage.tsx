@@ -355,6 +355,7 @@ export const FundFlowPage: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label={traceMode === 'account' ? 'Account ID to trace' : 'Case ID to trace'}
                 placeholder={traceMode === 'account' ? 'Enter Account ID (e.g. ACC-000001)...' : 'Enter Case ID (e.g. FS-1042)...'}
                 className="w-full pl-9 pr-14 py-2 bg-[#F6F6FC] border border-[#E4E5F0] rounded-xl text-xs text-[#141526] font-mono focus:outline-none focus:border-[#6246EA] focus:ring-2 focus:ring-[#6246EA]/15"
               />

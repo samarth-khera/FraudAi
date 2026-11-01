@@ -8,6 +8,43 @@ never sees the key.
 Code: `backend/app/services/v2/ai_analyst.py` (policy, payload, validation) and
 `backend/app/services/v2/gemini_provider.py` (the only module that uses the official `google-genai` SDK).
 
+## Production safeguards (QA remediation, 2026-11-02)
+
+The 2026-11-01 production QA audit found the analyst live in production, requested automatically for every
+investigation, anonymous and unthrottled, with an output filter that let guilt and freeze statements through
+(QA-01, QA-02, QA-13). Since then:
+
+- **Off in production unless approved twice.** With `ENVIRONMENT=production`, `GEMINI_ANALYST_ENABLED=true` alone
+  does nothing: the analyst also needs `GEMINI_ANALYST_PRODUCTION_APPROVED=true`, set by an operator once the
+  safeguards below are acceptable for the deployment. Without it the SDK is not even imported at startup, and a log
+  line names the missing approval (never the key).
+- **Generic public state.** In production every "cannot explain" configuration (switched off, waiting for
+  approval, or no key) answers the same: `state: "disabled"`, message "The optional AI analyst is not available on
+  this server.", no provider, model or privacy policy. A response never reveals whether a key is configured.
+  Development keeps the detailed `disabled` / `not_configured` states.
+- **Never automatic.** `/investigate` no longer requests an explanation. The AI stage shows **Request AI
+  explanation**, and only that click sends `POST /api/v2/dynamic-investigations/explanation`. Until then nothing from
+  the investigation is sent to an AI provider, and the stage says so. `POST /api/v2/investigations` now defaults to
+  `ai_explanation: "separate"` as well; `"inline"` must be asked for.
+- **Server-side guard on the real provider** (process-wide, in memory, never waits):
+  - at most one Gemini call at a time: a concurrent request returns `unavailable / busy` at once;
+  - at most `GEMINI_MAX_CALLS_PER_HOUR` calls (default 30) in any rolling hour: `unavailable / local_rate_limited`;
+  - a completed explanation of the identical extract (same model, instructions and pseudonymised data) is reused
+    for an hour instead of calling Gemini again. Failures are not cached.
+  Per-client limits are not used: behind Render's proxy the client address is not trustworthy without configured
+  forwarded-header trust, so the global limits are the reliable bound.
+- **Fail-closed output safety** (see Validation): manual checks are codes from a fixed list with server wording;
+  guilt, criminal-identity, certainty, punitive or restriction wording (in any spelling, including look-alike letters,
+  full-width or accented characters, zero-width characters and letter-spaced words) removes a statement; in the
+  summary or confidence note, or when a required section would be empty, or when more than half of the statements fail,
+  the whole answer is discarded. Every ID-like token must be an alias that was sent; real-format IDs always fail.
+- The advisory restriction state is no longer sent to the model at all.
+
+**Production mitigation still pending owner approval:** setting `GEMINI_ANALYST_ENABLED=false` on the Render service
+(and leaving `GEMINI_ANALYST_PRODUCTION_APPROVED` unset). The code above keeps the analyst off in production even
+without that change once it is deployed, but until a new build is deployed the running service still has the
+2026-11-01 behaviour.
+
 ## Render configuration
 
 Set these on the `fraudshield-api` service (Environment tab). Adding a variable does not prove the integration
@@ -22,6 +59,8 @@ works; check `ai_analysis.state` on a real investigation afterwards.
 | `GEMINI_MAX_OUTPUT_TOKENS` | no | `4096` (bounded 512–8192) | `2048` |
 | `GEMINI_THINKING_LEVEL` | no | `low`; empty sends no thinking setting | `low` |
 | `GEMINI_PRIVACY_POLICY` | no | `synthetic_only` | not set (default) |
+| `GEMINI_ANALYST_PRODUCTION_APPROVED` | in production | off (only `true` approves) | not set (recommended: leave unset) |
+| `GEMINI_MAX_CALLS_PER_HOUR` | no | `30` (bounded 1–1000) | not set |
 
 **Thinking level must suit the model.** `gemini-3.8-flash` accepts only `low`, `medium` and `high`. Google
 documents that `minimal` "is not supported and returns an error" (HTTP 400). That exact setting caused the
@@ -35,15 +74,17 @@ deadline defaults to 600 s. The SDK sends `GEMINI_TIMEOUT_SECONDS` to Gemini as 
 On 2026-10-29 a valid production request (thinking `low`) reached the 55 s deadline and Gemini returned 504
 (`reason=timeout http_status=504 latency_ms=54919`). So the UI no longer waits for the AI:
 
-1. `/investigate` sends `POST /api/v2/investigations` with `ai_explanation: "separate"`. The deterministic report
-   returns at once with `ai_analysis.state = "deferred"`.
-2. The page then calls `POST /api/v2/investigations/explanation` with the same body. The server recomputes the same
-   report itself (the browser never supplies evidence), runs the analyst, and returns
+1. `/investigate` sends `POST /api/v2/dynamic-investigations` with `ai_explanation: "separate"`. The deterministic
+   report returns at once with `ai_analysis.state = "deferred"` when an explanation could be produced, otherwise with
+   the analyst's real state.
+2. Only when the investigator clicks **Request AI explanation**, the page calls
+   `POST /api/v2/dynamic-investigations/explanation` with the same body. The server recomputes the same report itself
+   (the browser never supplies evidence), runs the analyst, and returns
    `{account_id, report_digest, data_as_of, duration_ms, ai_analysis}`.
 3. The page shows the explanation only if its `report_digest` equals the displayed report's. Otherwise it reports
    that the report changed. While waiting, it shows an honest "writing the explanation…" state with elapsed seconds.
 
-API clients that omit `ai_explanation` get the previous behaviour (`"inline"`: the response waits for the AI).
+API clients that omit `ai_explanation` get `"separate"` (since 2026-11-02; it used to be `"inline"`).
 
 A client calling the explanation endpoint must wait longer than `GEMINI_TIMEOUT_SECONDS` + 2 s (the server's hard
 bound). If the client gives up first, the server's Gemini call keeps running. On 2026-10-29, a client with a 120 s cap
@@ -84,10 +125,10 @@ If Google retires the model, the analyst reports `unavailable` with reason `mode
 | State | Meaning |
 |---|---|
 | `completed` | Gemini answered and the answer passed schema validation and grounding. Only this state carries `report`. |
-| `disabled` | `GEMINI_ANALYST_ENABLED` is not `true`. |
-| `not_configured` | Enabled, but no `GEMINI_API_KEY`. |
+| `disabled` | `GEMINI_ANALYST_ENABLED` is not `true`. In production also: not approved (`GEMINI_ANALYST_PRODUCTION_APPROVED`), or no key; the message is the same generic one in every such case. |
+| `not_configured` | Development only: enabled, but no `GEMINI_API_KEY`. |
 | `skipped_privacy_policy` | The ledger is not verified as the synthetic demo ledger, and no opt-in is set. Nothing was sent. |
-| `unavailable` | The call or its output failed. `unavailable_reason` says how: `timeout`, `rate_limited` (429 / quota), `auth_failed` (401, 403, or a 400 whose `ErrorInfo` says the key is invalid), `request_rejected` (other 4xx), `model_not_found`, `service_unavailable` (503: Google overloaded or down; try later), `upstream_error` (other 5xx or network), `blocked`, `empty_output`, `truncated_output`, `malformed_output`, `invalid_output`, `policy_violation` or `invalid_configuration` (a setting the model is documented to reject; no request sent). |
+| `unavailable` | The call or its output failed, or the server's guard refused it (`busy`: another explanation is being written; `local_rate_limited`: the hourly limit is reached; no request sent). Otherwise `unavailable_reason` says how: `timeout`, `rate_limited` (429 / quota), `auth_failed` (401, 403, or a 400 whose `ErrorInfo` says the key is invalid), `request_rejected` (other 4xx), `model_not_found`, `service_unavailable` (503: Google overloaded or down; try later), `upstream_error` (other 5xx or network), `blocked`, `empty_output`, `truncated_output`, `malformed_output`, `invalid_output`, `policy_violation` or `invalid_configuration` (a setting the model is documented to reject; no request sent). |
 | `deferred` | Only with `ai_explanation: "separate"`: the explanation comes from `POST /api/v2/investigations/explanation`. Nothing was sent. |
 
 The legacy `status` field (`generated` / `not_configured` / `failed` / `rejected`) is still sent for older clients.
@@ -143,17 +184,36 @@ Gemini API free-tier data handling differs from paid-tier handling, so the defau
 
 1. The answer must be JSON matching a strict schema:
    - `summary`, `key_observations[{text, basis, evidence_ids}]`, `evidence_references`, `reasoning_and_limitations`,
-     `recommended_manual_checks[{text, evidence_ids}]`, `confidence_note`
+     `recommended_manual_checks[{check, evidence_ids}]`, `confidence_note`
+   - `check` is one of ten fixed codes (`MANUAL_CHECKS` in the code); the text shown is the server's reviewed
+     wording for that code, never text written by the model. An unknown code rejects the answer (`invalid_output`).
    - no extra fields, and length limits on every field
-2. Grounding:
+2. Grounding (every statement, every ID-like token):
    - An observation with basis `observed`, `rule` or `model` must cite IDs, and every ID must have been in the
      extract; otherwise the observation is dropped.
-   - Unknown references are omitted.
-   - A summary or confidence note that mentions an unknown ID rejects the whole answer.
-3. Statements asserting guilt or directing a freeze, block or closure are dropped. In the summary, they reject the
-   whole answer (`policy_violation`).
-4. Aliases are mapped back to the report's own IDs, so the UI can link each reference to its transfer, account or
+   - Any `PA-`, `PT-` or `F-` token in the text must be an alias that was sent, in any spelling (lower case,
+     typographic hyphens, extra digits). Real-format IDs (`ACC-…`, `TXN-…`, `TX-…`, `FS-…`, `CASE-…`) are never sent,
+     so citing one is a fabrication or a leak and always fails.
+   - In the summary or confidence note an unknown reference rejects the whole answer (`invalid_output`).
+3. Safety (deterministic, after normalising Unicode compatibility forms, accents, zero-width characters, typographic
+   quotes and letter-spaced words; letters from look-alike scripts such as Cyrillic always fail):
+   - guilt or criminal identity or acts (guilty, fraudster, criminal, scammer, mule, accomplice, stole, laundered,
+     committed fraud, ran the scheme, …), affirmed or denied;
+   - punitive or restriction wording (freeze, block, suspend, restrict, seize, blacklist, deactivate, place a hold,
+     prosecute, …), even when ruled out, and everyday verbs with an account, card, transfer or money as their
+     object (close the account, shut down PA-002's account, PA-002 should be closed, claw back the funds, …);
+   - certainty about wrongdoing (definitely, proves, beyond doubt, is fraudulent, …) unless negated ("does not
+     prove", "no proof");
+   - prompt-injection residue (ignore previous instructions, system prompt, …).
+   A failing statement is dropped; in the summary or confidence note it discards the whole answer
+   (`policy_violation`).
+4. Fail closed: if every check or every limitation is dropped, or more than half of all statements are dropped, the
+   whole answer is discarded (`policy_violation`).
+5. Aliases are mapped back to the report's own IDs, so the UI can link each reference to its transfer, account or
    finding.
+
+Regression tests: `backend/tests/test_qa_remediation_ai.py` (the 13 phrasings the 2026-11-01 security audit found, 38
+paraphrases including obfuscated spellings, 16 ordinary evidence sentences that must pass, and the grounding cases).
 
 ## Testing
 
@@ -175,7 +235,8 @@ Gemini API free-tier data handling differs from paid-tier handling, so the defau
   3. Check that the Render logs show no `AI analyst configuration problem` line for the current instance.
   4. Send exactly one request: `POST /api/v2/investigations/explanation` with body
      `{"account_id": "ACC-000001", "ai_explanation": "separate"}`. Alternatively, run `ACC-000001` once from
-     `/investigate`, which makes the same single call after showing the report.
+     `/investigate` and click **Request AI explanation**, which makes the same single call. (In production this needs
+     `GEMINI_ANALYST_PRODUCTION_APPROVED=true` as well; see Production safeguards.)
   5. Use a client timeout longer than `GEMINI_TIMEOUT_SECONDS` + 2 s, for example 240 s for 180.
   6. Read `ai_analysis.state`, `unavailable_reason`, `model` and `latency_ms`. The log line is
      `AI analyst completed: …` or `AI analyst unavailable: reason=… http_status=… … provider_status=…`.

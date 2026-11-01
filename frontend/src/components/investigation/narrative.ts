@@ -3,6 +3,7 @@
  * inferred beyond what the trace and the rules already state.
  */
 import { InvestigationResponse, TransferFlag } from '../../types/investigation';
+import { DynamicReport } from '../../types/dynamic';
 import { channelLabel, formatDateTime, formatMoney, formatDuration } from '../../lib/format';
 import { Trail } from './trail';
 import { MODEL_FLAG_CODE } from './labels';
@@ -27,7 +28,11 @@ const MANY_FLAGGED = {
   both: 'that the rules, the transaction model or both flag for review',
 };
 
-export function whatHappened(report: InvestigationResponse, trail: Trail): string[] {
+const byModel = (t: { flags: TransferFlag[] }) => t.flags.some((f) => f.code === MODEL_FLAG_CODE);
+
+/** `modelIsEvidence`: the transaction model is validated on this dataset, so a transfer only a fixed rule flags is
+ *  not treated as suspicious (the overview lists it separately); the story then counts the two kinds apart. */
+export function whatHappened(report: InvestigationResponse, trail: Trail, modelIsEvidence = false): string[] {
   const v = report.victim;
   const out: string[] = [];
   const flaggedOut = v.flagged_transfers.filter((t) => t.origin_account_id === v.account_id);
@@ -40,9 +45,22 @@ export function whatHappened(report: InvestigationResponse, trail: Trail): strin
     );
   } else if (flaggedOut.length > 1) {
     const total = flaggedOut.reduce((s, t) => s + t.amount, 0);
-    out.push(
-      `${v.account_id} made ${plural(flaggedOut.length, 'transfer')} ${MANY_FLAGGED[flagSource(flaggedOut)]}, ${formatMoney(total)} in total, starting ${formatDateTime(flaggedOut[0].timestamp)}.`,
-    );
+    const model = flaggedOut.filter(byModel);
+    const ruleOnly = flaggedOut.filter((t) => !byModel(t));
+    const start = `starting ${formatDateTime(flaggedOut[0].timestamp)}`;
+    if (model.length && ruleOnly.length) {
+      // Never one total that mixes the two: say how many each check flagged, and what each amounts to.
+      const sum = (ts: typeof flaggedOut) => formatMoney(ts.reduce((s, t) => s + t.amount, 0));
+      out.push(
+        `${v.account_id} made ${plural(flaggedOut.length, 'flagged transfer')}, ${start}: ${plural(model.length, 'transfer')} (${sum(model)}) ` +
+          `flagged by the transaction model and ${ruleOnly.length} (${sum(ruleOnly)}) by a fixed rule only` +
+          (modelIsEvidence ? ', which the validated transaction model does not support.' : '.'),
+      );
+    } else {
+      out.push(
+        `${v.account_id} made ${plural(flaggedOut.length, 'transfer')} ${MANY_FLAGGED[flagSource(flaggedOut)]}, ${formatMoney(total)} in total, ${start}.`,
+      );
+    }
   } else if (flaggedIn.length) {
     out.push(`${v.account_id} received ${plural(flaggedIn.length, 'transfer')} ${MANY_FLAGGED[flagSource(flaggedIn)]}; none of its outgoing transfers were flagged.`);
   } else {
@@ -78,4 +96,18 @@ export function whatHappened(report: InvestigationResponse, trail: Trail): strin
     out.push('No transfers could be traced from this account with the current settings.');
   }
   return out;
+}
+
+/** Counts each check's flags apart: with a validated model, the list holds the model's flags only, and transfers only a
+ *  fixed rule flags are counted separately (they are shown below, not treated as suspicious). */
+export function suspiciousHeading(intel: DynamicReport): string {
+  const n = intel.suspicious_transactions.length;
+  const was = (k: number) => (k === 1 ? 'was' : 'were');
+  const scored = 'Each was scored using only records from before it.';
+  if (!intel.transaction_scoring.model_used_as_evidence) {
+    return `${n} of this account's transfers ${was(n)} flagged by the fixed rules (the transaction model is not validated on this dataset, so its scores are reference only). ${scored}`;
+  }
+  const r = intel.uncorroborated_rule_flags.length;
+  const more = r ? ` ${r} more ${was(r)} flagged by a fixed rule only; ${r === 1 ? 'it is' : 'they are'} listed below and not treated as suspicious.` : '';
+  return `${n} of this account's transfers ${was(n)} flagged by the validated transaction model.${more} ${scored}`;
 }

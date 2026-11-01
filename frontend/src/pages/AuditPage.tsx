@@ -588,6 +588,7 @@ export const AuditPage: React.FC = () => {
           <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
             {/* Time Range Selector */}
             <select
+              aria-label="Time range"
               value={timeRange}
               onChange={(e) => {
                 setTimeRange(e.target.value as any);
@@ -603,6 +604,7 @@ export const AuditPage: React.FC = () => {
 
             {/* Actor Selector */}
             <select
+              aria-label="Actor"
               value={actorFilter}
               onChange={(e) => {
                 setActorFilter(e.target.value);
@@ -618,6 +620,7 @@ export const AuditPage: React.FC = () => {
 
             {/* Sort Order Selector */}
             <select
+              aria-label="Sort order"
               value={sortOrder}
               onChange={(e) => {
                 setSortOrder(e.target.value as any);
@@ -637,6 +640,7 @@ export const AuditPage: React.FC = () => {
             <Search className="w-4 h-4 text-[#868AA2] absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
+              aria-label="Search audit events"
               placeholder="Search across Case ID, Account ID, Actor, Action, or Notes..."
               value={searchTerm}
               onChange={(e) => {
@@ -658,6 +662,7 @@ export const AuditPage: React.FC = () => {
           <div className="sm:col-span-4 flex items-center gap-2">
             <input
               type="text"
+              aria-label="Filter by case ID"
               placeholder="Filter by Case (e.g. FS-1042)"
               value={caseFilter}
               onChange={(e) => {
@@ -898,6 +903,7 @@ export const AuditPage: React.FC = () => {
               <div className="flex items-center gap-1.5 text-xs text-[#5C6079]">
                 <span>Rows:</span>
                 <select
+                  aria-label="Rows per page"
                   value={pageSize}
                   onChange={(e) => {
                     setPageSize(Number(e.target.value));

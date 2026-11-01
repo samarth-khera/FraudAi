@@ -74,7 +74,7 @@ const ModelStatusIndicator: React.FC<{ placement?: 'up' | 'down' }> = ({ placeme
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        aria-label={`Account model status: ${view.label}`}
+        aria-label={`Model status: ${view.label}`}
         className="inline-flex w-full items-center gap-2 rounded-xl border border-line bg-white px-3 py-2 text-xs font-semibold text-ink hover:border-iris-line transition-colors cursor-pointer"
       >
         <span className={`w-2 h-2 rounded-full shrink-0 ${DOT[view.state]}`} aria-hidden="true" />

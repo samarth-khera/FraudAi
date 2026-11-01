@@ -49,6 +49,10 @@ class DatasetSummary(BaseModel):
     title: str
     description: str
     evaluation_labels_note: str
+    model_support: Literal["validated_in_distribution", "unsupported_distribution_shift", "unsupported_not_checked"] = Field(
+        ..., description="Whether the v3 models' outputs count as evidence on this dataset (validated_in_distribution) or "
+                         "are reference only; known before any account is chosen")
+    model_note: str = ""
     available: bool
     unavailable_reason: Optional[str] = None
     source: Optional[DataSourceInfo] = None

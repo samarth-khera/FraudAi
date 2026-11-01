@@ -270,14 +270,20 @@ const AccountDetail: React.FC<{
       {ra ? (
         <>
           <p className="mt-2 text-ink-soft leading-relaxed">{ra.headline}</p>
-          <Group title={`Evidence for this role (${STRENGTH_LABEL[ra.evidence_strength].toLowerCase()})`}>
+          <p className="mt-1 text-xs text-mute" data-testid="interpretation-note">
+            The role is an interpretation ({STRENGTH_LABEL[ra.evidence_strength].toLowerCase()}) for human review, not a finding.
+          </p>
+          <Group title="What the records show">
             <EvidenceList items={ra.evidence_items} empty="No supporting evidence found in the available data." />
           </Group>
-          {(ra.contradictory_evidence.length > 0 || ra.uncertainty_reason) && (
-            <Group title="Against it, and what is unknown">
-              <Bullets items={[...ra.contradictory_evidence, ...(ra.uncertainty_reason ? [ra.uncertainty_reason] : [])]} />
+          {ra.contradictory_evidence.length > 0 && (
+            <Group title="Against the interpretation">
+              <Bullets items={ra.contradictory_evidence} />
             </Group>
           )}
+          <Group title="Unknown">
+            <Bullets items={[...(ra.uncertainty_reason ? [ra.uncertainty_reason] : []), 'Whether the holder authorised, knew about or was deceived into these transfers.']} />
+          </Group>
           <div className="mt-4">
             <RestrictionPanel r={ra.restriction} compact />
           </div>

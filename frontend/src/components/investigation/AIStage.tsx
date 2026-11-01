@@ -38,7 +38,7 @@ export const AIStatusChip: React.FC<{ ai: AIAnalysis; explanation: ExplanationVi
     dot = 'bg-sev-elevated';
   } else {
     const s = aiState(explanation?.phase === 'done' ? explanation.analysis : ai);
-    label = s === 'completed' ? 'AI explanation ready' : AI_STATE[s].title;
+    label = s === 'completed' ? 'AI explanation ready' : s === 'deferred' ? 'AI explanation: on request' : AI_STATE[s].title;
     dot = s === 'completed' ? 'bg-iris' : s === 'unavailable' ? 'bg-sev-elevated' : 'bg-faint';
   }
   return (
@@ -72,11 +72,25 @@ const Block: React.FC<{ q: string; children: React.ReactNode }> = ({ q, children
   </section>
 );
 
-export const AIStage: React.FC<{ ai: AIAnalysis; explanation: ExplanationView | null }> = ({ ai: reportAI, explanation }) => {
+/** Sends nothing anywhere: the explanation is requested only when the investigator presses the button. */
+const RequestPanel: React.FC<{ onRequest: () => void; again?: boolean }> = ({ onRequest, again }) => (
+  <button type="button" onClick={onRequest} className="btn-primary mt-4" data-testid="ai-request">
+    <Sparkles className="w-4 h-4" aria-hidden="true" />
+    {again ? 'Try the AI explanation again' : 'Request AI explanation'}
+  </button>
+);
+
+const NOTHING_SENT = 'Nothing from this investigation was sent to an AI provider.';
+
+export const AIStage: React.FC<{ ai: AIAnalysis; explanation: ExplanationView | null; onRequest?: () => void }> = ({
+  ai: reportAI,
+  explanation,
+  onRequest,
+}) => {
   const heading = (
     <StageHeading
       title="AI analyst"
-      lead="A plain-language reading of the evidence by Google Gemini, from a pseudonymised extract of this report. It is shown only after it passes validation against this exact report, and it never changes a score, amount or finding."
+      lead="An optional plain-language reading of the evidence by Google Gemini, written only when an investigator asks for it, from a pseudonymised extract of this report. It is shown only after it passes validation against this exact report, and it never changes a score, amount or finding."
     />
   );
 
@@ -102,6 +116,7 @@ export const AIStage: React.FC<{ ai: AIAnalysis; explanation: ExplanationView | 
               ? 'The explanation was for a different version of this report (the ledger changed in between), so it is not shown. Run the investigation again.'
               : explanation.message}
           </p>
+          {explanation.phase === 'failed' && onRequest && <RequestPanel onRequest={onRequest} again />}
         </div>
       </div>
     );
@@ -112,6 +127,7 @@ export const AIStage: React.FC<{ ai: AIAnalysis; explanation: ExplanationView | 
   const r = state === 'completed' ? ai.report : null;
 
   if (!r) {
+    const offline = state === 'disabled' || state === 'not_configured' || state === 'skipped_privacy_policy';
     return (
       <div className="space-y-6">
         {heading}
@@ -120,7 +136,19 @@ export const AIStage: React.FC<{ ai: AIAnalysis; explanation: ExplanationView | 
             <Bot className="w-5 h-5 text-faint" aria-hidden="true" /> {AI_STATE[state].title}
             <Badge tone={state === 'unavailable' ? 'elevated' : 'neutral'}>{state.replace(/_/g, ' ')}</Badge>
           </p>
-          <p className="mt-2 text-sm text-mute max-w-2xl">{ai.message}</p>
+          {state === 'deferred' && !explanation ? (
+            <p className="mt-2 text-sm text-mute max-w-2xl">
+              It is never generated automatically. If you request it, a pseudonymised extract of this report (no names, contact
+              details or real account and transfer IDs) is sent to Google Gemini; writing it can take a minute or more. Until you
+              ask, nothing from this investigation is sent to an AI provider.
+            </p>
+          ) : (
+            <p className="mt-2 text-sm text-mute max-w-2xl">
+              {ai.message}
+              {offline && <> {NOTHING_SENT}</>}
+            </p>
+          )}
+          {state === 'deferred' && !explanation && onRequest && <RequestPanel onRequest={onRequest} />}
           {state === 'completed' && ai.sections.length > 0 && <QA sections={ai.sections} />}
           {state !== 'completed' && (
             <p className="mt-4 text-sm text-ink-soft">The overview, fund trail, risk evidence and next steps are complete without it.</p>

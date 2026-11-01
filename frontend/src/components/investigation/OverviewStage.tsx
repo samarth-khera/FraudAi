@@ -22,7 +22,8 @@ const Fact: React.FC<{ label: string; value: React.ReactNode; note?: string }> =
 export const OverviewStage: React.FC<{ onFollow: () => void }> = ({ onFollow }) => {
   const { report, trail, intel } = useCase();
   const v = report.victim;
-  const story = useMemo(() => whatHappened(report, trail), [report, trail]);
+  const modelIsEvidence = !!intel?.transaction_scoring.model_used_as_evidence;
+  const story = useMemo(() => whatHappened(report, trail, modelIsEvidence), [report, trail, modelIsEvidence]);
   const out = trail.branches.filter((b) => b.direction === 'downstream').length;
   const inn = trail.branches.filter((b) => b.direction === 'upstream').length;
 

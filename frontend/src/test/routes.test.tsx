@@ -135,10 +135,46 @@ describe('Model status indicator', () => {
       </MemoryRouter>
     );
     // The sidebar and the small-screen bar each show the status; both come from one shared request.
-    const [button] = await screen.findAllByRole('button', { name: /Account model status: Model unavailable/i });
+    const [button] = await screen.findAllByRole('button', { name: /Model status: Model unavailable/i });
     fireEvent.click(button);
     expect(screen.getByRole('dialog')).toHaveTextContent(/model file is missing/i);
     expect(screen.getByRole('link', { name: /Model performance details/i })).toHaveAttribute('href', '/tools/model');
+  });
+
+  it('describes the v3 models that investigations use, apart from the v2 account model (QA-07)', async () => {
+    const v3 = (version: string) => ({ available: true, purpose: 'p', model_version: version, threshold: 0.05, held_out_evaluation: null });
+    vi.mocked(v2Api.getModelsStatus).mockResolvedValue(
+      status({
+        account_model: { ...modelInfo(true), version: 'v2-account-2.0.0' },
+        investigation_models: {
+          used_by: 'Investigate page (dynamic investigations)', ready: true,
+          transaction_model: v3('v3-transaction-1.0.0'), account_model: v3('v3-account-1.0.0'),
+          datasets: [{ dataset_id: 'forensic-scenarios', title: 'Forensic scenario ledger', model_support: 'validated_in_distribution' }],
+        },
+      }),
+    );
+    render(
+      <MemoryRouter>
+        <UnifiedHeader />
+      </MemoryRouter>
+    );
+    const [button] = await screen.findAllByRole('button', { name: /Model status: Models ready/i });
+    fireEvent.click(button);
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveTextContent('Investigations use the transaction model v3-transaction-1.0.0 and the account behaviour model v3-account-1.0.0');
+    expect(dialog).toHaveTextContent('The Accounts tool and case review use the older account model v2-account-2.0.0');
+    expect(dialog).not.toHaveTextContent(/Account model v2-account-2\.0\.0 is loaded and can assess/);
+  });
+
+  it('reports the investigation models as unavailable when the v3 models are not loaded, whatever the v2 model says', () => {
+    const off = { available: false, purpose: 'p', unavailable_reason: 'artifact missing' };
+    const view = describeModelStatus(
+      status({ inference_ready: true, investigation_models: { used_by: 'x', ready: false, transaction_model: off, account_model: off, datasets: [] } }),
+      false,
+    );
+    expect(view.state).toBe('unavailable');
+    expect(view.label).toBe('Models unavailable');
+    expect(view.detail).toContain('artifact missing');
   });
 
   it('shows server unreachable when the status request fails', async () => {

@@ -181,7 +181,8 @@ export interface AIReport {
   key_observations: { text: string; basis: ObservationBasis; evidence_ids: string[] }[];
   evidence_references: string[];
   reasoning_and_limitations: string[];
-  recommended_manual_checks: { text: string; evidence_ids: string[] }[];
+  /** `text` is the server's fixed wording for the check code the AI selected, never AI-written text. */
+  recommended_manual_checks: { text: string; evidence_ids: string[]; check?: string | null }[];
   confidence_note: string;
 }
 

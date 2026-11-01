@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import time
 import uuid
 from collections import defaultdict
@@ -52,6 +53,8 @@ ENGINE_VERSION = "dynamic-investigation-1.0.0"
 EVIDENCE_KIND = {"ONWARD": "observed", "NETWORK": "observed", "CASH": "observed", "NEW_RECORDS": "observed",
                  "FUNDED_FORWARD": "observed", "FLAGGED_IN_MOVED": "observed",
                  "ACCOUNT_MODEL": "model", "TXN_MODEL": "model"}
+# Sentences that state what a model output (its flag, score or threshold), as opposed to a recorded transfer or balance.
+MODEL_SENTENCE = re.compile(r"\b(?:transaction model|account (?:behaviour )?model|model (?:flags|score|scores|suggests))\b", re.IGNORECASE)
 # A payer that already paid the account at least this many days before an inflow (a salary, a regular family or rent
 # transfer) is an established income source: its payment is not money handed over to be passed on, so it never makes
 # a flagged outgoing transfer "funded forwarding". Scenario money moves within hours or a few days (the trace window),
@@ -672,6 +675,11 @@ class DynamicInvestigation:
             unfunded, dev = cls._unfunded(s, [r.transaction_id], hist, {})
             mine = hist[((hist.sender_account_id == s) | (hist.receiver_account_id == s)) & (hist.timestamp < r.timestamp)]
             n = int(len(mine))
+            # Its own money or money just received, and how much of its balance the payment took (roles: other senders).
+            recent_in = mine[(mine.receiver_account_id == s) & (mine.timestamp >= r.timestamp - pd.Timedelta(hours=roles.ONWARD_HOURS))]
+            amt, bal = float(r.amount), r.sender_balance_before
+            recent_share = float(recent_in.amount.sum()) / amt if amt > 0 else None
+            balance_share = amt / float(bal) if not pd.isna(bal) and float(bal) > 0 else None
             days = (r.timestamp - mine.timestamp.min()).total_seconds() / 86400 if n else 0.0
             e = roles.AccountEvidence(account_id=s, position="other_sender", hop=None, n_transactions=n,
                                       history_days=round(days, 1), introduced_by=r.transaction_id, sent_traced=float(r.amount),
@@ -679,7 +687,8 @@ class DynamicInvestigation:
                                       flagged_out_unfunded_ids=unfunded, deviation=dev, account_model={"status": "not_analyzed"},
                                       paid_account_id=r.receiver_account_id,
                                       paid_account_role=prelim[r.receiver_account_id].role_candidate if r.receiver_account_id in prelim else None,
-                                      paid_account_paid_by_investigated=r.receiver_account_id in paid_by_root)
+                                      paid_account_paid_by_investigated=r.receiver_account_id in paid_by_root,
+                                      recent_inflow_share=recent_share, balance_share=balance_share)
             e._other = {"paid": r.receiver_account_id, "transaction": cls._scored(r, sc.loc[i], [])}  # type: ignore[attr-defined]
             out.append((e, roles.assess(e)))
         return out
@@ -703,7 +712,11 @@ class DynamicInvestigation:
         # Categories a role rule adds itself (FUNDED_FORWARD, FLAGGED_IN_MOVED) carry their own sentence.
         items += [{"category": c, "kind": EVIDENCE_KIND.get(c, "observed"), "text": t} for c, t in r.category_text.items() if c not in cats]
         shown = set(txt) | set(r.category_text.values())
-        items += [{"category": "OBSERVED", "kind": "observed", "text": t} for t in r.supporting if t not in shown]
+        # A supporting sentence that reports a model's output is a model output, not a recorded fact (QA-03: keep what the
+        # records show apart from what a model says). Display only: no role, status or restriction reads this field.
+        items += [{"category": "MODEL_OUTPUT" if MODEL_SENTENCE.search(t) else "OBSERVED",
+                   "kind": "model" if MODEL_SENTENCE.search(t) else "observed", "text": t}
+                  for t in r.supporting if t not in shown]
         return {
             "account_id": e.account_id, "role_candidate": r.role_candidate, "role_label": roles.ROLE_LABELS[r.role_candidate],
             "assessment_status": r.assessment_status, "headline": r.headline, "supporting_evidence": r.supporting,

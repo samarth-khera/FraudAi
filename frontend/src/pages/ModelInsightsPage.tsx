@@ -34,6 +34,7 @@ import {
 } from 'recharts';
 import { v2Api } from '../services/v2Api';
 import { V2ModelStatusResponse, V2SingleModelInfo, V2AccountMLAssessmentResponse } from '../types/v2';
+import { InvestigationModelsPanel } from '../components/models/InvestigationModelsPanel';
 import { accountEvaluation, formatModelScore, modelThreshold, thresholdPercent } from '../lib/modelScore';
 
 // -----------------------------------------------------------------------------
@@ -497,6 +498,8 @@ export const ModelInsightsPage: React.FC = () => {
         </div>
       )}
 
+      <InvestigationModelsPanel status={modelStatus} />
+
       {/* 2. Model Selector (Model Registry Tabs) */}
       <div className="p-1.5 rounded-2xl bg-white border border-[#E4E5F0] shadow-xs flex flex-wrap gap-1.5">
         <button
@@ -509,7 +512,7 @@ export const ModelInsightsPage: React.FC = () => {
         >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-mono font-bold uppercase tracking-wider opacity-80">
-              01 / Core Forensic Model
+              01 / Accounts tool &amp; case review
             </span>
             <span
               className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-bold ${
@@ -1095,6 +1098,7 @@ export const ModelInsightsPage: React.FC = () => {
                         type="text"
                         value={drillAccountId}
                         onChange={(e) => setDrillAccountId(e.target.value)}
+                        aria-label="Account ID to explain"
                         placeholder="Enter a synthetic-ledger account ID, e.g. ACC-000001"
                         className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0] text-xs font-mono text-[#141526] focus:outline-none focus:border-[#6246EA]"
                       />

@@ -134,6 +134,25 @@ export interface V2SingleModelInfo {
   } | null;
 }
 
+/** A v3 model behind dynamic investigations (GET /api/v2/models/status → investigation_models). */
+export interface InvestigationModelInfo {
+  available: boolean;
+  purpose: string;
+  model_version?: string;
+  threshold?: number | null;
+  threshold_rule?: string;
+  unavailable_reason?: string | null;
+  held_out_evaluation?: { n?: number; positives?: number; precision?: number; recall?: number; pr_auc?: number; brier?: number } | null;
+}
+
+export interface InvestigationModels {
+  used_by: string;
+  ready: boolean;
+  transaction_model: InvestigationModelInfo;
+  account_model: InvestigationModelInfo;
+  datasets: { dataset_id: string; title: string; model_support: string }[];
+}
+
 export interface V2ModelStatusResponse {
   account_model: V2SingleModelInfo;
   paysim_benchmark: V2SingleModelInfo;
@@ -141,6 +160,10 @@ export interface V2ModelStatusResponse {
   inference_ready: boolean;
   status_detail?: string | null;
   disclaimer: string;
+  /** Where the v2 account model is used: not by investigations. */
+  account_model_scope?: string | null;
+  /** The v3 models every Investigate-page investigation uses (absent on older servers). */
+  investigation_models?: InvestigationModels | null;
 }
 
 export interface V2GraphNode {

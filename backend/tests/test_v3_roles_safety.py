@@ -207,10 +207,12 @@ def test_forwarder_gets_a_documented_category_not_an_injected_onward():
     qs = {q["q"]: q["a"] for q in DynamicInvestigation._questions(e, r, None)}
     answer = qs["Is there evidence of suspicious intermediary behaviour?"]
     assert answer.startswith("Yes: ") and "flagged outgoing transfer" in answer and "passed most traced money" not in answer
+    # QA-03 (2026-11-02): FUNDED_FORWARD as the only kind of evidence no longer names a role (FS-10B80A33 was called an
+    # intermediary on this alone); the label abstains, the observation stays, and no restriction is suggested.
     root = ev(position="investigated", hop=0, flagged_out_ids=["T1"], flagged_out_unfunded_ids=[], account_model=LOW)
     r = roles.assess(root)
-    assert r.categories == ["FUNDED_FORWARD"] and r.evidence_strength == "weak"
-    assert roles.restriction(root, r, [])["state"] == "additional_verification_recommended"
+    assert r.role_candidate == "unknown_role" and r.categories == ["FUNDED_FORWARD"] and r.evidence_strength == "weak"
+    assert roles.restriction(root, r, [])["state"] == "insufficient_evidence_to_recommend"
 
 
 def _ledger(rows):

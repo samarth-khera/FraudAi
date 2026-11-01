@@ -671,8 +671,8 @@ Investigated account (checked in this order):
 | `potential_victim` | At least half of its flagged outgoing transfers were not funded by fresh inflows, it is established, and they deviate from its own history (over twice its largest earlier transfer, a new recipient, at least half the balance, or 00:00–05:00 when it rarely transacted then). Victim checks come first, whatever else arrived in the account |
 | `suspicious_activity_victim_unconfirmed` | The same flagged, unfunded transfers, but too little history or no deviation |
 | `potentially_suspicious_account` | Flagged transfers from ≥ 2 senders, FLAGGED_IN_MOVED, an outgoing-side signal (a flagged outgoing transfer or cash ≥ 50% of the flagged inflows), and ACCOUNT_MODEL |
-| `potential_intermediary` | Its flagged outgoing transfers were mostly funded forwarding (FUNDED_FORWARD). A transfer counts as funded only when inflows in the previous 24 h cover ≥ 70% of it, come from payers that had not paid it at least 7 days earlier, and the balance before them could not have covered 70% of it |
-| `unknown_role` | Only the account model suggests review |
+| `potential_intermediary` | Its flagged outgoing transfers were mostly funded forwarding (FUNDED_FORWARD) **and at least one other independent kind of evidence supports it** (QA-03, 2026-11-02). A transfer counts as funded only when inflows in the previous 24 h cover ≥ 70% of it, come from payers that had not paid it at least 7 days earlier, and the balance before them could not have covered 70% of it |
+| `unknown_role` | Only the account model suggests review; or FUNDED_FORWARD is the only kind of evidence (QA-03: the observation stays listed, the label abstains, and the investigated-account status is "Insufficient evidence") |
 | `no_suspicious_activity_observed` | No flagged transfer, or only uncorroborated rule flags |
 
 Connected accounts:
@@ -680,7 +680,7 @@ Connected accounts:
 | Role | When it applies |
 |---|---|
 | `cash_withdrawal_point` | Reached only through cash withdrawals and sends nothing: an ATM or cash network, not a person |
-| `potential_victim` (upstream or other sender) | Its flagged transfer into the flow was unfunded and deviates from its established history |
+| `potential_victim` (upstream or other sender) | Its flagged transfer into the flow was unfunded and deviates from its established history. **Other senders additionally (QA-03, 2026-11-02):** the money it received in the 24 h before covered less than 70% of the payment (it paid from money it already held), and the payment took at least 50% of its balance (the existing own-funds threshold). Otherwise `unknown_role`, with the reason named |
 | `no_suspicious_linkage_observed` | No categories on an established or business account; an earlier payer with only context or receipt-side signals; or reached only through transfers nobody flagged (onward movement there is ordinary life) |
 | `suspicious_activity_victim_unconfirmed` | Its own savings fell by half or more in transfers the transaction model flags, but attribution cannot show the traced money itself moved on |
 | `potential_secondary_victim` | Its own savings fell by half or more (established, personal, not a business), the receipt was material, attribution shows ≥ 70% of the traced money moved on, and ONWARD or TXN_MODEL |

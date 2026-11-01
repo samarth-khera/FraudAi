@@ -111,7 +111,9 @@ def verify_write_permission(
         provided_key = authorization.strip()
 
     if configured_key:
-        if not provided_key or not secrets.compare_digest(provided_key, configured_key):
+        # Compared as UTF-8 bytes: compare_digest raises TypeError on non-ASCII str, which used to surface as a 500
+        # (QA-14). Any header value now fails closed with 401.
+        if not provided_key or not secrets.compare_digest(provided_key.encode("utf-8"), configured_key.encode("utf-8")):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail={

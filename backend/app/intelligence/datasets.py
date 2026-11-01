@@ -63,11 +63,13 @@ DATASETS: dict[str, DatasetSpec] = {
         "(sample case FS-2001 lives here). Account IDs look like ACC-000001.",
         "Scenario labels exist in the file for model evaluation and are never read by an investigation.",
         models_validated=False,
-        model_note="Out of distribution: the v3 models were trained on the forensic scenario generator, and this ledger comes from a "
-                   "different generator. 9 of 29 behaviour inputs of the transaction model and 10 of 14 of the account model differ "
-                   "from the training data (PSI > 0.25; ml/reports/distribution_shift.json), and on this ledger the transaction "
-                   "model's precision was 1.1% and the account model's 1.3% (ml/reports/data_quality_v3.json). Their outputs are "
-                   "shown for reference only. Findings rest on the fixed rules and recorded facts.",
+        # Investigator-facing (QA-12). Sources: ml/reports/distribution_shift.json (PSI > 0.25 per input) and
+        # ml/reports/data_quality_v3.json (precision on this ledger).
+        model_note="Out of distribution: the v3 models were trained on data from a different synthetic generator, and this "
+                   "ledger's behaviour differs clearly from that training data (9 of the transaction model's 29 behaviour inputs "
+                   "and 10 of the account model's 14). On this ledger only about 1 in 100 transfers or accounts the models flagged "
+                   "was part of a scenario (precision 1.1% and 1.3%). Their outputs are shown for reference only; findings rest on "
+                   "the fixed rules and recorded facts.",
         distribution_check={"transaction_model": {"in_distribution": False, "behaviour_inputs_psi_over_0_25": 9, "behaviour_inputs": 29},
                             "account_model": {"in_distribution": False, "behaviour_inputs_psi_over_0_25": 10, "behaviour_inputs": 14}}),
     "forensic-scenarios": DatasetSpec(
@@ -77,9 +79,9 @@ DATASETS: dict[str, DatasetSpec] = {
         "Account IDs look like FS-1A2B3C4D.",
         "Each account's scenario role is stored for evaluation only and is never read by an investigation.",
         models_validated=True,
-        model_note="Same generator family as the models' training data, but a different seed and population: no account here was "
-                   "seen in training. Its behaviour inputs match the training data (no input with PSI > 0.25; "
-                   "ml/reports/distribution_shift.json). This supports the models only for this synthetic generator family.",
+        model_note="Same synthetic generator family as the models' training data, but a different seed and population: no account "
+                   "here was seen in training, and its behaviour matches the training data on every model input. This supports the "
+                   "models only for this synthetic generator family.",
         distribution_check={"transaction_model": {"in_distribution": True, "behaviour_inputs_psi_over_0_25": 0, "behaviour_inputs": 29},
                             "account_model": {"in_distribution": True, "behaviour_inputs_psi_over_0_25": 0, "behaviour_inputs": 14}}),
 }

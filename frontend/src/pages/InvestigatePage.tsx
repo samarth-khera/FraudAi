@@ -99,8 +99,17 @@ export const InvestigatePage: React.FC = () => {
   const [error, setError] = useState<{ title: string; message: string } | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
+  const explainAbortRef = useRef<AbortController | null>(null);
+  // The request and digest of the report on screen, so an explanation is requested for exactly that report.
+  const lastRunRef = useRef<{ body: DynamicInvestigationRequest; digest?: string } | null>(null);
 
-  useEffect(() => () => abortRef.current?.abort(), []);
+  useEffect(
+    () => () => {
+      abortRef.current?.abort();
+      explainAbortRef.current?.abort();
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!running) return;
@@ -111,6 +120,8 @@ export const InvestigatePage: React.FC = () => {
 
   const start = async (request: InvestigationRequest) => {
     abortRef.current?.abort();
+    explainAbortRef.current?.abort();
+    lastRunRef.current = null;
     const controller = new AbortController();
     abortRef.current = controller;
     setElapsed(0);
@@ -121,12 +132,12 @@ export const InvestigatePage: React.FC = () => {
     const settings = formFromRequest(request);
     setForm(settings);
     setParams(paramsFromForm(settings, request.account_id, dataset), { replace: true });
-    // The report is returned without waiting for the AI analyst, which can take minutes; the explanation follows.
+    // The report never waits for, or triggers, the AI analyst: an explanation is only requested when the investigator asks.
     const body = toDynamic(request, dataset);
-    let result: DynamicReport;
     try {
-      result = await v2Api.runDynamicInvestigation(body, controller.signal);
+      const result = await v2Api.runDynamicInvestigation(body, controller.signal);
       if (controller.signal.aborted) return;
+      lastRunRef.current = { body, digest: result.investigation.report_digest };
       setReport(result);
       window.scrollTo?.({ top: 0 });
     } catch (err) {
@@ -136,14 +147,22 @@ export const InvestigatePage: React.FC = () => {
     } finally {
       if (abortRef.current === controller) setRunning(null);
     }
-    if (result.investigation.ai_analysis.state !== 'deferred') return;
+  };
+
+  /** Explicit, investigator-initiated request for the optional AI explanation of the report on screen. */
+  const requestExplanation = async () => {
+    const last = lastRunRef.current;
+    if (!last) return;
+    explainAbortRef.current?.abort();
+    const controller = new AbortController();
+    explainAbortRef.current = controller;
     setExplanation({ phase: 'pending', since: Date.now() });
     try {
-      const ex = await v2Api.explainDynamicInvestigation(body, controller.signal);
+      const ex = await v2Api.explainDynamicInvestigation(last.body, controller.signal);
       if (controller.signal.aborted) return;
       // Only show an explanation of exactly this report (the ledger could have changed in between). An empty digest means
       // the server explained nothing (e.g. the analyst was turned off meanwhile), so its state is shown as is.
-      const same = !ex.report_digest || ex.report_digest === result.investigation.report_digest;
+      const same = !ex.report_digest || ex.report_digest === last.digest;
       setExplanation(same ? { phase: 'done', analysis: ex.ai_analysis } : { phase: 'stale' });
     } catch (err) {
       if ((err as { name?: string })?.name === 'AbortError' || controller.signal.aborted) return;
@@ -159,6 +178,8 @@ export const InvestigatePage: React.FC = () => {
 
   const reset = () => {
     abortRef.current?.abort();
+    explainAbortRef.current?.abort();
+    lastRunRef.current = null;
     setReport(null);
     setExplanation(null);
     setError(null);
@@ -185,7 +206,14 @@ export const InvestigatePage: React.FC = () => {
   if (report) {
     return (
       <div className="pb-6">
-        <CaseView report={report.investigation} intel={report} explanation={explanation} onNew={newInvestigation} onRerun={start} />
+        <CaseView
+          report={report.investigation}
+          intel={report}
+          explanation={explanation}
+          onNew={newInvestigation}
+          onRerun={start}
+          onRequestExplanation={report.investigation.ai_analysis.state === 'deferred' ? requestExplanation : undefined}
+        />
       </div>
     );
   }

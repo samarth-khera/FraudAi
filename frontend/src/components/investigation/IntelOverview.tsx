@@ -4,6 +4,7 @@ import { formatDateTime, formatMoney } from '../../lib/format';
 import { DynamicReport } from '../../types/dynamic';
 import { Badge, Disclosure, IdText } from './ui';
 import { ScoredTransfer } from './intel';
+import { suspiciousHeading } from './narrative';
 
 const STATUS_TONE = {
   potential_victim: 'ice',
@@ -27,7 +28,12 @@ export const IntelOverview: React.FC<{ intel: DynamicReport }> = ({ intel }) => 
     <div className="space-y-5">
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px] items-start">
         <section aria-labelledby="assess-h" className="panel p-6" data-testid="victim-assessment" data-status={v.status}>
-          <p className="text-sm text-mute">Is <IdText>{v.account_id}</IdText> potentially a victim?</p>
+          {/* QA-12: the victim question only heads a victim-side result; forwarding or abstaining results get a neutral heading. */}
+          <p className="text-sm text-mute" data-testid="assessment-question">
+            {v.status === 'potential_victim' || (v.status === 'suspicious_activity_victim_status_unconfirmed' && v.role_candidate === 'suspicious_activity_victim_unconfirmed')
+              ? <>Is <IdText>{v.account_id}</IdText> potentially a victim?</>
+              : <>What the records show about <IdText>{v.account_id}</IdText></>}
+          </p>
           <h2 id="assess-h" className="mt-1 font-display text-2xl font-bold text-ink flex flex-wrap items-center gap-3">
             {v.label}
             <Badge tone={STATUS_TONE[v.status]}>Account assessment</Badge>
@@ -76,7 +82,7 @@ export const IntelOverview: React.FC<{ intel: DynamicReport }> = ({ intel }) => 
           <h2 id="susp-h" className="font-display text-xl font-bold text-ink">Suspicious transactions</h2>
           <p className="text-sm text-mute">
             {intel.suspicious_transactions.length
-              ? `${intel.suspicious_transactions.length} of this account's transfers were flagged by ${intel.transaction_scoring.model_used_as_evidence ? 'the transaction model or ' : ''}the fixed rules. Each was scored using only records from before it.`
+              ? suspiciousHeading(intel)
               : `None of this account's ${onAccount !== undefined ? `${onAccount} ` : ''}scored transfers was flagged${intel.transaction_scoring.model_used_as_evidence ? " by the transaction model's review threshold or" : ' by'} a fixed rule.`}
           </p>
           {!intel.model_validation.validated_for_this_dataset && (
@@ -93,7 +99,7 @@ export const IntelOverview: React.FC<{ intel: DynamicReport }> = ({ intel }) => 
           )}
         </div>
         <div className="grid gap-3 lg:grid-cols-2">
-          {shown.map((t) => <ScoredTransfer key={t.transaction_id} t={t} />)}
+          {shown.map((t) => <ScoredTransfer key={t.transaction_id} t={t} threshold={tm.threshold} />)}
         </div>
         {!intel.suspicious_transactions.length && (intel.closest_unflagged_transfers?.length ?? 0) > 0 && (
           <div className="panel p-5" data-testid="closest-unflagged">
@@ -124,14 +130,14 @@ export const IntelOverview: React.FC<{ intel: DynamicReport }> = ({ intel }) => 
               the validated detector, so these rule flags are shown but not treated as suspicious activity.
             </p>
             <div className="grid gap-3 lg:grid-cols-2">
-              {intel.uncorroborated_rule_flags.map((t) => <ScoredTransfer key={t.transaction_id} t={t} />)}
+              {intel.uncorroborated_rule_flags.map((t) => <ScoredTransfer key={t.transaction_id} t={t} threshold={tm.threshold} />)}
             </div>
           </Disclosure>
         )}
         {more.length > 0 && (
           <Disclosure summary={`Show ${more.length} more flagged transfer(s)`}>
             <div className="grid gap-3 lg:grid-cols-2">
-              {more.map((t) => <ScoredTransfer key={t.transaction_id} t={t} />)}
+              {more.map((t) => <ScoredTransfer key={t.transaction_id} t={t} threshold={tm.threshold} />)}
             </div>
           </Disclosure>
         )}

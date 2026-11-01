@@ -38,8 +38,9 @@ class InvestigationRequest(BaseModel):
         "flagged", description="'flagged': trace the account's transfers flagged as unusual (largest ones if none are); 'all': every transfer in range")
     max_accounts_analyzed: int = Field(25, ge=1, le=60, description="Accounts given a full individual assessment")
     ai_explanation: Literal["inline", "separate"] = Field(
-        "inline", description="'inline': wait for the AI analyst in this response. 'separate': return the report now "
-                              "with ai_analysis.state 'deferred'; get the explanation from POST /api/v2/investigations/explanation")
+        "separate", description="'separate' (default): return the report now; ai_analysis.state is 'deferred' when an "
+                                "explanation can be requested from POST /api/v2/investigations/explanation, otherwise the "
+                                "analyst's state. 'inline': wait for the AI analyst in this response.")
 
     @model_validator(mode="after")
     def _range(self) -> "InvestigationRequest":
@@ -237,8 +238,9 @@ class AIObservation(BaseModel):
 
 
 class AIManualCheck(BaseModel):
-    text: str
+    text: str = Field(..., description="Fixed, reviewed wording for the check code; never text written by the AI")
     evidence_ids: list[str]
+    check: Optional[str] = Field(None, description="Code of the manual check the AI selected from the server's fixed list")
 
 
 class AIReport(BaseModel):

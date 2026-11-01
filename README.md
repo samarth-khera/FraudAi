@@ -364,7 +364,7 @@ Environment variables:
 | Render | `CORS_ALLOWED_ORIGINS` | the Vercel production URL, e.g. `https://<project>.vercel.app` |
 | Render | `PYTHON_VERSION` | `3.12.4` |
 | Render | `GEMINI_API_KEY` | secret, for the optional AI analyst (never a `VITE_` variable) |
-| Render | `GEMINI_ANALYST_ENABLED` | `true` to turn the AI analyst on (off otherwise); model, timeout and privacy settings in [docs/AI_ANALYST.md](docs/AI_ANALYST.md) |
+| Render | `GEMINI_ANALYST_ENABLED` | recommended `false`. In production the analyst also needs `GEMINI_ANALYST_PRODUCTION_APPROVED=true` (leave it unset unless its safeguards suit the deployment); explanations are only ever requested by an explicit click. See [docs/AI_ANALYST.md](docs/AI_ANALYST.md) |
 | Vercel | `VITE_API_URL` | the Render URL, e.g. `https://fraudshield-api.onrender.com` (the build fails without it) |
 
 Why read-only: a Render web service's disk is wiped on every deploy and restart, and the app has no safe way to
@@ -372,8 +372,20 @@ let the public write (the browser app must never receive the API key). The ledge
 time and the case database is re-seeded at start, so nothing needs to persist. Recording decisions in a public
 deployment would need a persistent database (Render Postgres or a paid disk) plus real user authentication.
 
-Free-plan limits: the backend sleeps after about 15 minutes without traffic and takes roughly a minute to wake;
-the header shows “Server unreachable” until it does.
+Free-plan limits: the backend sleeps after about 15 minutes without traffic and takes roughly a minute to wake
+(37–94 s measured on 2026-11-01); the header shows “Server unreachable” until it does. On its 0.1 CPU an investigation
+takes 3–10 s, and a deploy replaces the instance, so do not deploy shortly before a demonstration.
+
+**Before a live demonstration**, wake and warm the backend once, a few minutes beforehand:
+
+```bash
+python scripts/demo_preflight.py --base-url https://<your-backend>.onrender.com
+```
+
+It waits for `/health`, reads the model status and dataset list, computes and then re-reads the sample accounts (they
+are cached on the server after the first request), and runs one investigation per dataset so the models and database
+pages are loaded. It sends a fixed set of read-only requests and exits: it is not a keep-alive, never writes and never
+calls the AI analyst. Exit status 0 means every step answered.
 
 ## Further documentation
 

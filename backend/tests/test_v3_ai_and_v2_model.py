@@ -61,7 +61,7 @@ def cited_reply(call) -> str:
         "key_observations": [{"text": f"{acc} has a role assessment.", "basis": "observed", "evidence_ids": ids}],
         "evidence_references": ids,
         "reasoning_and_limitations": ["The ledger does not show intent."],
-        "recommended_manual_checks": [{"text": f"Verify {acc} through an authorised process.", "evidence_ids": [acc]}],
+        "recommended_manual_checks": [{"check": "request_recipient_bank_records", "evidence_ids": [acc]}],
         "confidence_note": "Device and login records are not in the ledger.",
     })
 
@@ -80,7 +80,9 @@ def test_dynamic_payload_carries_role_engine_output_not_the_trace_reports(dyn_fi
     accounts = {ps.reverse[a["id"]]: a for a in payload["accounts"]}
     for ra in d["role_assessments"][: ai_analyst.MAX_ACCOUNTS]:
         a = accounts[ra["account_id"]]
-        assert a["role_candidate"] == ra["role_candidate"] and a["restriction_state"] == ra["restriction"]["state"]
+        assert a["role_candidate"] == ra["role_candidate"]
+        # QA-02: the advisory restriction state is not sent; the explanation must not discuss restriction.
+        assert "restriction_state" not in a
         assert len(a["evidence"]) == min(8, len(ra["evidence_items"]))
         assert len(a["contradictory_evidence"]) == min(6, len(ra["contradictory_evidence"]))
         assert "role_label" not in a and "model_score_pct" not in a and "model_suggests_review" not in a
@@ -88,7 +90,7 @@ def test_dynamic_payload_carries_role_engine_output_not_the_trace_reports(dyn_fi
         assert (a["account_model"] is not None) == (ra["account_model"]["status"] == "scored")
     assert accounts[ref["account_id"]]["account_model"] is None
     assert [ps.reverse[t["id"]] for t in payload["flagged_transfers"]] == [t["transaction_id"] for t in d["suspicious_transactions"][:20]]
-    assert payload["investigation_assessment"]["restriction_state"] == d["restriction_recommendation"]["state"]
+    assert "restriction_state" not in payload["investigation_assessment"]
     assert all(f["kind"] != "model" for f in payload["findings"]), "the trace report's own model statements are not sent"
     assert "model_review_threshold_pct" not in payload["scope"]
     # Pseudonymisation is as strict as before: no real account or transfer ID anywhere in what is sent.

@@ -1,0 +1,125 @@
+{
+  "ledger": "demo",
+  "rules": {
+    "previous": {
+      "accounts": [
+        {
+          "account_id": "FS-10B80A33",
+          "truth": "no_scenario_role",
+          "status": "insufficient_evidence",
+          "root_role": "unknown_role",
+          "root_label_contradicts_truth": false,
+          "root_protective_label_contradicts_truth": false,
+          "connected_label_contradictions": []
+        },
+        {
+          "account_id": "FS-56629D8E",
+          "truth": "no_scenario_role",
+          "status": "no_suspicious_activity_observed",
+          "root_role": "no_suspicious_activity_observed",
+          "root_label_contradicts_truth": false,
+          "root_protective_label_contradicts_truth": false,
+          "connected_label_contradictions": []
+        },
+        {
+          "account_id": "FS-09C2300C",
+          "truth": "no_scenario_role",
+          "status": "potential_victim",
+          "root_role": "potential_victim",
+          "root_label_contradicts_truth": false,
+          "root_protective_label_contradicts_truth": true,
+          "connected_label_contradictions": []
+        },
+        {
+          "account_id": "FS-78059149",
+          "truth": "no_scenario_role",
+          "status": "no_suspicious_activity_observed",
+          "root_role": "no_suspicious_activity_observed",
+          "root_label_contradicts_truth": false,
+          "root_protective_label_contradicts_truth": false,
+          "connected_label_contradictions": []
+        },
+        {
+          "account_id": "FS-DE98A61C",
+          "truth": "no_scenario_role",
+          "status": "no_suspicious_activity_observed",
+          "root_role": "no_suspicious_activity_observed",
+          "root_label_contradicts_truth": false,
+          "root_protective_label_contradicts_truth": false,
+          "connected_label_contradictions": []
+        },
+        {
+          "account_id": "FS-7031B74C",
+          "truth": "victim",
+          "status": "potential_victim",
+          "root_role": "potential_victim",
+          "root_label_contradicts_truth": false,
+          "root_protective_label_contradicts_truth": false,
+          "connected_label_contradictions": []
+        }
+      ],
+      "investigations_with_a_suspicious_direction_contradiction": 0,
+      "investigations_with_any_contradicting_label": 1
+    },
+    "current": {
+      "accounts": [
+        {
+          "account_id": "FS-D948AB11",
+          "truth": "victim",
+          "status": "potential_victim",
+          "root_role": "potential_victim",
+          "root_label_contradicts_truth": false,
+          "root_protective_label_contradicts_truth": false,
+          "connected_label_contradictions": []
+        },
+        {
+          "account_id": "FS-F1017663",
+          "truth": "secondary_victim",
+          "status": "potential_victim",
+          "root_role": "potential_victim",
+          "root_label_contradicts_truth": false,
+          "root_protective_label_contradicts_truth": false,
+          "connected_label_contradictions": []
+        },
+        {
+          "account_id": "FS-6FD017A3",
+          "truth": "victim",
+          "status": "potential_victim",
+          "root_role": "potential_victim",
+          "root_label_contradicts_truth": false,
+          "root_protective_label_contradicts_truth": false,
+          "connected_label_contradictions": []
+        },
+        {
+          "account_id": "FS-D0D054F1",
+          "truth": "lookalike_legitimate",
+          "status": "insufficient_evidence",
+          "root_role": "unknown_role",
+          "root_label_contradicts_truth": false,
+          "root_protective_label_contradicts_truth": false,
+          "connected_label_contradictions": []
+        },
+        {
+          "account_id": "FS-C9501D6A",
+          "truth": "intermediary",
+          "status": "potential_victim",
+          "root_role": "potential_victim",
+          "root_label_contradicts_truth": false,
+          "root_protective_label_contradicts_truth": true,
+          "connected_label_contradictions": []
+        },
+        {
+          "account_id": "FS-33F54945",
+          "truth": "lookalike_legitimate",
+          "status": "insufficient_evidence",
+          "root_role": "unknown_role",
+          "root_label_contradicts_truth": false,
+          "root_protective_label_contradicts_truth": false,
+          "connected_label_contradictions": []
+        }
+      ],
+      "investigations_with_a_suspicious_direction_contradiction": 0,
+      "investigations_with_any_contradicting_label": 1
+    }
+  }
+}

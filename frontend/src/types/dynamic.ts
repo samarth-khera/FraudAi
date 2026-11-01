@@ -8,6 +8,9 @@ export interface DatasetSummary {
   title: string;
   description: string;
   evaluation_labels_note: string;
+  /** Whether the v3 models' outputs count as evidence on this dataset; absent on older servers. */
+  model_support?: 'validated_in_distribution' | 'unsupported_distribution_shift' | 'unsupported_not_checked';
+  model_note?: string;
   available: boolean;
   unavailable_reason?: string | null;
   source?: DataSourceInfo | null;

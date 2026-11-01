@@ -82,7 +82,19 @@ const RESTRICTION_TONE: Record<RestrictionState, string> = {
   insufficient_evidence_to_recommend: 'ring-line bg-white',
 };
 
-/** Advisory restriction state. Always states that a person decides and that nothing was done. */
+const ListBlock: React.FC<{ title: string; items: string[]; testId: string }> = ({ title, items, testId }) =>
+  items.length > 0 ? (
+    <div data-testid={testId}>
+      <h4 className="text-xs font-semibold text-ink">{title}</h4>
+      <ul className="mt-1.5 space-y-1 list-disc pl-4 text-ink-soft">
+        {items.map((s) => <li key={s}>{s}</li>)}
+      </ul>
+    </div>
+  ) : null;
+
+/** Advisory restriction state. Always states that a person decides and that nothing was done, and always shows the
+ *  safeguards (innocent explanations, verification needed, missing information). `compact` only leaves out what the
+ *  surrounding view already shows: the supporting evidence and the relevant transfers. */
 export const RestrictionPanel: React.FC<{ r: Restriction; compact?: boolean }> = ({ r, compact }) => {
   const Icon = RESTRICTION_ICON[r.state];
   return (
@@ -96,48 +108,20 @@ export const RestrictionPanel: React.FC<{ r: Restriction; compact?: boolean }> =
           {r.victim_note && <p className="mt-2 text-sm font-medium text-[#1D4ED8]">{r.victim_note}</p>}
         </div>
       </div>
-      {!compact && (
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 text-sm">
-          {r.supporting_evidence.length > 0 && (
-            <div>
-              <h4 className="text-xs font-semibold text-ink">What supports it</h4>
-              <ul className="mt-1.5 space-y-1 list-disc pl-4 text-ink-soft">
-                {r.supporting_evidence.map((s) => <li key={s}>{s}</li>)}
-              </ul>
-            </div>
-          )}
-          {r.innocent_explanations.length > 0 && (
-            <div>
-              <h4 className="text-xs font-semibold text-ink">Innocent explanations to rule out</h4>
-              <ul className="mt-1.5 space-y-1 list-disc pl-4 text-ink-soft">
-                {r.innocent_explanations.map((s) => <li key={s}>{s}</li>)}
-              </ul>
-            </div>
-          )}
-          {r.verification_needed.length > 0 && (
-            <div>
-              <h4 className="text-xs font-semibold text-ink">Verification needed first</h4>
-              <ul className="mt-1.5 space-y-1 list-disc pl-4 text-ink-soft">
-                {r.verification_needed.map((s) => <li key={s}>{s}</li>)}
-              </ul>
-            </div>
-          )}
-          <div>
-            <h4 className="text-xs font-semibold text-ink">Missing information</h4>
-            <ul className="mt-1.5 space-y-1 list-disc pl-4 text-ink-soft">
-              {r.missing_information.map((s) => <li key={s}>{s}</li>)}
-            </ul>
-          </div>
-          {r.relevant_transaction_ids.length > 0 && (
+      <div className={`mt-4 grid gap-4 text-sm ${compact ? '' : 'sm:grid-cols-2'}`}>
+        {!compact && <ListBlock title="What supports it" items={r.supporting_evidence} testId="restriction-support" />}
+        <ListBlock title="Innocent explanations to rule out" items={r.innocent_explanations} testId="restriction-innocent" />
+        <ListBlock title="Verification needed first" items={r.verification_needed} testId="restriction-verification" />
+        <ListBlock title="Missing information" items={r.missing_information} testId="restriction-missing" />
+        {!compact && r.relevant_transaction_ids.length > 0 && (
             <div className="sm:col-span-2">
               <h4 className="text-xs font-semibold text-ink">Relevant transfers</h4>
               <span className="mt-1.5 inline-flex flex-wrap gap-1">
                 {r.relevant_transaction_ids.slice(0, 12).map((id) => <Ref key={id} id={id} />)}
               </span>
             </div>
-          )}
-        </div>
-      )}
+        )}
+      </div>
       <p className="mt-4 pt-3 border-t border-line/70 text-xs text-mute">
         Advisory only. A person at the authorised institution decides, under its policy. FraudShield took no action on this account.
       </p>
@@ -149,7 +133,7 @@ const RISK_LABEL: Record<TransactionAssessment['risk_category'], string> = { hig
 const RISK_TONE: Record<TransactionAssessment['risk_category'], Tone> = { high: 'critical', elevated: 'elevated', low: 'low', not_scored: 'neutral' };
 
 /** One scored transfer: what was flagged, by which check, and the model's own factors (not causes). */
-export const ScoredTransfer: React.FC<{ t: TransactionAssessment }> = ({ t }) => (
+export const ScoredTransfer: React.FC<{ t: TransactionAssessment; threshold?: number | null }> = ({ t, threshold }) => (
   <article className="rounded-2xl ring-1 ring-line bg-white p-4" data-testid="scored-transfer">
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div className="min-w-0">
@@ -171,6 +155,8 @@ export const ScoredTransfer: React.FC<{ t: TransactionAssessment }> = ({ t }) =>
         {t.calibrated_probability !== null && (
           <p className="mt-1 text-xs text-mute" title="Share of synthetic validation transfers with this score that were scenario transfers. Not a probability that anyone committed fraud.">
             Calibrated score {(t.calibrated_probability * 100).toFixed(1)}%
+            {threshold != null && <> · review threshold {(threshold * 100).toFixed(2)}%</>}
+            <span className="block text-[11px] text-faint">A model score, not a probability of fraud</span>
           </p>
         )}
       </div>
