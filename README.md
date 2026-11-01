@@ -27,16 +27,37 @@ The sidebar has four main destinations, **Overview**, **Investigate**, **Account
 
 ### Live investigation (Investigate)
 
-Open an account (for example `ACC-000001`, or just `1`) to see its summary, then press **Start fund investigation**. The server
-queries the ledger at that moment and returns a report. It contains the account's transfers that are unusual for it,
-the money flow traced in both directions with time order respected, and each linked account assessed on its own
-records by the rules and the model. It also gives a balance-based exposure range, findings labelled
-*observed / rule / model / limit* that cite transaction IDs, and advisory next steps. The page walks through it in five
-stages (overview, fund trail, risk evidence, AI analyst, next steps); the fund trail follows each branch transfer by
-transfer, with an inspector for every transfer and account. Nothing is precomputed or stored, and the report says plainly that the data is synthetic. When enabled on the
-server, a Google Gemini explanation is added after the checks finish. It is labelled as AI-generated, cites the
-report's own records and never changes a score, and the report states plainly when it did not run.
-Details: [docs/LIVE_INVESTIGATION.md](docs/LIVE_INVESTIGATION.md) and [docs/AI_ANALYST.md](docs/AI_ANALYST.md).
+Choose a dataset, open an account (for example `ACC-000001` in the demo ledger, or one of the suggested `FS-…` accounts
+in the forensic scenario ledger) and press **Start fund investigation**. One request to `POST /api/v2/dynamic-investigations`
+then:
+
+1. reads the account's history from the chosen dataset (an ID is only ever looked up inside that synthetic dataset; an
+   unknown ID returns *account not found*, never invented details);
+2. scores each of its transfers with the **transaction model**, using only the two parties' records from before that
+   transfer;
+3. traces the money downstream and upstream from flagged transfers (bounded by depth, accounts and time window), with
+   each branch's ending stated honestly (no further transfer, depth or account limit, cycle, including loops through the
+   investigated account, already traced, cash withdrawal);
+4. scores connected accounts with the **account behaviour model** (served: `v3-account-1.0.0`; it abstains below 5
+   transfers), adds network facts, and finds other senders whose own model-flagged transfers reached an
+   intermediary or suspicious-account candidate, or an account the investigated account paid in a flagged transfer;
+5. assigns each account a *candidate* role (potential victim, secondary victim, intermediary, suspicious account,
+   no suspicious linkage observed, unknown) by documented rules, with evidence for and against it;
+6. gives an advisory restriction state per account. Nothing is ever frozen, blocked or changed.
+
+The page walks through six stages: overview (is this account potentially a victim, which transfers were flagged and
+why), fund trail, **affected accounts**, risk evidence, the optional AI analyst, and next steps (including whether a
+restriction should be considered by the institution, with human-approval wording). Model outputs count as evidence only
+on the dataset family the models were validated on; on the demo ledger they are shown for reference. The optional AI
+analyst explains the role assessment itself and reports its real state (turned off, not configured, deferred, ...).
+
+A retrained account model (`v3-account-1.1.0`) exists as a **challenger** in `ml/artifacts/v3/account_model_challenger/`
+and is **not served**: it is much better on short account histories but, on the validation and cold ledgers at the
+ledger end, flags more long-history accounts, victims and innocent counterparties; promotion is the owner's decision. Results for both are in
+[docs/DYNAMIC_INTELLIGENCE.md §7](docs/DYNAMIC_INTELLIGENCE.md#7-models-b-and-c-account-behaviour).
+
+Details: [docs/DYNAMIC_INTELLIGENCE.md](docs/DYNAMIC_INTELLIGENCE.md) (models, validation, roles, results),
+[docs/DATASETS.md](docs/DATASETS.md), [docs/LIVE_INVESTIGATION.md](docs/LIVE_INVESTIGATION.md) and [docs/AI_ANALYST.md](docs/AI_ANALYST.md).
 
 ### Case workspace (Investigations)
 
@@ -194,6 +215,21 @@ PYTHONPATH=backend:. backend/.venv/bin/python -m ml.v2.account_model_eval   # tr
 PYTHONPATH=. backend/.venv/bin/python ml/v2/paysim_benchmark.py   # needs the PaySim CSV in data/raw/
 ```
 
+The dynamic investigation's forensic ledger and v3 models (the models are committed as small JSON files; retraining is
+only needed to reproduce them):
+
+```bash
+backend/.venv/bin/python scripts/build_forensic_ledger.py                     # data/v3_forensic_scenarios.db (seed 303)
+backend/.venv/bin/python scripts/build_forensic_ledger.py --ledger cold --db data/v3_forensic_cold.db
+PYTHONPATH=.:backend backend/.venv/bin/python -m ml.forensics.train_transaction_model
+PYTHONPATH=.:backend backend/.venv/bin/python -m ml.forensics.train_account_model   # writes the challenger only
+PYTHONPATH=.:backend backend/.venv/bin/python -m ml.forensics.evaluate_investigations --ledger cold
+```
+
+`train_account_model` never replaces the served account model unless run with `--promote` (and its validation rule
+passes). The full list of commands, including the comparison, safety-scan, tracing-verification and scenario scripts and
+the inputs they need, is in [docs/DYNAMIC_INTELLIGENCE.md §14](docs/DYNAMIC_INTELLIGENCE.md#14-reproducing-everything).
+
 ### Running the tests
 
 ```bash
@@ -229,6 +265,13 @@ describe position in the money flow only.
 ## Limitations
 
 - **Synthetic data only.** Real payment systems, fraud patterns and customer behaviour differ.
+- **The v3 models describe their own generator.** They were trained and tested on synthetic ledgers from one
+  generator. On the demo ledger, built by a different generator, the transaction model's precision was 1.1% and the
+  account model's 1.3%, so there their scores are shown for reference only. Nothing here measures real-world detection
+  accuracy.
+- **The served v3 account model flags short histories.** About a third of accounts with under 30 days of records are
+  flagged by it, and it was trained before a ground-truth label correction. The role engine's results and remaining
+  failure modes are in [docs/DYNAMIC_INTELLIGENCE.md §11–13](docs/DYNAMIC_INTELLIGENCE.md#13-limitations-and-remaining-failure-modes).
 - **Model evaluated on synthetic data only.** The account model’s test set has 260 suspicious accounts, but
   some behaviour families are still small (9–11 accounts), the synthetic suspicious rate (~6%) is far above real
   life, and the account-level features cannot see who the counterparties are. See
@@ -335,6 +378,9 @@ the header shows “Server unreachable” until it does.
 ## Further documentation
 
 - [`backend/README.md`](backend/README.md): database schema and API details
+- [`docs/DYNAMIC_INTELLIGENCE.md`](docs/DYNAMIC_INTELLIGENCE.md): the dynamic investigation: models, leakage prevention, validation, role engine and results
+- [`docs/DATASETS.md`](docs/DATASETS.md): data sources, licences, checksums and label meanings
+- [`docs/SCENARIO_DEMONSTRATION.md`](docs/SCENARIO_DEMONSTRATION.md): ten end-to-end scenarios on the forensic ledger
 - [`docs/LIVE_INVESTIGATION.md`](docs/LIVE_INVESTIGATION.md): how a live investigation is computed, its data source and limits
 - [`docs/AI_ANALYST.md`](docs/AI_ANALYST.md): the Gemini AI analyst: configuration, privacy policy, states, quota and smoke test
 - [`ml/README.md`](ml/README.md) and [`docs/V2_ML_MODELS.md`](docs/V2_ML_MODELS.md): model training and evaluation

@@ -1,0 +1,1098 @@
+{
+  "model": "transaction_model",
+  "feature_schema_version": "pit-features-1.0.0",
+  "generator_version": "forensic-scenarios-1.0.0",
+  "environment": {
+    "python": "3.12.4",
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "scikit_learn": "1.9.1",
+    "xgboost": "3.4.1",
+    "platform": "macOS-27.0.1",
+    "trained_at": "2026-11-01T13:03:57Z",
+    "seed": 20261031
+  },
+  "validation": {
+    "train_ledger": {
+      "rows_in": 450424,
+      "rows_valid": 450424,
+      "errors": {},
+      "warnings": {}
+    },
+    "cold_ledger": {
+      "rows_in": 299828,
+      "rows_valid": 299828,
+      "errors": {},
+      "warnings": {}
+    },
+    "demo_ledger": {
+      "rows_in": 88623,
+      "rows_valid": 88623,
+      "errors": {},
+      "warnings": {}
+    }
+  },
+  "splits": {
+    "temporal": {
+      "train": {
+        "rows": 307255,
+        "positives": 1108,
+        "days": "0-83"
+      },
+      "validation": {
+        "rows": 82339,
+        "positives": 297,
+        "days": "84-101"
+      },
+      "test": {
+        "rows": 60830,
+        "positives": 273,
+        "days": "102-119"
+      }
+    },
+    "cold_ledger": {
+      "rows": 299828,
+      "positives": 1330,
+      "accounts": 6818,
+      "accounts_shared_with_training_ledger": 0,
+      "held_out_variants": {
+        "multi_hop:slow": "Each hop waits 6-40 hours instead of minutes, so 'forwarded within the hour' never fires.",
+        "split:structured": "The split uses many transfers under 10,000 instead of a few large ones.",
+        "takeover:after_dormancy": "The account had no activity for 45+ days before the takeover burst."
+      }
+    },
+    "temporal_test_rows_with_sender_unseen_in_training_period": 1337,
+    "scenario_instances_with_positives": {
+      "train": 165,
+      "validation": 47,
+      "test": 43
+    },
+    "cold_ledger_scenario_instances_with_positives": 194
+  },
+  "leakage_audit": {
+    "forbidden_columns_in_features": [],
+    "single_feature_roc_auc_top": {
+      "amount_to_sender_balance": 0.8848,
+      "log_amount": 0.8773,
+      "s_amount_vs_prior_max": 0.8742,
+      "s_minutes_since_last_in": 0.8305,
+      "s_in_24h_to_amount": 0.8215,
+      "s_amount_z": 0.811,
+      "type_PAYMENT": 0.7252,
+      "ch_CARD_POS": 0.7252
+    },
+    "proxy_alert": [],
+    "note": "A single feature separating the classes almost perfectly would suggest a label proxy. None is >= 0.98 unless listed in proxy_alert."
+  },
+  "candidates": [
+    {
+      "family": "logistic_regression",
+      "params": {
+        "C": 0.01,
+        "class_weight": "balanced"
+      },
+      "best_iteration": null,
+      "train": {
+        "pr_auc": 0.4321,
+        "roc_auc": 0.9919
+      },
+      "validation": {
+        "pr_auc": 0.5512,
+        "roc_auc": 0.994
+      },
+      "train_seconds": 2.4
+    },
+    {
+      "family": "logistic_regression",
+      "params": {
+        "C": 0.1,
+        "class_weight": "balanced"
+      },
+      "best_iteration": null,
+      "train": {
+        "pr_auc": 0.4263,
+        "roc_auc": 0.992
+      },
+      "validation": {
+        "pr_auc": 0.5178,
+        "roc_auc": 0.9933
+      },
+      "train_seconds": 2.9
+    },
+    {
+      "family": "logistic_regression",
+      "params": {
+        "C": 1.0,
+        "class_weight": "balanced"
+      },
+      "best_iteration": null,
+      "train": {
+        "pr_auc": 0.4235,
+        "roc_auc": 0.992
+      },
+      "validation": {
+        "pr_auc": 0.503,
+        "roc_auc": 0.9929
+      },
+      "train_seconds": 3.0
+    },
+    {
+      "family": "random_forest",
+      "params": {
+        "n_estimators": 300,
+        "max_depth": 8,
+        "min_samples_leaf": 20,
+        "class_weight": "balanced_subsample"
+      },
+      "best_iteration": null,
+      "train": {
+        "pr_auc": 0.9185,
+        "roc_auc": 0.9995
+      },
+      "validation": {
+        "pr_auc": 0.8337,
+        "roc_auc": 0.9986
+      },
+      "train_seconds": 13.4
+    },
+    {
+      "family": "random_forest",
+      "params": {
+        "n_estimators": 300,
+        "max_depth": 14,
+        "min_samples_leaf": 5,
+        "class_weight": "balanced_subsample"
+      },
+      "best_iteration": null,
+      "train": {
+        "pr_auc": 0.9814,
+        "roc_auc": 0.9999
+      },
+      "validation": {
+        "pr_auc": 0.8795,
+        "roc_auc": 0.999
+      },
+      "train_seconds": 16.8
+    },
+    {
+      "family": "random_forest",
+      "params": {
+        "n_estimators": 300,
+        "max_depth": null,
+        "min_samples_leaf": 10,
+        "class_weight": "balanced_subsample"
+      },
+      "best_iteration": null,
+      "train": {
+        "pr_auc": 0.9955,
+        "roc_auc": 1.0
+      },
+      "validation": {
+        "pr_auc": 0.8874,
+        "roc_auc": 0.9991
+      },
+      "train_seconds": 13.3
+    },
+    {
+      "family": "xgboost",
+      "params": {
+        "eta": 0.05,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "max_depth": 3,
+        "min_child_weight": 1,
+        "lambda": 1,
+        "alpha": 0,
+        "scale_pos_weight": 16.62
+      },
+      "best_iteration": 699,
+      "train": {
+        "pr_auc": 0.9975,
+        "roc_auc": 1.0
+      },
+      "validation": {
+        "pr_auc": 0.9345,
+        "roc_auc": 0.9992
+      },
+      "train_seconds": 9.9
+    },
+    {
+      "family": "xgboost",
+      "params": {
+        "eta": 0.05,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "max_depth": 3,
+        "min_child_weight": 1,
+        "lambda": 10,
+        "alpha": 1,
+        "scale_pos_weight": 16.62
+      },
+      "best_iteration": 899,
+      "train": {
+        "pr_auc": 0.9981,
+        "roc_auc": 1.0
+      },
+      "validation": {
+        "pr_auc": 0.9363,
+        "roc_auc": 0.9991
+      },
+      "train_seconds": 14.4
+    },
+    {
+      "family": "xgboost",
+      "params": {
+        "eta": 0.05,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "max_depth": 3,
+        "min_child_weight": 10,
+        "lambda": 1,
+        "alpha": 0,
+        "scale_pos_weight": 16.62
+      },
+      "best_iteration": 759,
+      "train": {
+        "pr_auc": 0.9976,
+        "roc_auc": 1.0
+      },
+      "validation": {
+        "pr_auc": 0.9378,
+        "roc_auc": 0.9991
+      },
+      "train_seconds": 12.5
+    },
+    {
+      "family": "xgboost",
+      "params": {
+        "eta": 0.05,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "max_depth": 3,
+        "min_child_weight": 10,
+        "lambda": 10,
+        "alpha": 1,
+        "scale_pos_weight": 16.62
+      },
+      "best_iteration": 911,
+      "train": {
+        "pr_auc": 0.998,
+        "roc_auc": 1.0
+      },
+      "validation": {
+        "pr_auc": 0.9354,
+        "roc_auc": 0.999
+      },
+      "train_seconds": 15.3
+    },
+    {
+      "family": "xgboost",
+      "params": {
+        "eta": 0.05,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "max_depth": 5,
+        "min_child_weight": 1,
+        "lambda": 1,
+        "alpha": 0,
+        "scale_pos_weight": 16.62
+      },
+      "best_iteration": 301,
+      "train": {
+        "pr_auc": 0.9996,
+        "roc_auc": 1.0
+      },
+      "validation": {
+        "pr_auc": 0.9413,
+        "roc_auc": 0.9993
+      },
+      "train_seconds": 6.1
+    },
+    {
+      "family": "xgboost",
+      "params": {
+        "eta": 0.05,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "max_depth": 5,
+        "min_child_weight": 1,
+        "lambda": 10,
+        "alpha": 1,
+        "scale_pos_weight": 16.62
+      },
+      "best_iteration": 241,
+      "train": {
+        "pr_auc": 0.9964,
+        "roc_auc": 1.0
+      },
+      "validation": {
+        "pr_auc": 0.9367,
+        "roc_auc": 0.9993
+      },
+      "train_seconds": 4.6
+    },
+    {
+      "family": "xgboost",
+      "params": {
+        "eta": 0.05,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "max_depth": 5,
+        "min_child_weight": 10,
+        "lambda": 1,
+        "alpha": 0,
+        "scale_pos_weight": 16.62
+      },
+      "best_iteration": 310,
+      "train": {
+        "pr_auc": 0.9991,
+        "roc_auc": 1.0
+      },
+      "validation": {
+        "pr_auc": 0.9392,
+        "roc_auc": 0.9993
+      },
+      "train_seconds": 5.4
+    },
+    {
+      "family": "xgboost",
+      "params": {
+        "eta": 0.05,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "max_depth": 5,
+        "min_child_weight": 10,
+        "lambda": 10,
+        "alpha": 1,
+        "scale_pos_weight": 16.62
+      },
+      "best_iteration": 317,
+      "train": {
+        "pr_auc": 0.9981,
+        "roc_auc": 1.0
+      },
+      "validation": {
+        "pr_auc": 0.9374,
+        "roc_auc": 0.9993
+      },
+      "train_seconds": 4.6
+    }
+  ],
+  "imbalance_comparison": [
+    {
+      "strategy": "no reweighting",
+      "validation": {
+        "pr_auc": 0.9247,
+        "roc_auc": 0.9987
+      }
+    },
+    {
+      "strategy": "scale_pos_weight = sqrt(neg/pos)",
+      "validation": {
+        "pr_auc": 0.9413,
+        "roc_auc": 0.9993
+      }
+    },
+    {
+      "strategy": "scale_pos_weight = neg/pos",
+      "validation": {
+        "pr_auc": 0.9334,
+        "roc_auc": 0.9992
+      }
+    },
+    {
+      "strategy": "random undersampling 20:1 (train only)",
+      "validation": {
+        "pr_auc": 0.9238,
+        "roc_auc": 0.9993
+      }
+    }
+  ],
+  "imbalance_note": "SMOTE was not used: most features are counts, flags and one-hot channels, so interpolated synthetic rows would not be valid transactions. Resampling, when compared, was applied to the training split only; validation and test keep their real prevalence.",
+  "selected": {
+    "family": "xgboost",
+    "params": {
+      "objective": "binary:logistic",
+      "eval_metric": "aucpr",
+      "eta": 0.05,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "seed": 20261031,
+      "max_depth": 5,
+      "min_child_weight": 1,
+      "lambda": 1,
+      "alpha": 0,
+      "scale_pos_weight": 16.62
+    },
+    "best_iteration": 301,
+    "selection_rule": "highest validation PR-AUC"
+  },
+  "learning_curve": [
+    {
+      "train_fraction": 0.1,
+      "train_positives": 110,
+      "train_pr_auc": 1.0,
+      "validation_pr_auc": 0.8463
+    },
+    {
+      "train_fraction": 0.25,
+      "train_positives": 277,
+      "train_pr_auc": 1.0,
+      "validation_pr_auc": 0.8928
+    },
+    {
+      "train_fraction": 0.5,
+      "train_positives": 554,
+      "train_pr_auc": 1.0,
+      "validation_pr_auc": 0.9322
+    },
+    {
+      "train_fraction": 1.0,
+      "train_positives": 1108,
+      "train_pr_auc": 0.9996,
+      "validation_pr_auc": 0.9413
+    }
+  ],
+  "results": {
+    "train": {
+      "split": "train",
+      "n": 307255,
+      "positives": 1108,
+      "negatives": 306147,
+      "prevalence": 0.00361,
+      "threshold": 0.001302,
+      "precision": 0.6886,
+      "recall": 1.0,
+      "f1": 0.8156,
+      "false_positive_rate": 0.001636,
+      "confusion_matrix": {
+        "tn": 305646,
+        "fp": 501,
+        "fn": 0,
+        "tp": 1108
+      },
+      "pr_auc": 0.9996,
+      "roc_auc": 1.0,
+      "brier": 8.3e-05,
+      "ece": 0.00046,
+      "precision_at_k": {
+        "50": 1.0,
+        "100": 1.0,
+        "500": 1.0
+      },
+      "recall_at_precision": [
+        {
+          "precision_target": 0.5,
+          "recall": 1.0,
+          "threshold": 0.287089467048645
+        },
+        {
+          "precision_target": 0.8,
+          "recall": 1.0,
+          "threshold": 0.287089467048645
+        },
+        {
+          "precision_target": 0.9,
+          "recall": 1.0,
+          "threshold": 0.287089467048645
+        }
+      ],
+      "raw_score_pr_auc": 0.9996
+    },
+    "validation": {
+      "split": "validation",
+      "n": 82339,
+      "positives": 297,
+      "negatives": 82042,
+      "prevalence": 0.00361,
+      "threshold": 0.001302,
+      "precision": 0.5257,
+      "recall": 0.963,
+      "f1": 0.6801,
+      "false_positive_rate": 0.003145,
+      "confusion_matrix": {
+        "tn": 81784,
+        "fp": 258,
+        "fn": 11,
+        "tp": 286
+      },
+      "pr_auc": 0.9413,
+      "roc_auc": 0.9993,
+      "brier": 0.000673,
+      "ece": 0.0004,
+      "precision_at_k": {
+        "50": 1.0,
+        "100": 1.0,
+        "500": 0.566
+      },
+      "recall_at_precision": [
+        {
+          "precision_target": 0.5,
+          "recall": 0.963,
+          "threshold": 0.001301623065955937
+        },
+        {
+          "precision_target": 0.8,
+          "recall": 0.9226,
+          "threshold": 0.11218210309743881
+        },
+        {
+          "precision_target": 0.9,
+          "recall": 0.8822,
+          "threshold": 0.659880518913269
+        }
+      ],
+      "raw_score_pr_auc": 0.9413
+    },
+    "temporal_test": {
+      "split": "temporal_test",
+      "n": 60830,
+      "positives": 273,
+      "negatives": 60557,
+      "prevalence": 0.00449,
+      "threshold": 0.001302,
+      "precision": 0.8241,
+      "recall": 0.978,
+      "f1": 0.8945,
+      "false_positive_rate": 0.000941,
+      "confusion_matrix": {
+        "tn": 60500,
+        "fp": 57,
+        "fn": 6,
+        "tp": 267
+      },
+      "pr_auc": 0.9865,
+      "roc_auc": 0.9999,
+      "brier": 0.000499,
+      "ece": 0.00088,
+      "precision_at_k": {
+        "50": 1.0,
+        "100": 1.0,
+        "500": 0.546
+      },
+      "recall_at_precision": [
+        {
+          "precision_target": 0.5,
+          "recall": 1.0,
+          "threshold": 0.00030872487695887685
+        },
+        {
+          "precision_target": 0.8,
+          "recall": 0.9853,
+          "threshold": 0.0008659826125949621
+        },
+        {
+          "precision_target": 0.9,
+          "recall": 0.9634,
+          "threshold": 0.015598773024976254
+        }
+      ],
+      "raw_score_pr_auc": 0.9865,
+      "pr_auc_95ci_bootstrap_by_scenario": [
+        0.9776,
+        0.9936
+      ],
+      "scenario_instances_with_positives": 43
+    },
+    "cold_ledger_test": {
+      "split": "cold_ledger_test",
+      "n": 299828,
+      "positives": 1330,
+      "negatives": 298498,
+      "prevalence": 0.00444,
+      "threshold": 0.001302,
+      "precision": 0.6893,
+      "recall": 0.9391,
+      "f1": 0.795,
+      "false_positive_rate": 0.001886,
+      "confusion_matrix": {
+        "tn": 297935,
+        "fp": 563,
+        "fn": 81,
+        "tp": 1249
+      },
+      "pr_auc": 0.9459,
+      "roc_auc": 0.9994,
+      "brier": 0.000874,
+      "ece": 0.00109,
+      "precision_at_k": {
+        "50": 1.0,
+        "100": 1.0,
+        "500": 1.0
+      },
+      "recall_at_precision": [
+        {
+          "precision_target": 0.5,
+          "recall": 0.9669,
+          "threshold": 0.0004492111620493233
+        },
+        {
+          "precision_target": 0.8,
+          "recall": 0.9195,
+          "threshold": 0.006350342184305191
+        },
+        {
+          "precision_target": 0.9,
+          "recall": 0.8639,
+          "threshold": 0.10777493566274643
+        }
+      ],
+      "raw_score_pr_auc": 0.9459,
+      "pr_auc_95ci_bootstrap_by_scenario": [
+        0.9313,
+        0.9589
+      ]
+    },
+    "served_demo_ledger": {
+      "split": "served_demo_ledger",
+      "n": 88623,
+      "positives": 333,
+      "negatives": 88290,
+      "prevalence": 0.00376,
+      "threshold": 0.001302,
+      "precision": 0.6795,
+      "recall": 0.8979,
+      "f1": 0.7736,
+      "false_positive_rate": 0.001597,
+      "confusion_matrix": {
+        "tn": 88149,
+        "fp": 141,
+        "fn": 34,
+        "tp": 299
+      },
+      "pr_auc": 0.9093,
+      "roc_auc": 0.9987,
+      "brier": 0.000963,
+      "ece": 0.00122,
+      "precision_at_k": {
+        "50": 1.0,
+        "100": 1.0,
+        "500": 0.61
+      },
+      "recall_at_precision": [
+        {
+          "precision_target": 0.5,
+          "recall": 0.9309,
+          "threshold": 0.0004715628456324339
+        },
+        {
+          "precision_target": 0.8,
+          "recall": 0.8468,
+          "threshold": 0.020061014220118523
+        },
+        {
+          "precision_target": 0.9,
+          "recall": 0.7988,
+          "threshold": 0.18400615453720093
+        }
+      ],
+      "raw_score_pr_auc": 0.9093
+    },
+    "temporal_test_cold_senders": {
+      "split": "temporal test, senders with no training-period records",
+      "n": 1337,
+      "positives": 76,
+      "negatives": 1261,
+      "prevalence": 0.05684,
+      "threshold": 0.001302,
+      "precision": 0.8824,
+      "recall": 0.9868,
+      "f1": 0.9317,
+      "false_positive_rate": 0.00793,
+      "confusion_matrix": {
+        "tn": 1251,
+        "fp": 10,
+        "fn": 1,
+        "tp": 75
+      },
+      "pr_auc": 0.9961,
+      "roc_auc": 0.9997,
+      "brier": 0.002919,
+      "ece": 0.00518,
+      "precision_at_k": {
+        "50": 1.0,
+        "100": 0.76,
+        "500": 0.152
+      },
+      "recall_at_precision": [
+        {
+          "precision_target": 0.5,
+          "recall": 1.0,
+          "threshold": 0.00031464756466448307
+        },
+        {
+          "precision_target": 0.8,
+          "recall": 1.0,
+          "threshold": 0.00031464756466448307
+        },
+        {
+          "precision_target": 0.9,
+          "recall": 0.9737,
+          "threshold": 0.46030476689338684
+        }
+      ]
+    },
+    "cold_seen_variants": {
+      "split": "cold ledger, seen variants + ordinary",
+      "n": 299509,
+      "positives": 1027,
+      "negatives": 298482,
+      "prevalence": 0.00343,
+      "threshold": 0.001302,
+      "precision": 0.636,
+      "recall": 0.9542,
+      "f1": 0.7632,
+      "false_positive_rate": 0.00188,
+      "confusion_matrix": {
+        "tn": 297921,
+        "fp": 561,
+        "fn": 47,
+        "tp": 980
+      },
+      "pr_auc": 0.9533,
+      "roc_auc": 0.9995,
+      "brier": 0.000562,
+      "ece": 0.00069,
+      "precision_at_k": {
+        "50": 1.0,
+        "100": 1.0,
+        "500": 1.0
+      },
+      "recall_at_precision": [
+        {
+          "precision_target": 0.5,
+          "recall": 0.9718,
+          "threshold": 0.000558196275960654
+        },
+        {
+          "precision_target": 0.8,
+          "recall": 0.9299,
+          "threshold": 0.01608627662062645
+        },
+        {
+          "precision_target": 0.9,
+          "recall": 0.8909,
+          "threshold": 0.24227897822856903
+        }
+      ]
+    },
+    "cold_held_out_variants_recall": {
+      "multi_hop:slow": 0.9286,
+      "split:structured": 0.8827,
+      "takeover:after_dormancy": 0.8706
+    }
+  },
+  "calibration_curve_cold": [
+    {
+      "n": 29983,
+      "mean_score": 0.0003,
+      "observed_rate": 0.0
+    },
+    {
+      "n": 29983,
+      "mean_score": 0.0003,
+      "observed_rate": 0.0
+    },
+    {
+      "n": 29983,
+      "mean_score": 0.0003,
+      "observed_rate": 0.0
+    },
+    {
+      "n": 29983,
+      "mean_score": 0.0003,
+      "observed_rate": 0.0
+    },
+    {
+      "n": 29983,
+      "mean_score": 0.0003,
+      "observed_rate": 0.0
+    },
+    {
+      "n": 29983,
+      "mean_score": 0.0003,
+      "observed_rate": 0.0
+    },
+    {
+      "n": 29983,
+      "mean_score": 0.0003,
+      "observed_rate": 0.0
+    },
+    {
+      "n": 29983,
+      "mean_score": 0.0003,
+      "observed_rate": 0.0
+    },
+    {
+      "n": 29982,
+      "mean_score": 0.0003,
+      "observed_rate": 0.0
+    },
+    {
+      "n": 29982,
+      "mean_score": 0.0358,
+      "observed_rate": 0.0444
+    }
+  ],
+  "segments_cold": {
+    "channel": {
+      "RTGS": {
+        "n": 320,
+        "positives": 0,
+        "flagged": 0,
+        "recall": null,
+        "precision": null,
+        "false_positive_rate": 0.0
+      },
+      "NEFT": {
+        "n": 23230,
+        "positives": 179,
+        "flagged": 181,
+        "recall": 0.9665,
+        "precision": 0.9558,
+        "false_positive_rate": 0.000347
+      },
+      "UPI": {
+        "n": 93793,
+        "positives": 436,
+        "flagged": 639,
+        "recall": 0.9335,
+        "precision": 0.6369,
+        "false_positive_rate": 0.002485
+      },
+      "CARD_POS": {
+        "n": 133485,
+        "positives": 0,
+        "flagged": 0,
+        "recall": null,
+        "precision": null,
+        "false_positive_rate": 0.0
+      },
+      "IMPS": {
+        "n": 22989,
+        "positives": 265,
+        "flagged": 364,
+        "recall": 0.9019,
+        "precision": 0.6566,
+        "false_positive_rate": 0.005501
+      },
+      "ATM_CASH_OUT": {
+        "n": 26011,
+        "positives": 450,
+        "flagged": 628,
+        "recall": 0.9556,
+        "precision": 0.6847,
+        "false_positive_rate": 0.007746
+      }
+    },
+    "sender_prior_outgoing": {
+      "none": {
+        "n": 6815,
+        "positives": 77,
+        "flagged": 77,
+        "recall": 0.8701,
+        "precision": 0.8701,
+        "false_positive_rate": 0.001484
+      },
+      "1-4": {
+        "n": 27011,
+        "positives": 340,
+        "flagged": 359,
+        "recall": 0.9824,
+        "precision": 0.9304,
+        "false_positive_rate": 0.000937
+      },
+      "5+": {
+        "n": 266002,
+        "positives": 913,
+        "flagged": 1376,
+        "recall": 0.9288,
+        "precision": 0.6163,
+        "false_positive_rate": 0.001992
+      }
+    },
+    "amount_band": {
+      ">=100k": {
+        "n": 4512,
+        "positives": 125,
+        "flagged": 129,
+        "recall": 0.992,
+        "precision": 0.9612,
+        "false_positive_rate": 0.00114
+      },
+      "25k-100k": {
+        "n": 17466,
+        "positives": 396,
+        "flagged": 455,
+        "recall": 0.9798,
+        "precision": 0.8527,
+        "false_positive_rate": 0.003925
+      },
+      "5k-25k": {
+        "n": 24048,
+        "positives": 515,
+        "flagged": 809,
+        "recall": 0.9398,
+        "precision": 0.5983,
+        "false_positive_rate": 0.01381
+      },
+      "<5k": {
+        "n": 253802,
+        "positives": 294,
+        "flagged": 419,
+        "recall": 0.8605,
+        "precision": 0.6038,
+        "false_positive_rate": 0.000655
+      }
+    },
+    "sender_customer_type (slice only, not a feature)": {
+      "corporate": {
+        "n": 15079,
+        "positives": 0,
+        "flagged": 0,
+        "recall": null,
+        "precision": null,
+        "false_positive_rate": 0.0
+      },
+      "sme": {
+        "n": 7807,
+        "positives": 0,
+        "flagged": 5,
+        "recall": null,
+        "precision": 0.0,
+        "false_positive_rate": 0.00064
+      },
+      "retail": {
+        "n": 240268,
+        "positives": 1087,
+        "flagged": 1465,
+        "recall": 0.9402,
+        "precision": 0.6976,
+        "false_positive_rate": 0.001852
+      },
+      "student": {
+        "n": 36674,
+        "positives": 243,
+        "flagged": 342,
+        "recall": 0.9342,
+        "precision": 0.6637,
+        "false_positive_rate": 0.003157
+      }
+    },
+    "time_of_day": {
+      "05-24": {
+        "n": 291416,
+        "positives": 1284,
+        "flagged": 1732,
+        "recall": 0.9385,
+        "precision": 0.6957,
+        "false_positive_rate": 0.001816
+      },
+      "00-05": {
+        "n": 8412,
+        "positives": 46,
+        "flagged": 80,
+        "recall": 0.9565,
+        "precision": 0.55,
+        "false_positive_rate": 0.004303
+      }
+    }
+  },
+  "errors_cold": {
+    "false_positives_by_ordinary_activity": {
+      "p2p": 217,
+      "cash": 198,
+      "allowance": 67,
+      "family_pool": 37,
+      "rent": 23,
+      "flow_incidental": 7,
+      "purchase": 6,
+      "settlement": 5,
+      "large_purchase": 2,
+      "large_bill": 1
+    },
+    "false_negatives_by_scenario_step": {
+      "forward": 23,
+      "cash_out": 20,
+      "victim_transfer": 18,
+      "takeover_transfer": 17,
+      "secondary_victim_drain": 3
+    },
+    "recall_by_pattern": {
+      "split": 0.9314,
+      "consolidation": 0.9804,
+      "multi_hop": 0.9615,
+      "takeover": 0.905,
+      "multi_victim": 0.911,
+      "direct": 0.9485,
+      "chain": 0.9068,
+      "circular": 0.9659
+    }
+  },
+  "errors_temporal_test": {
+    "false_positives_by_ordinary_activity": {
+      "p2p": 26,
+      "cash": 17,
+      "family_pool": 12,
+      "flow_incidental": 2
+    },
+    "false_negatives_by_scenario_step": {
+      "cash_out": 3,
+      "victim_transfer": 3
+    },
+    "recall_by_pattern": {
+      "split": 0.9821,
+      "multi_hop": 1.0,
+      "multi_victim": 0.9565,
+      "takeover": 0.9722,
+      "direct": 0.9615,
+      "circular": 0.9565,
+      "chain": 1.0,
+      "consolidation": 1.0
+    }
+  },
+  "feature_importance": {
+    "s_in_24h_to_amount": 0.2677,
+    "s_minutes_since_last_in": 0.1131,
+    "log_amount": 0.0988,
+    "amount_to_sender_balance": 0.0934,
+    "r_prior_out_n": 0.083,
+    "r_distinct_senders": 0.0771,
+    "s_amount_z": 0.0519,
+    "r_prior_in_n": 0.0332,
+    "s_hours_since_last_out": 0.0223,
+    "r_balance_before_log": 0.0176,
+    "s_prior_in_n": 0.014,
+    "type_PAYMENT": 0.0131,
+    "s_distinct_recipients": 0.013,
+    "s_amount_vs_prior_max": 0.0128,
+    "s_out_amount_24h_log": 0.0127
+  },
+  "ablation_validation": {
+    "without amount_to_sender_balance": {
+      "pr_auc": 0.9246,
+      "roc_auc": 0.9982
+    },
+    "without channel one-hots": {
+      "pr_auc": 0.9377,
+      "roc_auc": 0.9992
+    },
+    "without time-of-day": {
+      "pr_auc": 0.9435,
+      "roc_auc": 0.9993
+    }
+  },
+  "fit_diagnosis": {
+    "train_minus_validation_pr_auc": 0.0583,
+    "validation_minus_temporal_test_pr_auc": -0.0452,
+    "reading": "Train and validation PR-AUC are close; no strong overfitting signal; see learning_curve for whether more data still helps (underfitting would show low train PR-AUC)."
+  },
+  "artifact": {
+    "path": "ml/artifacts/v3/transaction_model",
+    "format": "xgboost_json",
+    "size_bytes": 969914,
+    "reload_matches_training_scores": true,
+    "inference_ms_per_1000_rows": 3.51
+  },
+  "runtime_seconds": 215.8
+}

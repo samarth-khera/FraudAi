@@ -11,6 +11,7 @@ import {
   V2TraceGraphResponse,
 } from '../types/v2';
 import { DataSourceInfo, InvestigationExplanationResponse, InvestigationRequest, InvestigationResponse } from '../types/investigation';
+import { DatasetAccount, DatasetId, DatasetSummary, DynamicInvestigationRequest, DynamicReport, SampleAccounts } from '../types/dynamic';
 import { API_BASE_URL } from './apiBase';
 
 const BASE_URL = `${API_BASE_URL}/api/v2`;
@@ -63,8 +64,8 @@ export const v2Api = {
   /**
    * Retrieves account 360° profile, KYC tier, balances, and calculated summary metrics.
    */
-  async getAccount(accountId: string): Promise<V2AccountProfileResponse> {
-    const res = await fetch(`${BASE_URL}/accounts/${encodeURIComponent(accountId)}`);
+  async getAccount(accountId: string, signal?: AbortSignal): Promise<V2AccountProfileResponse> {
+    const res = await fetch(`${BASE_URL}/accounts/${encodeURIComponent(accountId)}`, { signal });
     return handleResponse<V2AccountProfileResponse>(res);
   },
 
@@ -95,8 +96,8 @@ export const v2Api = {
   /**
    * Retrieves Phase 3 deterministic rule-based behavioral risk assessment.
    */
-  async getAssessment(accountId: string): Promise<V2AccountAssessmentResponse> {
-    const res = await fetch(`${BASE_URL}/accounts/${encodeURIComponent(accountId)}/assessment`);
+  async getAssessment(accountId: string, signal?: AbortSignal): Promise<V2AccountAssessmentResponse> {
+    const res = await fetch(`${BASE_URL}/accounts/${encodeURIComponent(accountId)}/assessment`, { signal });
     return handleResponse<V2AccountAssessmentResponse>(res);
   },
 
@@ -179,9 +180,49 @@ export const v2Api = {
   /**
    * Which ledger the server queries, whether it is synthetic, and how fresh it is.
    */
-  async getDataSource(): Promise<DataSourceInfo> {
-    const res = await fetch(`${BASE_URL}/data-source`);
+  async getDataSource(signal?: AbortSignal): Promise<DataSourceInfo> {
+    const res = await fetch(`${BASE_URL}/data-source`, { signal });
     return handleResponse<DataSourceInfo>(res);
+  },
+
+  /** Datasets an investigation can search, with availability and record counts. */
+  async listDatasets(signal?: AbortSignal): Promise<DatasetSummary[]> {
+    const res = await fetch(`${BASE_URL}/datasets`, { signal });
+    return handleResponse<DatasetSummary[]>(res);
+  },
+
+  /** History coverage of one account inside one dataset (no prediction). 404 account_not_found if absent. */
+  async getDatasetAccount(datasetId: DatasetId, accountId: string, signal?: AbortSignal): Promise<DatasetAccount> {
+    const res = await fetch(`${BASE_URL}/datasets/${datasetId}/accounts/${encodeURIComponent(accountId)}`, { signal });
+    return handleResponse<DatasetAccount>(res);
+  },
+
+  /** A few accounts with notable observable activity, chosen without scenario labels. */
+  async getSampleAccounts(datasetId: DatasetId, signal?: AbortSignal): Promise<SampleAccounts> {
+    const res = await fetch(`${BASE_URL}/datasets/${datasetId}/sample-accounts`, { signal });
+    return handleResponse<SampleAccounts>(res);
+  },
+
+  /** Model-driven investigation of one account. Computed on request; nothing is stored or acted on. */
+  async runDynamicInvestigation(body: DynamicInvestigationRequest, signal?: AbortSignal): Promise<DynamicReport> {
+    const res = await fetch(`${BASE_URL}/dynamic-investigations`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal,
+    });
+    return handleResponse<DynamicReport>(res);
+  },
+
+  /** AI explanation of the same dynamic investigation, recomputed on the server. */
+  async explainDynamicInvestigation(body: DynamicInvestigationRequest, signal?: AbortSignal): Promise<InvestigationExplanationResponse> {
+    const res = await fetch(`${BASE_URL}/dynamic-investigations/explanation`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal,
+    });
+    return handleResponse<InvestigationExplanationResponse>(res);
   },
 };
 

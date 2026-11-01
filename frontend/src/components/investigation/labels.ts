@@ -62,7 +62,11 @@ export const FLAG_LABEL: Record<string, string> = {
   BURST_TO_NEW_RECIPIENTS: 'Burst to new recipients',
   RAPIDLY_FORWARDED_INFLOW: 'Forwarded within 30 min',
   FORWARDS_RECENT_INFLOW: 'Forwards money just received',
+  MODEL_TRANSACTION_RISK: 'Transaction model',
 };
+
+/** The flag the transaction model adds to a transfer. A model output, never shown as one of the fixed rules. */
+export const MODEL_FLAG_CODE = 'MODEL_TRANSACTION_RISK';
 
 export const ACTION_LABEL: Record<string, string> = {
   further_review: 'Further review',

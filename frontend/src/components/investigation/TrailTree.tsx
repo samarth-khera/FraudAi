@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Maximize2, Minus, Plus } from 'lucide-react';
 import { AccountFinding } from '../../types/investigation';
+import { DynamicReport } from '../../types/dynamic';
 import { channelLabel, formatDateTime, formatMoney } from '../../lib/format';
 import { ROLE_ASSESSMENT } from './labels';
 import { PlacedNode, TREE, TreeLayout, countDescendants } from './trail';
-import { ROLE_TONE } from './caseModel';
+import { roleDisplay } from './caseModel';
 
 export type Target = { kind: 'transfer' | 'account'; id: string };
 
@@ -40,10 +41,12 @@ export const TrailTree: React.FC<{
   selected: Target | null;
   onSelect: (t: Target) => void;
   accounts: Map<string, AccountFinding>;
+  /** Model-driven role assessments; when present they supersede the trace report's labels. */
+  intel?: DynamicReport | null;
   /** Fit the view to these node keys whenever `focusToken` changes. */
   focusKeys: string[] | null;
   focusToken: number;
-}> = ({ layout, rootId, collapsed, onToggle, emphasis, selected, onSelect, accounts, focusKeys, focusToken }) => {
+}> = ({ layout, rootId, collapsed, onToggle, emphasis, selected, onSelect, accounts, intel = null, focusKeys, focusToken }) => {
   const viewport = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 900, h: 460 });
   const [view, setView] = useState<View>({ scale: 1, x: 0, y: 0 });
@@ -242,8 +245,8 @@ export const TrailTree: React.FC<{
             const { node } = p;
             const isRoot = node.key === 'root';
             const finding = accounts.get(node.accountId);
-            const role = finding ? ROLE_ASSESSMENT[finding.role_assessment] : null;
-            const tone = finding ? ROLE_TONE[finding.role_assessment] : 'neutral';
+            const role = roleDisplay(node.accountId, finding, intel, ROLE_ASSESSMENT);
+            const tone = role?.tone ?? 'neutral';
             const lit = !emphasis || emphasis.accounts.has(node.accountId);
             const chosen = selected?.kind === 'account' && selected.id === node.accountId;
             const hidden = collapsed.has(node.key) ? countDescendants(node) : 0;

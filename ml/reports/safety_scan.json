@@ -1,0 +1,1601 @@
+{
+  "title": "Innocent-counterparty safety scan (synthetic data)",
+  "generated_at": "2026-11-01T16:40:51+00:00",
+  "ledger": "demo",
+  "database": "data/v3_forensic_scenarios.db",
+  "generator_seed": 303,
+  "engine_version": "dynamic-investigation-1.0.0",
+  "request": "API defaults via ml.forensics.evaluate_investigations.run (DynamicInvestigationRequest defaults)",
+  "notice": "Synthetic ledger. Ground truth was read only by this evaluator, after the engine ran, to classify accounts. No threshold or rule was changed; this measures, it does not tune. Nothing here is a real-world accuracy claim.",
+  "roots": {
+    "total": 256,
+    "by_kind": {
+      "victim": 61,
+      "lookalike_hub": 10,
+      "innocent_counterparty": 35,
+      "ordinary": 150
+    },
+    "ordinary_sample": {
+      "n": 150,
+      "min_transfers": 5,
+      "seed": 20261101,
+      "rule": "ground_truth_label 'ordinary', no row in roles.csv, >= 5 transfers; numpy default_rng(seed).choice over the sorted eligible IDs"
+    },
+    "errors": []
+  },
+  "seconds_per_investigation": {
+    "median": 0.304,
+    "p95": 0.43
+  },
+  "assessments_by_truth_class": {
+    "scenario_role": 320,
+    "no_scenario_role": 2166,
+    "innocent_counterparty": 123,
+    "lookalike_legitimate": 13
+  },
+  "engine_roles_by_truth_class": {
+    "scenario_role": {
+      "potential_victim": 86,
+      "potential_intermediary": 82,
+      "unknown_role": 97,
+      "no_suspicious_activity_observed": 4,
+      "potentially_suspicious_account": 11,
+      "no_suspicious_linkage_observed": 37,
+      "suspicious_activity_victim_unconfirmed": 2,
+      "potential_secondary_victim": 1
+    },
+    "no_scenario_role": {
+      "cash_withdrawal_point": 213,
+      "no_suspicious_linkage_observed": 1578,
+      "unknown_role": 215,
+      "potential_intermediary": 3,
+      "potential_victim": 20,
+      "no_suspicious_activity_observed": 137
+    },
+    "innocent_counterparty": {
+      "no_suspicious_linkage_observed": 86,
+      "unknown_role": 8,
+      "no_suspicious_activity_observed": 27,
+      "potential_victim": 2
+    },
+    "lookalike_legitimate": {
+      "potential_victim": 3,
+      "unknown_role": 10
+    }
+  },
+  "restriction_states_by_truth_class": {
+    "scenario_role": {
+      "urgent_manual_review_recommended": 133,
+      "consider_temporary_restriction_review": 33,
+      "insufficient_evidence_to_recommend": 97,
+      "additional_verification_recommended": 16,
+      "no_restriction_recommendation": 41
+    },
+    "no_scenario_role": {
+      "no_restriction_recommendation": 1928,
+      "insufficient_evidence_to_recommend": 215,
+      "consider_temporary_restriction_review": 1,
+      "urgent_manual_review_recommended": 21,
+      "additional_verification_recommended": 1
+    },
+    "innocent_counterparty": {
+      "no_restriction_recommendation": 113,
+      "insufficient_evidence_to_recommend": 8,
+      "urgent_manual_review_recommended": 2
+    },
+    "lookalike_legitimate": {
+      "urgent_manual_review_recommended": 3,
+      "insufficient_evidence_to_recommend": 10
+    }
+  },
+  "protected_accounts_flagged": {
+    "definition": "Accounts whose ground truth is innocent_counterparty / lookalike_legitimate (only materialised role) or no materialised scenario role, given potential_intermediary, potentially_suspicious_account, potential_secondary_victim, urgent_manual_review_recommended or consider_temporary_restriction_review, in any position (the investigated account included).",
+    "protective_victim_class": {
+      "occurrences": 25,
+      "distinct_accounts": 23,
+      "by_truth_class": {
+        "lookalike_legitimate": 3,
+        "no_scenario_role": 20,
+        "innocent_counterparty": 2
+      },
+      "by_role_and_restriction": {
+        "potential_victim / urgent_manual_review_recommended": 25
+      }
+    },
+    "suspicion": {
+      "occurrences": 3,
+      "distinct_accounts": 3,
+      "by_truth_class": {
+        "no_scenario_role": 3
+      },
+      "by_role_and_restriction": {
+        "potential_intermediary / consider_temporary_restriction_review": 1,
+        "potential_intermediary / additional_verification_recommended": 1,
+        "potential_intermediary / urgent_manual_review_recommended": 1
+      }
+    },
+    "distinct_accounts": [
+      {
+        "account_id": "FS-052EC4BA",
+        "truth_class": "no_scenario_role",
+        "ground_truth_label": "ordinary",
+        "customer_type": "student",
+        "planned_roles": [],
+        "occurrences": 1,
+        "roots": [
+          "FS-052EC4BA"
+        ],
+        "engine_roles": {
+          "potential_victim": 1
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 1
+        },
+        "label_kinds": {
+          "protective_victim_class": 1
+        },
+        "evidence_categories": []
+      },
+      {
+        "account_id": "FS-0572CA18",
+        "truth_class": "no_scenario_role",
+        "ground_truth_label": "ordinary",
+        "customer_type": "student",
+        "planned_roles": [],
+        "occurrences": 1,
+        "roots": [
+          "FS-3B2ABF11"
+        ],
+        "engine_roles": {
+          "potential_victim": 1
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 1
+        },
+        "label_kinds": {
+          "protective_victim_class": 1
+        },
+        "evidence_categories": [
+          "ACCOUNT_MODEL"
+        ]
+      },
+      {
+        "account_id": "FS-0EBB3658",
+        "truth_class": "no_scenario_role",
+        "ground_truth_label": "ordinary",
+        "customer_type": "student",
+        "planned_roles": [],
+        "occurrences": 2,
+        "roots": [
+          "FS-EFC5C8A6",
+          "FS-F3544284"
+        ],
+        "engine_roles": {
+          "potential_victim": 2
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 2
+        },
+        "label_kinds": {
+          "protective_victim_class": 2
+        },
+        "evidence_categories": []
+      },
+      {
+        "account_id": "FS-0FD4CC75",
+        "truth_class": "no_scenario_role",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "planned_roles": [],
+        "occurrences": 1,
+        "roots": [
+          "FS-33F54945"
+        ],
+        "engine_roles": {
+          "potential_victim": 1
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 1
+        },
+        "label_kinds": {
+          "protective_victim_class": 1
+        },
+        "evidence_categories": []
+      },
+      {
+        "account_id": "FS-10B80A33",
+        "truth_class": "no_scenario_role",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "planned_roles": [],
+        "occurrences": 1,
+        "roots": [
+          "FS-10B80A33"
+        ],
+        "engine_roles": {
+          "potential_intermediary": 1
+        },
+        "restrictions": {
+          "additional_verification_recommended": 1
+        },
+        "label_kinds": {
+          "suspicion": 1
+        },
+        "evidence_categories": [
+          "FUNDED_FORWARD"
+        ]
+      },
+      {
+        "account_id": "FS-126B6A5D",
+        "truth_class": "lookalike_legitimate",
+        "ground_truth_label": "lookalike_legitimate",
+        "customer_type": "retail",
+        "planned_roles": [
+          "lookalike_legitimate"
+        ],
+        "occurrences": 1,
+        "roots": [
+          "FS-126B6A5D"
+        ],
+        "engine_roles": {
+          "potential_victim": 1
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 1
+        },
+        "label_kinds": {
+          "protective_victim_class": 1
+        },
+        "evidence_categories": [
+          "ACCOUNT_MODEL"
+        ]
+      },
+      {
+        "account_id": "FS-208217D6",
+        "truth_class": "no_scenario_role",
+        "ground_truth_label": "ordinary",
+        "customer_type": "student",
+        "planned_roles": [],
+        "occurrences": 1,
+        "roots": [
+          "FS-34C43A2A"
+        ],
+        "engine_roles": {
+          "potential_victim": 1
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 1
+        },
+        "label_kinds": {
+          "protective_victim_class": 1
+        },
+        "evidence_categories": []
+      },
+      {
+        "account_id": "FS-3064EBFF",
+        "truth_class": "no_scenario_role",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "planned_roles": [],
+        "occurrences": 1,
+        "roots": [
+          "FS-3064EBFF"
+        ],
+        "engine_roles": {
+          "potential_victim": 1
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 1
+        },
+        "label_kinds": {
+          "protective_victim_class": 1
+        },
+        "evidence_categories": []
+      },
+      {
+        "account_id": "FS-35C0E965",
+        "truth_class": "no_scenario_role",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "planned_roles": [],
+        "occurrences": 1,
+        "roots": [
+          "FS-C6734E8B"
+        ],
+        "engine_roles": {
+          "potential_victim": 1
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 1
+        },
+        "label_kinds": {
+          "protective_victim_class": 1
+        },
+        "evidence_categories": []
+      },
+      {
+        "account_id": "FS-4487CFEC",
+        "truth_class": "no_scenario_role",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "planned_roles": [],
+        "occurrences": 1,
+        "roots": [
+          "FS-A44659BA"
+        ],
+        "engine_roles": {
+          "potential_victim": 1
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 1
+        },
+        "label_kinds": {
+          "protective_victim_class": 1
+        },
+        "evidence_categories": []
+      },
+      {
+        "account_id": "FS-50900CF1",
+        "truth_class": "no_scenario_role",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "planned_roles": [],
+        "occurrences": 2,
+        "roots": [
+          "FS-EFC5C8A6",
+          "FS-F3544284"
+        ],
+        "engine_roles": {
+          "potential_victim": 2
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 2
+        },
+        "label_kinds": {
+          "protective_victim_class": 2
+        },
+        "evidence_categories": []
+      },
+      {
+        "account_id": "FS-56F02A02",
+        "truth_class": "no_scenario_role",
+        "ground_truth_label": "ordinary",
+        "customer_type": "student",
+        "planned_roles": [],
+        "occurrences": 1,
+        "roots": [
+          "FS-56F02A02"
+        ],
+        "engine_roles": {
+          "potential_victim": 1
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 1
+        },
+        "label_kinds": {
+          "protective_victim_class": 1
+        },
+        "evidence_categories": [
+          "ACCOUNT_MODEL"
+        ]
+      },
+      {
+        "account_id": "FS-5DB36A7B",
+        "truth_class": "no_scenario_role",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "planned_roles": [],
+        "occurrences": 1,
+        "roots": [
+          "FS-F9F48F0C"
+        ],
+        "engine_roles": {
+          "potential_victim": 1
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 1
+        },
+        "label_kinds": {
+          "protective_victim_class": 1
+        },
+        "evidence_categories": []
+      },
+      {
+        "account_id": "FS-748E87EF",
+        "truth_class": "innocent_counterparty",
+        "ground_truth_label": "innocent_counterparty",
+        "customer_type": "retail",
+        "planned_roles": [
+          "innocent_counterparty"
+        ],
+        "occurrences": 1,
+        "roots": [
+          "FS-748E87EF"
+        ],
+        "engine_roles": {
+          "potential_victim": 1
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 1
+        },
+        "label_kinds": {
+          "protective_victim_class": 1
+        },
+        "evidence_categories": []
+      },
+      {
+        "account_id": "FS-7BA8A2CC",
+        "truth_class": "no_scenario_role",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "planned_roles": [],
+        "occurrences": 1,
+        "roots": [
+          "FS-7BA8A2CC"
+        ],
+        "engine_roles": {
+          "potential_intermediary": 1
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 1
+        },
+        "label_kinds": {
+          "suspicion": 1
+        },
+        "evidence_categories": [
+          "ACCOUNT_MODEL",
+          "FUNDED_FORWARD"
+        ]
+      },
+      {
+        "account_id": "FS-7BD6E642",
+        "truth_class": "no_scenario_role",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "planned_roles": [],
+        "occurrences": 1,
+        "roots": [
+          "FS-7BD6E642"
+        ],
+        "engine_roles": {
+          "potential_victim": 1
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 1
+        },
+        "label_kinds": {
+          "protective_victim_class": 1
+        },
+        "evidence_categories": []
+      },
+      {
+        "account_id": "FS-9AEDB5FF",
+        "truth_class": "no_scenario_role",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "planned_roles": [],
+        "occurrences": 1,
+        "roots": [
+          "FS-9AEDB5FF"
+        ],
+        "engine_roles": {
+          "potential_victim": 1
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 1
+        },
+        "label_kinds": {
+          "protective_victim_class": 1
+        },
+        "evidence_categories": []
+      },
+      {
+        "account_id": "FS-9ED5A9A0",
+        "truth_class": "no_scenario_role",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "planned_roles": [],
+        "occurrences": 1,
+        "roots": [
+          "FS-5FBACE15"
+        ],
+        "engine_roles": {
+          "potential_victim": 1
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 1
+        },
+        "label_kinds": {
+          "protective_victim_class": 1
+        },
+        "evidence_categories": []
+      },
+      {
+        "account_id": "FS-A6FA51C3",
+        "truth_class": "innocent_counterparty",
+        "ground_truth_label": "innocent_counterparty",
+        "customer_type": "student",
+        "planned_roles": [
+          "innocent_counterparty"
+        ],
+        "occurrences": 1,
+        "roots": [
+          "FS-A6FA51C3"
+        ],
+        "engine_roles": {
+          "potential_victim": 1
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 1
+        },
+        "label_kinds": {
+          "protective_victim_class": 1
+        },
+        "evidence_categories": []
+      },
+      {
+        "account_id": "FS-A96D2CCB",
+        "truth_class": "lookalike_legitimate",
+        "ground_truth_label": "lookalike_legitimate",
+        "customer_type": "retail",
+        "planned_roles": [
+          "lookalike_legitimate"
+        ],
+        "occurrences": 1,
+        "roots": [
+          "FS-A96D2CCB"
+        ],
+        "engine_roles": {
+          "potential_victim": 1
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 1
+        },
+        "label_kinds": {
+          "protective_victim_class": 1
+        },
+        "evidence_categories": [
+          "ACCOUNT_MODEL"
+        ]
+      },
+      {
+        "account_id": "FS-BE16A3FE",
+        "truth_class": "no_scenario_role",
+        "ground_truth_label": "secondary_victim",
+        "customer_type": "student",
+        "planned_roles": [
+          "secondary_victim"
+        ],
+        "occurrences": 1,
+        "roots": [
+          "FS-1512B57C"
+        ],
+        "engine_roles": {
+          "potential_intermediary": 1
+        },
+        "restrictions": {
+          "consider_temporary_restriction_review": 1
+        },
+        "label_kinds": {
+          "suspicion": 1
+        },
+        "evidence_categories": [
+          "ACCOUNT_MODEL",
+          "ONWARD",
+          "TXN_MODEL"
+        ]
+      },
+      {
+        "account_id": "FS-DB092CC6",
+        "truth_class": "no_scenario_role",
+        "ground_truth_label": "intermediary",
+        "customer_type": "retail",
+        "planned_roles": [
+          "intermediary"
+        ],
+        "occurrences": 1,
+        "roots": [
+          "FS-839E101F"
+        ],
+        "engine_roles": {
+          "potential_victim": 1
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 1
+        },
+        "label_kinds": {
+          "protective_victim_class": 1
+        },
+        "evidence_categories": []
+      },
+      {
+        "account_id": "FS-E0C0323D",
+        "truth_class": "no_scenario_role",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "planned_roles": [],
+        "occurrences": 1,
+        "roots": [
+          "FS-D0D054F1"
+        ],
+        "engine_roles": {
+          "potential_victim": 1
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 1
+        },
+        "label_kinds": {
+          "protective_victim_class": 1
+        },
+        "evidence_categories": []
+      },
+      {
+        "account_id": "FS-F836172C",
+        "truth_class": "lookalike_legitimate",
+        "ground_truth_label": "lookalike_legitimate",
+        "customer_type": "retail",
+        "planned_roles": [
+          "lookalike_legitimate"
+        ],
+        "occurrences": 1,
+        "roots": [
+          "FS-F836172C"
+        ],
+        "engine_roles": {
+          "potential_victim": 1
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 1
+        },
+        "label_kinds": {
+          "protective_victim_class": 1
+        },
+        "evidence_categories": [
+          "ACCOUNT_MODEL"
+        ]
+      },
+      {
+        "account_id": "FS-F8E884CD",
+        "truth_class": "no_scenario_role",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "planned_roles": [],
+        "occurrences": 1,
+        "roots": [
+          "FS-F8E884CD"
+        ],
+        "engine_roles": {
+          "potential_victim": 1
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 1
+        },
+        "label_kinds": {
+          "protective_victim_class": 1
+        },
+        "evidence_categories": []
+      },
+      {
+        "account_id": "FS-FB51FF23",
+        "truth_class": "no_scenario_role",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "planned_roles": [],
+        "occurrences": 1,
+        "roots": [
+          "FS-D0D054F1"
+        ],
+        "engine_roles": {
+          "potential_victim": 1
+        },
+        "restrictions": {
+          "urgent_manual_review_recommended": 1
+        },
+        "label_kinds": {
+          "protective_victim_class": 1
+        },
+        "evidence_categories": []
+      }
+    ],
+    "occurrences": [
+      {
+        "root": "FS-1512B57C",
+        "root_kind": "victim",
+        "account_id": "FS-BE16A3FE",
+        "position": "downstream",
+        "hop": 1,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_intermediary",
+        "restriction": "consider_temporary_restriction_review",
+        "ground_truth_label": "secondary_victim",
+        "customer_type": "student",
+        "materialised_roles": [],
+        "planned_roles": [
+          "secondary_victim"
+        ],
+        "label_kind": "suspicion",
+        "may_be_victim": false,
+        "evidence_categories": [
+          "ONWARD",
+          "ACCOUNT_MODEL",
+          "TXN_MODEL"
+        ],
+        "evidence_strength": "strong",
+        "supporting_evidence": [
+          "Sent 74,262 of the 74,578 it received in traced transfers onward within 24 h; the first went 82 min after receipt. Balance-based attribution: between 74,096 and 74,262 of the traced money itself moved on.",
+          "The account behaviour model scores its history at or above the validated review threshold.",
+          "The transaction model flags 1 of its traced outgoing transfer(s) (TX-303-0054824)."
+        ],
+        "contradictory_evidence": [
+          "Established records: 21 transfers over 53 days before it was reached."
+        ],
+        "why": "Received traced money and passed most of it on quickly - consistent with a pass-through, which does not establish that the holder knowingly took part; restriction rationale: 3 independent kinds of evidence support review. A temporary restriction may be considered by the authorised institution after human review, under its policy. This report takes no action.; received traced 74,578.24, sent traced 74,262.48, forwarded between 74095.58 and 74262.48; business_account=False, in_flagged_flow=True, traced_paths_in=1, in_cycle=False, drained_senders_near=1"
+      },
+      {
+        "root": "FS-126B6A5D",
+        "root_kind": "lookalike_hub",
+        "account_id": "FS-126B6A5D",
+        "position": "investigated",
+        "hop": 0,
+        "truth_class": "lookalike_legitimate",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "lookalike_legitimate",
+        "customer_type": "retail",
+        "materialised_roles": [
+          "lookalike_legitimate"
+        ],
+        "planned_roles": [
+          "lookalike_legitimate"
+        ],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [
+          "ACCOUNT_MODEL"
+        ],
+        "evidence_strength": "moderate",
+        "supporting_evidence": [
+          "Sent 1 flagged transfer(s) that were not funded by money it had just received.",
+          "1 flagged transfer(s) went to account(s) it had never paid before.",
+          "1 flagged transfer(s) took at least half of the balance at the time."
+        ],
+        "contradictory_evidence": [
+          "The ledger records a payment, not whether the holder authorised it or was deceived."
+        ],
+        "why": "Money left this account in transfers that differ from its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 147,018.90, forwarded between None and None; business_account=False, in_flagged_flow=True, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-33F54945",
+        "root_kind": "lookalike_hub",
+        "account_id": "FS-0FD4CC75",
+        "position": "upstream",
+        "hop": 1,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "materialised_roles": [],
+        "planned_roles": [],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [],
+        "evidence_strength": "strong",
+        "supporting_evidence": [
+          "Its transfer TX-303-0068903 is flagged and was not funded by money it had just received.",
+          "1 flagged transfer(s) went to account(s) it had never paid before.",
+          "1 flagged transfer(s) took at least half of the balance at the time."
+        ],
+        "contradictory_evidence": [
+          "Established records: 43 transfers over 66 days before it was reached.",
+          "The account behaviour model scores it below its review threshold (which does not clear it)."
+        ],
+        "why": "Paid into the traced flow in a flagged transfer unlike its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 36,116.08, forwarded between None and None; business_account=False, in_flagged_flow=False, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-A96D2CCB",
+        "root_kind": "lookalike_hub",
+        "account_id": "FS-A96D2CCB",
+        "position": "investigated",
+        "hop": 0,
+        "truth_class": "lookalike_legitimate",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "lookalike_legitimate",
+        "customer_type": "retail",
+        "materialised_roles": [
+          "lookalike_legitimate"
+        ],
+        "planned_roles": [
+          "lookalike_legitimate"
+        ],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [
+          "ACCOUNT_MODEL"
+        ],
+        "evidence_strength": "weak",
+        "supporting_evidence": [
+          "Sent 1 flagged transfer(s) that were not funded by money it had just received.",
+          "1 flagged transfer(s) went to account(s) it had never paid before."
+        ],
+        "contradictory_evidence": [
+          "The ledger records a payment, not whether the holder authorised it or was deceived."
+        ],
+        "why": "Money left this account in transfers that differ from its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 150,542.29, forwarded between None and None; business_account=False, in_flagged_flow=True, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-D0D054F1",
+        "root_kind": "lookalike_hub",
+        "account_id": "FS-E0C0323D",
+        "position": "upstream",
+        "hop": 1,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "materialised_roles": [],
+        "planned_roles": [],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [],
+        "evidence_strength": "moderate",
+        "supporting_evidence": [
+          "Its transfer TX-303-0054960 is flagged and was not funded by money it had just received.",
+          "1 flagged transfer(s) went to account(s) it had never paid before."
+        ],
+        "contradictory_evidence": [
+          "Established records: 33 transfers over 53 days before it was reached.",
+          "The account behaviour model scores it below its review threshold (which does not clear it)."
+        ],
+        "why": "Paid into the traced flow in a flagged transfer unlike its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 60,000.00, forwarded between None and None; business_account=False, in_flagged_flow=False, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-D0D054F1",
+        "root_kind": "lookalike_hub",
+        "account_id": "FS-FB51FF23",
+        "position": "upstream",
+        "hop": 1,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "materialised_roles": [],
+        "planned_roles": [],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [],
+        "evidence_strength": "strong",
+        "supporting_evidence": [
+          "Its transfer TX-303-0054972 is flagged and was not funded by money it had just received.",
+          "1 flagged transfer(s) went to account(s) it had never paid before.",
+          "1 flagged transfer(s) took at least half of the balance at the time."
+        ],
+        "contradictory_evidence": [
+          "Established records: 29 transfers over 56 days before it was reached.",
+          "The account behaviour model scores it below its review threshold (which does not clear it)."
+        ],
+        "why": "Paid into the traced flow in a flagged transfer unlike its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 55,500.00, forwarded between None and None; business_account=False, in_flagged_flow=False, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-F3544284",
+        "root_kind": "lookalike_hub",
+        "account_id": "FS-0EBB3658",
+        "position": "upstream",
+        "hop": 1,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "ordinary",
+        "customer_type": "student",
+        "materialised_roles": [],
+        "planned_roles": [],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [],
+        "evidence_strength": "strong",
+        "supporting_evidence": [
+          "Its transfer TX-303-0052321 is flagged and was not funded by money it had just received.",
+          "Largest flagged transfer (11,331) is more than twice its largest earlier one (5,080).",
+          "1 flagged transfer(s) went to account(s) it had never paid before.",
+          "1 flagged transfer(s) took at least half of the balance at the time.",
+          "Flagged transfer(s) between 00:00 and 05:00, when it rarely transacted before."
+        ],
+        "contradictory_evidence": [
+          "Established records: 42 transfers over 52 days before it was reached.",
+          "The account behaviour model scores it below its review threshold (which does not clear it)."
+        ],
+        "why": "Paid into the traced flow in a flagged transfer unlike its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 11,330.94, forwarded between None and None; business_account=False, in_flagged_flow=False, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-F3544284",
+        "root_kind": "lookalike_hub",
+        "account_id": "FS-50900CF1",
+        "position": "upstream",
+        "hop": 1,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "materialised_roles": [],
+        "planned_roles": [],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [],
+        "evidence_strength": "moderate",
+        "supporting_evidence": [
+          "Its transfer TX-303-0052656 is flagged and was not funded by money it had just received.",
+          "1 flagged transfer(s) went to account(s) it had never paid before."
+        ],
+        "contradictory_evidence": [
+          "Established records: 43 transfers over 55 days before it was reached.",
+          "The account behaviour model scores it below its review threshold (which does not clear it)."
+        ],
+        "why": "Paid into the traced flow in a flagged transfer unlike its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 12,107.79, forwarded between None and None; business_account=False, in_flagged_flow=False, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-F836172C",
+        "root_kind": "lookalike_hub",
+        "account_id": "FS-F836172C",
+        "position": "investigated",
+        "hop": 0,
+        "truth_class": "lookalike_legitimate",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "lookalike_legitimate",
+        "customer_type": "retail",
+        "materialised_roles": [
+          "lookalike_legitimate"
+        ],
+        "planned_roles": [
+          "lookalike_legitimate"
+        ],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [
+          "ACCOUNT_MODEL"
+        ],
+        "evidence_strength": "weak",
+        "supporting_evidence": [
+          "Sent 1 flagged transfer(s) that were not funded by money it had just received.",
+          "1 flagged transfer(s) went to account(s) it had never paid before."
+        ],
+        "contradictory_evidence": [
+          "The ledger records a payment, not whether the holder authorised it or was deceived."
+        ],
+        "why": "Money left this account in transfers that differ from its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 159,534.62, forwarded between None and None; business_account=False, in_flagged_flow=True, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-F9F48F0C",
+        "root_kind": "lookalike_hub",
+        "account_id": "FS-5DB36A7B",
+        "position": "upstream",
+        "hop": 1,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "materialised_roles": [],
+        "planned_roles": [],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [],
+        "evidence_strength": "strong",
+        "supporting_evidence": [
+          "Its transfer TX-303-0038266 is flagged and was not funded by money it had just received.",
+          "1 flagged transfer(s) went to account(s) it had never paid before.",
+          "1 flagged transfer(s) took at least half of the balance at the time."
+        ],
+        "contradictory_evidence": [
+          "Established records: 39 transfers over 36 days before it was reached.",
+          "The account behaviour model scores it below its review threshold (which does not clear it)."
+        ],
+        "why": "Paid into the traced flow in a flagged transfer unlike its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 39,110.57, forwarded between None and None; business_account=False, in_flagged_flow=False, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-748E87EF",
+        "root_kind": "innocent_counterparty",
+        "account_id": "FS-748E87EF",
+        "position": "investigated",
+        "hop": 0,
+        "truth_class": "innocent_counterparty",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "innocent_counterparty",
+        "customer_type": "retail",
+        "materialised_roles": [
+          "innocent_counterparty"
+        ],
+        "planned_roles": [
+          "innocent_counterparty"
+        ],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [],
+        "evidence_strength": "weak",
+        "supporting_evidence": [
+          "Sent 1 flagged transfer(s) that were not funded by money it had just received.",
+          "1 flagged transfer(s) went to account(s) it had never paid before."
+        ],
+        "contradictory_evidence": [
+          "The ledger records a payment, not whether the holder authorised it or was deceived."
+        ],
+        "why": "Money left this account in transfers that differ from its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 1,078.40, forwarded between None and None; business_account=False, in_flagged_flow=True, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-839E101F",
+        "root_kind": "innocent_counterparty",
+        "account_id": "FS-DB092CC6",
+        "position": "upstream",
+        "hop": 1,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "intermediary",
+        "customer_type": "retail",
+        "materialised_roles": [],
+        "planned_roles": [
+          "intermediary"
+        ],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [],
+        "evidence_strength": "strong",
+        "supporting_evidence": [
+          "Its transfer TX-303-0056669 is flagged and was not funded by money it had just received.",
+          "Largest flagged transfer (19,500) is more than twice its largest earlier one (3,528).",
+          "1 flagged transfer(s) went to account(s) it had never paid before."
+        ],
+        "contradictory_evidence": [
+          "Established records: 51 transfers over 56 days before it was reached.",
+          "The account behaviour model scores it below its review threshold (which does not clear it)."
+        ],
+        "why": "Paid into the traced flow in a flagged transfer unlike its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 19,500.00, forwarded between None and None; business_account=False, in_flagged_flow=False, traced_paths_in=1, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-A6FA51C3",
+        "root_kind": "innocent_counterparty",
+        "account_id": "FS-A6FA51C3",
+        "position": "investigated",
+        "hop": 0,
+        "truth_class": "innocent_counterparty",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "innocent_counterparty",
+        "customer_type": "student",
+        "materialised_roles": [
+          "innocent_counterparty"
+        ],
+        "planned_roles": [
+          "innocent_counterparty"
+        ],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [],
+        "evidence_strength": "weak",
+        "supporting_evidence": [
+          "Sent 1 flagged transfer(s) that were not funded by money it had just received.",
+          "1 flagged transfer(s) went to account(s) it had never paid before."
+        ],
+        "contradictory_evidence": [
+          "The ledger records a payment, not whether the holder authorised it or was deceived."
+        ],
+        "why": "Money left this account in transfers that differ from its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 14,683.90, forwarded between None and None; business_account=False, in_flagged_flow=True, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-EFC5C8A6",
+        "root_kind": "innocent_counterparty",
+        "account_id": "FS-0EBB3658",
+        "position": "upstream",
+        "hop": 2,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "ordinary",
+        "customer_type": "student",
+        "materialised_roles": [],
+        "planned_roles": [],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [],
+        "evidence_strength": "strong",
+        "supporting_evidence": [
+          "Its transfer TX-303-0052321 is flagged and was not funded by money it had just received.",
+          "Largest flagged transfer (11,331) is more than twice its largest earlier one (5,080).",
+          "1 flagged transfer(s) went to account(s) it had never paid before.",
+          "1 flagged transfer(s) took at least half of the balance at the time.",
+          "Flagged transfer(s) between 00:00 and 05:00, when it rarely transacted before."
+        ],
+        "contradictory_evidence": [
+          "Established records: 42 transfers over 52 days before it was reached.",
+          "The account behaviour model scores it below its review threshold (which does not clear it)."
+        ],
+        "why": "Paid into the traced flow in a flagged transfer unlike its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 11,330.94, forwarded between None and None; business_account=False, in_flagged_flow=False, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-EFC5C8A6",
+        "root_kind": "innocent_counterparty",
+        "account_id": "FS-50900CF1",
+        "position": "upstream",
+        "hop": 2,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "materialised_roles": [],
+        "planned_roles": [],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [],
+        "evidence_strength": "moderate",
+        "supporting_evidence": [
+          "Its transfer TX-303-0052656 is flagged and was not funded by money it had just received.",
+          "1 flagged transfer(s) went to account(s) it had never paid before."
+        ],
+        "contradictory_evidence": [
+          "Established records: 43 transfers over 55 days before it was reached.",
+          "The account behaviour model scores it below its review threshold (which does not clear it)."
+        ],
+        "why": "Paid into the traced flow in a flagged transfer unlike its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 12,107.79, forwarded between None and None; business_account=False, in_flagged_flow=False, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-052EC4BA",
+        "root_kind": "ordinary",
+        "account_id": "FS-052EC4BA",
+        "position": "investigated",
+        "hop": 0,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "ordinary",
+        "customer_type": "student",
+        "materialised_roles": [],
+        "planned_roles": [],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [],
+        "evidence_strength": "moderate",
+        "supporting_evidence": [
+          "Sent 1 flagged transfer(s) that were not funded by money it had just received.",
+          "1 flagged transfer(s) went to account(s) it had never paid before.",
+          "1 flagged transfer(s) took at least half of the balance at the time."
+        ],
+        "contradictory_evidence": [
+          "The ledger records a payment, not whether the holder authorised it or was deceived."
+        ],
+        "why": "Money left this account in transfers that differ from its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 22,000.00, forwarded between None and None; business_account=False, in_flagged_flow=True, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-10B80A33",
+        "root_kind": "ordinary",
+        "account_id": "FS-10B80A33",
+        "position": "investigated",
+        "hop": 0,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_intermediary",
+        "restriction": "additional_verification_recommended",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "materialised_roles": [],
+        "planned_roles": [],
+        "label_kind": "suspicion",
+        "may_be_victim": false,
+        "evidence_categories": [
+          "FUNDED_FORWARD"
+        ],
+        "evidence_strength": "weak",
+        "supporting_evidence": [
+          "1 of its 1 flagged outgoing transfer(s) (TX-303-0027087) were paid out of money received in the previous 24 h from payers that had not paid it before, which its own earlier balance could not have covered."
+        ],
+        "contradictory_evidence": [
+          "Established records: 23 transfers over 87 days before it was reached.",
+          "The account behaviour model scores it below its review threshold (which does not clear it)."
+        ],
+        "why": "Its flagged outgoing transfers mostly forwarded money it had just received; restriction rationale: Only one kind of evidence; verify before anything else.; received traced 0.00, sent traced 80,966.86, forwarded between None and None; business_account=False, in_flagged_flow=True, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-3064EBFF",
+        "root_kind": "ordinary",
+        "account_id": "FS-3064EBFF",
+        "position": "investigated",
+        "hop": 0,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "materialised_roles": [],
+        "planned_roles": [],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [],
+        "evidence_strength": "weak",
+        "supporting_evidence": [
+          "Sent 1 flagged transfer(s) that were not funded by money it had just received.",
+          "1 flagged transfer(s) went to account(s) it had never paid before."
+        ],
+        "contradictory_evidence": [
+          "The ledger records a payment, not whether the holder authorised it or was deceived."
+        ],
+        "why": "Money left this account in transfers that differ from its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 17,655.80, forwarded between None and None; business_account=False, in_flagged_flow=True, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-34C43A2A",
+        "root_kind": "ordinary",
+        "account_id": "FS-208217D6",
+        "position": "upstream",
+        "hop": 1,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "ordinary",
+        "customer_type": "student",
+        "materialised_roles": [],
+        "planned_roles": [],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [],
+        "evidence_strength": "strong",
+        "supporting_evidence": [
+          "Its transfer TX-303-0062993 is flagged and was not funded by money it had just received.",
+          "1 flagged transfer(s) went to account(s) it had never paid before.",
+          "1 flagged transfer(s) took at least half of the balance at the time."
+        ],
+        "contradictory_evidence": [
+          "Established records: 34 transfers over 61 days before it was reached.",
+          "The account behaviour model scores it below its review threshold (which does not clear it)."
+        ],
+        "why": "Paid into the traced flow in a flagged transfer unlike its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 6,971.26, forwarded between None and None; business_account=False, in_flagged_flow=False, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-3B2ABF11",
+        "root_kind": "ordinary",
+        "account_id": "FS-0572CA18",
+        "position": "upstream",
+        "hop": 1,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "ordinary",
+        "customer_type": "student",
+        "materialised_roles": [],
+        "planned_roles": [],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [
+          "ACCOUNT_MODEL"
+        ],
+        "evidence_strength": "strong",
+        "supporting_evidence": [
+          "Its transfer TX-303-0057790 is flagged and was not funded by money it had just received.",
+          "1 flagged transfer(s) went to account(s) it had never paid before.",
+          "1 flagged transfer(s) took at least half of the balance at the time."
+        ],
+        "contradictory_evidence": [
+          "Established records: 40 transfers over 56 days before it was reached."
+        ],
+        "why": "Paid into the traced flow in a flagged transfer unlike its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 9,567.12, forwarded between None and None; business_account=False, in_flagged_flow=False, traced_paths_in=1, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-56F02A02",
+        "root_kind": "ordinary",
+        "account_id": "FS-56F02A02",
+        "position": "investigated",
+        "hop": 0,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "ordinary",
+        "customer_type": "student",
+        "materialised_roles": [],
+        "planned_roles": [],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [
+          "ACCOUNT_MODEL"
+        ],
+        "evidence_strength": "strong",
+        "supporting_evidence": [
+          "Sent 1 flagged transfer(s) that were not funded by money it had just received.",
+          "Largest flagged transfer (19,018) is more than twice its largest earlier one (1,228).",
+          "1 flagged transfer(s) went to account(s) it had never paid before.",
+          "1 flagged transfer(s) took at least half of the balance at the time."
+        ],
+        "contradictory_evidence": [
+          "The ledger records a payment, not whether the holder authorised it or was deceived."
+        ],
+        "why": "Money left this account in transfers that differ from its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 19,017.92, forwarded between None and None; business_account=False, in_flagged_flow=True, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-5FBACE15",
+        "root_kind": "ordinary",
+        "account_id": "FS-9ED5A9A0",
+        "position": "upstream",
+        "hop": 1,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "materialised_roles": [],
+        "planned_roles": [],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [],
+        "evidence_strength": "strong",
+        "supporting_evidence": [
+          "Its transfer TX-303-0044614 is flagged and was not funded by money it had just received.",
+          "Largest flagged transfer (29,000) is more than twice its largest earlier one (3,650).",
+          "1 flagged transfer(s) went to account(s) it had never paid before.",
+          "1 flagged transfer(s) took at least half of the balance at the time."
+        ],
+        "contradictory_evidence": [
+          "Established records: 30 transfers over 34 days before it was reached.",
+          "The account behaviour model scores it below its review threshold (which does not clear it)."
+        ],
+        "why": "Paid into the traced flow in a flagged transfer unlike its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 29,000.00, forwarded between None and None; business_account=False, in_flagged_flow=False, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-7BA8A2CC",
+        "root_kind": "ordinary",
+        "account_id": "FS-7BA8A2CC",
+        "position": "investigated",
+        "hop": 0,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_intermediary",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "materialised_roles": [],
+        "planned_roles": [],
+        "label_kind": "suspicion",
+        "may_be_victim": false,
+        "evidence_categories": [
+          "ACCOUNT_MODEL",
+          "FUNDED_FORWARD"
+        ],
+        "evidence_strength": "moderate",
+        "supporting_evidence": [
+          "The account behaviour model scores its history at or above the validated review threshold.",
+          "1 of its 1 flagged outgoing transfer(s) (TX-303-0026583) were paid out of money received in the previous 24 h from payers that had not paid it before, which its own earlier balance could not have covered."
+        ],
+        "contradictory_evidence": [
+          "Established records: 51 transfers over 89 days before it was reached."
+        ],
+        "why": "Its flagged outgoing transfers mostly forwarded money it had just received; restriction rationale: Two independent kinds of evidence support urgent review.; received traced 0.00, sent traced 41,600.00, forwarded between None and None; business_account=False, in_flagged_flow=True, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-7BD6E642",
+        "root_kind": "ordinary",
+        "account_id": "FS-7BD6E642",
+        "position": "investigated",
+        "hop": 0,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "materialised_roles": [],
+        "planned_roles": [],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [],
+        "evidence_strength": "moderate",
+        "supporting_evidence": [
+          "Sent 1 flagged transfer(s) that were not funded by money it had just received.",
+          "1 flagged transfer(s) went to account(s) it had never paid before.",
+          "1 flagged transfer(s) took at least half of the balance at the time."
+        ],
+        "contradictory_evidence": [
+          "The ledger records a payment, not whether the holder authorised it or was deceived."
+        ],
+        "why": "Money left this account in transfers that differ from its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 18,369.95, forwarded between None and None; business_account=False, in_flagged_flow=True, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-9AEDB5FF",
+        "root_kind": "ordinary",
+        "account_id": "FS-9AEDB5FF",
+        "position": "investigated",
+        "hop": 0,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "materialised_roles": [],
+        "planned_roles": [],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [],
+        "evidence_strength": "weak",
+        "supporting_evidence": [
+          "Sent 1 flagged transfer(s) that were not funded by money it had just received.",
+          "1 flagged transfer(s) went to account(s) it had never paid before."
+        ],
+        "contradictory_evidence": [
+          "The ledger records a payment, not whether the holder authorised it or was deceived."
+        ],
+        "why": "Money left this account in transfers that differ from its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 46,200.00, forwarded between None and None; business_account=False, in_flagged_flow=True, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-A44659BA",
+        "root_kind": "ordinary",
+        "account_id": "FS-4487CFEC",
+        "position": "upstream",
+        "hop": 1,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "materialised_roles": [],
+        "planned_roles": [],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [],
+        "evidence_strength": "moderate",
+        "supporting_evidence": [
+          "Its transfer TX-303-0035694 is flagged and was not funded by money it had just received.",
+          "1 flagged transfer(s) went to account(s) it had never paid before."
+        ],
+        "contradictory_evidence": [
+          "Established records: 32 transfers over 36 days before it was reached.",
+          "The account behaviour model scores it below its review threshold (which does not clear it)."
+        ],
+        "why": "Paid into the traced flow in a flagged transfer unlike its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 2,500.00, forwarded between None and None; business_account=False, in_flagged_flow=False, traced_paths_in=1, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-C6734E8B",
+        "root_kind": "ordinary",
+        "account_id": "FS-35C0E965",
+        "position": "upstream",
+        "hop": 1,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "materialised_roles": [],
+        "planned_roles": [],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [],
+        "evidence_strength": "strong",
+        "supporting_evidence": [
+          "Its transfer TX-303-0077509 is flagged and was not funded by money it had just received.",
+          "Largest flagged transfer (41,924) is more than twice its largest earlier one (19,600).",
+          "1 flagged transfer(s) went to account(s) it had never paid before.",
+          "1 flagged transfer(s) took at least half of the balance at the time."
+        ],
+        "contradictory_evidence": [
+          "Established records: 27 transfers over 39 days before it was reached.",
+          "The account behaviour model scores it below its review threshold (which does not clear it)."
+        ],
+        "why": "Paid into the traced flow in a flagged transfer unlike its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 41,924.35, forwarded between None and None; business_account=False, in_flagged_flow=False, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      },
+      {
+        "root": "FS-F8E884CD",
+        "root_kind": "ordinary",
+        "account_id": "FS-F8E884CD",
+        "position": "investigated",
+        "hop": 0,
+        "truth_class": "no_scenario_role",
+        "engine_role": "potential_victim",
+        "restriction": "urgent_manual_review_recommended",
+        "ground_truth_label": "ordinary",
+        "customer_type": "retail",
+        "materialised_roles": [],
+        "planned_roles": [],
+        "label_kind": "protective_victim_class",
+        "may_be_victim": true,
+        "evidence_categories": [],
+        "evidence_strength": "moderate",
+        "supporting_evidence": [
+          "Sent 1 flagged transfer(s) that were not funded by money it had just received.",
+          "Largest flagged transfer (23,000) is more than twice its largest earlier one (5,133).",
+          "1 flagged transfer(s) went to account(s) it had never paid before."
+        ],
+        "contradictory_evidence": [
+          "The ledger records a payment, not whether the holder authorised it or was deceived."
+        ],
+        "why": "Money left this account in transfers that differ from its own history; restriction rationale: The account may itself be a victim. Review it urgently to protect the holder: contact them through a verified channel. Any protective hold is a decision for the institution with the holder, never a penalty.; received traced 0.00, sent traced 23,000.00, forwarded between None and None; business_account=False, in_flagged_flow=True, traced_paths_in=0, in_cycle=False, drained_senders_near=0"
+      }
+    ]
+  },
+  "fixed_failure_modes": {
+    "F1_pass_through_exceeds_received": {
+      "description": "Every 'Sent X of the Y it received' / 'Sent X (onward) within 24 h of receiving Y' sentence has X <= Y; forwarded range never exceeds received; ONWARD only with balance-based attribution >= 70%; the engine's capped non-cash onward amount never exceeds received.",
+      "failure_count": 0,
+      "checks": {
+        "stated_pass_through_exceeds_received": {
+          "count": 0,
+          "examples": []
+        },
+        "forwarded_range_exceeds_received": {
+          "count": 0,
+          "examples": []
+        },
+        "onward_without_balance_attribution": {
+          "count": 0,
+          "examples": []
+        },
+        "noncash_onward_exceeds_received": {
+          "count": 0,
+          "examples": []
+        }
+      }
+    },
+    "F2_cash_withdrawal_counted_twice": {
+      "description": "Independent SQL split of each traced account's onward transfers into non-cash and ATM_CASH_OUT matches the engine; no transfer is in both; money-leaving categories (ONWARD, CASH, FUNDED_FORWARD, FLAGGED_IN_MOVED) count as one kind in evidence strength and the restriction state.",
+      "failure_count": 0,
+      "checks": {
+        "same_transfer_in_onward_and_cash": {
+          "count": 0,
+          "examples": []
+        },
+        "engine_noncash_or_cash_differs_from_sql": {
+          "count": 0,
+          "examples": []
+        },
+        "evidence_strength_counts_money_leaving_twice": {
+          "count": 0,
+          "examples": []
+        },
+        "restriction_state_not_from_collapsed_kinds": {
+          "count": 0,
+          "examples": []
+        }
+      }
+    },
+    "F3_merchant_as_secondary_victim": {
+      "description": "No sme/corporate account, nor any account labelled merchant/employer/cash_network, is labelled potential_secondary_victim or given the savings-based urgent review; savings_left() is never true for one.",
+      "failure_count": 0,
+      "checks": {
+        "business_labelled_potential_secondary_victim": {
+          "count": 0,
+          "examples": []
+        },
+        "business_given_savings_based_urgent_review": {
+          "count": 0,
+          "examples": []
+        },
+        "savings_left_true_for_business": {
+          "count": 0,
+          "examples": []
+        }
+      }
+    },
+    "F4_receipt_only_restriction_review": {
+      "description": "Every suspicion-side review state (additional verification, urgent review, restriction review; may_be_victim false) has at least one outgoing-side category (ONWARD, CASH, FUNDED_FORWARD, FLAGGED_IN_MOVED, TXN_MODEL); an investigated collection point needs an outgoing signal. Separately reported (not counted as the failure mode): restriction reviews that reach the threshold only because receipt-only NETWORK evidence counts as a kind.",
+      "failure_count": 0,
+      "checks": {
+        "review_without_outgoing_side_evidence": {
+          "count": 0,
+          "examples": []
+        },
+        "investigated_collector_without_outgoing_signal": {
+          "count": 0,
+          "examples": []
+        }
+      }
+    },
+    "counters": {
+      "F1_assessments_checked": 2622,
+      "F1_pass_through_statements": 199,
+      "F1_onward_category": 32,
+      "F2_accounts_recomputed": 2342,
+      "F4_suspicion_side_reviews": 96,
+      "F1_cash_timing_statements": 54,
+      "F2_accounts_with_cash_withdrawal_in_trace": 67,
+      "F3_business_assessments": 1180,
+      "F2_restriction_softened_by_own_funds_rule": 2,
+      "F2_restriction_avoided_by_collapsing": 4
+    }
+  },
+  "runtime_seconds": 78.2
+}

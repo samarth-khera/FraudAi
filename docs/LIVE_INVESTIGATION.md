@@ -1,5 +1,11 @@
 # Live investigation engine
 
+> Since the dynamic intelligence work, the page calls `POST /api/v2/dynamic-investigations`, which runs everything
+> below (as the `investigation` section of its response) and adds model scoring, role assessment and restriction
+> states on top. See [DYNAMIC_INTELLIGENCE.md](DYNAMIC_INTELLIGENCE.md). `POST /api/v2/investigations` is unchanged and
+> still works on its own. Inside a dynamic investigation, step 6 runs the v2 account model only on `demo-ledger`, and
+> the role engine's assessment replaces this report's escalation recommendations for the accounts it assessed.
+
 `/investigate` in the app, `POST /api/v2/investigations` in the API. An investigator opens the account that lost
 money and presses **Start fund investigation**. The server then queries the configured ledger, traces the money, assesses
 every linked account and returns an evidence-referenced report. Nothing is precomputed and nothing is stored.
@@ -37,7 +43,9 @@ every linked account and returns an evidence-referenced report. Nothing is preco
    - Each account is expanded once.
    - Defaults are a depth of 3 hops and 200 accounts.
 
-   An edge that returns to an account already on its own path is a **cycle**. Every limit that cut the trace short
+   An edge that returns to an account already on its own path is a **cycle**. So is an edge that reaches an account
+   first reached from the other side of the entered account, when the timing lets money run all the way round (a loop
+   through the entered account); a transfer found again from the other side is recorded once, as a cross-link. Every limit that cut the trace short
    is listed in `truncation_notes`. Edges touching the entered account are `observed_direct`. All others are
    `inferred_related`: the transfer is a recorded fact, but its link to the incident rests on timing.
 6. **Per-account assessment.** The entered account, then direct recipients, onward recipients and senders, up to
@@ -72,9 +80,12 @@ every linked account and returns an evidence-referenced report. Nothing is preco
       is off unless `GEMINI_ANALYST_ENABLED=true`, and by default it is sent only for the synthetic ledger. Gemini
       receives a pseudonymised, bounded extract, and its answer is schema-validated and grounded against this report's
       IDs. `ai_analysis.state` says what happened (`completed`, `disabled`, `not_configured`,
-      `skipped_privacy_policy`, `unavailable` or `deferred`). The UI requests the report with
-      `ai_explanation: "separate"` and fetches the explanation from `POST /api/v2/investigations/explanation`, so
-      a slow model never delays the report. See [AI_ANALYST.md](AI_ANALYST.md).
+      `skipped_privacy_policy`, `unavailable` or `deferred`). With `ai_explanation: "separate"` the report comes back
+      without waiting for the model; the explanation is fetched from `POST /api/v2/investigations/explanation` (this
+      endpoint) or, as the page does, `POST /api/v2/dynamic-investigations/explanation`, which explains the dynamic role
+      assessment. This endpoint always answers `deferred` in separate mode; the dynamic endpoint answers `deferred` only
+      when an explanation could actually be produced, and otherwise returns the real state (`disabled`,
+      `not_configured`, ...) at once. See [AI_ANALYST.md](AI_ANALYST.md).
 
 Ground-truth labels and scenario tags are never read. A test scrambles them and checks that the report is unchanged.
 
@@ -82,21 +93,31 @@ Ground-truth labels and scenario tags are never read. A test scrambles them and 
 
 `/investigate` answers one question at a time instead of showing every section at once.
 
-1. **Account summary** (before anything is traced). Opening `/investigate?account=ACC-000001` reads the account, its
-   rule assessment and the data source (`GET /api/v2/accounts/{id}`, `/accounts/{id}/assessment`, `/data-source`).
-   Nothing is traced until **Start fund investigation** is pressed, which sends one `POST /api/v2/investigations`.
+1. **Account summary** (before anything is traced). The investigator picks a dataset (`GET /api/v2/datasets`; suggested
+   starting points from `GET /api/v2/datasets/{dataset}/sample-accounts`). Opening an account reads
+   `GET /api/v2/datasets/{dataset}/accounts/{id}`: history coverage, model availability and whether model outputs count
+   as evidence on that dataset, with no prediction. On `demo-ledger` the page also reads the account's rule assessment
+   and the data source (`GET /api/v2/accounts/{id}`, `/accounts/{id}/assessment`, `/data-source`). Nothing is traced
+   until **Start fund investigation** is pressed, which sends one `POST /api/v2/dynamic-investigations`. When its
+   `ai_analysis.state` is `deferred`, the page then requests `POST /api/v2/dynamic-investigations/explanation`.
 2. **Overview.** "What happened", written from the report by fixed rules (not AI), then the transfers where the trace
    starts. A flagged transfer is presented as a starting point, not a confirmed fraudulent event.
 3. **Fund trail.** The trace is split into branches using `parent_transaction_id`: one root-to-leaf path each, in the
    order the money moved. Each branch is told step by step (account, transfer, account…), drawn as a left-to-right
    tree (senders, then the investigated account, then recipients), and every transfer and account opens an inspector.
-   Each branch ends with the reason the data gives: depth limit, a cycle, money already traced on another branch, or
-   no further transfer found in the window. A stop is never presented as money recovered, lost or settled.
-4. **Risk evidence.** Accounts grouped by rule severity; each answers what was detected, what it relates to, the
+   Each branch ends with the reason the data gives: depth or account limit, a cycle, a cash withdrawal, money already
+   traced on another branch or from the other side of the investigated account, or no further transfer found in the
+   window (the endings are listed in [DYNAMIC_INTELLIGENCE.md](DYNAMIC_INTELLIGENCE.md#10-fund-tracing-branch-endings-and-tracing-verification)).
+   A stop is never presented as money recovered, lost or settled.
+4. **Affected accounts** (dynamic investigations). Every connected account grouped by its candidate role, each with its
+   evidence (recorded facts and model outputs labelled apart), what speaks against it, ten fixed questions and an
+   advisory restriction state.
+5. **Risk evidence.** Accounts grouped by rule severity; each answers what was detected, what it relates to, the
    evidence, why it matters and what is not known. Every finding, grouped by kind, and the template summary follow.
-5. **AI analyst.** Requested separately (`ai_explanation: "separate"`) and shown only for the same `report_digest`.
-   Every other stage is usable while it is pending.
-6. **Next steps.** Advisory recommendations, most direct first, each with the evidence it rests on. When the depth limit
+6. **AI analyst.** Requested separately (`ai_explanation: "separate"`) and shown only for the same `report_digest`.
+   It explains the dynamic role assessment, not the older role labels. Every other stage is usable while it is pending.
+7. **Next steps.** Whether a restriction should be considered (dynamic investigations; always advisory, with
+   human-approval wording), then advisory recommendations, most direct first, each with the evidence it rests on. When the depth limit
    cut the trace short, a deeper re-run is offered; it runs only when pressed.
 
 The trail model (`frontend/src/components/investigation/trail.ts`) only rearranges transfers that are in the response;
@@ -127,7 +148,8 @@ The server refuses to start investigations in three cases:
 
 ## Limits worth knowing
 
-- The request is synchronous. Locally it takes 0.1–0.5 s. On Render's free plan, add about a minute when the server
+- The request is synchronous. Locally it takes 0.1–0.5 s; a dynamic investigation takes a median of 0.2–0.8 s
+  depending on the ledger (DYNAMIC_INTELLIGENCE.md §11). On Render's free plan, add about a minute when the server
   is waking from sleep. There is no job queue and none is needed at this size.
 - Reports are not stored. A shared link (`/investigate?account=…`) only prefills the form, and the investigator
   presses Start again.

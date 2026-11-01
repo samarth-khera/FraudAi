@@ -1,14 +1,15 @@
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Crosshair, ExternalLink, X } from 'lucide-react';
-import { channelLabel, formatDateTime, formatMoney } from '../../lib/format';
+import { channelLabel, formatDateTime, formatMoney, formatDuration } from '../../lib/format';
 import { featureInfo } from '../../lib/featureGlossary';
 import { TraceEdge } from '../../types/investigation';
-import { FLAG_LABEL, GRAPH_ROLE, ROLE_ASSESSMENT, splitCoded } from './labels';
+import { FLAG_LABEL, GRAPH_ROLE, MODEL_FLAG_CODE, ROLE_ASSESSMENT, splitCoded } from './labels';
 import { Branch, farAccount } from './trail';
 import type { Target } from './TrailTree';
-import { ROLE_TONE, severityOf, useCase } from './caseModel';
+import { ROLE_TONE, STRENGTH_LABEL, severityOf, useCase } from './caseModel';
 import { Badge, IdText, Ref, Refs, SeverityMeter } from './ui';
+import { AccountModelFactors, EvidenceList, RestrictionPanel, RoleBadge } from './intel';
 
 const Row: React.FC<{ k: string; children: React.ReactNode }> = ({ k, children }) => (
   <div className="grid grid-cols-[minmax(0,9rem)_minmax(0,1fr)] gap-3 py-2 border-b border-line last:border-0">
@@ -86,8 +87,10 @@ const TransferDetail: React.FC<{
   onNavigate: (t: Target) => void;
   onFocusBranch: () => void;
 }> = ({ id, branch, headingRef, onNavigate, onFocusBranch }) => {
-  const { report, trail } = useCase();
+  const { report, trail, intel } = useCase();
   const t: TraceEdge | undefined = trail.edgesById.get(id) ?? report.victim.flagged_transfers.find((f) => f.transaction_id === id);
+  const score = intel?.transaction_scores?.find((x) => x.transaction_id === id) ?? null;
+  const ruleFlags = t?.flags.filter((f) => f.code !== MODEL_FLAG_CODE) ?? [];
   if (!t) return <p className="text-mute">This transfer is not part of the traced data.</p>;
 
   const steps = branch?.transfers ?? [];
@@ -111,7 +114,8 @@ const TransferDetail: React.FC<{
         <Badge tone={t.evidence_type === 'observed_direct' ? 'fact' : 'neutral'}>
           {t.evidence_type === 'observed_direct' ? 'Direct: the investigated account is a party' : 'Linked by timing and balance'}
         </Badge>
-        {t.flags.length > 0 && <Badge tone="iris">Flagged by rules</Badge>}
+        {ruleFlags.length > 0 && <Badge tone="iris">Flagged by rules</Badge>}
+        {score?.model_flag && score.evidence_use === 'evidence' && <Badge tone="critical">Flagged by the transaction model</Badge>}
         {t.is_cycle && <Badge tone="critical">Cycle</Badge>}
       </div>
 
@@ -127,6 +131,18 @@ const TransferDetail: React.FC<{
         </div>
       </div>
 
+      {score && (
+        <Group title="Transaction model (decision-time)">
+          <p className="text-ink-soft">
+            {score.evidence_use === 'reference_only' && 'Reference only (not validated on this dataset): '}
+            {score.model_flag ? 'At or above' : 'Below'} the review threshold
+            {score.calibrated_probability !== null && <> (calibrated score {(score.calibrated_probability * 100).toFixed(1)}%)</>}. Scored only from the
+            two accounts' records before this transfer.
+          </p>
+          {score.model_factors.length > 0 && <Bullets items={score.model_factors.map((f) => f.label)} />}
+        </Group>
+      )}
+
       <dl className="mt-4">
         <Row k="Transaction ID"><IdText>{t.transaction_id}</IdText></Row>
         <Row k="Time">{formatDateTime(t.timestamp)}</Row>
@@ -135,15 +151,15 @@ const TransferDetail: React.FC<{
         <Row k="Direction">{t.direction === 'downstream' ? 'Money leaving the investigated account' : 'Money reaching the investigated account'}</Row>
         <Row k="Hop">{t.hop} from {report.victim.account_id}</Row>
         {t.parent_transaction_id && <Row k="Followed from"><Ref id={t.parent_transaction_id} /></Row>}
-        {t.minutes_from_parent !== null && <Row k="Time from that transfer">{Math.round(t.minutes_from_parent)} min</Row>}
+        {t.minutes_from_parent !== null && <Row k="Time from that transfer">{formatDuration(t.minutes_from_parent)}</Row>}
         <Row k="Sender balance">{formatMoney(t.origin_balance_before)} to {formatMoney(t.origin_balance_after)}</Row>
         <Row k="Recipient balance">{formatMoney(t.dest_balance_before)} to {formatMoney(t.dest_balance_after)}</Row>
       </dl>
 
-      {t.flags.length > 0 && (
+      {ruleFlags.length > 0 && (
         <Group title="Why the rules flag it">
-          <ul className="space-y-2">
-            {t.flags.map((f) => (
+          <ul className="space-y-2" data-testid="rule-flags">
+            {ruleFlags.map((f) => (
               <li key={f.code} className="rounded-xl bg-iris-soft/60 ring-1 ring-iris-line px-3 py-2">
                 <p className="font-semibold text-iris-deep">{FLAG_LABEL[f.code] ?? f.code}</p>
                 <p className="mt-0.5 text-ink-soft">{f.explanation}</p>
@@ -220,9 +236,11 @@ const AccountDetail: React.FC<{
   onNavigate: (t: Target) => void;
   onFocusBranch?: () => void;
 }> = ({ id, headingRef, onNavigate, onFocusBranch }) => {
-  const { report, trail } = useCase();
+  const { report, trail, intel } = useCase();
   const a = report.accounts.find((x) => x.account_id === id);
   const node = report.trace.nodes.find((n) => n.account_id === id);
+  // A dynamic investigation's role assessment supersedes the trace report's simpler label and model score.
+  const ra = intel?.role_assessments.find((x) => x.account_id === id) ?? null;
   const incoming = trail.chronological.filter((e) => e.destination_account_id === id);
   const outgoing = trail.chronological.filter((e) => e.origin_account_id === id);
   const exposure = report.exposure.per_account.find((x) => x.account_id === id);
@@ -243,35 +261,77 @@ const AccountDetail: React.FC<{
       )}
       <div className="mt-3 flex flex-wrap items-center gap-2">
         {node && <Badge tone="neutral">{GRAPH_ROLE[node.graph_role]}{node.hop_distance ? `, hop ${node.hop_distance}` : ''}</Badge>}
-        {a && role && <Badge tone={ROLE_TONE[a.role_assessment]} title={role.help}>{role.label}</Badge>}
+        {ra ? (
+          <RoleBadge role={ra.role_candidate} label={ra.role_label} />
+        ) : (
+          a && role && <Badge tone={ROLE_TONE[a.role_assessment]} title={role.help}>{role.label}</Badge>
+        )}
       </div>
-      {role && <p className="mt-2 text-ink-soft leading-relaxed">{role.help}</p>}
+      {ra ? (
+        <>
+          <p className="mt-2 text-ink-soft leading-relaxed">{ra.headline}</p>
+          <Group title={`Evidence for this role (${STRENGTH_LABEL[ra.evidence_strength].toLowerCase()})`}>
+            <EvidenceList items={ra.evidence_items} empty="No supporting evidence found in the available data." />
+          </Group>
+          {(ra.contradictory_evidence.length > 0 || ra.uncertainty_reason) && (
+            <Group title="Against it, and what is unknown">
+              <Bullets items={[...ra.contradictory_evidence, ...(ra.uncertainty_reason ? [ra.uncertainty_reason] : [])]} />
+            </Group>
+          )}
+          <div className="mt-4">
+            <RestrictionPanel r={ra.restriction} compact />
+          </div>
+        </>
+      ) : (
+        role && <p className="mt-2 text-ink-soft leading-relaxed">{role.help}</p>
+      )}
 
       {a && !a.analyzed && <p className="mt-4 rounded-xl bg-sev-elevated-soft ring-1 ring-[#F5E3A8] px-3 py-2 text-sev-elevated">{a.not_analyzed_reason}</p>}
 
-      {a?.rule_assessment && (
+      {(a?.rule_assessment || ra) && (
         <div className="mt-5 grid grid-cols-2 gap-3">
-          <div className="well p-3">
-            <p className="text-xs text-mute">Rule assessment</p>
-            <div className="mt-1.5"><SeverityMeter level={severityOf(a)} /></div>
-            <p className="mt-1 text-xs text-mute">{Math.round(a.rule_assessment.risk_score)} of 100 rule points</p>
-          </div>
-          <div className="well p-3">
+          {a?.rule_assessment ? (
+            <div className="well p-3">
+              <p className="text-xs text-mute">Rule assessment</p>
+              <div className="mt-1.5"><SeverityMeter level={severityOf(a)} /></div>
+              <p className="mt-1 text-xs text-mute">{Math.round(a.rule_assessment.risk_score)} of 100 rule points</p>
+            </div>
+          ) : (
+            <div className="well p-3">
+              <p className="text-xs text-mute">Rule assessment</p>
+              <p className="mt-1 text-xs text-mute">Not assessed in this run</p>
+            </div>
+          )}
+          <div className="well p-3" data-testid="inspector-account-model">
             <p className="text-xs text-mute">Account model</p>
-            {a.model_assessment ? (
+            {ra ? (
+              ra.account_model.status === 'scored' || ra.account_model.status === 'reference_only' ? (
+                <>
+                  <p className="mt-1 font-display text-lg font-bold">{((ra.account_model.calibrated_probability ?? 0) * 100).toFixed(1)}%</p>
+                  <p className="text-xs text-mute">
+                    {ra.account_model.status === 'reference_only' ? 'Reference only, not validated on this dataset. ' : 'Calibrated, '}
+                    {ra.account_model.model_version}
+                    {ra.account_model.threshold != null &&
+                      `; ${ra.account_model.above_threshold ? 'at or above' : 'below'} its ${(ra.account_model.threshold * 100).toFixed(1)}% review threshold`}
+                  </p>
+                </>
+              ) : (
+                <p className="mt-1 text-xs text-mute">{ra.account_model.reason ?? (ra.account_model.status === 'not_analyzed' ? 'Not analysed in this run' : 'Not available')}</p>
+              )
+            ) : a?.model_assessment ? (
               <>
                 <p className="mt-1 font-display text-lg font-bold">{a.model_assessment.risk_score.toFixed(1)}%</p>
                 <p className="text-xs text-mute">{threshold !== null ? `Review threshold ${(threshold * 100).toFixed(1)}%` : 'No threshold available'}</p>
               </>
             ) : (
-              <p className="mt-1 text-xs text-mute">{a.model_unavailable_reason ?? 'Not available'}</p>
+              <p className="mt-1 text-xs text-mute">{a?.model_unavailable_reason ?? 'Not available'}</p>
             )}
           </div>
         </div>
       )}
-      {a?.disagreement_note && <p className="mt-3 rounded-xl bg-sev-elevated-soft ring-1 ring-[#F5E3A8] px-3 py-2 text-xs text-sev-elevated">{a.disagreement_note}</p>}
+      {!ra && a?.disagreement_note && <p className="mt-3 rounded-xl bg-sev-elevated-soft ring-1 ring-[#F5E3A8] px-3 py-2 text-xs text-sev-elevated">{a.disagreement_note}</p>}
 
-      {a && a.role_basis.length > 0 && (
+      {!ra && a && a.role_basis.length > 0 && (
         <Group title="Why this label">
           <Bullets items={a.role_basis} />
         </Group>
@@ -316,7 +376,12 @@ const AccountDetail: React.FC<{
         </Group>
       )}
 
-      {a?.model_assessment && a.model_assessment.top_contributions.length > 0 && (
+      {ra && ra.account_model.factors.length > 0 && (ra.account_model.status === 'scored' || ra.account_model.status === 'reference_only') && (
+        <Group title={`What moved the account model score${ra.account_model.status === 'reference_only' ? ' (reference only)' : ''}`}>
+          <AccountModelFactors m={ra.account_model} />
+        </Group>
+      )}
+      {!ra && a?.model_assessment && a.model_assessment.top_contributions.length > 0 && (
         <Group title="What moved the model score">
           <ul className="space-y-1">
             {a.model_assessment.top_contributions.slice(0, 5).map((c) => {
@@ -345,7 +410,8 @@ const AccountDetail: React.FC<{
             <Bullets items={a.alternative_explanations} />
           </Group>
           <Group title="Next steps (advisory)">
-            <Bullets items={a.next_steps} />
+            {/* The role assessment's own next check supersedes the trace report's steps (which can suggest escalation). */}
+            <Bullets items={ra ? [ra.recommended_next_check] : a.next_steps} />
           </Group>
           {a.evidence_transaction_ids.length > 0 && (
             <Group title="Evidence cited">

@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
 import { ArrowDown, CircleStop, Crosshair, GitFork, Repeat, Waypoints } from 'lucide-react';
-import { channelLabel, formatDateTime, formatMoney } from '../../lib/format';
-import { FLAG_LABEL, ROLE_ASSESSMENT } from './labels';
+import { channelLabel, formatDateTime, formatMoney, formatDuration } from '../../lib/format';
+import { FLAG_LABEL, MODEL_FLAG_CODE, ROLE_ASSESSMENT } from './labels';
 import { Branch, EndingKind, TrailNode, layoutTrail, stepTitle } from './trail';
 import { Target, TrailTree } from './TrailTree';
-import { ROLE_TONE, severityOf, useCase } from './caseModel';
+import { roleDisplay, severityOf, useCase } from './caseModel';
 import { Badge, Disclosure, IdText, SeverityMeter, StageHeading } from './ui';
+import { ModelFlagBadge } from './intel';
 
 const ENDING_ICON: Record<EndingKind, React.FC<{ className?: string }>> = {
   cycle: Repeat,
@@ -30,7 +31,7 @@ export const FundTrailStage: React.FC<{
   focusKeys: string[] | null;
   focusToken: number;
 }> = ({ branch, onPickBranch, target, onSelect, collapsed, onToggle, onFocusBranch, focusKeys, focusToken }) => {
-  const { report, trail } = useCase();
+  const { report, trail, intel } = useCase();
   const accounts = useMemo(() => new Map(report.accounts.map((a) => [a.account_id, a])), [report]);
   const layout = useMemo(() => layoutTrail(trail, collapsed), [trail, collapsed]);
   const outflows = trail.branches.filter((b) => b.direction === 'downstream');
@@ -139,6 +140,7 @@ export const FundTrailStage: React.FC<{
               selected={target}
               onSelect={onSelect}
               accounts={accounts}
+              intel={intel}
               focusKeys={focusKeys}
               focusToken={focusToken}
             />
@@ -166,7 +168,7 @@ const BranchStory: React.FC<{ branch: Branch; target: Target | null; onSelect: (
   onSelect,
   onFocusBranch,
 }) => {
-  const { report, trail } = useCase();
+  const { report, trail, intel } = useCase();
   const accounts = new Map(report.accounts.map((a) => [a.account_id, a]));
   const Icon = ENDING_ICON[branch.ending.kind];
 
@@ -184,7 +186,7 @@ const BranchStory: React.FC<{ branch: Branch; target: Target | null; onSelect: (
           const t = branch.transfers[i];
           const accountOn = target?.kind === 'account' && target.id === id;
           const transferOn = t && target?.kind === 'transfer' && target.id === t.transaction_id;
-          const role = a ? ROLE_ASSESSMENT[a.role_assessment] : null;
+          const role = roleDisplay(id, a, intel, ROLE_ASSESSMENT);
           return (
             <li key={`${id}-${i}`}>
               <button
@@ -206,9 +208,9 @@ const BranchStory: React.FC<{ branch: Branch; target: Target | null; onSelect: (
                   <span className={`font-mono text-[15px] font-semibold ${id === trail.rootId ? 'text-white' : 'text-ink'}`}>{id}</span>
                   {a && id !== trail.rootId && <SeverityMeter level={severityOf(a)} showLabel={false} />}
                 </span>
-                {a && role && id !== trail.rootId && (
+                {role && id !== trail.rootId && (
                   <span className="mt-1.5 flex flex-wrap gap-1.5">
-                    <Badge tone={ROLE_TONE[a.role_assessment]}>{role.label}</Badge>
+                    <Badge tone={role.tone} title={role.help}>{role.label}</Badge>
                   </span>
                 )}
               </button>
@@ -236,11 +238,15 @@ const BranchStory: React.FC<{ branch: Branch; target: Target | null; onSelect: (
                     {(t.minutes_from_parent !== null || t.flags.length > 0) && (
                       <span className="mt-1.5 flex flex-wrap gap-1.5">
                         {t.minutes_from_parent !== null && i > 0 && branch.direction === 'downstream' && (
-                          <Badge tone="neutral">{Math.round(t.minutes_from_parent)} min after the previous transfer</Badge>
+                          <Badge tone="neutral">{formatDuration(t.minutes_from_parent)} after the previous transfer</Badge>
                         )}
-                        {t.flags.map((f) => (
-                          <Badge key={f.code} tone="iris">{FLAG_LABEL[f.code] ?? f.code}</Badge>
-                        ))}
+                        {t.flags.map((f) =>
+                          f.code === MODEL_FLAG_CODE ? (
+                            <ModelFlagBadge key={f.code} explanation={f.explanation} />
+                          ) : (
+                            <Badge key={f.code} tone="iris">{FLAG_LABEL[f.code] ?? f.code}</Badge>
+                          ),
+                        )}
                       </span>
                     )}
                   </button>

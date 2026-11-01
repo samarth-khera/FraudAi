@@ -1,0 +1,1370 @@
+{
+  "ledger": "cold",
+  "roots": 314,
+  "label_occurrences": 40,
+  "distinct_accounts": 40,
+  "against_ground_truth": "all are false victim labels (accounts with no scenario role)",
+  "by_evidence_grade": {
+    "uncertain": 15,
+    "supported": 14,
+    "weak": 11
+  },
+  "by_position": {
+    "upstream": 39,
+    "other_sender": 1
+  },
+  "by_deviation_count": {
+    "2": 15,
+    "3": 12,
+    "4": 2,
+    "1": 11
+  },
+  "deviation_frequency": {
+    "new_recipient": 36,
+    "night": 8,
+    "over_twice_largest": 20,
+    "half_balance": 21
+  },
+  "ground_truth_activity_of_flagged_transfers": {
+    "family_pool": 50,
+    "p2p": 7,
+    "salary": 2,
+    "allowance": 4
+  },
+  "restriction_states": {
+    "urgent_manual_review_recommended": 40
+  },
+  "account_model_above_threshold": 5,
+  "labels": [
+    {
+      "root": "FS-56D133A4",
+      "account_id": "FS-713EC16C",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "uncertain",
+      "deviations": [
+        "new_recipient",
+        "night"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0204556 is flagged and was not funded by money it had just received.",
+        "1 flagged transfer(s) went to account(s) it had never paid before.",
+        "Flagged transfer(s) between 00:00 and 05:00, when it rarely transacted before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 39 transfers over 41 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0152,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0204556"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-ED77EAA7",
+      "account_id": "FS-63544667",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "uncertain",
+      "deviations": [
+        "new_recipient",
+        "over_twice_largest"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0130817 is flagged and was not funded by money it had just received.",
+        "Largest flagged transfer (14,000) is more than twice its largest earlier one (2,500).",
+        "1 flagged transfer(s) went to account(s) it had never paid before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 51 transfers over 50 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0306,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0130817"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-ED77EAA7",
+      "account_id": "FS-485E00BC",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "uncertain",
+      "deviations": [
+        "half_balance",
+        "new_recipient"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0130992 is flagged and was not funded by money it had just received.",
+        "1 flagged transfer(s) went to account(s) it had never paid before.",
+        "1 flagged transfer(s) took at least half of the balance at the time."
+      ],
+      "contradictory_evidence": [
+        "Established records: 56 transfers over 54 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0157,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0130992"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-9AEE7903",
+      "account_id": "FS-7D543C2D",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "supported",
+      "deviations": [
+        "half_balance",
+        "new_recipient",
+        "over_twice_largest"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0052558 is flagged and was not funded by money it had just received.",
+        "Largest flagged transfer (39,000) is more than twice its largest earlier one (5,479).",
+        "1 flagged transfer(s) went to account(s) it had never paid before.",
+        "1 flagged transfer(s) took at least half of the balance at the time."
+      ],
+      "contradictory_evidence": [
+        "Established records: 56 transfers over 20 days before it was reached."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.4396,
+        "above_threshold": true
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0051213",
+        "TX-202-0052558"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "p2p",
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-18C526E8",
+      "account_id": "FS-E5683327",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "supported",
+      "deviations": [
+        "half_balance",
+        "new_recipient",
+        "night",
+        "over_twice_largest"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0043215 is flagged and was not funded by money it had just received.",
+        "Largest flagged transfer (18,270) is more than twice its largest earlier one (4,570).",
+        "1 flagged transfer(s) went to account(s) it had never paid before.",
+        "1 flagged transfer(s) took at least half of the balance at the time.",
+        "Flagged transfer(s) between 00:00 and 05:00, when it rarely transacted before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 56 transfers over 19 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0147,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0043215"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-933B840C",
+      "account_id": "FS-F5CE9FEF",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "supported",
+      "deviations": [
+        "half_balance",
+        "new_recipient",
+        "over_twice_largest"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0196927 is flagged and was not funded by money it had just received.",
+        "Largest flagged transfer (24,986) is more than twice its largest earlier one (10,000).",
+        "1 flagged transfer(s) went to account(s) it had never paid before.",
+        "1 flagged transfer(s) took at least half of the balance at the time."
+      ],
+      "contradictory_evidence": [
+        "Established records: 47 transfers over 78 days before it was reached."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0676,
+        "above_threshold": true
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0196927"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-FEDB59EB",
+      "account_id": "FS-30E4A3FE",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "supported",
+      "deviations": [
+        "half_balance",
+        "new_recipient",
+        "over_twice_largest"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0272163 is flagged and was not funded by money it had just received.",
+        "Largest flagged transfer (14,500) is more than twice its largest earlier one (5,000).",
+        "1 flagged transfer(s) went to account(s) it had never paid before.",
+        "1 flagged transfer(s) took at least half of the balance at the time."
+      ],
+      "contradictory_evidence": [
+        "Established records: 48 transfers over 102 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0159,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0272163"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-31A05AAA",
+      "account_id": "FS-C614AB61",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "weak",
+      "deviations": [
+        "new_recipient"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0157714 is flagged and was not funded by money it had just received.",
+        "1 flagged transfer(s) went to account(s) it had never paid before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 55 transfers over 55 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0158,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0157714"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-094E320B",
+      "account_id": "FS-B411A9EC",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "supported",
+      "deviations": [
+        "new_recipient",
+        "night",
+        "over_twice_largest"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0180474 is flagged and was not funded by money it had just received.",
+        "Largest flagged transfer (26,000) is more than twice its largest earlier one (10,000).",
+        "1 flagged transfer(s) went to account(s) it had never paid before.",
+        "Flagged transfer(s) between 00:00 and 05:00, when it rarely transacted before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 60 transfers over 71 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0182,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0180474",
+        "TX-202-0180502",
+        "TX-202-0181319"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool",
+        "family_pool",
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-37312F19",
+      "account_id": "FS-992C0775",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "supported",
+      "deviations": [
+        "half_balance",
+        "night",
+        "over_twice_largest"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0093973 is flagged and was not funded by money it had just received.",
+        "Largest flagged transfer (18,000) is more than twice its largest earlier one (7,404).",
+        "1 flagged transfer(s) took at least half of the balance at the time.",
+        "Flagged transfer(s) between 00:00 and 05:00, when it rarely transacted before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 50 transfers over 39 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0173,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0093901",
+        "TX-202-0093973"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool",
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-B42FB4F8",
+      "account_id": "FS-61A389E0",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "weak",
+      "deviations": [
+        "half_balance"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0113648 is flagged and was not funded by money it had just received.",
+        "1 flagged transfer(s) took at least half of the balance at the time."
+      ],
+      "contradictory_evidence": [
+        "Established records: 64 transfers over 47 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0172,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0113610",
+        "TX-202-0113648"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool",
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-5BF85E91",
+      "account_id": "FS-9A923802",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "supported",
+      "deviations": [
+        "half_balance",
+        "new_recipient",
+        "night"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0180491 is flagged and was not funded by money it had just received.",
+        "1 flagged transfer(s) went to account(s) it had never paid before.",
+        "1 flagged transfer(s) took at least half of the balance at the time.",
+        "Flagged transfer(s) between 00:00 and 05:00, when it rarely transacted before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 59 transfers over 72 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0236,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0180491"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-5BF85E91",
+      "account_id": "FS-4D840B30",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "uncertain",
+      "deviations": [
+        "half_balance",
+        "new_recipient"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0180884 is flagged and was not funded by money it had just received.",
+        "1 flagged transfer(s) went to account(s) it had never paid before.",
+        "1 flagged transfer(s) took at least half of the balance at the time."
+      ],
+      "contradictory_evidence": [
+        "Established records: 48 transfers over 62 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0144,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0180884"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-5BF85E91",
+      "account_id": "FS-AF09E5FF",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "uncertain",
+      "deviations": [
+        "new_recipient",
+        "over_twice_largest"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0181266 is flagged and was not funded by money it had just received.",
+        "Largest flagged transfer (19,500) is more than twice its largest earlier one (5,000).",
+        "1 flagged transfer(s) went to account(s) it had never paid before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 59 transfers over 68 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0163,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0181266"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-5BF85E91",
+      "account_id": "FS-CB1AED1E",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "uncertain",
+      "deviations": [
+        "new_recipient",
+        "over_twice_largest"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0181896 is flagged and was not funded by money it had just received.",
+        "Largest flagged transfer (22,000) is more than twice its largest earlier one (10,000).",
+        "1 flagged transfer(s) went to account(s) it had never paid before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 48 transfers over 72 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0247,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0176377",
+        "TX-202-0181896"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "p2p",
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-6630FF27",
+      "account_id": "FS-89CBC578",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "uncertain",
+      "deviations": [
+        "half_balance",
+        "new_recipient"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0250111 is flagged and was not funded by money it had just received.",
+        "1 flagged transfer(s) went to account(s) it had never paid before.",
+        "1 flagged transfer(s) took at least half of the balance at the time."
+      ],
+      "contradictory_evidence": [
+        "Established records: 38 transfers over 85 days before it was reached."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0807,
+        "above_threshold": true
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0250111"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-63FB4C36",
+      "account_id": "FS-D2F30076",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "supported",
+      "deviations": [
+        "new_recipient",
+        "night",
+        "over_twice_largest"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0191430 is flagged and was not funded by money it had just received.",
+        "Largest flagged transfer (18,500) is more than twice its largest earlier one (8,300).",
+        "1 flagged transfer(s) went to account(s) it had never paid before.",
+        "Flagged transfer(s) between 00:00 and 05:00, when it rarely transacted before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 54 transfers over 68 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0168,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0191430"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-692E9685",
+      "account_id": "FS-120EDD65",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "weak",
+      "deviations": [
+        "new_recipient"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0255207 is flagged and was not funded by money it had just received.",
+        "1 flagged transfer(s) went to account(s) it had never paid before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 57 transfers over 98 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0197,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0249145",
+        "TX-202-0255207",
+        "TX-202-0255525",
+        "TX-202-0256441"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "p2p",
+        "family_pool",
+        "family_pool",
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-07EF1134",
+      "account_id": "FS-CB5E7F7C",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "uncertain",
+      "deviations": [
+        "new_recipient",
+        "over_twice_largest"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0051964 is flagged and was not funded by money it had just received.",
+        "Largest flagged transfer (17,500) is more than twice its largest earlier one (2,619).",
+        "1 flagged transfer(s) went to account(s) it had never paid before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 51 transfers over 25 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0184,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0051964",
+        "TX-202-0052965"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool",
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-43909DE1",
+      "account_id": "FS-6606E641",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "supported",
+      "deviations": [
+        "half_balance",
+        "new_recipient",
+        "over_twice_largest"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0133071 is flagged and was not funded by money it had just received.",
+        "Largest flagged transfer (30,000) is more than twice its largest earlier one (2,152).",
+        "1 flagged transfer(s) went to account(s) it had never paid before.",
+        "1 flagged transfer(s) took at least half of the balance at the time."
+      ],
+      "contradictory_evidence": [
+        "Established records: 50 transfers over 53 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0164,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0133071"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-CB8703BA",
+      "account_id": "FS-FD1AB743",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "weak",
+      "deviations": [
+        "new_recipient"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0092672 is flagged and was not funded by money it had just received.",
+        "1 flagged transfer(s) went to account(s) it had never paid before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 71 transfers over 37 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.028,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0092672",
+        "TX-202-0093244"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool",
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-C93E44BE",
+      "account_id": "FS-2173662D",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "uncertain",
+      "deviations": [
+        "half_balance",
+        "new_recipient"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0173812 is flagged and was not funded by money it had just received.",
+        "1 flagged transfer(s) went to account(s) it had never paid before.",
+        "1 flagged transfer(s) took at least half of the balance at the time."
+      ],
+      "contradictory_evidence": [
+        "Established records: 50 transfers over 68 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0161,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0173812"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-C93E44BE",
+      "account_id": "FS-36CD253B",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "uncertain",
+      "deviations": [
+        "half_balance",
+        "new_recipient"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0174351 is flagged and was not funded by money it had just received.",
+        "1 flagged transfer(s) went to account(s) it had never paid before.",
+        "1 flagged transfer(s) took at least half of the balance at the time."
+      ],
+      "contradictory_evidence": [
+        "Established records: 63 transfers over 69 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0241,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0174351"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-79C80E83",
+      "account_id": "FS-2B7CA27B",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "weak",
+      "deviations": [
+        "night"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0111353 is flagged and was not funded by money it had just received.",
+        "Flagged transfer(s) between 00:00 and 05:00, when it rarely transacted before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 64 transfers over 44 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0314,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0111213",
+        "TX-202-0111353",
+        "TX-202-0112331"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool",
+        "family_pool",
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-79C80E83",
+      "account_id": "FS-163E2759",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "supported",
+      "deviations": [
+        "half_balance",
+        "new_recipient",
+        "over_twice_largest"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0111431 is flagged and was not funded by money it had just received.",
+        "Largest flagged transfer (28,382) is more than twice its largest earlier one (10,000).",
+        "1 flagged transfer(s) went to account(s) it had never paid before.",
+        "1 flagged transfer(s) took at least half of the balance at the time."
+      ],
+      "contradictory_evidence": [
+        "Established records: 38 transfers over 46 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0188,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0111431",
+        "TX-202-0112021"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool",
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-45419610",
+      "account_id": "FS-E3AF5461",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "uncertain",
+      "deviations": [
+        "new_recipient",
+        "over_twice_largest"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0219930 is flagged and was not funded by money it had just received.",
+        "Largest flagged transfer (15,500) is more than twice its largest earlier one (5,000).",
+        "1 flagged transfer(s) went to account(s) it had never paid before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 66 transfers over 83 days before it was reached."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0657,
+        "above_threshold": true
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0219579",
+        "TX-202-0219930",
+        "TX-202-0226926",
+        "TX-202-0227003"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "salary",
+        "family_pool",
+        "family_pool",
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-6A685A90",
+      "account_id": "FS-04847D9E",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "uncertain",
+      "deviations": [
+        "half_balance",
+        "new_recipient"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0234905 is flagged and was not funded by money it had just received.",
+        "1 flagged transfer(s) went to account(s) it had never paid before.",
+        "1 flagged transfer(s) took at least half of the balance at the time."
+      ],
+      "contradictory_evidence": [
+        "Established records: 49 transfers over 90 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0154,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0224571",
+        "TX-202-0234905"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "allowance",
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-7E1D95FD",
+      "account_id": "FS-4F0B5F5F",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "weak",
+      "deviations": [
+        "new_recipient"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0133107 is flagged and was not funded by money it had just received.",
+        "1 flagged transfer(s) went to account(s) it had never paid before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 52 transfers over 54 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0172,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0133107",
+        "TX-202-0135178"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool",
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-7E1D95FD",
+      "account_id": "FS-6F4935BA",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "supported",
+      "deviations": [
+        "half_balance",
+        "new_recipient",
+        "over_twice_largest"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0133402 is flagged and was not funded by money it had just received.",
+        "Largest flagged transfer (18,000) is more than twice its largest earlier one (7,300).",
+        "1 flagged transfer(s) went to account(s) it had never paid before.",
+        "1 flagged transfer(s) took at least half of the balance at the time."
+      ],
+      "contradictory_evidence": [
+        "Established records: 46 transfers over 56 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0151,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0133402"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-7E1D95FD",
+      "account_id": "FS-F6499832",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "weak",
+      "deviations": [
+        "new_recipient"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0134001 is flagged and was not funded by money it had just received.",
+        "1 flagged transfer(s) went to account(s) it had never paid before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 55 transfers over 57 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.031,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0134001"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-4ED1C2D0",
+      "account_id": "FS-9BEBFA64",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "supported",
+      "deviations": [
+        "half_balance",
+        "new_recipient",
+        "over_twice_largest"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0100328 is flagged and was not funded by money it had just received.",
+        "Largest flagged transfer (7,926) is more than twice its largest earlier one (3,000).",
+        "1 flagged transfer(s) went to account(s) it had never paid before.",
+        "1 flagged transfer(s) took at least half of the balance at the time."
+      ],
+      "contradictory_evidence": [
+        "Established records: 44 transfers over 35 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0192,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0100328"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-1AF6E537",
+      "account_id": "FS-E02B61CF",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "supported",
+      "deviations": [
+        "half_balance",
+        "new_recipient",
+        "over_twice_largest"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0134884 is flagged and was not funded by money it had just received.",
+        "Largest flagged transfer (33,000) is more than twice its largest earlier one (10,000).",
+        "1 flagged transfer(s) went to account(s) it had never paid before.",
+        "1 flagged transfer(s) took at least half of the balance at the time."
+      ],
+      "contradictory_evidence": [
+        "Established records: 52 transfers over 57 days before it was reached."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0539,
+        "above_threshold": true
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0134884"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-FC98CBEB",
+      "account_id": "FS-46FD1353",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "uncertain",
+      "deviations": [
+        "new_recipient",
+        "over_twice_largest"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0132363 is flagged and was not funded by money it had just received.",
+        "Largest flagged transfer (14,192) is more than twice its largest earlier one (2,500).",
+        "1 flagged transfer(s) went to account(s) it had never paid before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 53 transfers over 55 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0207,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0132363",
+        "TX-202-0133070"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool",
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-E047671F",
+      "account_id": "FS-92DC7ECB",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "uncertain",
+      "deviations": [
+        "new_recipient",
+        "over_twice_largest"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0093804 is flagged and was not funded by money it had just received.",
+        "Largest flagged transfer (17,000) is more than twice its largest earlier one (7,500).",
+        "1 flagged transfer(s) went to account(s) it had never paid before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 69 transfers over 35 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0162,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0093804"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-B65B5ECE",
+      "account_id": "FS-A92250B1",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "supported",
+      "deviations": [
+        "half_balance",
+        "new_recipient",
+        "night",
+        "over_twice_largest"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0204562 is flagged and was not funded by money it had just received.",
+        "Largest flagged transfer (38,000) is more than twice its largest earlier one (16,998).",
+        "1 flagged transfer(s) went to account(s) it had never paid before.",
+        "1 flagged transfer(s) took at least half of the balance at the time.",
+        "Flagged transfer(s) between 00:00 and 05:00, when it rarely transacted before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 64 transfers over 82 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0405,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0204562"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "family_pool"
+      ]
+    },
+    {
+      "root": "FS-B8BF7C23",
+      "account_id": "FS-8C6247C1",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "uncertain",
+      "deviations": [
+        "half_balance",
+        "new_recipient"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0056366 is flagged and was not funded by money it had just received.",
+        "1 flagged transfer(s) went to account(s) it had never paid before.",
+        "1 flagged transfer(s) took at least half of the balance at the time."
+      ],
+      "contradictory_evidence": [
+        "Established records: 65 transfers over 28 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0166,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0056366"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "p2p"
+      ]
+    },
+    {
+      "root": "FS-2D591815",
+      "account_id": "FS-EB66925A",
+      "position": "other_sender",
+      "hop": null,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "weak",
+      "deviations": [
+        "new_recipient"
+      ],
+      "supporting_evidence": [
+        "Its own transfer TX-202-0190184 is flagged by the transaction model and was not funded by money it had just received.",
+        "1 flagged transfer(s) went to account(s) it had never paid before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 38 transfers over 73 days before it was reached."
+      ],
+      "account_model": {
+        "status": "not_analyzed",
+        "calibrated_probability": null,
+        "above_threshold": null
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0190184"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "p2p"
+      ]
+    },
+    {
+      "root": "FS-0A06600C",
+      "account_id": "FS-3EF92E6D",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "weak",
+      "deviations": [
+        "half_balance"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0223645 is flagged and was not funded by money it had just received.",
+        "1 flagged transfer(s) took at least half of the balance at the time."
+      ],
+      "contradictory_evidence": [
+        "Established records: 28 transfers over 30 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0218,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0065497",
+        "TX-202-0068406",
+        "TX-202-0141660",
+        "TX-202-0223645"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "salary",
+        "allowance",
+        "allowance",
+        "allowance"
+      ]
+    },
+    {
+      "root": "FS-4F842C94",
+      "account_id": "FS-0251F40F",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "weak",
+      "deviations": [
+        "new_recipient"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0133163 is flagged and was not funded by money it had just received.",
+        "1 flagged transfer(s) went to account(s) it had never paid before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 53 transfers over 56 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0153,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0133163"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "p2p"
+      ]
+    },
+    {
+      "root": "FS-6E54449E",
+      "account_id": "FS-B02DE3B8",
+      "position": "upstream",
+      "hop": 1,
+      "restriction": "urgent_manual_review_recommended",
+      "evidence_grade": "weak",
+      "deviations": [
+        "new_recipient"
+      ],
+      "supporting_evidence": [
+        "Its transfer TX-202-0126548 is flagged and was not funded by money it had just received.",
+        "1 flagged transfer(s) went to account(s) it had never paid before."
+      ],
+      "contradictory_evidence": [
+        "Established records: 52 transfers over 50 days before it was reached.",
+        "The account behaviour model scores it below its review threshold (which does not clear it)."
+      ],
+      "account_model": {
+        "status": "scored",
+        "calibrated_probability": 0.0262,
+        "above_threshold": false
+      },
+      "relevant_transaction_ids": [
+        "TX-202-0126548"
+      ],
+      "ground_truth_activity_of_flagged_transfers": [
+        "p2p"
+      ]
+    }
+  ]
+}

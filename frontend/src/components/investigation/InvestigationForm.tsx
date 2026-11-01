@@ -54,20 +54,28 @@ export const AccountEntry: React.FC<{ initial?: string; onOpen: (accountId: stri
 };
 
 /** Trace settings. Limits match the API's own; `toRequest` validates them before anything is sent. */
-export const TraceSettings: React.FC<{ values: FormValues; onChange: (v: FormValues) => void }> = ({ values, onChange }) => {
+export const TraceSettings: React.FC<{ values: FormValues; onChange: (v: FormValues) => void; limitsOnly?: boolean }> = ({
+  values,
+  onChange,
+  limitsOnly = false,
+}) => {
   const set = <K extends keyof FormValues>(k: K, val: FormValues[K]) => onChange({ ...values, [k]: val });
   const label = 'block text-sm';
   const name = 'font-semibold text-ink';
   return (
     <div id="advanced-settings" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <label className={label}>
-        <span className={name}>From date</span>
-        <input type="date" value={values.startDate} onChange={(e) => set('startDate', e.target.value)} className="field mt-1" />
-      </label>
-      <label className={label}>
-        <span className={name}>To date</span>
-        <input type="date" value={values.endDate} onChange={(e) => set('endDate', e.target.value)} className="field mt-1" />
-      </label>
+      {!limitsOnly && (
+        <>
+          <label className={label}>
+            <span className={name}>From date</span>
+            <input type="date" value={values.startDate} onChange={(e) => set('startDate', e.target.value)} className="field mt-1" />
+          </label>
+          <label className={label}>
+            <span className={name}>To date</span>
+            <input type="date" value={values.endDate} onChange={(e) => set('endDate', e.target.value)} className="field mt-1" />
+          </label>
+        </>
+      )}
       <label className={label}>
         <span className={name}>Trace depth (hops)</span>
         <input type="number" min={1} max={6} value={values.maxDepth} onChange={(e) => set('maxDepth', Number(e.target.value))} className="field mt-1" />
@@ -84,16 +92,20 @@ export const TraceSettings: React.FC<{ values: FormValues; onChange: (v: FormVal
         <span className={name}>Accounts assessed</span>
         <input type="number" min={1} max={60} value={values.maxAccounts} onChange={(e) => set('maxAccounts', Number(e.target.value))} className="field mt-1" />
       </label>
-      <label className={`${label} sm:col-span-2`}>
-        <span className={name}>Which transfers to trace</span>
-        <select value={values.scope} onChange={(e) => set('scope', e.target.value as FormValues['scope'])} className="field mt-1">
-          <option value="flagged">Transfers flagged as unusual (largest if none)</option>
-          <option value="all">Every transfer in the date range</option>
-        </select>
-      </label>
+      {!limitsOnly && (
+        <label className={`${label} sm:col-span-2`}>
+          <span className={name}>Which transfers to trace</span>
+          <select value={values.scope} onChange={(e) => set('scope', e.target.value as FormValues['scope'])} className="field mt-1">
+            <option value="flagged">Transfers flagged as unusual (largest if none)</option>
+            <option value="all">Every transfer in the date range</option>
+          </select>
+        </label>
+      )}
       <p className="sm:col-span-2 lg:col-span-4 text-xs text-mute">
-        The date range selects which of this account’s transfers start the trace; its full history is still the baseline. The follow-on
-        window is how long after receiving funds an account’s transfers are followed.
+        {limitsOnly
+          ? 'The trace starts from the transfers flagged by the transaction model or the fixed rules (the largest if none are); the account’s whole history is the baseline.'
+          : 'The date range selects which of this account’s transfers start the trace; its full history is still the baseline.'}{' '}
+        The follow-on window is how long after receiving funds an account’s transfers are followed.
       </p>
     </div>
   );

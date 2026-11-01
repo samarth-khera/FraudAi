@@ -39,6 +39,13 @@ export function formatTime(value: string | null | undefined): string {
   return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
 }
 
+/** Plain-language elapsed time: minutes below 2 h, hours below 2 days, then days. */
+export function formatDuration(minutes: number): string {
+  if (minutes < 120) return `${Math.round(minutes)} min`;
+  if (minutes < 2880) return `${Math.round(minutes / 60)} h`;
+  return `${(minutes / 1440).toFixed(1)} days`;
+}
+
 export function minutesBetween(a: string, b: string): number | null {
   const ms = new Date(b).getTime() - new Date(a).getTime();
   return Number.isFinite(ms) ? Math.round(ms / 60000) : null;
