@@ -2,7 +2,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, FlaskConical, RotateCcw } from 'lucide-react';
 import { formatDateTime } from '../../lib/format';
 import { ExplanationView, InvestigationRequest, InvestigationResponse } from '../../types/investigation';
+import { DynamicReport } from '../../types/dynamic';
 import { AIStage, AIStatusChip } from './AIStage';
+import { AffectedAccountsStage } from './AffectedAccountsStage';
 import { FundTrailStage } from './FundTrailStage';
 import { Inspector } from './Inspector';
 import { NextStepsStage } from './NextStepsStage';
@@ -12,11 +14,12 @@ import { branchFor, buildTrail } from './trail';
 import type { Target } from './TrailTree';
 import { CaseContext, CaseNav } from './caseModel';
 
-export type Stage = 'overview' | 'trail' | 'risk' | 'ai' | 'next';
+export type Stage = 'overview' | 'trail' | 'accounts' | 'risk' | 'ai' | 'next';
 
 export const STAGES: { id: Stage; label: string; question: string }[] = [
   { id: 'overview', label: 'Overview', question: 'What happened, and where the trace starts' },
   { id: 'trail', label: 'Fund trail', question: 'Where the money went, transfer by transfer' },
+  { id: 'accounts', label: 'Affected accounts', question: 'Who else is involved, and in what possible role' },
   { id: 'risk', label: 'Risk evidence', question: 'What the rules and the model found, and why' },
   { id: 'ai', label: 'AI analyst', question: 'A plain-language reading, kept separate' },
   { id: 'next', label: 'Next steps', question: 'What to examine next' },
@@ -24,11 +27,16 @@ export const STAGES: { id: Stage; label: string; question: string }[] = [
 
 export const CaseView: React.FC<{
   report: InvestigationResponse;
+  intel?: DynamicReport | null;
   explanation: ExplanationView | null;
   onNew: () => void;
   onRerun: (r: InvestigationRequest) => void;
-}> = ({ report, explanation, onNew, onRerun }) => {
-  const trail = useMemo(() => buildTrail(report), [report]);
+}> = ({ report, intel = null, explanation, onNew, onRerun }) => {
+  // Branch endings come from the dynamic investigation of the same account when it is present (matched by transfers).
+  const serverBranches = intel && intel.account_summary?.account_id === report.victim.account_id ? intel.fund_trace?.branches : null;
+  const trail = useMemo(() => buildTrail(report, serverBranches), [report, serverBranches]);
+  // The affected-accounts stage needs the model-driven sections; a trace-only report has five stages.
+  const stages = useMemo(() => STAGES.filter((s) => s.id !== 'accounts' || intel), [intel]);
   const [stage, setStage] = useState<Stage>('overview');
   const [branchId, setBranchId] = useState<string | null>(trail.branches[0]?.id ?? null);
   const [target, setTarget] = useState<Target | null>(null);
@@ -77,6 +85,7 @@ export const CaseView: React.FC<{
   const nav: CaseNav = useMemo(
     () => ({
       report,
+      intel,
       trail,
       openTransfer: (id) => select({ kind: 'transfer', id }),
       openAccount: (id) => select({ kind: 'account', id }),
@@ -86,7 +95,7 @@ export const CaseView: React.FC<{
         setFindingToShow(id);
       },
     }),
-    [report, trail, select],
+    [report, intel, trail, select],
   );
 
   // A finding lives inside a closed disclosure on the evidence stage: open it, then bring it into view.
@@ -105,16 +114,16 @@ export const CaseView: React.FC<{
   };
 
   const onTabKey = (e: React.KeyboardEvent, i: number) => {
-    const n = STAGES.length;
+    const n = stages.length;
     const to = e.key === 'ArrowRight' ? (i + 1) % n : e.key === 'ArrowLeft' ? (i - 1 + n) % n : e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : -1;
     if (to < 0) return;
     e.preventDefault();
-    setStage(STAGES[to].id);
+    setStage(stages[to].id);
     tabs.current[to]?.focus();
   };
 
-  const idx = STAGES.findIndex((s) => s.id === stage);
-  const nextStage = STAGES[idx + 1];
+  const idx = stages.findIndex((s) => s.id === stage);
+  const nextStage = stages[idx + 1];
   const synthetic = report.data_source.is_synthetic;
 
   return (
@@ -124,14 +133,18 @@ export const CaseView: React.FC<{
           <div role="note" className="sticky top-16 lg:top-4 z-30 rounded-xl bg-[rgba(254,249,231,0.94)] backdrop-blur ring-1 ring-[#F5E3A8] px-4 py-2 text-[13px] text-[#7A4B05] flex items-center gap-2 shadow-sm">
             <FlaskConical className="w-4 h-4 shrink-0" aria-hidden="true" />
             <span>
-              <strong>Synthetic demo data.</strong> {report.data_source.disclosure.replace(/^Synthetic demo data\.\s*/, '')}
+              <strong>Synthetic {intel && intel.dataset.dataset_id !== 'demo-ledger' ? 'data' : 'demo data'}.</strong>{' '}
+              {report.data_source.disclosure.replace(/^Synthetic[^.]*\.\s*/, '')}
             </span>
           </div>
         )}
 
         <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-sm text-mute">Investigation {report.investigation_id}</p>
+            <p className="text-sm text-mute">
+              Investigation {intel?.investigation_id ?? report.investigation_id}
+              {intel && <span className="ml-2 text-faint">in the {intel.dataset.title.toLowerCase()}</span>}
+            </p>
             <h1 className="mt-1 font-display text-3xl sm:text-4xl font-bold text-ink tracking-tight">
               <span>{report.victim.account_id}</span>
               <span className="ml-3 text-xl sm:text-2xl font-medium text-faint">{report.victim.customer_name}</span>
@@ -150,7 +163,7 @@ export const CaseView: React.FC<{
         </header>
 
         <div role="tablist" aria-label="Investigation stages" className="flex gap-1 overflow-x-auto no-scrollbar rounded-2xl bg-white/70 ring-1 ring-line p-1.5">
-          {STAGES.map((s, i) => {
+          {stages.map((s, i) => {
             const on = s.id === stage;
             return (
               <button
@@ -209,6 +222,7 @@ export const CaseView: React.FC<{
               focusToken={focus.token}
             />
           )}
+          {stage === 'accounts' && <AffectedAccountsStage onInspect={showInTrail} />}
           {stage === 'risk' && <RiskStage onInspect={showInTrail} />}
           {stage === 'ai' && <AIStage ai={report.ai_analysis} explanation={explanation} />}
           {stage === 'next' && <NextStepsStage onInspect={showInTrail} onRerun={onRerun} />}

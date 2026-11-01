@@ -71,3 +71,51 @@ flags = model.predict(df)           # score >= saved threshold -> review flag
 ```
 
 See `ml/reports/model_card.md` for the actual results and limitations.
+
+---
+
+# v3: dynamic fraud intelligence (`ml/forensics/`)
+
+The models behind `POST /api/v2/dynamic-investigations`. The feature code is shared with serving:
+`backend/app/intelligence/features.py` is imported by both the training scripts and the API, so nothing can drift.
+Full documentation, with results: [docs/DYNAMIC_INTELLIGENCE.md](../docs/DYNAMIC_INTELLIGENCE.md).
+
+| Module | Role |
+|---|---|
+| `generator.py` | Forensic scenario generator (12 documented patterns, account roles, held-out variants, three fixed ledgers) |
+| `adapters.py` | PaySim, AMLSim and forensic-ledger adapters into the normalized schema |
+| `evaluation.py` | Rare-event metrics, validation-only thresholds, group bootstrap |
+| `modeling.py` | Candidate models, imbalance strategies, calibration and text (JSON) export |
+| `train_transaction_model.py` | Model A: decision-time transaction risk |
+| `train_account_model.py` | Models B and C: account behaviour, with and without graph features. Writes the challenger only; `--promote` is needed to replace the served model |
+| `compare_account_models.py` | Champion vs challenger on the corrected labels, by snapshot, history length and role |
+| `evaluate_investigations.py` | The whole engine against ground-truth roles |
+| `safety_scan.py` | Ledger-wide innocent-counterparty safety scan of the engine on the served ledger |
+| `verify_tracing.py` | Independent SQL verification of fund tracing (amounts, endings, loops, limits) |
+| `analyse_false_negative.py` | Diagnosis of the scenario 4 missed victim transfer and the threshold trade-off |
+| `demonstrate_scenarios.py` | Ten end-to-end scenarios; writes `docs/SCENARIO_DEMONSTRATION.md` |
+| `paysim_transaction_model.py`, `amlsim_graph_benchmark.py` | Source-specific external evaluations |
+| `data_quality.py` | Data-quality report and the demo-ledger distribution-shift check (both v3 models) |
+
+Artifacts in `ml/artifacts/v3/`:
+
+| Directory | Model | Served | Report |
+|---|---|---|---|
+| `transaction_model/` | `v3-transaction-1.0.0` | Yes | `ml/reports/transaction_model_v3.json` |
+| `account_model/` | `v3-account-1.0.0` (champion; trained on pre-correction planned-role labels) | Yes | `ml/reports/account_model_v3.json` |
+| `account_model_challenger/` | `v3-account-1.1.0` (challenger; multi-snapshot, corrected labels, graph features, isotonic) | No | `ml/reports/account_model_v3_challenger.json` |
+
+Each holds `model.json` (the XGBoost booster in its native JSON, no pickle) and `metadata.json` (features, calibration
+map, threshold, training ranges, metrics, seeds and versions). They are committed because they are small.
+
+The challenger is not served: the owner decides on promotion. `ml/reports/account_model_champion_challenger.json`
+compares the two on the corrected labels and explains the challenger's higher false-positive rate on long histories (an
+isotonic plateau at its threshold) and its larger train–validation gap (in-sample saturation, not leakage). Note that
+the challenger's own report and metadata still say `promotion.promoted: true`; that was written by an earlier version of
+the script that promoted automatically, and the promotion was undone. Promotion and rollback steps are in
+[docs/DYNAMIC_INTELLIGENCE.md §7.4](../docs/DYNAMIC_INTELLIGENCE.md#74-promotion-status-rule-and-how-to-do-it).
+
+Other reports: `investigation_eval_{train,cold,demo}.json`, `safety_scan.json`, `tracing_verification.json`,
+`scenario4_false_negative.json`, `scenario_demonstration.json`, `data_quality_v3.json`, `paysim_transaction_model.json`
+and `amlsim_graph_benchmark.json`. Files ending in `_previous.json` are earlier runs kept for comparison; they are not
+current results.

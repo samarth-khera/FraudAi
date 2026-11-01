@@ -1,0 +1,333 @@
+{
+  "format": "xgboost_json",
+  "features": [
+    "log_amount",
+    "amount_to_sender_balance",
+    "sender_balance_missing",
+    "s_prior_out_n",
+    "s_prior_in_n",
+    "s_history_days",
+    "s_out_n_1h",
+    "s_out_n_24h",
+    "s_out_amount_24h_log",
+    "s_amount_vs_prior_max",
+    "s_amount_z",
+    "s_new_recipients_24h",
+    "s_distinct_recipients",
+    "s_hours_since_last_out",
+    "s_in_24h_to_amount",
+    "s_minutes_since_last_in",
+    "pair_prior_n",
+    "first_time_pair",
+    "r_prior_in_n",
+    "r_prior_out_n",
+    "r_history_days",
+    "r_distinct_senders",
+    "r_in_n_24h",
+    "r_balance_before_log",
+    "hour_sin",
+    "hour_cos",
+    "is_weekend",
+    "type_TRANSFER",
+    "type_PAYMENT",
+    "type_CASH_OUT",
+    "type_CASH_IN",
+    "type_DEBIT",
+    "ch_UPI",
+    "ch_IMPS",
+    "ch_NEFT",
+    "ch_RTGS",
+    "ch_CARD_POS",
+    "ch_ATM_CASH_OUT"
+  ],
+  "model_version": "v3-transaction-1.0.0",
+  "model": "transaction_model",
+  "family": "xgboost",
+  "feature_schema_version": "pit-features-1.0.0",
+  "generator_version": "forensic-scenarios-1.0.0",
+  "dataset": {
+    "source": "forensic-scenarios (synthetic, this repository)",
+    "train_ledger_seed": 101,
+    "train_days": "0-83",
+    "validation_days": "84-101"
+  },
+  "label_definition": "Transfer is a step of a planted scenario flow (victim transfer, forwarding, cash-out, takeover transfer, secondary-victim drain). Incidental purchases from scam money are not positives.",
+  "decision_time": "Uses only the two parties' transfers strictly before the transfer's timestamp.",
+  "calibration": {
+    "method": "sigmoid",
+    "a": -10.783145904541016,
+    "b": 8.247257232666016,
+    "cross_fitted_brier_on_validation": {
+      "uncalibrated": 0.001005,
+      "isotonic": 0.001008,
+      "sigmoid": 0.000882
+    },
+    "cross_fit": "2-fold cross-fit over the earlier and later halves of the validation period",
+    "fitted_on": "validation split (all rows)"
+  },
+  "threshold": {
+    "value": 0.001301623065955937,
+    "display_value": 0.001302,
+    "on": "calibrated",
+    "rule": "lowest validation threshold with precision >= 50%",
+    "chosen_on": "validation split",
+    "value_provenance": "exact validation-selected score, recovered 2026-11-01 without retraining: the frozen model.json and this file's calibration map re-scored the same validation rows as the training script and the rule above was re-applied; its 6-decimal rounding equals the value stored before. Earlier metadata stored only that rounding.",
+    "validation_rows": "validation split (train ledger days 84-101): 82339 rows, 297 positives",
+    "validation_at_value_ties_counted": {
+      "tp": 286,
+      "fp": 258,
+      "fn": 11,
+      "tn": 81784,
+      "rows_tied_at_value": 1,
+      "precision": 0.5257
+    }
+  },
+  "training_ranges": {
+    "log_amount": [
+      4.3641515718322115,
+      12.645134170972492
+    ],
+    "amount_to_sender_balance": [
+      7.312793121429759e-05,
+      0.8527287825066615
+    ],
+    "s_prior_out_n": [
+      0.0,
+      5.4116460518550396
+    ],
+    "s_prior_in_n": [
+      0.0,
+      5.5254529391317835
+    ],
+    "s_out_n_1h": [
+      0.0,
+      66.0
+    ],
+    "s_out_n_24h": [
+      0.0,
+      108.0
+    ],
+    "s_out_amount_24h_log": [
+      0.0,
+      15.506479259867255
+    ],
+    "s_amount_vs_prior_max": [
+      0.0036287805566760792,
+      10.552183347864448
+    ],
+    "s_amount_z": [
+      -1.9348195305549039,
+      25.169438896744587
+    ],
+    "s_new_recipients_24h": [
+      0.0,
+      94.0
+    ],
+    "s_distinct_recipients": [
+      0.0,
+      4.90527477843843
+    ],
+    "s_hours_since_last_out": [
+      0.016529301951210565,
+      5.843777484911734
+    ],
+    "s_in_24h_to_amount": [
+      0.0,
+      156.58574577036882
+    ],
+    "s_minutes_since_last_in": [
+      2.586365734879344,
+      10.592353629451239
+    ],
+    "pair_prior_n": [
+      0.0,
+      1.791759469228055
+    ],
+    "r_prior_in_n": [
+      0.0,
+      9.016148642611741
+    ],
+    "r_prior_out_n": [
+      0.0,
+      3.5553480614894135
+    ],
+    "r_distinct_senders": [
+      0.0,
+      8.583304846070765
+    ],
+    "r_in_n_24h": [
+      0.0,
+      125.0
+    ],
+    "r_balance_before_log": [
+      5.8412556829666675,
+      27.631061130766945
+    ],
+    "hour_sin": [
+      -0.9999619230641713,
+      0.9978589232386035
+    ],
+    "hour_cos": [
+      -0.9999619230641713,
+      0.9988483864849507
+    ]
+  },
+  "training_ranges_excluded": {
+    "s_history_days": "days since the sender's first record; grows with calendar position",
+    "r_history_days": "days since the receiver's first record; grows with calendar position"
+  },
+  "environment": {
+    "python": "3.12.4",
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "scikit_learn": "1.9.1",
+    "xgboost": "3.4.1",
+    "platform": "macOS-27.0.1",
+    "trained_at": "2026-11-01T13:07:03Z",
+    "seed": 20261031
+  },
+  "params": {
+    "objective": "binary:logistic",
+    "eval_metric": "aucpr",
+    "eta": 0.05,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "seed": 20261031,
+    "max_depth": 5,
+    "min_child_weight": 1,
+    "lambda": 1,
+    "alpha": 0,
+    "scale_pos_weight": 16.62
+  },
+  "metrics": {
+    "train": {
+      "n": 307255,
+      "positives": 1108,
+      "precision": 0.6886,
+      "recall": 1.0,
+      "pr_auc": 0.9996,
+      "roc_auc": 1.0,
+      "brier": 8.3e-05,
+      "ece": 0.00046,
+      "confusion_matrix": {
+        "tn": 305646,
+        "fp": 501,
+        "fn": 0,
+        "tp": 1108
+      }
+    },
+    "validation": {
+      "n": 82339,
+      "positives": 297,
+      "precision": 0.5257,
+      "recall": 0.963,
+      "pr_auc": 0.9413,
+      "roc_auc": 0.9993,
+      "brier": 0.000673,
+      "ece": 0.0004,
+      "confusion_matrix": {
+        "tn": 81784,
+        "fp": 258,
+        "fn": 11,
+        "tp": 286
+      }
+    },
+    "temporal_test": {
+      "n": 60830,
+      "positives": 273,
+      "precision": 0.8241,
+      "recall": 0.978,
+      "pr_auc": 0.9865,
+      "roc_auc": 0.9999,
+      "brier": 0.000499,
+      "ece": 0.00088,
+      "confusion_matrix": {
+        "tn": 60500,
+        "fp": 57,
+        "fn": 6,
+        "tp": 267
+      }
+    },
+    "cold_ledger_test": {
+      "n": 299828,
+      "positives": 1330,
+      "precision": 0.6893,
+      "recall": 0.9391,
+      "pr_auc": 0.9459,
+      "roc_auc": 0.9994,
+      "brier": 0.000874,
+      "ece": 0.00109,
+      "confusion_matrix": {
+        "tn": 297935,
+        "fp": 563,
+        "fn": 81,
+        "tp": 1249
+      }
+    },
+    "served_demo_ledger": {
+      "n": 88623,
+      "positives": 333,
+      "precision": 0.6795,
+      "recall": 0.8979,
+      "pr_auc": 0.9093,
+      "roc_auc": 0.9987,
+      "brier": 0.000963,
+      "ece": 0.00122,
+      "confusion_matrix": {
+        "tn": 88149,
+        "fp": 141,
+        "fn": 34,
+        "tp": 299
+      }
+    },
+    "temporal_test_cold_senders": {
+      "n": 1337,
+      "positives": 76,
+      "precision": 0.8824,
+      "recall": 0.9868,
+      "pr_auc": 0.9961,
+      "roc_auc": 0.9997,
+      "brier": 0.002919,
+      "ece": 0.00518,
+      "confusion_matrix": {
+        "tn": 1251,
+        "fp": 10,
+        "fn": 1,
+        "tp": 75
+      }
+    },
+    "cold_seen_variants": {
+      "n": 299509,
+      "positives": 1027,
+      "precision": 0.636,
+      "recall": 0.9542,
+      "pr_auc": 0.9533,
+      "roc_auc": 0.9995,
+      "brier": 0.000562,
+      "ece": 0.00069,
+      "confusion_matrix": {
+        "tn": 297921,
+        "fp": 561,
+        "fn": 47,
+        "tp": 980
+      }
+    }
+  },
+  "feature_importance": {
+    "s_in_24h_to_amount": 0.2677,
+    "s_minutes_since_last_in": 0.1131,
+    "log_amount": 0.0988,
+    "amount_to_sender_balance": 0.0934,
+    "r_prior_out_n": 0.083,
+    "r_distinct_senders": 0.0771,
+    "s_amount_z": 0.0519,
+    "r_prior_in_n": 0.0332,
+    "s_hours_since_last_out": 0.0223,
+    "r_balance_before_log": 0.0176,
+    "s_prior_in_n": 0.014,
+    "type_PAYMENT": 0.0131,
+    "s_distinct_recipients": 0.013,
+    "s_amount_vs_prior_max": 0.0128,
+    "s_out_amount_24h_log": 0.0127
+  }
+}

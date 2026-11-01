@@ -1,0 +1,293 @@
+{
+  "format": "xgboost_json",
+  "features": [
+    "n_out_log",
+    "n_in_log",
+    "total_in_log",
+    "total_out_log",
+    "out_to_in_ratio",
+    "distinct_senders_log",
+    "distinct_recipients_log",
+    "top_sender_share",
+    "top_recipient_share",
+    "out_amount_cv",
+    "max_out_to_median_out",
+    "pass_through_1h",
+    "pass_through_24h",
+    "median_hold_hours",
+    "new_recipient_out_share",
+    "max_gap_days",
+    "out_share_after_max_gap",
+    "night_out_share",
+    "cash_out_share",
+    "max_out_to_balance",
+    "max_out_burst_1h"
+  ],
+  "model_version": "v3-account-1.0.0",
+  "model": "account_model",
+  "family": "xgboost",
+  "feature_set": "behaviour_without_account_age",
+  "feature_schema_version": "pit-features-1.0.0",
+  "generator_version": "forensic-scenarios-1.0.0",
+  "label_definition": "role in ('intermediary', 'attacker_controlled')",
+  "abstain_below_transactions": 5,
+  "dataset": {
+    "source": "forensic-scenarios (synthetic, this repository)",
+    "train_ledger_seed": 101,
+    "ledger_days": 120,
+    "as_of_days": [
+      120
+    ],
+    "as_of_rule": "one snapshot per account at the training ledger's last day (day 120); features use only records with timestamp <= as_of. No earlier snapshots were used, so histories shorter than the ledger were never in training.",
+    "split": "sha256('20261031:' + scenario instance or account id) < 0.25 -> validation; all accounts of one scenario instance stay in one split (the same hash split as v3-account-1.1.0)",
+    "excluded": [
+      "accounts whose planned role (the generator's account label) is secondary_victim",
+      "< 5 transactions by as_of (the served model abstains)",
+      "cash_network"
+    ],
+    "label_definition": "positive = the account's planned role in the generator's account table is 'intermediary' or 'attacker_controlled', as of the ledger end, whether or not its scenario transfers happened. Victims, innocent counterparties, look-alikes, merchants, employers and ordinary accounts are negatives.",
+    "materialised_rule": "not applied - pre-correction labels. Planned suspicious roles counted as positives even when none of their scenario transfers happened. This is broader than the generator's old 'materialised' rule (any transfer of its scenario: 493/205 train/validation positives) and than the corrected rule used by v3-account-1.1.0 (intermediaries must have both received and sent scenario money: 485/202).",
+    "train_rows": 7525,
+    "train_positives": 556,
+    "validation_rows": 2534,
+    "validation_positives": 231,
+    "derived_from": "ml/reports/account_model_v3.json (target, splits, abstention, exclusions) and reproduced exactly - row and positive counts on train/validation/cold/demo and train/validation PR-AUC 0.9427/0.818 - by ml/forensics/compare_account_models.py (report key provenance_check_champion)",
+    "recorded": "2026-11-01, after training; model.json and every scoring field (features, calibration, threshold, training_ranges) are unchanged"
+  },
+  "calibration": {
+    "method": "sigmoid",
+    "a": -8.477245330810547,
+    "b": 4.284470558166504,
+    "cross_fitted_brier_on_validation": {
+      "uncalibrated": 0.03316,
+      "isotonic": 0.032581,
+      "sigmoid": 0.031872
+    },
+    "fitted_on": "validation split (all rows)"
+  },
+  "threshold": {
+    "value": 0.052098002284765244,
+    "display_value": 0.052098,
+    "on": "calibrated",
+    "rule": "lowest validation threshold with precision >= 50%",
+    "chosen_on": "validation split",
+    "value_provenance": "exact validation-selected score, recovered 2026-11-01 without retraining: the frozen model.json and this file's calibration map re-scored the same validation rows as the training script and the rule above was re-applied; its 6-decimal rounding equals the value stored before. Earlier metadata stored only that rounding.",
+    "validation_rows": "validation split as trained (training ledger, ledger-end as_of, planned-role labels): 2534 rows, 231 positives",
+    "validation_at_value_ties_counted": {
+      "tp": 189,
+      "fp": 188,
+      "fn": 42,
+      "tn": 2115,
+      "rows_tied_at_value": 1,
+      "precision": 0.5013
+    }
+  },
+  "training_ranges": {
+    "n_out_log": [
+      1.791759469228055,
+      5.8179067503374355
+    ],
+    "n_in_log": [
+      0.0,
+      6.17873167909935
+    ],
+    "total_in_log": [
+      0.0,
+      15.645558329726297
+    ],
+    "total_out_log": [
+      8.677055997554842,
+      16.73659187217894
+    ],
+    "out_to_in_ratio": [
+      0.03580630558344579,
+      5.0
+    ],
+    "distinct_senders_log": [
+      0.0,
+      6.126869184114185
+    ],
+    "distinct_recipients_log": [
+      1.0986122886681098,
+      4.793772877523508
+    ],
+    "top_sender_share": [
+      0.0,
+      1.0
+    ],
+    "top_recipient_share": [
+      0.04887273240349176,
+      0.9498710280654304
+    ],
+    "out_amount_cv": [
+      0.4336883414383115,
+      4.551281863273245
+    ],
+    "max_out_to_median_out": [
+      1.7961085335354436,
+      238.50221456533245
+    ],
+    "pass_through_1h": [
+      0.0,
+      0.904535961990583
+    ],
+    "pass_through_24h": [
+      0.0,
+      0.9734088609612435
+    ],
+    "median_hold_hours": [
+      0.20534444444444444,
+      720.0
+    ],
+    "new_recipient_out_share": [
+      0.055351268703784304,
+      1.0
+    ],
+    "max_gap_days": [
+      1.3254824074074074,
+      36.31220694444446
+    ],
+    "out_share_after_max_gap": [
+      0.0,
+      0.30572604036229223
+    ],
+    "night_out_share": [
+      0.0,
+      0.5316359775286091
+    ],
+    "cash_out_share": [
+      0.0,
+      0.865882042208281
+    ],
+    "max_out_to_balance": [
+      0.00687287777403168,
+      0.995000794350638
+    ],
+    "max_out_burst_1h": [
+      1.0,
+      64.38000000000011
+    ]
+  },
+  "environment": {
+    "python": "3.12.4",
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "scikit_learn": "1.9.1",
+    "xgboost": "3.4.1",
+    "platform": "macOS-27.0.1",
+    "trained_at": "2026-10-31T17:09:39Z",
+    "seed": 20261031
+  },
+  "params": {
+    "objective": "binary:logistic",
+    "eval_metric": "aucpr",
+    "eta": 0.05,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "seed": 20261031,
+    "max_depth": 4,
+    "min_child_weight": 5,
+    "lambda": 10,
+    "alpha": 0.5,
+    "scale_pos_weight": 3.54
+  },
+  "metrics": {
+    "train": {
+      "n": 7525,
+      "positives": 556,
+      "precision": 0.4972,
+      "recall": 0.973,
+      "pr_auc": 0.9427,
+      "roc_auc": 0.9921,
+      "brier": 0.014409,
+      "ece": 0.01742,
+      "confusion_matrix": {
+        "tn": 6422,
+        "fp": 547,
+        "fn": 15,
+        "tp": 541
+      }
+    },
+    "validation": {
+      "n": 2534,
+      "positives": 231,
+      "precision": 0.5013,
+      "recall": 0.8182,
+      "pr_auc": 0.818,
+      "roc_auc": 0.933,
+      "brier": 0.031792,
+      "ece": 0.01013,
+      "confusion_matrix": {
+        "tn": 2115,
+        "fp": 188,
+        "fn": 42,
+        "tp": 189
+      }
+    },
+    "cold_ledger_test": {
+      "n": 6702,
+      "positives": 594,
+      "precision": 0.4665,
+      "recall": 0.8215,
+      "pr_auc": 0.8089,
+      "roc_auc": 0.9282,
+      "brier": 0.031652,
+      "ece": 0.01093,
+      "confusion_matrix": {
+        "tn": 5550,
+        "fp": 558,
+        "fn": 106,
+        "tp": 488
+      }
+    },
+    "served_demo_ledger": {
+      "n": 2644,
+      "positives": 160,
+      "precision": 0.3373,
+      "recall": 0.7125,
+      "pr_auc": 0.6921,
+      "roc_auc": 0.9139,
+      "brier": 0.030644,
+      "ece": 0.01912,
+      "confusion_matrix": {
+        "tn": 2260,
+        "fp": 224,
+        "fn": 46,
+        "tp": 114
+      }
+    },
+    "cold_seen_variants": {
+      "n": 6526,
+      "positives": 475,
+      "precision": 0.42,
+      "recall": 0.84,
+      "pr_auc": 0.8095,
+      "roc_auc": 0.9334,
+      "brier": 0.026088,
+      "ece": 0.0125,
+      "confusion_matrix": {
+        "tn": 5500,
+        "fp": 551,
+        "fn": 76,
+        "tp": 399
+      }
+    }
+  },
+  "feature_importance": {
+    "pass_through_24h": 0.2999,
+    "n_out_log": 0.096,
+    "pass_through_1h": 0.0756,
+    "top_sender_share": 0.064,
+    "cash_out_share": 0.0557,
+    "n_in_log": 0.0492,
+    "out_to_in_ratio": 0.0447,
+    "total_in_log": 0.0402,
+    "max_out_to_median_out": 0.0352,
+    "max_gap_days": 0.0309,
+    "new_recipient_out_share": 0.0302,
+    "median_hold_hours": 0.0243,
+    "total_out_log": 0.0221,
+    "top_recipient_share": 0.0208,
+    "distinct_recipients_log": 0.0202
+  }
+}

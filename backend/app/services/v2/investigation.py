@@ -26,7 +26,7 @@ try:
     from app.api.v2.investigation_schemas import InvestigationExplanationResponse, InvestigationRequest, InvestigationResponse
     from app.db.v2.models import AccountModel, TransactionModel
     from app.services.v2 import ai_analyst, data_source
-    from app.services.v2.graph_tracer import FlowEdge, ForensicGraphTracer
+    from app.services.v2.graph_tracer import FlowEdge, FlowTrace, ForensicGraphTracer
     from app.services.v2.live_analysis import compare_review_suggestions
     from app.services.v2.ml_service import ModelUnavailableException, V2MLInferenceService
     from app.services.v2.risk_assessment import AccountRiskAssessor
@@ -34,7 +34,7 @@ except ModuleNotFoundError:
     from backend.app.api.v2.investigation_schemas import InvestigationExplanationResponse, InvestigationRequest, InvestigationResponse
     from backend.app.db.v2.models import AccountModel, TransactionModel
     from backend.app.services.v2 import ai_analyst, data_source
-    from backend.app.services.v2.graph_tracer import FlowEdge, ForensicGraphTracer
+    from backend.app.services.v2.graph_tracer import FlowEdge, FlowTrace, ForensicGraphTracer
     from backend.app.services.v2.live_analysis import compare_review_suggestions
     from backend.app.services.v2.ml_service import ModelUnavailableException, V2MLInferenceService
     from backend.app.services.v2.risk_assessment import AccountRiskAssessor
@@ -62,6 +62,10 @@ INTERMEDIARY_SHARE = 0.7
 
 class AccountNotFound(Exception):
     pass
+
+
+V2_MODEL_NOT_USED = ("the demo-ledger account model is not used on this dataset (it was trained and validated on the demo "
+                     "ledger only); the dynamic investigation reports its own account model.")
 
 
 def _money(x: float) -> str:
@@ -216,9 +220,22 @@ class InvestigationService:
     @classmethod
     def compute(cls, db: Session, req: InvestigationRequest) -> tuple[dict, float]:
         """Everything except the AI explanation. Returns (report dict, perf_counter start)."""
+        report, clock, _ = cls.compute_with_trace(db, req)
+        return report, clock
+
+    @classmethod
+    def compute_with_trace(cls, db: Session, req: InvestigationRequest, source: Optional[dict] = None,
+                           extra_flags: Optional[dict[str, list[dict]]] = None,
+                           use_v2_model: bool = True) -> tuple[dict, float, FlowTrace]:
+        """As compute, plus the raw trace. Used by the dynamic investigation, which describes its own dataset
+        (``source``) and adds model flags on the account's own transfers (``extra_flags``: transaction ID -> flags),
+        so model-flagged transfers also seed the trace. Flags only ever add trace seeds and evidence.
+
+        ``use_v2_model=False`` skips the V2 account model (trained and validated on the demo ledger only), so a report on
+        another dataset carries no V2 model scores, findings or comparisons; the dynamic investigation reports its own."""
         started = datetime.now(timezone.utc)
         clock = time.perf_counter()
-        source = data_source.describe(db)  # raises DataSourceUnavailable with the precise blocker
+        source = source or data_source.describe(db)  # raises DataSourceUnavailable with the precise blocker
         rows_read = 0
 
         root_id = req.account_id
@@ -240,6 +257,8 @@ class InvestigationService:
         period_in = [t for t in period if t.destination_account_id == root_id]
 
         flags = compute_flags(root_id, list(history))
+        for tid, extra in (extra_flags or {}).items():
+            flags.setdefault(tid, []).extend(extra)
         flagged_out = [t for t in period_out if t.transaction_id in flags]
         flagged_in = [t for t in period_in if t.transaction_id in flags]
 
@@ -287,6 +306,7 @@ class InvestigationService:
             window_hours=req.onward_window_hours, max_edges_per_account=MAX_EDGES_PER_ACCOUNT,
         )
         rows_read += flow.rows_read
+        untraced_seeds = set(getattr(flow, "untraced_seeds", []))  # seeds the account limit kept out of the trace
 
         accounts = {
             a.account_id: a
@@ -336,39 +356,57 @@ class InvestigationService:
         )
         exposure_lines: dict[str, dict] = {}
         for acc_id in downstream_ids[:MAX_EXPOSURE_ACCOUNTS]:
-            receipts = [e.txn for e in in_edges[acc_id] if e.direction == "downstream"]
+            receipts = sorted((e.txn for e in in_edges[acc_id] if e.direction == "downstream"),
+                              key=lambda t: (t.timestamp, t.transaction_id))
             if not receipts:
                 continue
-            first = min(r.timestamp for r in receipts)
-            receipt_ids = {r.transaction_id for r in receipts}
-            rows = db.scalars(
-                select(TransactionModel)
-                .where(
-                    or_(TransactionModel.origin_account_id == acc_id, TransactionModel.destination_account_id == acc_id),
-                    and_(TransactionModel.timestamp >= first, TransactionModel.timestamp <= first + window),
-                )
-                .order_by(TransactionModel.timestamp.asc(), TransactionModel.transaction_id.asc())
-            ).all()
-            rows_read += len(rows)
-            traced, lowest, outgoing = 0.0, None, 0.0
-            received = 0.0
-            for t in rows:
-                is_dest = t.destination_account_id == acc_id
-                balance = t.dest_balance_after if is_dest else t.origin_balance_after
-                if t.transaction_id in receipt_ids:
-                    traced += t.amount
-                    received += t.amount
-                if not is_dest:
-                    outgoing += t.amount
-                traced = min(traced, balance)
-                lowest = balance if lowest is None else min(lowest, balance)
+            # Every traced receipt is covered (the same set graph_relationship.received_traced_amount sums). Receipts are
+            # grouped into windows: a window opens at the earliest receipt not yet covered and runs onward_window_hours;
+            # a receipt after it opens the next one. Windows never overlap, so per-window results add up. With every
+            # receipt inside one window this is exactly the single-window rule.
+            windows: list[list[TransactionModel]] = []
+            for r in receipts:
+                if windows and r.timestamp <= windows[-1][0].timestamp + window:
+                    windows[-1].append(r)
+                else:
+                    windows.append([r])
+            received = outgoing = f_min = f_max = 0.0
+            lowest = None
+            for group in windows:
+                first = group[0].timestamp
+                receipt_ids = {r.transaction_id for r in group}
+                rows = db.scalars(
+                    select(TransactionModel)
+                    .where(
+                        or_(TransactionModel.origin_account_id == acc_id, TransactionModel.destination_account_id == acc_id),
+                        and_(TransactionModel.timestamp >= first, TransactionModel.timestamp <= first + window),
+                    )
+                    .order_by(TransactionModel.timestamp.asc(), TransactionModel.transaction_id.asc())
+                ).all()
+                rows_read += len(rows)
+                traced = w_received = w_outgoing = 0.0
+                for t in rows:
+                    is_dest = t.destination_account_id == acc_id
+                    balance = t.dest_balance_after if is_dest else t.origin_balance_after
+                    if t.transaction_id in receipt_ids:
+                        traced += t.amount
+                        w_received += t.amount
+                    if not is_dest:
+                        w_outgoing += t.amount
+                    traced = min(traced, balance)
+                    lowest = balance if lowest is None else min(lowest, balance)
+                w_max = min(w_received, w_outgoing)
+                f_max += w_max
+                f_min += min(max(0.0, w_received - traced), w_max)  # keeps 0 <= lower <= upper per window
+                received += w_received
+                outgoing += w_outgoing
             exposure_lines[acc_id] = {
                 "account_id": acc_id,
                 "hop": flow.node_hops[acc_id][0],
                 "traced_in_amount": round(received, 2),
                 "outgoing_in_window": round(outgoing, 2),
-                "forwarded_min": round(max(0.0, received - traced), 2),
-                "forwarded_max": round(min(received, outgoing), 2),
+                "forwarded_min": round(f_min, 2),
+                "forwarded_max": round(f_max, 2),
                 "lowest_balance_in_window": round(lowest, 2) if lowest is not None else None,
             }
 
@@ -387,14 +425,14 @@ class InvestigationService:
             rule = AccountRiskAssessor.assess_account(db, acc_id)
             rows_read += rule.signals.total_transactions
             ml = None
-            if model_error is None:
+            if model_error is None and use_v2_model:
                 try:
                     ml = V2MLInferenceService.assess_account(db, acc_id, rule_assessment=rule, account=accounts[acc_id])
                 except ModelUnavailableException as exc:
                     model_error = str(exc)
             assessed[acc_id] = {"rule": rule, "ml": ml}
 
-        threshold = V2MLInferenceService.decision_threshold() if model_error is None else None
+        threshold = V2MLInferenceService.decision_threshold() if model_error is None and use_v2_model else None
         model_version = next((v["ml"].model_version for v in assessed.values() if v["ml"]), None)
 
         # ---------------------------------------------------------------- per-account findings
@@ -491,7 +529,7 @@ class InvestigationService:
                 missing.append(f"Not individually assessed in this run (limit of {req.max_accounts_analyzed} accounts).")
             elif rule.uncertainty_rating == "high":
                 missing.append(f"Only {rule.signals.total_transactions} transaction(s) on record: scores are less reliable.")
-            if a is not None and ml is None:
+            if a is not None and ml is None and use_v2_model:
                 missing.append("Model assessment unavailable: " + (model_error or "unknown reason."))
 
             steps: list[str] = []
@@ -554,7 +592,8 @@ class InvestigationService:
             return fid
 
         if source["is_synthetic"]:
-            add("limitation", None, "Every record in this investigation comes from the synthetic demo ledger; "
+            ledger = "the synthetic demo ledger" if source["source_kind"] == data_source.SYNTHETIC else f"a synthetic ledger ({source['source_name']})"
+            add("limitation", None, f"Every record in this investigation comes from {ledger}; "
                                     "no real customer or bank transaction is involved.")
         for t in flagged_out + flagged_in:
             other = t.destination_account_id if t.origin_account_id == root_id else t.origin_account_id
@@ -646,12 +685,13 @@ class InvestigationService:
         flagged_total = round(sum(t.amount for t in flagged_out), 2)
         exposure = {
             "flagged_outgoing_total": flagged_total,
-            "traced_outgoing_total": round(sum(t.amount for t in down), 2),
+            "traced_outgoing_total": round(sum(t.amount for t in down if t.transaction_id not in untraced_seeds), 2),
             "observed_downstream_total": round(sum(e.txn.amount for e in flow.edges if e.direction == "downstream"), 2),
             "per_account": [exposure_lines[a] for a in downstream_ids if a in exposure_lines],
             "method": (
                 "For each account that received traced funds, its own balance is followed from the first traced receipt "
-                f"to {req.onward_window_hours:g} h later. Lower bound (lowest intermediate balance): traced funds are assumed "
+                f"to {req.onward_window_hours:g} h later; a traced receipt after that opens a further window of the same "
+                "length, so every traced receipt is covered and the per-window results are added. Lower bound (lowest intermediate balance): traced funds are assumed "
                 "to stay in the account until its balance falls below them. Upper bound: no more than was received, and no "
                 "more than actually left the account. Ranges are per account and must not be added across hops."
             ),
@@ -698,8 +738,9 @@ class InvestigationService:
                  for f in account_findings if f["checks_disagree"]][:10]
                 or ([{"kind": "model", "text": f"The model and the rules agree for all {sum(1 for f in account_findings if f['checks_disagree'] is not None)} accounts assessed by both.",
                       "refs": [f["account_id"] for f in account_findings if f["checks_disagree"] is not None][:10]}]
-                    if not model_error else
-                    [{"kind": "limitation", "text": f"No comparison: the model could not run ({model_error}).", "refs": []}])
+                    if not model_error and use_v2_model else
+                    [{"kind": "limitation", "text": f"No comparison: the model could not run ({model_error})." if model_error
+                      else f"No comparison: {V2_MODEL_NOT_USED}", "refs": []}])
             )},
             {"question": ai_analyst.QUESTIONS[6], "claims": [{"kind": "limitation", "text": u, "refs": []} for u in unknowns]},
             {"question": ai_analyst.QUESTIONS[7], "claims": [{"kind": "limitation", "text": r, "refs": []} for r in records]},
@@ -779,14 +820,16 @@ class InvestigationService:
             "data_source": source,
             "model_version": model_version,
             "model_review_threshold": threshold,
-            "model_available": model_error is None,
-            "model_unavailable_reason": model_error,
+            "model_available": model_error is None and use_v2_model,
+            "model_unavailable_reason": model_error or (None if use_v2_model else V2_MODEL_NOT_USED),
             "victim": victim,
             "trace": {
                 "nodes": nodes,
                 "edges": edges,
-                "downstream_seed_transaction_ids": [t.transaction_id for t in down],
-                "upstream_seed_transaction_ids": [t.transaction_id for t in up],
+                # Only seeds that are in the trace; any the account limit kept out are listed separately (and in a note).
+                "downstream_seed_transaction_ids": [t.transaction_id for t in down if t.transaction_id not in untraced_seeds],
+                "upstream_seed_transaction_ids": [t.transaction_id for t in up if t.transaction_id not in untraced_seeds],
+                "untraced_seed_transaction_ids": sorted(untraced_seeds),
                 "seed_selection": " ".join(selection),
                 "max_depth_reached": flow.max_depth_reached,
                 "cycles_detected": sum(1 for e in flow.edges if e.is_cycle),
@@ -815,4 +858,4 @@ class InvestigationService:
             ),
         }
         report["report_digest"] = report_digest(report)
-        return report, clock
+        return report, clock, flow

@@ -6,7 +6,28 @@ import { CaseView, STAGES } from '../components/investigation/CaseView';
 import { AccountEntry } from '../components/investigation/InvestigationForm';
 import { DEFAULT_FORM, FormValues } from '../components/investigation/formModel';
 import { v2Api } from '../services/v2Api';
-import { ExplanationView, InvestigationRequest, InvestigationResponse } from '../types/investigation';
+import { ExplanationView, InvestigationRequest } from '../types/investigation';
+import { DatasetId, DynamicInvestigationRequest, DynamicReport } from '../types/dynamic';
+import { DatasetPicker } from '../components/investigation/DatasetPicker';
+
+const DATASETS: DatasetId[] = ['demo-ledger', 'forensic-scenarios'];
+function datasetFrom(p: URLSearchParams): DatasetId {
+  const d = p.get('dataset') as DatasetId | null;
+  return d && DATASETS.includes(d) ? d : 'demo-ledger';
+}
+
+/** The dynamic engine takes the trace limits; the account's whole history is always the baseline. */
+function toDynamic(r: InvestigationRequest, dataset: DatasetId): DynamicInvestigationRequest {
+  return {
+    account_id: r.account_id,
+    dataset_id: dataset,
+    max_depth: r.max_depth,
+    max_nodes: r.max_nodes,
+    onward_window_hours: r.onward_window_hours,
+    max_accounts_analyzed: r.max_accounts_analyzed,
+    ai_explanation: 'separate',
+  };
+}
 
 /** Settings live in the URL so a link can be shared; the investigation itself only runs on an explicit click. */
 function formFromParams(p: URLSearchParams): FormValues {
@@ -23,8 +44,9 @@ function formFromParams(p: URLSearchParams): FormValues {
   };
 }
 
-function paramsFromForm(f: FormValues, accountId: string): Record<string, string> {
+function paramsFromForm(f: FormValues, accountId: string, dataset: DatasetId): Record<string, string> {
   const out: Record<string, string> = { account: accountId };
+  if (dataset !== 'demo-ledger') out.dataset = dataset;
   if (f.startDate) out.from = f.startDate;
   if (f.endDate) out.to = f.endDate;
   if (f.maxDepth !== DEFAULT_FORM.maxDepth) out.depth = String(f.maxDepth);
@@ -56,7 +78,8 @@ function investigationError(err: unknown): { title: string; message: string } {
       message: 'No investigation was run. The free server sleeps when idle and can take about a minute to wake; try again shortly.',
     };
   }
-  if (e?.code === 'account_not_found') return { title: 'Account not found', message: e.message ?? 'That account is not in the ledger.' };
+  if (e?.code === 'account_not_found') return { title: 'Account not found', message: e.message ?? 'That account is not in the selected dataset.' };
+  if (e?.code === 'dataset_unavailable') return { title: 'This dataset is not available', message: e.message ?? 'The selected dataset has not been built on this server.' };
   if (e?.code === 'validation_error') return { title: 'Check the settings', message: 'The server rejected one of the settings. Check the account ID and the trace settings.' };
   if (e?.code?.startsWith('data_source') || e?.code?.startsWith('ledger_')) {
     return { title: 'The transaction ledger is not available', message: e.message ?? 'The configured data source could not be used.' };
@@ -68,9 +91,10 @@ function investigationError(err: unknown): { title: string; message: string } {
 export const InvestigatePage: React.FC = () => {
   const [params, setParams] = useSearchParams();
   const accountId = params.get('account')?.trim() || '';
+  const dataset = datasetFrom(params);
   const [form, setForm] = useState<FormValues>(() => formFromParams(params));
   const [running, setRunning] = useState<InvestigationRequest | null>(null);
-  const [report, setReport] = useState<InvestigationResponse | null>(null);
+  const [report, setReport] = useState<DynamicReport | null>(null);
   const [explanation, setExplanation] = useState<ExplanationView | null>(null);
   const [error, setError] = useState<{ title: string; message: string } | null>(null);
   const [elapsed, setElapsed] = useState(0);
@@ -96,12 +120,12 @@ export const InvestigatePage: React.FC = () => {
     setRunning(request);
     const settings = formFromRequest(request);
     setForm(settings);
-    setParams(paramsFromForm(settings, request.account_id), { replace: true });
+    setParams(paramsFromForm(settings, request.account_id, dataset), { replace: true });
     // The report is returned without waiting for the AI analyst, which can take minutes; the explanation follows.
-    const body: InvestigationRequest = { ...request, ai_explanation: 'separate' };
-    let result: InvestigationResponse;
+    const body = toDynamic(request, dataset);
+    let result: DynamicReport;
     try {
-      result = await v2Api.runInvestigation(body, controller.signal);
+      result = await v2Api.runDynamicInvestigation(body, controller.signal);
       if (controller.signal.aborted) return;
       setReport(result);
       window.scrollTo?.({ top: 0 });
@@ -112,13 +136,15 @@ export const InvestigatePage: React.FC = () => {
     } finally {
       if (abortRef.current === controller) setRunning(null);
     }
-    if (result.ai_analysis.state !== 'deferred') return;
+    if (result.investigation.ai_analysis.state !== 'deferred') return;
     setExplanation({ phase: 'pending', since: Date.now() });
     try {
-      const ex = await v2Api.explainInvestigation(body, controller.signal);
+      const ex = await v2Api.explainDynamicInvestigation(body, controller.signal);
       if (controller.signal.aborted) return;
-      // Only show an explanation of exactly this report (the ledger could have changed in between).
-      setExplanation(ex.report_digest === result.report_digest ? { phase: 'done', analysis: ex.ai_analysis } : { phase: 'stale' });
+      // Only show an explanation of exactly this report (the ledger could have changed in between). An empty digest means
+      // the server explained nothing (e.g. the analyst was turned off meanwhile), so its state is shown as is.
+      const same = !ex.report_digest || ex.report_digest === result.investigation.report_digest;
+      setExplanation(same ? { phase: 'done', analysis: ex.ai_analysis } : { phase: 'stale' });
     } catch (err) {
       if ((err as { name?: string })?.name === 'AbortError' || controller.signal.aborted) return;
       setExplanation({
@@ -142,19 +168,24 @@ export const InvestigatePage: React.FC = () => {
   const newInvestigation = () => {
     reset();
     setForm(DEFAULT_FORM);
-    setParams({}, { replace: true });
+    setParams(dataset === 'demo-ledger' ? {} : { dataset }, { replace: true });
     window.scrollTo?.({ top: 0 });
   };
 
   const openAccount = (id: string) => {
     reset();
-    setParams(paramsFromForm(form, id));
+    setParams(paramsFromForm(form, id, dataset));
+  };
+
+  const chooseDataset = (d: DatasetId) => {
+    reset();
+    setParams(d === 'demo-ledger' ? {} : { dataset: d }, { replace: true });
   };
 
   if (report) {
     return (
       <div className="pb-6">
-        <CaseView report={report} explanation={explanation} onNew={newInvestigation} onRerun={start} />
+        <CaseView report={report.investigation} intel={report} explanation={explanation} onNew={newInvestigation} onRerun={start} />
       </div>
     );
   }
@@ -163,8 +194,9 @@ export const InvestigatePage: React.FC = () => {
     return (
       <div className="space-y-5 pb-6">
         <AccountBrief
-          key={accountId}
+          key={`${dataset}:${accountId}`}
           accountId={accountId}
+          datasetId={dataset}
           form={form}
           onFormChange={setForm}
           onStart={start}
@@ -188,15 +220,12 @@ export const InvestigatePage: React.FC = () => {
             Open an account to see what the records already say about it. When you start the investigation, the server traces where its
             money went and came from, and walks you through the evidence one question at a time.
           </p>
-          <div className="mt-8">
+          <div className="mt-8 space-y-5">
+            <DatasetPicker value={dataset} onChange={chooseDataset} onPickAccount={openAccount} />
             <AccountEntry initial={form.accountId} onOpen={openAccount} />
           </div>
           <p className="mt-3 text-sm text-mute">
-            New here? Try{' '}
-            <button type="button" className="font-mono font-semibold text-iris-deep hover:text-iris underline-offset-2 hover:underline" onClick={() => openAccount('ACC-000001')}>
-              ACC-000001
-            </button>{' '}
-            from the synthetic demo ledger.
+            Account IDs are searched only inside the selected synthetic dataset. FraudShield cannot look up real bank accounts.
           </p>
         </div>
         <ol className="panel p-5 space-y-4" aria-label="How an investigation is laid out">

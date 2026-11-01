@@ -11,12 +11,26 @@ import { splitCoded } from './labels';
 import { Severity } from './caseModel';
 import { IdText, SeverityMeter } from './ui';
 import { InvestigationRequest } from '../../types/investigation';
+import { DatasetAccount, DatasetId } from '../../types/dynamic';
 
 interface Brief {
-  profile: V2AccountProfileResponse;
+  /** History coverage in the chosen dataset; always present once loaded. */
+  ds: DatasetAccount;
+  /** Demo-ledger profile and rule assessment (the other dataset has no profile endpoint). */
+  profile: V2AccountProfileResponse | null;
   assessment: V2AccountAssessmentResponse | null;
   source: DataSourceInfo | null;
 }
+
+// The engine's own steps (backend/app/intelligence/engine.py). Listed, not animated: no step is claimed as current.
+const RUN_STEPS = [
+  'Loading account history',
+  'Generating historical features',
+  'Detecting suspicious transactions',
+  'Tracing funds',
+  'Examining counterparties',
+  'Preparing investigation results',
+];
 
 type Load = { state: 'loading' } | { state: 'ready'; brief: Brief } | { state: 'error'; title: string; message: string; notFound: boolean };
 
@@ -34,13 +48,14 @@ const Fact: React.FC<{ label: string; value: React.ReactNode; note?: string }> =
  */
 export const AccountBrief: React.FC<{
   accountId: string;
+  datasetId?: DatasetId;
   form: FormValues;
   onFormChange: (v: FormValues) => void;
   onStart: (r: InvestigationRequest) => void;
   onChangeAccount: () => void;
   running: boolean;
   elapsed: number;
-}> = ({ accountId, form, onFormChange, onStart, onChangeAccount, running, elapsed }) => {
+}> = ({ accountId, datasetId = 'demo-ledger', form, onFormChange, onStart, onChangeAccount, running, elapsed }) => {
   const [load, setLoad] = useState<Load>({ state: 'loading' });
   const [attempt, setAttempt] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -48,20 +63,29 @@ export const AccountBrief: React.FC<{
   const errId = useId();
 
   useEffect(() => {
-    let live = true;
+    // Aborted on unmount or when the account, dataset or attempt changes, so stale lookups stop and never land.
+    const controller = new AbortController();
+    const { signal } = controller;
     setLoad({ state: 'loading' });
-    Promise.allSettled([v2Api.getAccount(accountId), v2Api.getAssessment(accountId), v2Api.getDataSource()]).then(([p, a, s]) => {
-      if (!live) return;
-      if (p.status === 'rejected') {
-        const e = p.reason as { code?: string; status?: number; message?: string };
+    const demo = datasetId === 'demo-ledger';
+    const none = Promise.resolve(null);
+    Promise.allSettled([
+      v2Api.getDatasetAccount(datasetId, accountId, signal),
+      demo ? v2Api.getAccount(accountId, signal) : none,
+      demo ? v2Api.getAssessment(accountId, signal) : none,
+      demo ? v2Api.getDataSource(signal) : none,
+    ]).then(([d, p, a, s]) => {
+      if (signal.aborted) return;
+      if (d.status === 'rejected') {
+        const e = d.reason as { code?: string; status?: number; message?: string };
         const notFound = e?.status === 404;
         setLoad({
           state: 'error',
           notFound,
-          title: notFound ? 'Account not found' : p.reason instanceof TypeError ? 'The server could not be reached' : 'The account could not be loaded',
+          title: notFound ? 'Account not found' : d.reason instanceof TypeError ? 'The server could not be reached' : 'The account could not be loaded',
           message: notFound
-            ? `${accountId} is not in the configured ledger. Check the ID (for example ACC-000001).`
-            : p.reason instanceof TypeError
+            ? e?.message ?? `${accountId} is not in the selected dataset.`
+            : d.reason instanceof TypeError
               ? 'The free server sleeps when idle and can take about a minute to wake. Try again shortly.'
               : e?.message ?? 'Try again; if it keeps failing, the server log has the cause.',
         });
@@ -69,13 +93,16 @@ export const AccountBrief: React.FC<{
       }
       setLoad({
         state: 'ready',
-        brief: { profile: p.value, assessment: a.status === 'fulfilled' ? a.value : null, source: s.status === 'fulfilled' ? s.value : null },
+        brief: {
+          ds: d.value,
+          profile: p.status === 'fulfilled' ? p.value : null,
+          assessment: a.status === 'fulfilled' ? a.value : null,
+          source: s.status === 'fulfilled' ? s.value : null,
+        },
       });
     });
-    return () => {
-      live = false;
-    };
-  }, [accountId, attempt]);
+    return () => controller.abort();
+  }, [accountId, datasetId, attempt]);
 
   const start = () => {
     const result = toRequest({ ...form, accountId });
@@ -114,19 +141,22 @@ export const AccountBrief: React.FC<{
     );
   }
 
-  const { profile: p, assessment: a, source: s } = load.brief;
-  const m = p.metrics;
+  const { ds, profile: p, assessment: a, source: s } = load.brief;
   const signals = (a?.reason_codes ?? []).map(splitCoded).filter((x) => x.code !== 'NORMAL_ACTIVITY');
   const settingsChanged = JSON.stringify({ ...form, accountId: '' }) !== JSON.stringify({ ...DEFAULT_FORM, accountId: '' });
+  const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'None');
+  const models = Object.entries(ds.models);
+  // Older servers do not send models_validated; treat that as validated, as before.
+  const modelsValidated = ds.models_validated !== false;
 
   return (
     <div className="space-y-5" data-testid="account-brief">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm text-mute">Account under investigation</p>
-          <h1 className="mt-1 font-display text-4xl sm:text-5xl font-bold tracking-tight text-ink">{p.account_id}</h1>
+          <p className="text-sm text-mute">Account under investigation in the {ds.dataset_title.toLowerCase()}</p>
+          <h1 className="mt-1 font-display text-4xl sm:text-5xl font-bold tracking-tight text-ink">{ds.account_id}</h1>
           <p className="mt-2 text-[15px] text-mute">
-            {p.customer_name}, {p.customer_type} customer, {p.kyc_tier.replace(/_/g, ' ')}, account {p.status}
+            {p ? `${p.customer_name}, ${p.customer_type} customer, ${p.kyc_tier.replace(/_/g, ' ')}, account ${p.status}` : `${ds.customer_type} account, synthetic`}
           </p>
         </div>
         <button type="button" className="btn-ghost" onClick={onChangeAccount}>
@@ -135,42 +165,57 @@ export const AccountBrief: React.FC<{
       </header>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <section aria-labelledby="sev-h" className="panel p-5">
-          <h2 id="sev-h" className="text-sm font-semibold text-ink">Assessment before tracing</h2>
-          {a ? (
-            <>
-              <div className="mt-3 flex items-end justify-between gap-3">
-                <SeverityMeter level={a.risk_level as Severity} />
-                <span className="text-xs text-mute">{Math.round(a.risk_score)} of 100 rule points</span>
-              </div>
-              <ul className="mt-4 space-y-2 text-sm">
-                {signals.length ? (
-                  signals.slice(0, 3).map((x) => (
-                    <li key={x.label}>
-                      <span className="font-semibold text-ink">{x.label}</span>
-                      {x.detail && <span className="block text-xs text-mute">{x.detail}</span>}
-                    </li>
-                  ))
-                ) : (
-                  <li className="text-mute">No rule signal on this account’s own history.</li>
-                )}
-              </ul>
-              <p className="mt-3 text-[11px] text-faint">From this account’s own records only. A severity is a prompt for review, not proof.</p>
-            </>
-          ) : (
-            <p className="mt-2 text-sm text-mute">The rule assessment is not available right now. The investigation will compute it.</p>
-          )}
-        </section>
+        {a ? (
+          <section aria-labelledby="sev-h" className="panel p-5">
+            <h2 id="sev-h" className="text-sm font-semibold text-ink">Assessment before tracing</h2>
+            <div className="mt-3 flex items-end justify-between gap-3">
+              <SeverityMeter level={a.risk_level as Severity} />
+              <span className="text-xs text-mute">{Math.round(a.risk_score)} of 100 rule points</span>
+            </div>
+            <ul className="mt-4 space-y-2 text-sm">
+              {signals.length ? (
+                signals.slice(0, 3).map((x) => (
+                  <li key={x.label}>
+                    <span className="font-semibold text-ink">{x.label}</span>
+                    {x.detail && <span className="block text-xs text-mute">{x.detail}</span>}
+                  </li>
+                ))
+              ) : (
+                <li className="text-mute">No rule signal on this account’s own history.</li>
+              )}
+            </ul>
+            <p className="mt-3 text-[11px] text-faint">From this account’s own records only. A severity is a prompt for review, not proof.</p>
+          </section>
+        ) : (
+          <section aria-labelledby="cov-h" className="panel p-5" data-testid="history-coverage">
+            <h2 id="cov-h" className="text-sm font-semibold text-ink">Available history</h2>
+            <p className="mt-3 font-display text-3xl font-bold text-ink">{ds.transactions}</p>
+            <p className="text-xs text-mute">transfers on record ({ds.outgoing} out, {ds.incoming} in)</p>
+            <p className={`mt-3 text-sm ${ds.history_sufficient ? 'text-ink-soft' : 'text-sev-elevated font-medium'}`}>{ds.coverage_note}</p>
+            <p className="mt-3 text-[11px] text-faint">No prediction is shown before the investigation runs.</p>
+          </section>
+        )}
 
         <section aria-labelledby="act-h" className="panel p-5">
           <h2 id="act-h" className="text-sm font-semibold text-ink">Account activity</h2>
           <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3">
-            <Fact label="Balance" value={formatMoney(p.current_balance)} />
-            <Fact label="Opened" value={new Date(p.account_opened_at).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })} />
-            <Fact label="Money in" value={formatMoney(m.total_incoming_amount)} note={`${m.total_incoming_txns} transfers`} />
-            <Fact label="Money out" value={formatMoney(m.total_outgoing_amount)} note={`${m.total_outgoing_txns} transfers`} />
-            <Fact label="Counterparties" value={m.unique_counterparties} />
-            <Fact label="Last activity" value={m.last_activity_at ? formatDateTime(m.last_activity_at) : 'None'} />
+            {p ? (
+              <>
+                <Fact label="Balance" value={formatMoney(p.current_balance)} />
+                <Fact label="Opened" value={new Date(p.account_opened_at).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })} />
+                <Fact label="Money in" value={formatMoney(p.metrics.total_incoming_amount)} note={`${p.metrics.total_incoming_txns} transfers`} />
+                <Fact label="Money out" value={formatMoney(p.metrics.total_outgoing_amount)} note={`${p.metrics.total_outgoing_txns} transfers`} />
+                <Fact label="Counterparties" value={p.metrics.unique_counterparties} />
+                <Fact label="Last activity" value={p.metrics.last_activity_at ? formatDateTime(p.metrics.last_activity_at) : 'None'} />
+              </>
+            ) : (
+              <>
+                <Fact label="Incoming" value={ds.incoming} note="transfers" />
+                <Fact label="Outgoing" value={ds.outgoing} note="transfers" />
+                <Fact label="First record" value={day(ds.first_transaction_at)} />
+                <Fact label="Last record" value={day(ds.last_transaction_at)} />
+              </>
+            )}
           </dl>
         </section>
 
@@ -179,33 +224,46 @@ export const AccountBrief: React.FC<{
             <Route className="w-4 h-4 text-iris" aria-hidden="true" /> What can be traced
           </h2>
           <p className="mt-3 text-sm text-ink-soft leading-relaxed">
-            {m.total_outgoing_txns + m.total_incoming_txns === 0
+            {ds.transactions === 0
               ? 'This account has no transfers on record, so there is nothing to trace.'
-              : `${m.total_outgoing_txns} outgoing and ${m.total_incoming_txns} incoming transfers are on record. The trace starts from the ones the rules flag as unusual, or the largest if none are.`}
+              : modelsValidated
+                ? `${ds.outgoing} outgoing and ${ds.incoming} incoming transfers are on record. Each is scored by the transaction model from earlier records only; the trace starts from the ones flagged by the model or the fixed rules, or the largest if none are.`
+                : `${ds.outgoing} outgoing and ${ds.incoming} incoming transfers are on record. The trace starts from the ones flagged by the fixed rules, or the largest if none are. The models are not validated on this dataset, so their scores are shown for reference only.`}
           </p>
           <p className="mt-2 text-xs text-mute">
             Follows money up to {form.maxDepth} hop{form.maxDepth === 1 ? '' : 's'}, within {form.windowHours} h of each receipt
             {settingsChanged ? ' (custom settings)' : ''}.
           </p>
-          {s && (
-            <p className="mt-auto pt-4 text-xs text-mute flex items-start gap-1.5">
-              <FlaskConical className="w-3.5 h-3.5 mt-0.5 shrink-0 text-sev-elevated" aria-hidden="true" />
-              <span>
-                {s.is_synthetic ? 'Synthetic demo data. ' : ''}
-                {s.source_name}, as of {formatDateTime(s.data_as_of)}. Real bank data: {s.real_bank_data ? 'yes' : 'no'}.
-              </span>
+          <ul className="mt-3 space-y-1 text-xs text-mute" aria-label="Model availability">
+            {models.map(([name, m]) => (
+              <li key={name}>
+                {name === 'transaction_model' ? 'Transaction model' : 'Account behaviour model'}:{' '}
+                <span className={m.available ? 'font-semibold text-ink' : 'font-semibold text-sev-elevated'}>{m.available ? m.model_version : 'unavailable'}</span>
+                {m.available && !modelsValidated && ' (reference only, not validated on this dataset)'}
+              </li>
+            ))}
+          </ul>
+          {!modelsValidated && ds.model_note && (
+            <p className="mt-2 text-xs text-sev-elevated" data-testid="models-reference-only">
+              {ds.model_note}
             </p>
           )}
+          <p className="mt-auto pt-4 text-xs text-mute flex items-start gap-1.5">
+            <FlaskConical className="w-3.5 h-3.5 mt-0.5 shrink-0 text-sev-elevated" aria-hidden="true" />
+            <span>
+              {s ? `${s.is_synthetic ? 'Synthetic demo data. ' : ''}${s.source_name}, as of ${formatDateTime(s.data_as_of)}. Real bank data: ${s.real_bank_data ? 'yes' : 'no'}.` : `Synthetic data. ${ds.dataset_title}. Real bank data: no.`}
+            </span>
+          </p>
         </section>
       </div>
 
       <div className="panel p-5 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="max-w-2xl">
-            <p className="font-semibold text-ink">Ready to follow the money</p>
+            <p className="font-semibold text-ink">Ready to investigate</p>
             <p className="mt-0.5 text-sm text-mute">
-              The server queries the ledger now, traces where the money went and came from, and assesses every linked account on its own
-              records. Nothing is precomputed or stored.
+              The server reads this account’s history now, scores each transfer, traces where the money went and came from, and assesses every
+              connected account on its own records. Nothing is precomputed, stored or acted on.
             </p>
           </div>
           <div className="flex flex-wrap gap-2 shrink-0">
@@ -230,7 +288,7 @@ export const AccountBrief: React.FC<{
         )}
         {settingsOpen && (
           <div className="mt-5 pt-5 border-t border-line rise-in">
-            <TraceSettings values={form} onChange={onFormChange} />
+            <TraceSettings values={form} onChange={onFormChange} limitsOnly />
           </div>
         )}
         {running && (
@@ -241,9 +299,12 @@ export const AccountBrief: React.FC<{
                 Investigating <IdText>{accountId}</IdText>… {elapsed > 0 && <span className="font-normal text-faint">{elapsed} s</span>}
               </p>
               <p className="mt-0.5 text-mute">
-                The server is querying the ledger and running the checks. The report appears when it has finished.
+                The server runs these steps in one request; the time each one took appears in the report.
                 {elapsed >= 10 && ' If the free server was asleep, the first request can take about a minute.'}
               </p>
+              <ol className="mt-2 grid gap-x-6 gap-y-1 sm:grid-cols-2 text-xs text-ink-soft list-decimal pl-4" aria-label="Steps being run">
+                {RUN_STEPS.map((x) => <li key={x}>{x}</li>)}
+              </ol>
             </div>
           </div>
         )}

@@ -1,0 +1,1853 @@
+{
+  "forensic_ledgers": {
+    "train": {
+      "config": {
+        "seed": 101,
+        "days": 120,
+        "people": 9000,
+        "include_held_out": false
+      },
+      "generator_version": "forensic-scenarios-1.0.0",
+      "validation": {
+        "rows_in": 450424,
+        "rows_valid": 450424,
+        "errors": {},
+        "warnings": {}
+      },
+      "rows": 450424,
+      "accounts": 10195,
+      "label_prevalence": 0.00373,
+      "positives": 1678,
+      "negatives": 448746,
+      "positives_by_type": {
+        "CASH_OUT": {
+          "sum": 629,
+          "count": 38576
+        },
+        "PAYMENT": {
+          "sum": 0,
+          "count": 200832
+        },
+        "TRANSFER": {
+          "sum": 1049,
+          "count": 211016
+        }
+      },
+      "positives_by_channel": {
+        "ATM_CASH_OUT": {
+          "sum": 629,
+          "count": 38576
+        },
+        "CARD_POS": {
+          "sum": 0,
+          "count": 200832
+        },
+        "IMPS": {
+          "sum": 273,
+          "count": 34466
+        },
+        "NEFT": {
+          "sum": 244,
+          "count": 35105
+        },
+        "RTGS": {
+          "sum": 0,
+          "count": 480
+        },
+        "UPI": {
+          "sum": 532,
+          "count": 140965
+        }
+      },
+      "amount_quantiles_by_label": {
+        "0": {
+          "0.01": 95.17,
+          "0.5": 1000.0,
+          "0.99": 148347.57
+        },
+        "1": {
+          "0.01": 700.0,
+          "0.5": 18687.34,
+          "0.99": 597406.31
+        }
+      },
+      "missing_values": {},
+      "duplicate_transaction_ids": 0,
+      "exact_duplicate_rows": 0,
+      "feature_mean_by_label": {
+        "log_amount": {
+          "0": {
+            "mean": 7.1916,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 9.7767,
+            "missing_share": 0.0
+          }
+        },
+        "amount_to_sender_balance": {
+          "0": {
+            "mean": 0.0787,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.4276,
+            "missing_share": 0.0
+          }
+        },
+        "sender_balance_missing": {
+          "0": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          }
+        },
+        "s_prior_out_n": {
+          "0": {
+            "mean": 2.9843,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 2.3842,
+            "missing_share": 0.0
+          }
+        },
+        "s_prior_in_n": {
+          "0": {
+            "mean": 1.3853,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 1.3551,
+            "missing_share": 0.0
+          }
+        },
+        "s_history_days": {
+          "0": {
+            "mean": 56.7948,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 44.4303,
+            "missing_share": 0.0
+          }
+        },
+        "s_out_n_1h": {
+          "0": {
+            "mean": 2.2526,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.3927,
+            "missing_share": 0.0
+          }
+        },
+        "s_out_n_24h": {
+          "0": {
+            "mean": 3.3893,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.9356,
+            "missing_share": 0.0
+          }
+        },
+        "s_out_amount_24h_log": {
+          "0": {
+            "mean": 2.9137,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 4.7816,
+            "missing_share": 0.0
+          }
+        },
+        "s_amount_vs_prior_max": {
+          "0": {
+            "mean": 0.4041,
+            "missing_share": 0.0225
+          },
+          "1": {
+            "mean": 15.2128,
+            "missing_share": 0.056
+          }
+        },
+        "s_amount_z": {
+          "0": {
+            "mean": 0.2273,
+            "missing_share": 0.0671
+          },
+          "1": {
+            "mean": 26.1673,
+            "missing_share": 0.2318
+          }
+        },
+        "s_new_recipients_24h": {
+          "0": {
+            "mean": 1.3428,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.7718,
+            "missing_share": 0.0
+          }
+        },
+        "s_distinct_recipients": {
+          "0": {
+            "mean": 2.8791,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 2.3283,
+            "missing_share": 0.0
+          }
+        },
+        "s_hours_since_last_out": {
+          "0": {
+            "mean": 3.4088,
+            "missing_share": 0.0225
+          },
+          "1": {
+            "mean": 2.6573,
+            "missing_share": 0.056
+          }
+        },
+        "s_in_24h_to_amount": {
+          "0": {
+            "mean": 3.588,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 3.7481,
+            "missing_share": 0.0
+          }
+        },
+        "s_minutes_since_last_in": {
+          "0": {
+            "mean": 8.8354,
+            "missing_share": 0.1847
+          },
+          "1": {
+            "mean": 5.7606,
+            "missing_share": 0.0167
+          }
+        },
+        "pair_prior_n": {
+          "0": {
+            "mean": 0.1592,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.1944,
+            "missing_share": 0.0
+          }
+        },
+        "first_time_pair": {
+          "0": {
+            "mean": 0.8353,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.7855,
+            "missing_share": 0.0
+          }
+        },
+        "r_prior_in_n": {
+          "0": {
+            "mean": 4.8765,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 3.8409,
+            "missing_share": 0.0
+          }
+        },
+        "r_prior_out_n": {
+          "0": {
+            "mean": 2.0557,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 1.1833,
+            "missing_share": 0.0
+          }
+        },
+        "r_history_days": {
+          "0": {
+            "mean": 59.9111,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 48.6246,
+            "missing_share": 0.0
+          }
+        },
+        "r_distinct_senders": {
+          "0": {
+            "mean": 4.7798,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 3.6034,
+            "missing_share": 0.0
+          }
+        },
+        "r_in_n_24h": {
+          "0": {
+            "mean": 16.239,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 41.6585,
+            "missing_share": 0.0
+          }
+        },
+        "r_balance_before_log": {
+          "0": {
+            "mean": 12.6364,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 16.1749,
+            "missing_share": 0.0
+          }
+        },
+        "hour_sin": {
+          "0": {
+            "mean": -0.2655,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": -0.1713,
+            "missing_share": 0.0
+          }
+        },
+        "hour_cos": {
+          "0": {
+            "mean": -0.2747,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": -0.1564,
+            "missing_share": 0.0
+          }
+        },
+        "is_weekend": {
+          "0": {
+            "mean": 0.3027,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.2807,
+            "missing_share": 0.0
+          }
+        },
+        "type_TRANSFER": {
+          "0": {
+            "mean": 0.4679,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.6251,
+            "missing_share": 0.0
+          }
+        },
+        "type_PAYMENT": {
+          "0": {
+            "mean": 0.4475,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          }
+        },
+        "type_CASH_OUT": {
+          "0": {
+            "mean": 0.0846,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.3749,
+            "missing_share": 0.0
+          }
+        },
+        "type_CASH_IN": {
+          "0": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          }
+        },
+        "type_DEBIT": {
+          "0": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          }
+        },
+        "ch_UPI": {
+          "0": {
+            "mean": 0.3129,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.317,
+            "missing_share": 0.0
+          }
+        },
+        "ch_IMPS": {
+          "0": {
+            "mean": 0.0762,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.1627,
+            "missing_share": 0.0
+          }
+        },
+        "ch_NEFT": {
+          "0": {
+            "mean": 0.0777,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.1454,
+            "missing_share": 0.0
+          }
+        },
+        "ch_RTGS": {
+          "0": {
+            "mean": 0.0011,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          }
+        },
+        "ch_CARD_POS": {
+          "0": {
+            "mean": 0.4475,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          }
+        },
+        "ch_ATM_CASH_OUT": {
+          "0": {
+            "mean": 0.0846,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.3749,
+            "missing_share": 0.0
+          }
+        }
+      },
+      "roles": {
+        "attacker_controlled": {
+          "count": 200,
+          "materialised": 181
+        },
+        "innocent_counterparty": {
+          "count": 202,
+          "materialised": 161
+        },
+        "intermediary": {
+          "count": 668,
+          "materialised": 544
+        },
+        "lookalike_legitimate": {
+          "count": 60,
+          "materialised": 58
+        },
+        "secondary_victim": {
+          "count": 25,
+          "materialised": 24
+        },
+        "victim": {
+          "count": 373,
+          "materialised": 337
+        }
+      },
+      "scenarios_by_pattern": [
+        {
+          "pattern": "chain",
+          "variant": "standard",
+          "n": 45
+        },
+        {
+          "pattern": "circular",
+          "variant": "standard",
+          "n": 20
+        },
+        {
+          "pattern": "consolidation",
+          "variant": "standard",
+          "n": 25
+        },
+        {
+          "pattern": "direct",
+          "variant": "standard",
+          "n": 45
+        },
+        {
+          "pattern": "lookalike",
+          "variant": "family_pool",
+          "n": 60
+        },
+        {
+          "pattern": "multi_hop",
+          "variant": "standard",
+          "n": 40
+        },
+        {
+          "pattern": "multi_victim",
+          "variant": "standard",
+          "n": 25
+        },
+        {
+          "pattern": "split",
+          "variant": "standard",
+          "n": 35
+        },
+        {
+          "pattern": "takeover",
+          "variant": "standard",
+          "n": 40
+        }
+      ],
+      "unfundable_scenario_legs_skipped": 386,
+      "time_of_day_night_share": {
+        "scenario": 0.0656,
+        "ordinary": 0.0279
+      },
+      "time_of_day_night_share_detail": {
+        "night_hours": "00:00-04:59",
+        "scenario_including_takeovers": 0.0656,
+        "scenario_rows_including_takeovers": 1678,
+        "scenario_excluding_takeovers": 0.0153,
+        "scenario_rows_excluding_takeovers": 1503,
+        "takeover_only": 0.4971,
+        "takeover_rows": 175,
+        "ordinary": 0.0279,
+        "ordinary_rows": 448746
+      },
+      "round_amount_share": {
+        "scenario": 0.3081,
+        "ordinary": 0.1431
+      }
+    },
+    "cold": {
+      "config": {
+        "seed": 202,
+        "days": 120,
+        "people": 6000,
+        "include_held_out": true
+      },
+      "generator_version": "forensic-scenarios-1.0.0",
+      "validation": {
+        "rows_in": 299828,
+        "rows_valid": 299828,
+        "errors": {},
+        "warnings": {}
+      },
+      "rows": 299828,
+      "accounts": 6819,
+      "label_prevalence": 0.00444,
+      "positives": 1330,
+      "negatives": 298498,
+      "positives_by_type": {
+        "CASH_OUT": {
+          "sum": 450,
+          "count": 26011
+        },
+        "PAYMENT": {
+          "sum": 0,
+          "count": 133485
+        },
+        "TRANSFER": {
+          "sum": 880,
+          "count": 140332
+        }
+      },
+      "positives_by_channel": {
+        "ATM_CASH_OUT": {
+          "sum": 450,
+          "count": 26011
+        },
+        "CARD_POS": {
+          "sum": 0,
+          "count": 133485
+        },
+        "IMPS": {
+          "sum": 265,
+          "count": 22989
+        },
+        "NEFT": {
+          "sum": 179,
+          "count": 23230
+        },
+        "RTGS": {
+          "sum": 0,
+          "count": 320
+        },
+        "UPI": {
+          "sum": 436,
+          "count": 93793
+        }
+      },
+      "amount_quantiles_by_label": {
+        "0": {
+          "0.01": 96.44,
+          "0.5": 1000.0,
+          "0.99": 143640.32
+        },
+        "1": {
+          "0.01": 656.54,
+          "0.5": 16086.48,
+          "0.99": 580664.45
+        }
+      },
+      "missing_values": {},
+      "duplicate_transaction_ids": 0,
+      "exact_duplicate_rows": 0,
+      "feature_mean_by_label": {
+        "log_amount": {
+          "0": {
+            "mean": 7.1934,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 9.6318,
+            "missing_share": 0.0
+          }
+        },
+        "amount_to_sender_balance": {
+          "0": {
+            "mean": 0.0768,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.3998,
+            "missing_share": 0.0
+          }
+        },
+        "sender_balance_missing": {
+          "0": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          }
+        },
+        "s_prior_out_n": {
+          "0": {
+            "mean": 2.9856,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 2.4854,
+            "missing_share": 0.0
+          }
+        },
+        "s_prior_in_n": {
+          "0": {
+            "mean": 1.3825,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 1.3633,
+            "missing_share": 0.0
+          }
+        },
+        "s_history_days": {
+          "0": {
+            "mean": 56.7923,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 48.6887,
+            "missing_share": 0.0
+          }
+        },
+        "s_out_n_1h": {
+          "0": {
+            "mean": 2.2876,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 1.0128,
+            "missing_share": 0.0
+          }
+        },
+        "s_out_n_24h": {
+          "0": {
+            "mean": 3.437,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 1.4571,
+            "missing_share": 0.0
+          }
+        },
+        "s_out_amount_24h_log": {
+          "0": {
+            "mean": 2.9207,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 4.8591,
+            "missing_share": 0.0
+          }
+        },
+        "s_amount_vs_prior_max": {
+          "0": {
+            "mean": 0.4038,
+            "missing_share": 0.0226
+          },
+          "1": {
+            "mean": 15.8398,
+            "missing_share": 0.0579
+          }
+        },
+        "s_amount_z": {
+          "0": {
+            "mean": -0.4891,
+            "missing_share": 0.0673
+          },
+          "1": {
+            "mean": 35.7369,
+            "missing_share": 0.2263
+          }
+        },
+        "s_new_recipients_24h": {
+          "0": {
+            "mean": 1.3545,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.8316,
+            "missing_share": 0.0
+          }
+        },
+        "s_distinct_recipients": {
+          "0": {
+            "mean": 2.875,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 2.3826,
+            "missing_share": 0.0
+          }
+        },
+        "s_hours_since_last_out": {
+          "0": {
+            "mean": 3.4076,
+            "missing_share": 0.0226
+          },
+          "1": {
+            "mean": 2.5884,
+            "missing_share": 0.0579
+          }
+        },
+        "s_in_24h_to_amount": {
+          "0": {
+            "mean": 3.6843,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 5.5607,
+            "missing_share": 0.0
+          }
+        },
+        "s_minutes_since_last_in": {
+          "0": {
+            "mean": 8.8302,
+            "missing_share": 0.1869
+          },
+          "1": {
+            "mean": 5.8158,
+            "missing_share": 0.0233
+          }
+        },
+        "pair_prior_n": {
+          "0": {
+            "mean": 0.1664,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.2646,
+            "missing_share": 0.0
+          }
+        },
+        "first_time_pair": {
+          "0": {
+            "mean": 0.8248,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.7293,
+            "missing_share": 0.0
+          }
+        },
+        "r_prior_in_n": {
+          "0": {
+            "mean": 4.87,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 3.5645,
+            "missing_share": 0.0
+          }
+        },
+        "r_prior_out_n": {
+          "0": {
+            "mean": 2.0563,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 1.3856,
+            "missing_share": 0.0
+          }
+        },
+        "r_history_days": {
+          "0": {
+            "mean": 59.9113,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 53.3723,
+            "missing_share": 0.0
+          }
+        },
+        "r_distinct_senders": {
+          "0": {
+            "mean": 4.768,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 3.2786,
+            "missing_share": 0.0
+          }
+        },
+        "r_in_n_24h": {
+          "0": {
+            "mean": 13.52,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 25.785,
+            "missing_share": 0.0
+          }
+        },
+        "r_balance_before_log": {
+          "0": {
+            "mean": 12.6529,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 15.6042,
+            "missing_share": 0.0
+          }
+        },
+        "hour_sin": {
+          "0": {
+            "mean": -0.2657,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": -0.1022,
+            "missing_share": 0.0
+          }
+        },
+        "hour_cos": {
+          "0": {
+            "mean": -0.275,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": -0.2624,
+            "missing_share": 0.0
+          }
+        },
+        "is_weekend": {
+          "0": {
+            "mean": 0.301,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.2639,
+            "missing_share": 0.0
+          }
+        },
+        "type_TRANSFER": {
+          "0": {
+            "mean": 0.4672,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.6617,
+            "missing_share": 0.0
+          }
+        },
+        "type_PAYMENT": {
+          "0": {
+            "mean": 0.4472,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          }
+        },
+        "type_CASH_OUT": {
+          "0": {
+            "mean": 0.0856,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.3383,
+            "missing_share": 0.0
+          }
+        },
+        "type_CASH_IN": {
+          "0": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          }
+        },
+        "type_DEBIT": {
+          "0": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          }
+        },
+        "ch_UPI": {
+          "0": {
+            "mean": 0.3128,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.3278,
+            "missing_share": 0.0
+          }
+        },
+        "ch_IMPS": {
+          "0": {
+            "mean": 0.0761,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.1992,
+            "missing_share": 0.0
+          }
+        },
+        "ch_NEFT": {
+          "0": {
+            "mean": 0.0772,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.1346,
+            "missing_share": 0.0
+          }
+        },
+        "ch_RTGS": {
+          "0": {
+            "mean": 0.0011,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          }
+        },
+        "ch_CARD_POS": {
+          "0": {
+            "mean": 0.4472,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          }
+        },
+        "ch_ATM_CASH_OUT": {
+          "0": {
+            "mean": 0.0856,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.3383,
+            "missing_share": 0.0
+          }
+        }
+      },
+      "roles": {
+        "attacker_controlled": {
+          "count": 145,
+          "materialised": 133
+        },
+        "innocent_counterparty": {
+          "count": 147,
+          "materialised": 118
+        },
+        "intermediary": {
+          "count": 530,
+          "materialised": 426
+        },
+        "lookalike_legitimate": {
+          "count": 40,
+          "materialised": 39
+        },
+        "secondary_victim": {
+          "count": 17,
+          "materialised": 16
+        },
+        "victim": {
+          "count": 271,
+          "materialised": 246
+        }
+      },
+      "scenarios_by_pattern": [
+        {
+          "pattern": "chain",
+          "variant": "standard",
+          "n": 30
+        },
+        {
+          "pattern": "circular",
+          "variant": "standard",
+          "n": 14
+        },
+        {
+          "pattern": "consolidation",
+          "variant": "standard",
+          "n": 18
+        },
+        {
+          "pattern": "direct",
+          "variant": "standard",
+          "n": 30
+        },
+        {
+          "pattern": "lookalike",
+          "variant": "family_pool",
+          "n": 40
+        },
+        {
+          "pattern": "multi_hop",
+          "variant": "slow",
+          "n": 12
+        },
+        {
+          "pattern": "multi_hop",
+          "variant": "standard",
+          "n": 23
+        },
+        {
+          "pattern": "multi_victim",
+          "variant": "standard",
+          "n": 18
+        },
+        {
+          "pattern": "split",
+          "variant": "standard",
+          "n": 18
+        },
+        {
+          "pattern": "split",
+          "variant": "structured",
+          "n": 12
+        },
+        {
+          "pattern": "takeover",
+          "variant": "after_dormancy",
+          "n": 16
+        },
+        {
+          "pattern": "takeover",
+          "variant": "standard",
+          "n": 19
+        }
+      ],
+      "unfundable_scenario_legs_skipped": 333,
+      "time_of_day_night_share": {
+        "scenario": 0.0346,
+        "ordinary": 0.028
+      },
+      "time_of_day_night_share_detail": {
+        "night_hours": "00:00-04:59",
+        "scenario_including_takeovers": 0.0346,
+        "scenario_rows_including_takeovers": 1330,
+        "scenario_excluding_takeovers": 0.007,
+        "scenario_rows_excluding_takeovers": 1151,
+        "takeover_only": 0.2123,
+        "takeover_rows": 179,
+        "ordinary": 0.028,
+        "ordinary_rows": 298498
+      },
+      "round_amount_share": {
+        "scenario": 0.3038,
+        "ordinary": 0.144
+      }
+    },
+    "demo": {
+      "config": {
+        "seed": 303,
+        "days": 90,
+        "people": 2400,
+        "include_held_out": true
+      },
+      "generator_version": "forensic-scenarios-1.0.0",
+      "validation": {
+        "rows_in": 88623,
+        "rows_valid": 88623,
+        "errors": {},
+        "warnings": {}
+      },
+      "rows": 88623,
+      "accounts": 2676,
+      "label_prevalence": 0.00376,
+      "positives": 333,
+      "negatives": 88290,
+      "positives_by_type": {
+        "CASH_OUT": {
+          "sum": 99,
+          "count": 7592
+        },
+        "PAYMENT": {
+          "sum": 0,
+          "count": 40320
+        },
+        "TRANSFER": {
+          "sum": 234,
+          "count": 40711
+        }
+      },
+      "positives_by_channel": {
+        "ATM_CASH_OUT": {
+          "sum": 99,
+          "count": 7592
+        },
+        "CARD_POS": {
+          "sum": 0,
+          "count": 40320
+        },
+        "IMPS": {
+          "sum": 74,
+          "count": 6596
+        },
+        "NEFT": {
+          "sum": 53,
+          "count": 6419
+        },
+        "RTGS": {
+          "sum": 0,
+          "count": 120
+        },
+        "UPI": {
+          "sum": 107,
+          "count": 27576
+        }
+      },
+      "amount_quantiles_by_label": {
+        "0": {
+          "0.01": 94.45,
+          "0.5": 997.86,
+          "0.99": 161472.31
+        },
+        "1": {
+          "0.01": 532.0,
+          "0.5": 12000.0,
+          "0.99": 299721.29
+        }
+      },
+      "missing_values": {},
+      "duplicate_transaction_ids": 0,
+      "exact_duplicate_rows": 0,
+      "feature_mean_by_label": {
+        "log_amount": {
+          "0": {
+            "mean": 7.1587,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 9.3157,
+            "missing_share": 0.0
+          }
+        },
+        "amount_to_sender_balance": {
+          "0": {
+            "mean": 0.08,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.3734,
+            "missing_share": 0.0
+          }
+        },
+        "sender_balance_missing": {
+          "0": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          }
+        },
+        "s_prior_out_n": {
+          "0": {
+            "mean": 2.6845,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 2.3747,
+            "missing_share": 0.0
+          }
+        },
+        "s_prior_in_n": {
+          "0": {
+            "mean": 1.1629,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 1.2754,
+            "missing_share": 0.0
+          }
+        },
+        "s_history_days": {
+          "0": {
+            "mean": 41.9545,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 39.9963,
+            "missing_share": 0.0
+          }
+        },
+        "s_out_n_1h": {
+          "0": {
+            "mean": 1.6116,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.7417,
+            "missing_share": 0.0
+          }
+        },
+        "s_out_n_24h": {
+          "0": {
+            "mean": 2.5367,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 1.2643,
+            "missing_share": 0.0
+          }
+        },
+        "s_out_amount_24h_log": {
+          "0": {
+            "mean": 2.8455,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 4.6652,
+            "missing_share": 0.0
+          }
+        },
+        "s_amount_vs_prior_max": {
+          "0": {
+            "mean": 0.493,
+            "missing_share": 0.0301
+          },
+          "1": {
+            "mean": 15.8806,
+            "missing_share": 0.045
+          }
+        },
+        "s_amount_z": {
+          "0": {
+            "mean": 0.3368,
+            "missing_share": 0.0898
+          },
+          "1": {
+            "mean": 28.6574,
+            "missing_share": 0.2192
+          }
+        },
+        "s_new_recipients_24h": {
+          "0": {
+            "mean": 1.408,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.8078,
+            "missing_share": 0.0
+          }
+        },
+        "s_distinct_recipients": {
+          "0": {
+            "mean": 2.5946,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 2.2934,
+            "missing_share": 0.0
+          }
+        },
+        "s_hours_since_last_out": {
+          "0": {
+            "mean": 3.4201,
+            "missing_share": 0.0301
+          },
+          "1": {
+            "mean": 2.7063,
+            "missing_share": 0.045
+          }
+        },
+        "s_in_24h_to_amount": {
+          "0": {
+            "mean": 3.3947,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 5.3317,
+            "missing_share": 0.0
+          }
+        },
+        "s_minutes_since_last_in": {
+          "0": {
+            "mean": 8.811,
+            "missing_share": 0.2279
+          },
+          "1": {
+            "mean": 5.4804,
+            "missing_share": 0.048
+          }
+        },
+        "pair_prior_n": {
+          "0": {
+            "mean": 0.1411,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.2075,
+            "missing_share": 0.0
+          }
+        },
+        "first_time_pair": {
+          "0": {
+            "mean": 0.8318,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.7718,
+            "missing_share": 0.0
+          }
+        },
+        "r_prior_in_n": {
+          "0": {
+            "mean": 4.5247,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 2.9216,
+            "missing_share": 0.0
+          }
+        },
+        "r_prior_out_n": {
+          "0": {
+            "mean": 1.8254,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 1.5054,
+            "missing_share": 0.0
+          }
+        },
+        "r_history_days": {
+          "0": {
+            "mean": 44.6552,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 42.5182,
+            "missing_share": 0.0
+          }
+        },
+        "r_distinct_senders": {
+          "0": {
+            "mean": 4.4409,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 2.7078,
+            "missing_share": 0.0
+          }
+        },
+        "r_in_n_24h": {
+          "0": {
+            "mean": 9.7114,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 9.024,
+            "missing_share": 0.0
+          }
+        },
+        "r_balance_before_log": {
+          "0": {
+            "mean": 12.6971,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 15.1027,
+            "missing_share": 0.0
+          }
+        },
+        "hour_sin": {
+          "0": {
+            "mean": -0.2727,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": -0.143,
+            "missing_share": 0.0
+          }
+        },
+        "hour_cos": {
+          "0": {
+            "mean": -0.2706,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": -0.2317,
+            "missing_share": 0.0
+          }
+        },
+        "is_weekend": {
+          "0": {
+            "mean": 0.3173,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.3934,
+            "missing_share": 0.0
+          }
+        },
+        "type_TRANSFER": {
+          "0": {
+            "mean": 0.4585,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.7027,
+            "missing_share": 0.0
+          }
+        },
+        "type_PAYMENT": {
+          "0": {
+            "mean": 0.4567,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          }
+        },
+        "type_CASH_OUT": {
+          "0": {
+            "mean": 0.0849,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.2973,
+            "missing_share": 0.0
+          }
+        },
+        "type_CASH_IN": {
+          "0": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          }
+        },
+        "type_DEBIT": {
+          "0": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          }
+        },
+        "ch_UPI": {
+          "0": {
+            "mean": 0.3111,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.3213,
+            "missing_share": 0.0
+          }
+        },
+        "ch_IMPS": {
+          "0": {
+            "mean": 0.0739,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.2222,
+            "missing_share": 0.0
+          }
+        },
+        "ch_NEFT": {
+          "0": {
+            "mean": 0.0721,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.1592,
+            "missing_share": 0.0
+          }
+        },
+        "ch_RTGS": {
+          "0": {
+            "mean": 0.0014,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          }
+        },
+        "ch_CARD_POS": {
+          "0": {
+            "mean": 0.4567,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.0,
+            "missing_share": 0.0
+          }
+        },
+        "ch_ATM_CASH_OUT": {
+          "0": {
+            "mean": 0.0849,
+            "missing_share": 0.0
+          },
+          "1": {
+            "mean": 0.2973,
+            "missing_share": 0.0
+          }
+        }
+      },
+      "roles": {
+        "attacker_controlled": {
+          "count": 38,
+          "materialised": 34
+        },
+        "innocent_counterparty": {
+          "count": 35,
+          "materialised": 30
+        },
+        "intermediary": {
+          "count": 138,
+          "materialised": 118
+        },
+        "lookalike_legitimate": {
+          "count": 10,
+          "materialised": 10
+        },
+        "secondary_victim": {
+          "count": 6,
+          "materialised": 4
+        },
+        "victim": {
+          "count": 73,
+          "materialised": 61
+        }
+      },
+      "scenarios_by_pattern": [
+        {
+          "pattern": "chain",
+          "variant": "standard",
+          "n": 8
+        },
+        {
+          "pattern": "circular",
+          "variant": "standard",
+          "n": 4
+        },
+        {
+          "pattern": "consolidation",
+          "variant": "standard",
+          "n": 5
+        },
+        {
+          "pattern": "direct",
+          "variant": "standard",
+          "n": 8
+        },
+        {
+          "pattern": "lookalike",
+          "variant": "family_pool",
+          "n": 10
+        },
+        {
+          "pattern": "multi_hop",
+          "variant": "slow",
+          "n": 4
+        },
+        {
+          "pattern": "multi_hop",
+          "variant": "standard",
+          "n": 4
+        },
+        {
+          "pattern": "multi_victim",
+          "variant": "standard",
+          "n": 5
+        },
+        {
+          "pattern": "split",
+          "variant": "standard",
+          "n": 4
+        },
+        {
+          "pattern": "split",
+          "variant": "structured",
+          "n": 3
+        },
+        {
+          "pattern": "takeover",
+          "variant": "after_dormancy",
+          "n": 4
+        },
+        {
+          "pattern": "takeover",
+          "variant": "standard",
+          "n": 4
+        }
+      ],
+      "unfundable_scenario_legs_skipped": 70,
+      "time_of_day_night_share": {
+        "scenario": 0.039,
+        "ordinary": 0.028
+      },
+      "time_of_day_night_share_detail": {
+        "night_hours": "00:00-04:59",
+        "scenario_including_takeovers": 0.039,
+        "scenario_rows_including_takeovers": 333,
+        "scenario_excluding_takeovers": 0.0033,
+        "scenario_rows_excluding_takeovers": 299,
+        "takeover_only": 0.3529,
+        "takeover_rows": 34,
+        "ordinary": 0.028,
+        "ordinary_rows": 88290
+      },
+      "round_amount_share": {
+        "scenario": 0.3483,
+        "ordinary": 0.1425
+      }
+    }
+  },
+  "demo_ledger_external_check": {
+    "database_sha256": "69d9c6de572ea07a068903d4aae4533177e290aa2fedbd65e99d551e8aa5b1ce",
+    "validation": {
+      "rows_in": 353393,
+      "rows_valid": 353393,
+      "errors": {},
+      "warnings": {}
+    },
+    "rows": 353393,
+    "positives": 42,
+    "transaction_model": {
+      "split": "demo ledger (different generator; not used for any choice)",
+      "n": 353393,
+      "positives": 42,
+      "negatives": 353351,
+      "prevalence": 0.00012,
+      "threshold": 0.001302,
+      "precision": 0.0106,
+      "recall": 0.6429,
+      "f1": 0.0209,
+      "false_positive_rate": 0.007109,
+      "confusion_matrix": {
+        "tn": 350839,
+        "fp": 2512,
+        "fn": 15,
+        "tp": 27
+      },
+      "pr_auc": 0.0582,
+      "roc_auc": 0.9834,
+      "brier": 0.000477,
+      "ece": 0.00086,
+      "precision_at_k": {
+        "50": 0.06,
+        "100": 0.04,
+        "500": 0.024
+      },
+      "recall_at_precision": [
+        {
+          "precision_target": 0.5,
+          "recall": 0.0476,
+          "threshold": 0.9208645224571228
+        },
+        {
+          "precision_target": 0.8,
+          "recall": 0.0238,
+          "threshold": 0.9257028102874756
+        },
+        {
+          "precision_target": 0.9,
+          "recall": 0.0238,
+          "threshold": 0.9257028102874756
+        }
+      ]
+    },
+    "rows_with_3plus_features_outside_training_range": 2478,
+    "account_model": {
+      "model_version": "v3-account-1.0.0",
+      "artifact": "ml/artifacts/v3/account_model (served champion)",
+      "threshold": {
+        "value": 0.052098,
+        "on": "calibrated"
+      },
+      "as_of": "ledger end (all records)",
+      "positive_labels": [
+        "mule_aggregator",
+        "mule_feeder",
+        "mule_first_hop",
+        "mule_intermediate",
+        "shell_roundtripper",
+        "dormant_awakened_mule"
+      ],
+      "accounts_in_ledger": 10000,
+      "accounts_with_transfers": 10000,
+      "abstained_below_min_transactions": 0,
+      "positives_abstained": 0,
+      "metrics": {
+        "split": "demo ledger accounts (different generator; not used for any choice)",
+        "n": 10000,
+        "positives": 29,
+        "negatives": 9971,
+        "prevalence": 0.0029,
+        "threshold": 0.052098,
+        "precision": 0.0132,
+        "recall": 0.6207,
+        "f1": 0.0258,
+        "false_positive_rate": 0.135092,
+        "confusion_matrix": {
+          "tn": 8624,
+          "fp": 1347,
+          "fn": 11,
+          "tp": 18
+        },
+        "pr_auc": 0.0506,
+        "roc_auc": 0.7978,
+        "brier": 0.012515,
+        "ece": 0.04234,
+        "precision_at_k": {
+          "50": 0.08,
+          "100": 0.07,
+          "500": 0.026
+        },
+        "recall_at_precision": [
+          {
+            "precision_target": 0.5,
+            "recall": 0.0,
+            "threshold": null
+          },
+          {
+            "precision_target": 0.8,
+            "recall": 0.0,
+            "threshold": null
+          },
+          {
+            "precision_target": 0.9,
+            "recall": 0.0,
+            "threshold": null
+          }
+        ]
+      },
+      "accounts_with_3plus_features_outside_training_range": 3,
+      "flag_rate_by_ground_truth_label": {
+        "cashout_terminal": {
+          "count": 3,
+          "flagged": 0
+        },
+        "compromised_victim": {
+          "count": 2,
+          "flagged": 1
+        },
+        "dormant_awakened_mule": {
+          "count": 1,
+          "flagged": 1
+        },
+        "legitimate_corporate": {
+          "count": 462,
+          "flagged": 385
+        },
+        "legitimate_merchant": {
+          "count": 985,
+          "flagged": 0
+        },
+        "legitimate_retail": {
+          "count": 8519,
+          "flagged": 961
+        },
+        "mule_aggregator": {
+          "count": 1,
+          "flagged": 0
+        },
+        "mule_feeder": {
+          "count": 10,
+          "flagged": 2
+        },
+        "mule_first_hop": {
+          "count": 1,
+          "flagged": 1
+        },
+        "mule_intermediate": {
+          "count": 12,
+          "flagged": 12
+        },
+        "shell_roundtripper": {
+          "count": 4,
+          "flagged": 2
+        }
+      }
+    },
+    "reading": "Distribution shift check: the demo generator's ordinary activity and five single scenarios differ from the forensic generator the models were trained on."
+  }
+}

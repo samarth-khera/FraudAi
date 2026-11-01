@@ -30,9 +30,9 @@ from typing import Any, Literal, Optional, Protocol
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 try:
-    from app.services.v2.data_source import SYNTHETIC
+    from app.services.v2.data_source import SYNTHETIC_KINDS
 except ModuleNotFoundError:
-    from backend.app.services.v2.data_source import SYNTHETIC
+    from backend.app.services.v2.data_source import SYNTHETIC_KINDS
 
 logger = logging.getLogger("fraudshield.v2.ai_analyst")
 
@@ -121,12 +121,12 @@ class Provider(Protocol):
 def privacy_decision(data_source: dict, policy: str) -> tuple[bool, str]:
     """Uses the server's own data-source description (never anything the browser sent)."""
     verified_synthetic = (
-        data_source.get("source_kind") == SYNTHETIC
+        data_source.get("source_kind") in SYNTHETIC_KINDS
         and data_source.get("is_synthetic") is True
         and data_source.get("real_bank_data") is False
     )
     if verified_synthetic:
-        return True, "The ledger is the server-configured synthetic demo ledger."
+        return True, "The ledger is a server-built synthetic ledger."
     if policy == PRIVACY_ALLOW_NON_SYNTHETIC:
         return True, "Non-synthetic data allowed by GEMINI_PRIVACY_POLICY=allow_non_synthetic."
     return False, (
@@ -166,14 +166,17 @@ class Pseudonymizer:
         for real in sorted(self.forward, key=len, reverse=True):
             text = re.sub(rf"(?<![\w-]){re.escape(real)}(?![\w-])", self.forward[real], text)
         text = _ISO_TIME.sub("[time]", text)
-        return re.sub(r"\b(?:ACC|TXN)-[A-Za-z0-9-]+\b", "[other id]", text)
+        return re.sub(r"\b(?:ACC|TXN|FS|TX)-[A-Za-z0-9-]+\b", "[other id]", text)
 
     def restore(self, text: str) -> str:
         return _PSEUDO_TOKEN.sub(lambda m: self.reverse.get(m.group(0), m.group(0)), text)
 
 
-def build_payload(report: dict) -> tuple[dict, Pseudonymizer, set[str]]:
-    """(payload, pseudonymizer, allowed evidence IDs). Bounded; no names, contact details or ledger free text."""
+def build_payload(report: dict, dynamic: Optional[dict] = None) -> tuple[dict, Pseudonymizer, set[str]]:
+    """(payload, pseudonymizer, allowed evidence IDs). Bounded; no names, contact details or ledger free text.
+
+    With ``dynamic`` (a dynamic investigation's own sections), accounts and suspicious transfers come from its role
+    assessments and transaction scoring, not from the trace report's older role labels, model scores and recommendations."""
     ps = Pseudonymizer()
     trace, victim = report["trace"], report["victim"]
     root = ps.account(victim["account_id"])
@@ -263,9 +266,76 @@ def build_payload(report: dict) -> tuple[dict, Pseudonymizer, set[str]]:
     while len(json.dumps(payload, separators=(",", ":"))) > MAX_PAYLOAD_CHARS and payload["transfers"]:
         payload["transfers"].pop()
         payload["scope"]["transfers_in_this_extract"] = len(payload["transfers"])
+    if dynamic is not None:
+        _apply_dynamic(payload, report, dynamic, ps, minutes)
     # The model may cite exactly the IDs it was shown.
     allowed = set(_PSEUDO_TOKEN.findall(json.dumps(payload)))
     return payload, ps, allowed
+
+
+def _apply_dynamic(payload: dict, report: dict, dyn: dict, ps: Pseudonymizer, minutes) -> None:
+    """Replaces the trace report's account and model sections with the dynamic investigation's (in place)."""
+    # Alias every ID the dynamic sections mention before any of their text is scrubbed.
+    for ra in dyn["role_assessments"]:
+        ps.account(ra["account_id"])
+        for t in ra["relevant_transaction_ids"] + ra["restriction"]["relevant_transaction_ids"]:
+            ps.txn(t)
+    for t in dyn["suspicious_transactions"] + dyn["transaction_scores"]:
+        ps.account(t["sender_account_id"]), ps.account(t["receiver_account_id"]), ps.txn(t["transaction_id"])
+    base_acc = {a["account_id"]: a for a in report["accounts"]}
+
+    def pct(x: Optional[float]) -> Optional[float]:
+        return round(x * 100, 2) if x is not None else None
+
+    accounts = []
+    for ra in dyn["role_assessments"][:MAX_ACCOUNTS]:
+        g, m, rule = ra["graph_relationship"], ra["account_model"], (base_acc.get(ra["account_id"]) or {}).get("rule_assessment")
+        accounts.append({
+            "id": ps.account(ra["account_id"]), "position": g["position"], "hop": g["hop"],
+            "role_candidate": ra["role_candidate"], "assessment_status": ra["assessment_status"],
+            "evidence_strength": ra["evidence_strength"],
+            "evidence": [{"kind": e["kind"], "category": e["category"], "text": ps.scrub(e["text"])} for e in ra["evidence_items"][:8]],
+            "contradictory_evidence": [ps.scrub(t) for t in ra["contradictory_evidence"][:6]],
+            "uncertainty": ps.scrub(ra["uncertainty_reason"]) if ra["uncertainty_reason"] else None,
+            "restriction_state": ra["restriction"]["state"], "may_be_victim": ra["may_be_victim"],
+            "rule_score_of_100": rule["risk_score"] if rule else None, "rule_level": rule["risk_level"] if rule else None,
+            "rule_reason_codes": [r.split(":")[0] for r in rule["reason_codes"]][:6] if rule else [],
+            # The account model counts only where it is validated (status 'scored'); a reference-only score is not sent.
+            "account_model": {"calibrated_pct": pct(m.get("calibrated_probability")), "threshold_pct": pct(m.get("threshold")),
+                              "above_threshold": m.get("above_threshold"),
+                              "top_factors": [ps.scrub(f["label"]) for f in m.get("factors", [])[:4]]}
+            if m["status"] == "scored" else None,
+            "traced_in": g["received_traced_amount"], "traced_out": g["sent_traced_amount"],
+            "relevant_transfers": [ps.txn(t) for t in ra["relevant_transaction_ids"][:6]],
+        })
+    payload["accounts"] = accounts
+    payload["flagged_transfers"] = [
+        {"id": ps.txn(t["transaction_id"]), "from": ps.account(t["sender_account_id"]), "to": ps.account(t["receiver_account_id"]),
+         "amount": t["amount"], "currency": t["currency"], "minutes_from_start": minutes(t["timestamp"]),
+         "transaction_model": {"flagged": t["model_flag"], "calibrated_pct": pct(t["calibrated_probability"]),
+                               "top_factors": [ps.scrub(f["label"]) for f in t["model_factors"][:4]]}
+         if t["evidence_use"] == "evidence" else None,
+         "rule_flags": [f["code"] for f in t["rule_flags"]]}
+        for t in dyn["suspicious_transactions"][:20]
+    ]
+    va, rr = dyn["victim_assessment"], dyn["restriction_recommendation"]
+    payload["investigation_assessment"] = {
+        "investigated_account_status": va["status"], "headline": ps.scrub(va["headline"]),
+        "restriction_state": rr["state"], "models_validated_on_this_dataset": dyn["model_validation"]["validated_for_this_dataset"],
+        "network_findings": [ps.scrub(t) for t in dyn["network_findings"][:8]],
+    }
+    scope = payload["scope"]
+    scope.pop("model_review_threshold_pct", None)
+    scope["model_available"] = dyn["model_metadata"]["account_model"]["available"]
+    scope["transaction_model_used_as_evidence"] = dyn["transaction_scoring"]["model_used_as_evidence"]
+    # The trace report's own model statements describe its older model; the dynamic assessment supersedes them.
+    payload["findings"] = [f for f in payload["findings"] if f["kind"] != "model"]
+    while len(json.dumps(payload, separators=(",", ":"))) > MAX_PAYLOAD_CHARS and (payload["transfers"] or len(accounts) > 1):
+        if payload["transfers"]:
+            payload["transfers"].pop()
+            scope["transfers_in_this_extract"] = len(payload["transfers"])
+        else:
+            accounts.pop()
 
 
 SYSTEM_INSTRUCTION = """You explain the results of a completed financial-fraud investigation to a human investigator.
@@ -488,6 +558,32 @@ def deferred() -> dict:
     }
 
 
+def precheck(report: Optional[dict] = None, provider: Optional[Provider] = None,
+             config: Optional[AnalystConfig] = None) -> Optional[dict]:
+    """The ai_analysis block when no explanation can be produced (analyst turned off, no API key, settings the model
+    does not accept, or, given a report, the privacy policy forbids sending it); None when analyze() would go on to
+    send a request. Reads only settings; never contacts a provider."""
+    config = config or AnalystConfig.from_env()
+    template_note = "The evidence summary in this report was produced by fixed templates."
+    if not config.enabled:
+        return _result("disabled", f"The AI analyst is turned off on this server. {template_note}", config)
+    if provider is None and not config.api_key_present:
+        return _result("not_configured", f"The AI analyst is enabled but no Gemini API key is configured on the server. {template_note}", config)
+    if report is not None:
+        allowed_to_send, privacy_note = privacy_decision(report["data_source"], config.privacy_policy)
+        if not allowed_to_send:
+            return _result("skipped_privacy_policy", privacy_note, config)
+    problem = config_problem(config)
+    if problem:
+        logger.warning("AI analyst configuration problem: setting=%s model=%s (no request sent)", problem, config.model)
+        logger.warning("AI analyst unavailable: reason=invalid_configuration http_status=none error_type=none latency_ms=0")
+        return _result(
+            "unavailable", f"{UNAVAILABLE_MESSAGES['invalid_configuration']} The investigation results are unaffected.", config,
+            provider=getattr(provider, "name", "gemini"), unavailable_reason="invalid_configuration", pseudonymized=True, latency_ms=0,
+        )
+    return None
+
+
 def _gemini_module():
     try:
         from app.services.v2 import gemini_provider
@@ -518,22 +614,19 @@ def preload_provider() -> bool:
     return True
 
 
-async def analyze(report: dict, provider: Optional[Provider] = None, config: Optional[AnalystConfig] = None) -> dict:
+async def analyze(report: dict, provider: Optional[Provider] = None, config: Optional[AnalystConfig] = None,
+                  dynamic: Optional[dict] = None) -> dict:
     """Produces the ai_analysis block. Never raises; every outcome is reported with its real state.
 
     `provider` replaces the Gemini provider (tests); the configuration and privacy checks still apply.
     """
     config = config or AnalystConfig.from_env()
     template_note = "The evidence summary in this report was produced by fixed templates."
-    if not config.enabled:
-        return _result("disabled", f"The AI analyst is turned off on this server. {template_note}", config)
-    if provider is None and not config.api_key_present:
-        return _result("not_configured", f"The AI analyst is enabled but no Gemini API key is configured on the server. {template_note}", config)
-    allowed_to_send, privacy_note = privacy_decision(report["data_source"], config.privacy_policy)
-    if not allowed_to_send:
-        return _result("skipped_privacy_policy", privacy_note, config)
+    early = precheck(report, provider, config)
+    if early is not None:
+        return early
 
-    payload, ps, allowed = build_payload(report)
+    payload, ps, allowed = build_payload(report, dynamic)
     started = time.perf_counter()
     name = getattr(provider, "name", "gemini")
 
@@ -553,11 +646,6 @@ async def analyze(report: dict, provider: Optional[Provider] = None, config: Opt
             config, provider=name, unavailable_reason=reason, pseudonymized=True,
             latency_ms=int((time.perf_counter() - started) * 1000),
         )
-
-    problem = config_problem(config)
-    if problem:
-        logger.warning("AI analyst configuration problem: setting=%s model=%s (no request sent)", problem, config.model)
-        return unavailable("invalid_configuration")
 
     try:
         if provider is None:

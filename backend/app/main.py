@@ -19,9 +19,11 @@ from app.db.session import Base, SessionLocal, engine
 from app.services.risk_scoring import get_risk_service
 
 try:
+    from app.api.v2.dynamic_routes import router as v2_dynamic_router
     from app.api.v2.routes import router as v2_router
     from app.services.v2.ai_analyst import preload_provider as preload_ai_analyst
 except ModuleNotFoundError:
+    from backend.app.api.v2.dynamic_routes import router as v2_dynamic_router
     from backend.app.api.v2.routes import router as v2_router
     from backend.app.services.v2.ai_analyst import preload_provider as preload_ai_analyst
 
@@ -121,6 +123,7 @@ def create_app() -> FastAPI:
     app.include_router(router)
     app.include_router(risk_router)
     app.include_router(v2_router, prefix="/api/v2", tags=["v2-investigations"])
+    app.include_router(v2_dynamic_router, prefix="/api/v2", tags=["v2-dynamic-investigations"])
 
     @app.exception_handler(StarletteHTTPException)
     async def http_exc(_: Request, exc: StarletteHTTPException) -> JSONResponse:

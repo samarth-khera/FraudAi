@@ -1,0 +1,2663 @@
+{
+  "purpose": "Diagnose the scenario 4 false negative without changing the served threshold. Analysis only.",
+  "case": {
+    "ledger": "served forensic ledger, seed 303 (data/v3_forensic_scenarios.db)",
+    "victim": "FS-03BDFF00",
+    "scenario_id": "SC-MULTI-VICTIM-0041",
+    "transfer": "TX-303-0064858"
+  },
+  "model": {
+    "version": "v3-transaction-1.0.0",
+    "threshold": 0.001301623065955937,
+    "threshold_rule": "lowest validation threshold with precision >= 50%",
+    "threshold_chosen_on": "validation split",
+    "calibration": "sigmoid"
+  },
+  "labelling": {
+    "selection_basis": "validation split only (train ledger days 84-101)",
+    "post_hoc": "Everything under 'post_hoc_*' keys was computed after the threshold was fixed, for information only. None of it was used to choose or change anything."
+  },
+  "part1_transfer": {
+    "served_path_features_equal_full_ledger_features": true,
+    "scenario_variant": {
+      "pattern": "multi_victim",
+      "variant": "standard",
+      "held_out": false
+    },
+    "score": {
+      "model_score_raw": 0.122264,
+      "calibrated": 0.000978,
+      "threshold": 0.001301623065955937,
+      "share_of_threshold": 0.7515,
+      "above_threshold": false,
+      "outside_training_range_count": 0,
+      "raw_score_needed_for_threshold": 0.148789,
+      "log_odds": -1.971163,
+      "log_odds_needed": -1.744129,
+      "log_odds_short_by": 0.227034,
+      "treeshap_bias": -3.288555
+    },
+    "features_outside_training_range": {},
+    "excluded_from_range_check": {
+      "s_history_days": {
+        "value": 58.781875,
+        "train_split_p0.5_p99.5": [
+          0.0,
+          81.312779
+        ]
+      },
+      "r_history_days": {
+        "value": 23.971019,
+        "train_split_p0.5_p99.5": [
+          0.020186,
+          82.405794
+        ]
+      }
+    },
+    "top_negative_contributions": [
+      {
+        "feature": "r_prior_out_n",
+        "value": 2.833213,
+        "contribution": -0.817497,
+        "median_flagged_victim_transfer_value": 2.393746,
+        "median_flagged_victim_transfer_contribution": -0.07113,
+        "contribution_minus_flagged_median": -0.746367,
+        "percentile_among_training_victim_transfers": 67.8,
+        "label": "Receiver had 16 earlier outgoing transfer(s)"
+      },
+      {
+        "feature": "s_minutes_since_last_in",
+        "value": 8.836425,
+        "contribution": -0.619766,
+        "median_flagged_victim_transfer_value": 9.208332,
+        "median_flagged_victim_transfer_contribution": -0.514455,
+        "contribution_minus_flagged_median": -0.10531,
+        "percentile_among_training_victim_transfers": 29.8,
+        "label": "6,879 min since the sender last received money"
+      },
+      {
+        "feature": "s_in_24h_to_amount",
+        "value": 0.0,
+        "contribution": -0.44935,
+        "median_flagged_victim_transfer_value": 0.0,
+        "median_flagged_victim_transfer_contribution": -0.446996,
+        "contribution_minus_flagged_median": -0.002354,
+        "percentile_among_training_victim_transfers": 47.1,
+        "label": "Sender received 0% of this amount in the previous 24 h"
+      },
+      {
+        "feature": "hour_cos",
+        "value": -0.986996,
+        "contribution": -0.372928,
+        "median_flagged_victim_transfer_value": -0.471342,
+        "median_flagged_victim_transfer_contribution": -0.018641,
+        "contribution_minus_flagged_median": -0.354287,
+        "percentile_among_training_victim_transfers": 5.4,
+        "label": null
+      },
+      {
+        "feature": "s_out_amount_24h_log",
+        "value": 6.205729,
+        "contribution": -0.333511,
+        "median_flagged_victim_transfer_value": 0.0,
+        "median_flagged_victim_transfer_contribution": -0.110299,
+        "contribution_minus_flagged_median": -0.223212,
+        "percentile_among_training_victim_transfers": 66.7,
+        "label": "Sender paid out 495 in the previous 24 h"
+      },
+      {
+        "feature": "s_hours_since_last_out",
+        "value": 3.196198,
+        "contribution": -0.323123,
+        "median_flagged_victim_transfer_value": 3.804221,
+        "median_flagged_victim_transfer_contribution": -0.17991,
+        "contribution_minus_flagged_median": -0.143213,
+        "percentile_among_training_victim_transfers": 38.5,
+        "label": "23.4 h since the sender's previous outgoing transfer"
+      },
+      {
+        "feature": "s_history_days",
+        "value": 58.781875,
+        "contribution": -0.184947,
+        "median_flagged_victim_transfer_value": 47.49739,
+        "median_flagged_victim_transfer_contribution": 0.185887,
+        "contribution_minus_flagged_median": -0.370833,
+        "percentile_among_training_victim_transfers": 68.9,
+        "label": "Sender's records start 59 day(s) earlier"
+      },
+      {
+        "feature": "r_balance_before_log",
+        "value": 11.798159,
+        "contribution": -0.182515,
+        "median_flagged_victim_transfer_value": 9.662494,
+        "median_flagged_victim_transfer_contribution": -0.088272,
+        "contribution_minus_flagged_median": -0.094243,
+        "percentile_among_training_victim_transfers": 86.5,
+        "label": "Receiver's balance before: 133,006"
+      }
+    ],
+    "top_positive_contributions": [
+      {
+        "feature": "amount_to_sender_balance",
+        "value": 0.523759,
+        "contribution": 1.722159,
+        "median_flagged_victim_transfer_value": 0.65642,
+        "median_flagged_victim_transfer_contribution": 1.798643,
+        "contribution_minus_flagged_median": -0.076484,
+        "percentile_among_training_victim_transfers": 32.0,
+        "label": "Took 52% of the sender's balance just before it"
+      },
+      {
+        "feature": "r_distinct_senders",
+        "value": 1.098612,
+        "contribution": 0.573353,
+        "median_flagged_victim_transfer_value": 0.693147,
+        "median_flagged_victim_transfer_contribution": 0.999433,
+        "contribution_minus_flagged_median": -0.42608,
+        "percentile_among_training_victim_transfers": 64.2,
+        "label": "Receiver had been paid by 2 different account(s) before"
+      },
+      {
+        "feature": "r_prior_in_n",
+        "value": 1.098612,
+        "contribution": 0.571823,
+        "median_flagged_victim_transfer_value": 0.693147,
+        "median_flagged_victim_transfer_contribution": 0.386332,
+        "contribution_minus_flagged_median": 0.185491,
+        "percentile_among_training_victim_transfers": 58.8,
+        "label": "Receiver had 2 earlier incoming transfer(s)"
+      },
+      {
+        "feature": "log_amount",
+        "value": 8.804399,
+        "contribution": 0.550046,
+        "median_flagged_victim_transfer_value": 10.601483,
+        "median_flagged_victim_transfer_contribution": 1.970775,
+        "contribution_minus_flagged_median": -1.420729,
+        "percentile_among_training_victim_transfers": 7.2,
+        "label": "Amount 6,662"
+      },
+      {
+        "feature": "r_history_days",
+        "value": 23.971019,
+        "contribution": 0.358938,
+        "median_flagged_victim_transfer_value": 29.894676,
+        "median_flagged_victim_transfer_contribution": 0.114447,
+        "contribution_minus_flagged_median": 0.244491,
+        "percentile_among_training_victim_transfers": 36.5,
+        "label": "Receiver's records start 24 day(s) earlier"
+      },
+      {
+        "feature": "s_amount_z",
+        "value": 2.271186,
+        "contribution": 0.337946,
+        "median_flagged_victim_transfer_value": 16.45579,
+        "median_flagged_victim_transfer_contribution": 1.326041,
+        "contribution_minus_flagged_median": -0.988096,
+        "percentile_among_training_victim_transfers": 6.3,
+        "label": "+2.3 standard deviations from the sender's usual outgoing amount"
+      }
+    ],
+    "largest_shortfalls_vs_median_flagged_victim_transfer": [
+      {
+        "feature": "log_amount",
+        "value": 8.804399,
+        "contribution": 0.550046,
+        "median_flagged_victim_transfer_value": 10.601483,
+        "median_flagged_victim_transfer_contribution": 1.970775,
+        "contribution_minus_flagged_median": -1.420729,
+        "percentile_among_training_victim_transfers": 7.2,
+        "label": "Amount 6,662"
+      },
+      {
+        "feature": "s_amount_z",
+        "value": 2.271186,
+        "contribution": 0.337946,
+        "median_flagged_victim_transfer_value": 16.45579,
+        "median_flagged_victim_transfer_contribution": 1.326041,
+        "contribution_minus_flagged_median": -0.988096,
+        "percentile_among_training_victim_transfers": 6.3,
+        "label": "+2.3 standard deviations from the sender's usual outgoing amount"
+      },
+      {
+        "feature": "r_prior_out_n",
+        "value": 2.833213,
+        "contribution": -0.817497,
+        "median_flagged_victim_transfer_value": 2.393746,
+        "median_flagged_victim_transfer_contribution": -0.07113,
+        "contribution_minus_flagged_median": -0.746367,
+        "percentile_among_training_victim_transfers": 67.8,
+        "label": "Receiver had 16 earlier outgoing transfer(s)"
+      },
+      {
+        "feature": "r_distinct_senders",
+        "value": 1.098612,
+        "contribution": 0.573353,
+        "median_flagged_victim_transfer_value": 0.693147,
+        "median_flagged_victim_transfer_contribution": 0.999433,
+        "contribution_minus_flagged_median": -0.42608,
+        "percentile_among_training_victim_transfers": 64.2,
+        "label": "Receiver had been paid by 2 different account(s) before"
+      },
+      {
+        "feature": "s_history_days",
+        "value": 58.781875,
+        "contribution": -0.184947,
+        "median_flagged_victim_transfer_value": 47.49739,
+        "median_flagged_victim_transfer_contribution": 0.185887,
+        "contribution_minus_flagged_median": -0.370833,
+        "percentile_among_training_victim_transfers": 68.9,
+        "label": "Sender's records start 59 day(s) earlier"
+      },
+      {
+        "feature": "hour_cos",
+        "value": -0.986996,
+        "contribution": -0.372928,
+        "median_flagged_victim_transfer_value": -0.471342,
+        "median_flagged_victim_transfer_contribution": -0.018641,
+        "contribution_minus_flagged_median": -0.354287,
+        "percentile_among_training_victim_transfers": 5.4,
+        "label": null
+      },
+      {
+        "feature": "s_out_amount_24h_log",
+        "value": 6.205729,
+        "contribution": -0.333511,
+        "median_flagged_victim_transfer_value": 0.0,
+        "median_flagged_victim_transfer_contribution": -0.110299,
+        "contribution_minus_flagged_median": -0.223212,
+        "percentile_among_training_victim_transfers": 66.7,
+        "label": "Sender paid out 495 in the previous 24 h"
+      },
+      {
+        "feature": "s_amount_vs_prior_max",
+        "value": 0.617153,
+        "contribution": 0.007474,
+        "median_flagged_victim_transfer_value": 4.446937,
+        "median_flagged_victim_transfer_contribution": 0.210543,
+        "contribution_minus_flagged_median": -0.203069,
+        "percentile_among_training_victim_transfers": 5.0,
+        "label": "0.6x the sender's largest earlier outgoing transfer"
+      }
+    ],
+    "comparison_population": "served-ledger victim transfers the model flagged (n=52; 11 of them multi_victim)",
+    "profiles": {
+      "this_transfer": {
+        "log_amount": 8.804399,
+        "amount_to_sender_balance": 0.523759,
+        "s_history_days": 58.781875,
+        "s_prior_out_n": 3.258097,
+        "s_prior_in_n": 1.386294,
+        "s_amount_vs_prior_max": 0.617153,
+        "s_amount_z": 2.271186,
+        "s_distinct_recipients": 3.178054,
+        "s_hours_since_last_out": 3.196198,
+        "s_in_24h_to_amount": 0.0,
+        "s_minutes_since_last_in": 8.836425,
+        "first_time_pair": 1.0,
+        "pair_prior_n": 0.0,
+        "r_prior_in_n": 1.098612,
+        "r_prior_out_n": 2.833213,
+        "r_history_days": 23.971019,
+        "r_distinct_senders": 1.098612,
+        "r_in_n_24h": 0.0,
+        "r_balance_before_log": 11.798159,
+        "hour_sin": 0.160743,
+        "hour_cos": -0.986996
+      },
+      "served_flagged_victim_transfers": {
+        "n": 52,
+        "log_amount": {
+          "median": 10.601483,
+          "p25": 9.964645,
+          "p75": 11.220644
+        },
+        "amount_to_sender_balance": {
+          "median": 0.65642,
+          "p25": 0.464922,
+          "p75": 0.780727
+        },
+        "s_history_days": {
+          "median": 47.49739,
+          "p25": 34.318759,
+          "p75": 62.443079
+        },
+        "s_prior_out_n": {
+          "median": 3.044522,
+          "p25": 2.772589,
+          "p75": 3.340977
+        },
+        "s_prior_in_n": {
+          "median": 1.098612,
+          "p25": 0.693147,
+          "p75": 1.44208
+        },
+        "s_amount_vs_prior_max": {
+          "median": 4.446937,
+          "p25": 2.103431,
+          "p75": 9.034028
+        },
+        "s_amount_z": {
+          "median": 16.45579,
+          "p25": 7.380965,
+          "p75": 37.443904
+        },
+        "s_distinct_recipients": {
+          "median": 2.995732,
+          "p25": 2.756454,
+          "p75": 3.188259
+        },
+        "s_hours_since_last_out": {
+          "median": 3.804221,
+          "p25": 2.7565,
+          "p75": 4.305378
+        },
+        "s_in_24h_to_amount": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "s_minutes_since_last_in": {
+          "median": 9.208332,
+          "p25": 8.83564,
+          "p75": 10.052288
+        },
+        "first_time_pair": {
+          "median": 1.0,
+          "p25": 1.0,
+          "p75": 1.0
+        },
+        "pair_prior_n": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "r_prior_in_n": {
+          "median": 0.693147,
+          "p25": 0.0,
+          "p75": 1.609438
+        },
+        "r_prior_out_n": {
+          "median": 2.393746,
+          "p25": 0.693147,
+          "p75": 2.96946
+        },
+        "r_history_days": {
+          "median": 29.894676,
+          "p25": 12.265634,
+          "p75": 46.126516
+        },
+        "r_distinct_senders": {
+          "median": 0.693147,
+          "p25": 0.0,
+          "p75": 1.386294
+        },
+        "r_in_n_24h": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "r_balance_before_log": {
+          "median": 9.662494,
+          "p25": 6.841658,
+          "p75": 11.791617
+        },
+        "hour_sin": {
+          "median": -0.294423,
+          "p25": -0.854887,
+          "p75": 0.687413
+        },
+        "hour_cos": {
+          "median": -0.471342,
+          "p25": -0.79015,
+          "p75": -0.007756
+        }
+      },
+      "served_flagged_multi_victim_victim_transfers": {
+        "n": 11,
+        "log_amount": {
+          "median": 10.859018,
+          "p25": 10.601483,
+          "p75": 11.496831
+        },
+        "amount_to_sender_balance": {
+          "median": 0.784699,
+          "p25": 0.565123,
+          "p75": 0.818936
+        },
+        "s_history_days": {
+          "median": 36.919514,
+          "p25": 36.131493,
+          "p75": 56.993084
+        },
+        "s_prior_out_n": {
+          "median": 3.044522,
+          "p25": 2.83148,
+          "p75": 3.156774
+        },
+        "s_prior_in_n": {
+          "median": 1.098612,
+          "p25": 0.693147,
+          "p75": 1.242453
+        },
+        "s_amount_vs_prior_max": {
+          "median": 4.84,
+          "p25": 2.483555,
+          "p75": 7.748159
+        },
+        "s_amount_z": {
+          "median": 18.809844,
+          "p25": 9.920687,
+          "p75": 33.595232
+        },
+        "s_distinct_recipients": {
+          "median": 2.944439,
+          "p25": 2.83148,
+          "p75": 3.090008
+        },
+        "s_hours_since_last_out": {
+          "median": 3.511147,
+          "p25": 2.983257,
+          "p75": 4.100375
+        },
+        "s_in_24h_to_amount": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "s_minutes_since_last_in": {
+          "median": 9.200278,
+          "p25": 9.149266,
+          "p75": 9.310588
+        },
+        "first_time_pair": {
+          "median": 1.0,
+          "p25": 1.0,
+          "p75": 1.0
+        },
+        "pair_prior_n": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "r_prior_in_n": {
+          "median": 1.609438,
+          "p25": 1.242453,
+          "p75": 1.791759
+        },
+        "r_prior_out_n": {
+          "median": 2.772589,
+          "p25": 2.740319,
+          "p75": 2.861793
+        },
+        "r_history_days": {
+          "median": 34.360139,
+          "p25": 24.962789,
+          "p75": 34.956545
+        },
+        "r_distinct_senders": {
+          "median": 1.386294,
+          "p25": 1.242453,
+          "p75": 1.609438
+        },
+        "r_in_n_24h": {
+          "median": 1.0,
+          "p25": 0.0,
+          "p75": 1.0
+        },
+        "r_balance_before_log": {
+          "median": 12.433052,
+          "p25": 11.919069,
+          "p75": 12.637652
+        },
+        "hour_sin": {
+          "median": 0.857167,
+          "p25": -0.65774,
+          "p75": 0.910513
+        },
+        "hour_cos": {
+          "median": -0.362438,
+          "p25": -0.499924,
+          "p75": 0.13226
+        }
+      },
+      "train_split_victim_transfers": {
+        "n": 222,
+        "log_amount": {
+          "median": 10.455208,
+          "p25": 9.856501,
+          "p75": 11.032613
+        },
+        "amount_to_sender_balance": {
+          "median": 0.647053,
+          "p25": 0.49424,
+          "p75": 0.814594
+        },
+        "s_history_days": {
+          "median": 45.11956,
+          "p25": 30.59919,
+          "p75": 63.444352
+        },
+        "s_prior_out_n": {
+          "median": 2.970086,
+          "p25": 2.564949,
+          "p75": 3.332205
+        },
+        "s_prior_in_n": {
+          "median": 1.098612,
+          "p25": 0.693147,
+          "p75": 1.553652
+        },
+        "s_amount_vs_prior_max": {
+          "median": 3.244653,
+          "p25": 1.371061,
+          "p75": 8.3
+        },
+        "s_amount_z": {
+          "median": 11.752649,
+          "p25": 5.336805,
+          "p75": 29.608509
+        },
+        "s_distinct_recipients": {
+          "median": 2.917405,
+          "p25": 2.504917,
+          "p75": 3.258097
+        },
+        "s_hours_since_last_out": {
+          "median": 3.581279,
+          "p25": 2.467746,
+          "p75": 4.366074
+        },
+        "s_in_24h_to_amount": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "s_minutes_since_last_in": {
+          "median": 9.513947,
+          "p25": 8.650844,
+          "p75": 10.117185
+        },
+        "first_time_pair": {
+          "median": 1.0,
+          "p25": 1.0,
+          "p75": 1.0
+        },
+        "pair_prior_n": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "r_prior_in_n": {
+          "median": 0.89588,
+          "p25": 0.0,
+          "p75": 1.386294
+        },
+        "r_prior_out_n": {
+          "median": 2.197225,
+          "p25": 0.693147,
+          "p75": 3.044522
+        },
+        "r_history_days": {
+          "median": 30.366169,
+          "p25": 18.225888,
+          "p75": 47.242755
+        },
+        "r_distinct_senders": {
+          "median": 0.693147,
+          "p25": 0.0,
+          "p75": 1.386294
+        },
+        "r_in_n_24h": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 1.0
+        },
+        "r_balance_before_log": {
+          "median": 10.132022,
+          "p25": 7.675114,
+          "p75": 11.335568
+        },
+        "hour_sin": {
+          "median": -0.434441,
+          "p25": -0.820779,
+          "p75": 0.55557
+        },
+        "hour_cos": {
+          "median": -0.516906,
+          "p25": -0.819152,
+          "p75": 0.101265
+        }
+      }
+    },
+    "all_features": [
+      {
+        "feature": "log_amount",
+        "value": 8.804399,
+        "contribution": 0.550046,
+        "median_flagged_victim_transfer_value": 10.601483,
+        "median_flagged_victim_transfer_contribution": 1.970775,
+        "contribution_minus_flagged_median": -1.420729,
+        "percentile_among_training_victim_transfers": 7.2,
+        "label": "Amount 6,662"
+      },
+      {
+        "feature": "amount_to_sender_balance",
+        "value": 0.523759,
+        "contribution": 1.722159,
+        "median_flagged_victim_transfer_value": 0.65642,
+        "median_flagged_victim_transfer_contribution": 1.798643,
+        "contribution_minus_flagged_median": -0.076484,
+        "percentile_among_training_victim_transfers": 32.0,
+        "label": "Took 52% of the sender's balance just before it"
+      },
+      {
+        "feature": "sender_balance_missing",
+        "value": 0.0,
+        "contribution": 0.0,
+        "median_flagged_victim_transfer_value": 0.0,
+        "median_flagged_victim_transfer_contribution": 0.0,
+        "contribution_minus_flagged_median": 0.0,
+        "percentile_among_training_victim_transfers": 50.0,
+        "label": null
+      },
+      {
+        "feature": "s_prior_out_n",
+        "value": 3.258097,
+        "contribution": -0.03989,
+        "median_flagged_victim_transfer_value": 3.044522,
+        "median_flagged_victim_transfer_contribution": -0.025669,
+        "contribution_minus_flagged_median": -0.014221,
+        "percentile_among_training_victim_transfers": 71.8,
+        "label": "Sender had 25 earlier outgoing transfer(s)"
+      },
+      {
+        "feature": "s_prior_in_n",
+        "value": 1.386294,
+        "contribution": 0.032402,
+        "median_flagged_victim_transfer_value": 1.098612,
+        "median_flagged_victim_transfer_contribution": 0.049514,
+        "contribution_minus_flagged_median": -0.017112,
+        "percentile_among_training_victim_transfers": 66.0,
+        "label": "Sender had 3 earlier incoming transfer(s)"
+      },
+      {
+        "feature": "s_history_days",
+        "value": 58.781875,
+        "contribution": -0.184947,
+        "median_flagged_victim_transfer_value": 47.49739,
+        "median_flagged_victim_transfer_contribution": 0.185887,
+        "contribution_minus_flagged_median": -0.370833,
+        "percentile_among_training_victim_transfers": 68.9,
+        "label": "Sender's records start 59 day(s) earlier"
+      },
+      {
+        "feature": "s_out_n_1h",
+        "value": 0.0,
+        "contribution": -0.011521,
+        "median_flagged_victim_transfer_value": 0.0,
+        "median_flagged_victim_transfer_contribution": -0.00768,
+        "contribution_minus_flagged_median": -0.003841,
+        "percentile_among_training_victim_transfers": 45.3,
+        "label": "0 other outgoing transfer(s) by the sender in the previous hour"
+      },
+      {
+        "feature": "s_out_n_24h",
+        "value": 1.0,
+        "contribution": -0.005403,
+        "median_flagged_victim_transfer_value": 0.0,
+        "median_flagged_victim_transfer_contribution": -0.004434,
+        "contribution_minus_flagged_median": -0.000969,
+        "percentile_among_training_victim_transfers": 74.5,
+        "label": "1 other outgoing transfer(s) by the sender in the previous 24 h"
+      },
+      {
+        "feature": "s_out_amount_24h_log",
+        "value": 6.205729,
+        "contribution": -0.333511,
+        "median_flagged_victim_transfer_value": 0.0,
+        "median_flagged_victim_transfer_contribution": -0.110299,
+        "contribution_minus_flagged_median": -0.223212,
+        "percentile_among_training_victim_transfers": 66.7,
+        "label": "Sender paid out 495 in the previous 24 h"
+      },
+      {
+        "feature": "s_amount_vs_prior_max",
+        "value": 0.617153,
+        "contribution": 0.007474,
+        "median_flagged_victim_transfer_value": 4.446937,
+        "median_flagged_victim_transfer_contribution": 0.210543,
+        "contribution_minus_flagged_median": -0.203069,
+        "percentile_among_training_victim_transfers": 5.0,
+        "label": "0.6x the sender's largest earlier outgoing transfer"
+      },
+      {
+        "feature": "s_amount_z",
+        "value": 2.271186,
+        "contribution": 0.337946,
+        "median_flagged_victim_transfer_value": 16.45579,
+        "median_flagged_victim_transfer_contribution": 1.326041,
+        "contribution_minus_flagged_median": -0.988096,
+        "percentile_among_training_victim_transfers": 6.3,
+        "label": "+2.3 standard deviations from the sender's usual outgoing amount"
+      },
+      {
+        "feature": "s_new_recipients_24h",
+        "value": 1.0,
+        "contribution": -0.002079,
+        "median_flagged_victim_transfer_value": 0.0,
+        "median_flagged_victim_transfer_contribution": -0.017306,
+        "contribution_minus_flagged_median": 0.015227,
+        "percentile_among_training_victim_transfers": 77.0,
+        "label": "1 new recipient(s) paid by the sender in the previous 24 h"
+      },
+      {
+        "feature": "s_distinct_recipients",
+        "value": 3.178054,
+        "contribution": 0.113125,
+        "median_flagged_victim_transfer_value": 2.995732,
+        "median_flagged_victim_transfer_contribution": 0.151588,
+        "contribution_minus_flagged_median": -0.038464,
+        "percentile_among_training_victim_transfers": 70.9,
+        "label": "Sender had paid 23 different account(s) before"
+      },
+      {
+        "feature": "s_hours_since_last_out",
+        "value": 3.196198,
+        "contribution": -0.323123,
+        "median_flagged_victim_transfer_value": 3.804221,
+        "median_flagged_victim_transfer_contribution": -0.17991,
+        "contribution_minus_flagged_median": -0.143213,
+        "percentile_among_training_victim_transfers": 38.5,
+        "label": "23.4 h since the sender's previous outgoing transfer"
+      },
+      {
+        "feature": "s_in_24h_to_amount",
+        "value": 0.0,
+        "contribution": -0.44935,
+        "median_flagged_victim_transfer_value": 0.0,
+        "median_flagged_victim_transfer_contribution": -0.446996,
+        "contribution_minus_flagged_median": -0.002354,
+        "percentile_among_training_victim_transfers": 47.1,
+        "label": "Sender received 0% of this amount in the previous 24 h"
+      },
+      {
+        "feature": "s_minutes_since_last_in",
+        "value": 8.836425,
+        "contribution": -0.619766,
+        "median_flagged_victim_transfer_value": 9.208332,
+        "median_flagged_victim_transfer_contribution": -0.514455,
+        "contribution_minus_flagged_median": -0.10531,
+        "percentile_among_training_victim_transfers": 29.8,
+        "label": "6,879 min since the sender last received money"
+      },
+      {
+        "feature": "pair_prior_n",
+        "value": 0.0,
+        "contribution": 0.191304,
+        "median_flagged_victim_transfer_value": 0.0,
+        "median_flagged_victim_transfer_contribution": 0.2061,
+        "contribution_minus_flagged_median": -0.014796,
+        "percentile_among_training_victim_transfers": 45.5,
+        "label": "0 earlier transfer(s) between these two accounts"
+      },
+      {
+        "feature": "first_time_pair",
+        "value": 1.0,
+        "contribution": 0.03035,
+        "median_flagged_victim_transfer_value": 1.0,
+        "median_flagged_victim_transfer_contribution": 0.032604,
+        "contribution_minus_flagged_median": -0.002254,
+        "percentile_among_training_victim_transfers": 54.5,
+        "label": "First recorded transfer between these two accounts"
+      },
+      {
+        "feature": "r_prior_in_n",
+        "value": 1.098612,
+        "contribution": 0.571823,
+        "median_flagged_victim_transfer_value": 0.693147,
+        "median_flagged_victim_transfer_contribution": 0.386332,
+        "contribution_minus_flagged_median": 0.185491,
+        "percentile_among_training_victim_transfers": 58.8,
+        "label": "Receiver had 2 earlier incoming transfer(s)"
+      },
+      {
+        "feature": "r_prior_out_n",
+        "value": 2.833213,
+        "contribution": -0.817497,
+        "median_flagged_victim_transfer_value": 2.393746,
+        "median_flagged_victim_transfer_contribution": -0.07113,
+        "contribution_minus_flagged_median": -0.746367,
+        "percentile_among_training_victim_transfers": 67.8,
+        "label": "Receiver had 16 earlier outgoing transfer(s)"
+      },
+      {
+        "feature": "r_history_days",
+        "value": 23.971019,
+        "contribution": 0.358938,
+        "median_flagged_victim_transfer_value": 29.894676,
+        "median_flagged_victim_transfer_contribution": 0.114447,
+        "contribution_minus_flagged_median": 0.244491,
+        "percentile_among_training_victim_transfers": 36.5,
+        "label": "Receiver's records start 24 day(s) earlier"
+      },
+      {
+        "feature": "r_distinct_senders",
+        "value": 1.098612,
+        "contribution": 0.573353,
+        "median_flagged_victim_transfer_value": 0.693147,
+        "median_flagged_victim_transfer_contribution": 0.999433,
+        "contribution_minus_flagged_median": -0.42608,
+        "percentile_among_training_victim_transfers": 64.2,
+        "label": "Receiver had been paid by 2 different account(s) before"
+      },
+      {
+        "feature": "r_in_n_24h",
+        "value": 0.0,
+        "contribution": -0.152794,
+        "median_flagged_victim_transfer_value": 0.0,
+        "median_flagged_victim_transfer_contribution": -0.05422,
+        "contribution_minus_flagged_median": -0.098574,
+        "percentile_among_training_victim_transfers": 36.9,
+        "label": "Receiver got 0 other transfer(s) in the previous 24 h"
+      },
+      {
+        "feature": "r_balance_before_log",
+        "value": 11.798159,
+        "contribution": -0.182515,
+        "median_flagged_victim_transfer_value": 9.662494,
+        "median_flagged_victim_transfer_contribution": -0.088272,
+        "contribution_minus_flagged_median": -0.094243,
+        "percentile_among_training_victim_transfers": 86.5,
+        "label": "Receiver's balance before: 133,006"
+      },
+      {
+        "feature": "hour_sin",
+        "value": 0.160743,
+        "contribution": -0.083386,
+        "median_flagged_victim_transfer_value": -0.294423,
+        "median_flagged_victim_transfer_contribution": -0.076785,
+        "contribution_minus_flagged_median": -0.006601,
+        "percentile_among_training_victim_transfers": 67.6,
+        "label": null
+      },
+      {
+        "feature": "hour_cos",
+        "value": -0.986996,
+        "contribution": -0.372928,
+        "median_flagged_victim_transfer_value": -0.471342,
+        "median_flagged_victim_transfer_contribution": -0.018641,
+        "contribution_minus_flagged_median": -0.354287,
+        "percentile_among_training_victim_transfers": 5.4,
+        "label": null
+      },
+      {
+        "feature": "is_weekend",
+        "value": 0.0,
+        "contribution": 0.217839,
+        "median_flagged_victim_transfer_value": 0.5,
+        "median_flagged_victim_transfer_contribution": -0.007105,
+        "contribution_minus_flagged_median": 0.224943,
+        "percentile_among_training_victim_transfers": 33.3,
+        "label": null
+      },
+      {
+        "feature": "type_TRANSFER",
+        "value": 1.0,
+        "contribution": 0.0,
+        "median_flagged_victim_transfer_value": 1.0,
+        "median_flagged_victim_transfer_contribution": 0.0,
+        "contribution_minus_flagged_median": 0.0,
+        "percentile_among_training_victim_transfers": 50.0,
+        "label": null
+      },
+      {
+        "feature": "type_PAYMENT",
+        "value": 0.0,
+        "contribution": 0.080507,
+        "median_flagged_victim_transfer_value": 0.0,
+        "median_flagged_victim_transfer_contribution": 0.090518,
+        "contribution_minus_flagged_median": -0.01001,
+        "percentile_among_training_victim_transfers": 50.0,
+        "label": null
+      },
+      {
+        "feature": "type_CASH_OUT",
+        "value": 0.0,
+        "contribution": 0.0,
+        "median_flagged_victim_transfer_value": 0.0,
+        "median_flagged_victim_transfer_contribution": 0.0,
+        "contribution_minus_flagged_median": 0.0,
+        "percentile_among_training_victim_transfers": 50.0,
+        "label": null
+      },
+      {
+        "feature": "type_CASH_IN",
+        "value": 0.0,
+        "contribution": 0.0,
+        "median_flagged_victim_transfer_value": 0.0,
+        "median_flagged_victim_transfer_contribution": 0.0,
+        "contribution_minus_flagged_median": 0.0,
+        "percentile_among_training_victim_transfers": 50.0,
+        "label": null
+      },
+      {
+        "feature": "type_DEBIT",
+        "value": 0.0,
+        "contribution": 0.0,
+        "median_flagged_victim_transfer_value": 0.0,
+        "median_flagged_victim_transfer_contribution": 0.0,
+        "contribution_minus_flagged_median": 0.0,
+        "percentile_among_training_victim_transfers": 50.0,
+        "label": null
+      },
+      {
+        "feature": "ch_UPI",
+        "value": 1.0,
+        "contribution": 0.025958,
+        "median_flagged_victim_transfer_value": 0.0,
+        "median_flagged_victim_transfer_contribution": 0.000441,
+        "contribution_minus_flagged_median": 0.025517,
+        "percentile_among_training_victim_transfers": 74.1,
+        "label": null
+      },
+      {
+        "feature": "ch_IMPS",
+        "value": 0.0,
+        "contribution": 0.214359,
+        "median_flagged_victim_transfer_value": 0.0,
+        "median_flagged_victim_transfer_contribution": 0.050993,
+        "contribution_minus_flagged_median": 0.163366,
+        "percentile_among_training_victim_transfers": 39.2,
+        "label": null
+      },
+      {
+        "feature": "ch_NEFT",
+        "value": 0.0,
+        "contribution": -0.165977,
+        "median_flagged_victim_transfer_value": 0.0,
+        "median_flagged_victim_transfer_contribution": -0.052986,
+        "contribution_minus_flagged_median": -0.112992,
+        "percentile_among_training_victim_transfers": 36.7,
+        "label": null
+      },
+      {
+        "feature": "ch_RTGS",
+        "value": 0.0,
+        "contribution": 0.0,
+        "median_flagged_victim_transfer_value": 0.0,
+        "median_flagged_victim_transfer_contribution": 0.0,
+        "contribution_minus_flagged_median": 0.0,
+        "percentile_among_training_victim_transfers": 50.0,
+        "label": null
+      },
+      {
+        "feature": "ch_CARD_POS",
+        "value": 0.0,
+        "contribution": 0.034498,
+        "median_flagged_victim_transfer_value": 0.0,
+        "median_flagged_victim_transfer_contribution": 0.036468,
+        "contribution_minus_flagged_median": -0.00197,
+        "percentile_among_training_victim_transfers": 50.0,
+        "label": null
+      },
+      {
+        "feature": "ch_ATM_CASH_OUT",
+        "value": 0.0,
+        "contribution": 0.0,
+        "median_flagged_victim_transfer_value": 0.0,
+        "median_flagged_victim_transfer_contribution": 0.0,
+        "contribution_minus_flagged_median": 0.0,
+        "percentile_among_training_victim_transfers": 50.0,
+        "label": null
+      }
+    ]
+  },
+  "part2_rules": {
+    "transfer": {
+      "timestamp": "2026-03-06T11:23:12.425000",
+      "amount": 6662.49,
+      "channel": "UPI",
+      "receiver": "FS-6D5033D8",
+      "sender_balance_before": 12719.53
+    },
+    "checks": {
+      "AMOUNT_ABOVE_OWN_HISTORY": {
+        "rule": "earlier outgoing transfers >= 5 AND amount > 2.0x the largest earlier one AND amount >= 10,000",
+        "earlier_outgoing": 25,
+        "largest_earlier": 10795.53,
+        "amount_vs_largest_earlier": 0.617,
+        "amount": 6662.49,
+        "fails_on": [
+          "multiple",
+          "min_amount"
+        ]
+      },
+      "BALANCE_DRAIN": {
+        "rule": "amount >= 25,000 AND amount >= 50% of the balance before",
+        "amount": 6662.49,
+        "balance_before": 12719.53,
+        "share_of_balance": 0.5238,
+        "fails_on": [
+          "min_amount"
+        ]
+      },
+      "BURST_TO_NEW_RECIPIENTS": {
+        "rule": ">= 3 first-time-recipient transfers within 60 min totalling >= 25,000",
+        "first_time_recipient": true,
+        "groups_containing_it": [
+          {
+            "transfers": 1,
+            "total": 6662.49
+          }
+        ],
+        "fails_on": [
+          "count_and_total"
+        ]
+      },
+      "FORWARDS_RECENT_INFLOW": {
+        "rule": "sent within 30 min after an inflow >= 10,000, onward >= 70% of it",
+        "inflows_in_previous_30_min": [],
+        "fails_on": [
+          "no_qualifying_inflow"
+        ]
+      }
+    },
+    "rules_fired_on_this_transfer": [],
+    "rules_fired_on_the_account": {
+      "TX-303-0021394": [
+        "AMOUNT_ABOVE_OWN_HISTORY"
+      ]
+    },
+    "largest_outgoing_transfers_fallback_seeds": [
+      "TX-303-0021394",
+      "TX-303-0064858",
+      "TX-303-0055077",
+      "TX-303-0039383",
+      "TX-303-0063482"
+    ],
+    "transfer_in_fallback_seeds": true,
+    "outgoing_transfers": 33,
+    "incoming_transfers": 4,
+    "engine_as_served": {
+      "victim_assessment_status": "no_suspicious_activity_observed",
+      "suspicious_transactions": [],
+      "uncorroborated_rule_flags": [
+        {
+          "transaction_id": "TX-303-0021394",
+          "amount": 10795.53,
+          "receiver": "FS-2FB7ACFC",
+          "rules": [
+            "AMOUNT_ABOVE_OWN_HISTORY"
+          ]
+        }
+      ],
+      "seed_selection": "Traced the 1 outgoing transfer(s) flagged as unusual.",
+      "downstream_seeds": [
+        "TX-303-0021394"
+      ],
+      "upstream_seeds": [],
+      "traced_accounts": [
+        "FS-03BDFF00",
+        "FS-2FB7ACFC"
+      ],
+      "roles": {
+        "FS-03BDFF00": "no_suspicious_activity_observed",
+        "FS-2FB7ACFC": "no_suspicious_linkage_observed"
+      },
+      "role_details": {
+        "FS-2FB7ACFC": {
+          "role": "no_suspicious_linkage_observed",
+          "status": "assessed",
+          "headline": "No suspicious linkage observed: connected only through transfers that were not flagged.",
+          "categories": [
+            "RECEIPT_PATTERN"
+          ],
+          "uncertainty": "This does not establish that the account is uninvolved.",
+          "account_model": {
+            "status": "scored",
+            "calibrated_probability": 0.014,
+            "above_threshold": false,
+            "n_transactions": 390
+          }
+        }
+      },
+      "affected_account_groups": {
+        "potential_victims": [],
+        "potential_secondary_victims": [],
+        "potential_intermediaries": [],
+        "suspicious_accounts": [],
+        "ordinary_counterparties": [
+          "FS-2FB7ACFC"
+        ],
+        "unknown_roles": [],
+        "cash_withdrawal_points": []
+      },
+      "closest_unflagged_transfers": [
+        {
+          "transaction_id": "TX-303-0064858",
+          "timestamp": "2026-03-06T11:23:12.425000",
+          "receiver_account_id": "FS-6D5033D8",
+          "amount": 6662.49,
+          "transaction_type": "TRANSFER",
+          "channel": "UPI",
+          "calibrated_probability": 0.000978,
+          "model_score": 0.1223,
+          "threshold": 0.001302,
+          "share_of_threshold": 0.751,
+          "evidence_use": "evidence"
+        },
+        {
+          "transaction_id": "TX-303-0055077",
+          "timestamp": "2026-03-01T08:56:08",
+          "receiver_account_id": "FS-581B33A4",
+          "amount": 6000.0,
+          "transaction_type": "TRANSFER",
+          "channel": "IMPS",
+          "calibrated_probability": 0.000284,
+          "model_score": 0.0074,
+          "threshold": 0.001302,
+          "share_of_threshold": 0.218,
+          "evidence_use": "evidence"
+        },
+        {
+          "transaction_id": "TX-303-0021394",
+          "timestamp": "2026-01-28T00:47:21",
+          "receiver_account_id": "FS-2FB7ACFC",
+          "amount": 10795.53,
+          "transaction_type": "TRANSFER",
+          "channel": "IMPS",
+          "calibrated_probability": 0.000265,
+          "model_score": 0.001,
+          "threshold": 0.001302,
+          "share_of_threshold": 0.203,
+          "evidence_use": "evidence"
+        }
+      ],
+      "automatic_actions_taken": []
+    }
+  },
+  "part3_threshold": {
+    "validation": {
+      "rows": 82339,
+      "positives": 297,
+      "selected_threshold_unrounded": 0.001301623065955937,
+      "selection_rule": "lowest validation threshold with precision >= 50%",
+      "served_threshold_rounded": 0.001301623065955937,
+      "metadata_confusion_matrix": {
+        "tn": 81784,
+        "fp": 258,
+        "fn": 11,
+        "tp": 286
+      },
+      "served_threshold_reproduces_metadata_confusion_matrix": true,
+      "unrounded_threshold_reproduces_metadata_confusion_matrix": true,
+      "rows_between_unrounded_and_served_threshold": {
+        "positives": 0,
+        "negatives": 0,
+        "scores": []
+      },
+      "operating_points": [
+        {
+          "threshold": 0.001302,
+          "flagged": 544,
+          "tp": 286,
+          "fp": 258,
+          "fn": 11,
+          "precision": 0.5257,
+          "recall": 0.963,
+          "false_positive_rate": 0.003145,
+          "extra_fp_vs_served": 0,
+          "extra_tp_vs_served": 0,
+          "extra_fp_vs_selected": 0,
+          "extra_tp_vs_selected": 0
+        },
+        {
+          "threshold": 0.001302,
+          "flagged": 544,
+          "tp": 286,
+          "fp": 258,
+          "fn": 11,
+          "precision": 0.5257,
+          "recall": 0.963,
+          "false_positive_rate": 0.003145,
+          "extra_fp_vs_served": 0,
+          "extra_tp_vs_served": 0,
+          "extra_fp_vs_selected": 0,
+          "extra_tp_vs_selected": 0
+        },
+        {
+          "threshold": 0.001237,
+          "flagged": 552,
+          "tp": 286,
+          "fp": 266,
+          "fn": 11,
+          "precision": 0.5181,
+          "recall": 0.963,
+          "false_positive_rate": 0.003242,
+          "extra_fp_vs_served": 8,
+          "extra_tp_vs_served": 0,
+          "extra_fp_vs_selected": 8,
+          "extra_tp_vs_selected": 0
+        },
+        {
+          "threshold": 0.001172,
+          "flagged": 556,
+          "tp": 286,
+          "fp": 270,
+          "fn": 11,
+          "precision": 0.5144,
+          "recall": 0.963,
+          "false_positive_rate": 0.003291,
+          "extra_fp_vs_served": 12,
+          "extra_tp_vs_served": 0,
+          "extra_fp_vs_selected": 12,
+          "extra_tp_vs_selected": 0
+        },
+        {
+          "threshold": 0.001108,
+          "flagged": 560,
+          "tp": 286,
+          "fp": 274,
+          "fn": 11,
+          "precision": 0.5107,
+          "recall": 0.963,
+          "false_positive_rate": 0.00334,
+          "extra_fp_vs_served": 16,
+          "extra_tp_vs_served": 0,
+          "extra_fp_vs_selected": 16,
+          "extra_tp_vs_selected": 0
+        },
+        {
+          "threshold": 0.001043,
+          "flagged": 570,
+          "tp": 286,
+          "fp": 284,
+          "fn": 11,
+          "precision": 0.5018,
+          "recall": 0.963,
+          "false_positive_rate": 0.003462,
+          "extra_fp_vs_served": 26,
+          "extra_tp_vs_served": 0,
+          "extra_fp_vs_selected": 26,
+          "extra_tp_vs_selected": 0
+        },
+        {
+          "threshold": 0.000978,
+          "flagged": 584,
+          "tp": 286,
+          "fp": 298,
+          "fn": 11,
+          "precision": 0.4897,
+          "recall": 0.963,
+          "false_positive_rate": 0.003632,
+          "extra_fp_vs_served": 40,
+          "extra_tp_vs_served": 0,
+          "extra_fp_vs_selected": 40,
+          "extra_tp_vs_selected": 0
+        }
+      ],
+      "next_lower_validation_score_below_selected": 0.001297,
+      "precision_at_next_lower_score": 0.5248,
+      "validation_positives_in_[alt,selected)": 0,
+      "validation_negatives_in_[alt,selected)": 40,
+      "note": "The selected threshold is the lowest validation threshold with precision >= 50%; every lower threshold has validation precision below 50% by construction. metadata.json stores it rounded to 6 decimals."
+    },
+    "post_hoc_cold_ledger": {
+      "label": "POST-HOC, information only, not used for selection; cold ledger was scored once for the report and is re-scored here with the same frozen model.",
+      "at_current": {
+        "threshold": 0.001302,
+        "flagged": 1812,
+        "tp": 1249,
+        "fp": 563,
+        "fn": 81,
+        "precision": 0.6893,
+        "recall": 0.9391,
+        "false_positive_rate": 0.001886
+      },
+      "at_alternative": {
+        "threshold": 0.000978,
+        "flagged": 1910,
+        "tp": 1254,
+        "fp": 656,
+        "fn": 76,
+        "precision": 0.6565,
+        "recall": 0.9429,
+        "false_positive_rate": 0.002198
+      },
+      "extra_false_positives": 93,
+      "extra_true_positives": 5,
+      "recall_gained": 0.0038,
+      "false_positive_rate_change": 0.000312,
+      "victim_transfer_recall": {
+        "current": 0.9227,
+        "alternative": 0.9313,
+        "n": 233
+      },
+      "between_thresholds_by_step": {
+        "victim_transfer": 2,
+        "takeover_transfer": 2,
+        "forward": 1
+      },
+      "between_thresholds_ordinary_by_activity": {
+        "p2p": 41,
+        "cash": 26,
+        "allowance": 17,
+        "rent": 3,
+        "purchase": 2,
+        "family_pool": 2,
+        "settlement": 1,
+        "flow_incidental": 1
+      }
+    },
+    "post_hoc_served_ledger": {
+      "label": "POST-HOC, information only, not used for selection.",
+      "at_current": {
+        "threshold": 0.001302,
+        "flagged": 440,
+        "tp": 299,
+        "fp": 141,
+        "fn": 34,
+        "precision": 0.6795,
+        "recall": 0.8979,
+        "false_positive_rate": 0.001597
+      },
+      "at_alternative": {
+        "threshold": 0.000978,
+        "flagged": 480,
+        "tp": 304,
+        "fp": 176,
+        "fn": 29,
+        "precision": 0.6333,
+        "recall": 0.9129,
+        "false_positive_rate": 0.001993
+      },
+      "transfers_between_thresholds": 40,
+      "scenario_transfers_between_thresholds": 5,
+      "multi_victim_scenario_transfers_between_thresholds": 2,
+      "ordinary_transfers_between_thresholds": 35,
+      "scenario_transfers_between": [
+        {
+          "transaction_id": "TX-303-0017555",
+          "scenario_id": "SC-CHAIN-0012",
+          "pattern": "chain",
+          "variant": "standard",
+          "scenario_tag": "victim_transfer",
+          "amount": 7305.33,
+          "calibrated": 0.0010760000441223383
+        },
+        {
+          "transaction_id": "TX-303-0063276",
+          "scenario_id": "SC-MULTI-VICTIM-0041",
+          "pattern": "multi_victim",
+          "variant": "standard",
+          "scenario_tag": "victim_transfer",
+          "amount": 10500.0,
+          "calibrated": 0.0010710000060498714
+        },
+        {
+          "transaction_id": "TX-303-0064858",
+          "scenario_id": "SC-MULTI-VICTIM-0041",
+          "pattern": "multi_victim",
+          "variant": "standard",
+          "scenario_tag": "victim_transfer",
+          "amount": 6662.49,
+          "calibrated": 0.000977999996393919
+        },
+        {
+          "transaction_id": "TX-303-0081575",
+          "scenario_id": "SC-CONSOLIDATION-0035",
+          "pattern": "consolidation",
+          "variant": "standard",
+          "scenario_tag": "cash_out",
+          "amount": 2700.0,
+          "calibrated": 0.001142999972216785
+        },
+        {
+          "transaction_id": "TX-303-0083432",
+          "scenario_id": "SC-CONSOLIDATION-0033",
+          "pattern": "consolidation",
+          "variant": "standard",
+          "scenario_tag": "forward",
+          "amount": 1700.81,
+          "calibrated": 0.0012919999426230788
+        }
+      ],
+      "ordinary_between_by_activity": {
+        "p2p": 19,
+        "allowance": 10,
+        "purchase": 2,
+        "family_pool": 2,
+        "rent": 1,
+        "cash": 1
+      },
+      "multi_victim_victim_transfers": [
+        {
+          "transaction_id": "TX-303-0036433",
+          "scenario_id": "SC-MULTI-VICTIM-0042",
+          "amount": 125591.78,
+          "calibrated": 0.9146609902381897,
+          "flagged": true
+        },
+        {
+          "transaction_id": "TX-303-0036450",
+          "scenario_id": "SC-MULTI-VICTIM-0042",
+          "amount": 44000.0,
+          "calibrated": 0.876230001449585,
+          "flagged": true
+        },
+        {
+          "transaction_id": "TX-303-0036463",
+          "scenario_id": "SC-MULTI-VICTIM-0044",
+          "amount": 60500.0,
+          "calibrated": 0.9131739735603333,
+          "flagged": true
+        },
+        {
+          "transaction_id": "TX-303-0037236",
+          "scenario_id": "SC-MULTI-VICTIM-0042",
+          "amount": 20000.0,
+          "calibrated": 0.4548630118370056,
+          "flagged": true
+        },
+        {
+          "transaction_id": "TX-303-0037340",
+          "scenario_id": "SC-MULTI-VICTIM-0044",
+          "amount": 90505.2,
+          "calibrated": 0.9192919731140137,
+          "flagged": true
+        },
+        {
+          "transaction_id": "TX-303-0037346",
+          "scenario_id": "SC-MULTI-VICTIM-0044",
+          "amount": 36716.11,
+          "calibrated": 0.8749560117721558,
+          "flagged": true
+        },
+        {
+          "transaction_id": "TX-303-0037703",
+          "scenario_id": "SC-MULTI-VICTIM-0044",
+          "amount": 52000.0,
+          "calibrated": 0.9228360056877136,
+          "flagged": true
+        },
+        {
+          "transaction_id": "TX-303-0063276",
+          "scenario_id": "SC-MULTI-VICTIM-0041",
+          "amount": 10500.0,
+          "calibrated": 0.0010710000060498714,
+          "flagged": false
+        },
+        {
+          "transaction_id": "TX-303-0064195",
+          "scenario_id": "SC-MULTI-VICTIM-0043",
+          "amount": 106988.66,
+          "calibrated": 0.9259260296821594,
+          "flagged": true
+        },
+        {
+          "transaction_id": "TX-303-0064858",
+          "scenario_id": "SC-MULTI-VICTIM-0041",
+          "amount": 6662.49,
+          "calibrated": 0.000977999996393919,
+          "flagged": false
+        },
+        {
+          "transaction_id": "TX-303-0065870",
+          "scenario_id": "SC-MULTI-VICTIM-0041",
+          "amount": 118000.0,
+          "calibrated": 0.9147660136222839,
+          "flagged": true
+        },
+        {
+          "transaction_id": "TX-303-0066428",
+          "scenario_id": "SC-MULTI-VICTIM-0041",
+          "amount": 21000.0,
+          "calibrated": 0.184006005525589,
+          "flagged": true
+        },
+        {
+          "transaction_id": "TX-303-0067960",
+          "scenario_id": "SC-MULTI-VICTIM-0043",
+          "amount": 46500.0,
+          "calibrated": 0.9205089807510376,
+          "flagged": true
+        }
+      ]
+    },
+    "post_hoc_engine_counterfactual": {
+      "label": "POST-HOC counterfactual on the served ledger with the threshold lowered in memory to this transfer's score; the artifact and the served threshold are unchanged. The lower threshold also applies to the other-sender search inside the engine.",
+      "threshold_used": 0.000978,
+      "victim_assessment_status": "potential_victim",
+      "suspicious_transactions": [
+        "TX-303-0024627",
+        "TX-303-0064858"
+      ],
+      "uncorroborated_rule_flags": [
+        {
+          "transaction_id": "TX-303-0021394",
+          "amount": 10795.53,
+          "receiver": "FS-2FB7ACFC",
+          "rules": [
+            "AMOUNT_ABOVE_OWN_HISTORY"
+          ]
+        }
+      ],
+      "seed_selection": "Traced the 2 outgoing transfer(s) flagged as unusual.",
+      "downstream_seeds": [
+        "TX-303-0021394",
+        "TX-303-0064858"
+      ],
+      "upstream_seeds": [],
+      "traced_accounts": [
+        "FS-03BDFF00",
+        "FS-2FB7ACFC",
+        "FS-6D5033D8",
+        "FS-25D4EC05",
+        "FS-54F95A3F",
+        "FS-742FAD5E",
+        "FS-E916C859",
+        "FS-5970DE0C"
+      ],
+      "roles": {
+        "FS-03BDFF00": "potential_victim",
+        "FS-2FB7ACFC": "no_suspicious_linkage_observed",
+        "FS-6D5033D8": "unknown_role",
+        "FS-25D4EC05": "no_suspicious_linkage_observed",
+        "FS-54F95A3F": "unknown_role",
+        "FS-742FAD5E": "no_suspicious_linkage_observed",
+        "FS-E916C859": "cash_withdrawal_point",
+        "FS-5970DE0C": "cash_withdrawal_point",
+        "FS-F3147E95": "potential_victim",
+        "FS-C6B7A9F0": "potential_victim",
+        "FS-7031B74C": "potential_victim"
+      },
+      "role_details": {
+        "FS-2FB7ACFC": {
+          "role": "no_suspicious_linkage_observed",
+          "status": "assessed",
+          "headline": "No suspicious linkage observed: connected only through transfers that were not flagged.",
+          "categories": [
+            "RECEIPT_PATTERN"
+          ],
+          "uncertainty": "This does not establish that the account is uninvolved.",
+          "account_model": {
+            "status": "scored",
+            "calibrated_probability": 0.014,
+            "above_threshold": false,
+            "n_transactions": 390
+          }
+        },
+        "FS-6D5033D8": {
+          "role": "unknown_role",
+          "status": "assessed",
+          "headline": "Several signals, but no clear pattern of passing money on or collecting it.",
+          "categories": [
+            "ACCOUNT_MODEL",
+            "TXN_MODEL",
+            "RECEIPT_PATTERN",
+            "NEW_RECORDS"
+          ],
+          "uncertainty": "Mixed evidence.",
+          "account_model": {
+            "status": "scored",
+            "calibrated_probability": 0.9794,
+            "above_threshold": true,
+            "n_transactions": 31
+          }
+        },
+        "FS-25D4EC05": {
+          "role": "no_suspicious_linkage_observed",
+          "status": "assessed",
+          "headline": "No suspicious linkage observed in the available data: ordinary records and no flagged behaviour.",
+          "categories": [],
+          "uncertainty": "This does not establish that the account is uninvolved.",
+          "account_model": {
+            "status": "scored",
+            "calibrated_probability": 0.0141,
+            "above_threshold": false,
+            "n_transactions": 1115
+          }
+        },
+        "FS-54F95A3F": {
+          "role": "unknown_role",
+          "status": "assessed",
+          "headline": "Several signals, but no clear pattern of passing money on or collecting it.",
+          "categories": [
+            "ACCOUNT_MODEL",
+            "TXN_MODEL",
+            "NEW_RECORDS"
+          ],
+          "uncertainty": "Mixed evidence.",
+          "account_model": {
+            "status": "scored",
+            "calibrated_probability": 0.9421,
+            "above_threshold": true,
+            "n_transactions": 10
+          }
+        },
+        "FS-742FAD5E": {
+          "role": "no_suspicious_linkage_observed",
+          "status": "assessed",
+          "headline": "No suspicious linkage observed in the available data: ordinary records and no flagged behaviour.",
+          "categories": [],
+          "uncertainty": "This does not establish that the account is uninvolved.",
+          "account_model": {
+            "status": "scored",
+            "calibrated_probability": 0.0154,
+            "above_threshold": false,
+            "n_transactions": 382
+          }
+        },
+        "FS-E916C859": {
+          "role": "cash_withdrawal_point",
+          "status": "assessed",
+          "headline": "The ledger records cash withdrawals here; it stands for an ATM or cash network, not a person.",
+          "categories": [],
+          "uncertainty": "Cash leaves the ledger here and cannot be followed.",
+          "account_model": {
+            "status": "scored",
+            "calibrated_probability": 0.0159,
+            "above_threshold": false,
+            "n_transactions": 2532
+          }
+        },
+        "FS-5970DE0C": {
+          "role": "cash_withdrawal_point",
+          "status": "assessed",
+          "headline": "The ledger records cash withdrawals here; it stands for an ATM or cash network, not a person.",
+          "categories": [],
+          "uncertainty": "Cash leaves the ledger here and cannot be followed.",
+          "account_model": {
+            "status": "scored",
+            "calibrated_probability": 0.0159,
+            "above_threshold": false,
+            "n_transactions": 2456
+          }
+        },
+        "FS-F3147E95": {
+          "role": "potential_victim",
+          "status": "assessed",
+          "headline": "Sent a transfer the transaction model flags into FS-6D5033D8, which the investigated account also paid in a flagged transfer (its role in this trace: role unknown).",
+          "categories": [
+            "TXN_MODEL"
+          ],
+          "uncertainty": "Found by looking at other payments into FS-6D5033D8. The evidence here is the transaction model's flag on its own transfer, not the role given to FS-6D5033D8; that role is a candidate and may be wrong.",
+          "account_model": {
+            "status": "not_analyzed",
+            "calibrated_probability": null,
+            "above_threshold": null,
+            "n_transactions": null
+          }
+        },
+        "FS-C6B7A9F0": {
+          "role": "potential_victim",
+          "status": "assessed",
+          "headline": "Sent a transfer the transaction model flags into FS-6D5033D8, which the investigated account also paid in a flagged transfer (its role in this trace: role unknown).",
+          "categories": [
+            "TXN_MODEL"
+          ],
+          "uncertainty": "Found by looking at other payments into FS-6D5033D8. The evidence here is the transaction model's flag on its own transfer, not the role given to FS-6D5033D8; that role is a candidate and may be wrong.",
+          "account_model": {
+            "status": "not_analyzed",
+            "calibrated_probability": null,
+            "above_threshold": null,
+            "n_transactions": null
+          }
+        },
+        "FS-7031B74C": {
+          "role": "potential_victim",
+          "status": "assessed",
+          "headline": "Sent a transfer the transaction model flags into FS-6D5033D8, which the investigated account also paid in a flagged transfer (its role in this trace: role unknown).",
+          "categories": [
+            "TXN_MODEL"
+          ],
+          "uncertainty": "Found by looking at other payments into FS-6D5033D8. The evidence here is the transaction model's flag on its own transfer, not the role given to FS-6D5033D8; that role is a candidate and may be wrong.",
+          "account_model": {
+            "status": "not_analyzed",
+            "calibrated_probability": null,
+            "above_threshold": null,
+            "n_transactions": null
+          }
+        }
+      },
+      "affected_account_groups": {
+        "potential_victims": [
+          "FS-F3147E95",
+          "FS-C6B7A9F0",
+          "FS-7031B74C"
+        ],
+        "potential_secondary_victims": [],
+        "potential_intermediaries": [],
+        "suspicious_accounts": [],
+        "ordinary_counterparties": [
+          "FS-2FB7ACFC",
+          "FS-25D4EC05",
+          "FS-742FAD5E"
+        ],
+        "unknown_roles": [
+          "FS-6D5033D8",
+          "FS-54F95A3F"
+        ],
+        "cash_withdrawal_points": [
+          "FS-E916C859",
+          "FS-5970DE0C"
+        ]
+      },
+      "closest_unflagged_transfers": [
+        {
+          "transaction_id": "TX-303-0055077",
+          "timestamp": "2026-03-01T08:56:08",
+          "receiver_account_id": "FS-581B33A4",
+          "amount": 6000.0,
+          "transaction_type": "TRANSFER",
+          "channel": "IMPS",
+          "calibrated_probability": 0.000284,
+          "model_score": 0.0074,
+          "threshold": 0.000978,
+          "share_of_threshold": 0.29,
+          "evidence_use": "evidence"
+        },
+        {
+          "transaction_id": "TX-303-0021394",
+          "timestamp": "2026-01-28T00:47:21",
+          "receiver_account_id": "FS-2FB7ACFC",
+          "amount": 10795.53,
+          "transaction_type": "TRANSFER",
+          "channel": "IMPS",
+          "calibrated_probability": 0.000265,
+          "model_score": 0.001,
+          "threshold": 0.000978,
+          "share_of_threshold": 0.271,
+          "evidence_use": "evidence"
+        },
+        {
+          "transaction_id": "TX-303-0039383",
+          "timestamp": "2026-02-11T13:02:54",
+          "receiver_account_id": "FS-7C40406F",
+          "amount": 3000.0,
+          "transaction_type": "CASH_OUT",
+          "channel": "ATM_CASH_OUT",
+          "calibrated_probability": 0.000263,
+          "model_score": 0.0003,
+          "threshold": 0.000978,
+          "share_of_threshold": 0.269,
+          "evidence_use": "evidence"
+        }
+      ],
+      "automatic_actions_taken": [],
+      "other_scenario_victims": [
+        "FS-7031B74C",
+        "FS-C6B7A9F0",
+        "FS-F3147E95"
+      ],
+      "other_scenario_victims_surfaced": {
+        "FS-7031B74C": "potential_victim",
+        "FS-C6B7A9F0": "potential_victim",
+        "FS-F3147E95": "potential_victim"
+      }
+    }
+  },
+  "part4_frequency": {
+    "validation": {
+      "victim_transfers": 50,
+      "missed": 3,
+      "miss_rate": 0.06,
+      "by_pattern_variant": {
+        "chain:standard": {
+          "victim_transfers": 9,
+          "missed": 0,
+          "miss_rate": 0.0
+        },
+        "circular:standard": {
+          "victim_transfers": 3,
+          "missed": 1,
+          "miss_rate": 0.3333
+        },
+        "consolidation:standard": {
+          "victim_transfers": 10,
+          "missed": 0,
+          "miss_rate": 0.0
+        },
+        "direct:standard": {
+          "victim_transfers": 9,
+          "missed": 2,
+          "miss_rate": 0.2222
+        },
+        "multi_hop:standard": {
+          "victim_transfers": 6,
+          "missed": 0,
+          "miss_rate": 0.0
+        },
+        "multi_victim:standard": {
+          "victim_transfers": 10,
+          "missed": 0,
+          "miss_rate": 0.0
+        },
+        "split:standard": {
+          "victim_transfers": 3,
+          "missed": 0,
+          "miss_rate": 0.0
+        }
+      },
+      "missed_amount_median": 9196.06,
+      "detected_amount_median": 68026.37,
+      "missed_under_10k": 2,
+      "missed_share_of_balance_median": 0.732152,
+      "missed_scores_within_alt_band": 0,
+      "missed_scores_quantiles": [
+        0.000286,
+        0.000373,
+        0.000373
+      ],
+      "feature_profile_missed": {
+        "n": 3,
+        "log_amount": {
+          "median": 9.126639,
+          "p25": 8.56667,
+          "p75": 9.336762
+        },
+        "amount_to_sender_balance": {
+          "median": 0.732093,
+          "p25": 0.546296,
+          "p75": 0.806936
+        },
+        "s_history_days": {
+          "median": 82.634225,
+          "p25": 81.942066,
+          "p75": 85.374201
+        },
+        "s_prior_out_n": {
+          "median": 3.332205,
+          "p25": 3.138322,
+          "p75": 3.34975
+        },
+        "s_prior_in_n": {
+          "median": 1.609438,
+          "p25": 1.609438,
+          "p75": 1.777674
+        },
+        "s_amount_vs_prior_max": {
+          "median": 0.375349,
+          "p25": 0.368848,
+          "p75": 0.537675
+        },
+        "s_amount_z": {
+          "median": 1.097864,
+          "p25": 0.998365,
+          "p75": 1.843037
+        },
+        "s_distinct_recipients": {
+          "median": 3.258097,
+          "p25": 3.101268,
+          "p75": 3.276967
+        },
+        "s_hours_since_last_out": {
+          "median": 3.369018,
+          "p25": 3.125301,
+          "p75": 3.820249
+        },
+        "s_in_24h_to_amount": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "s_minutes_since_last_in": {
+          "median": 8.721956,
+          "p25": 8.314859,
+          "p75": 9.539856
+        },
+        "first_time_pair": {
+          "median": 1.0,
+          "p25": 1.0,
+          "p75": 1.0
+        },
+        "pair_prior_n": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "r_prior_in_n": {
+          "median": 2.302585,
+          "p25": 2.124248,
+          "p75": 2.35024
+        },
+        "r_prior_out_n": {
+          "median": 3.7612,
+          "p25": 3.72504,
+          "p75": 3.7612
+        },
+        "r_history_days": {
+          "median": 78.786424,
+          "p25": 78.599225,
+          "p75": 85.382593
+        },
+        "r_distinct_senders": {
+          "median": 1.94591,
+          "p25": 1.868835,
+          "p75": 1.94591
+        },
+        "r_in_n_24h": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "r_balance_before_log": {
+          "median": 8.197583,
+          "p25": 7.606755,
+          "p75": 9.780585
+        },
+        "hour_sin": {
+          "median": -0.976296,
+          "p25": -0.984421,
+          "p75": -0.403473
+        },
+        "hour_cos": {
+          "median": 0.121869,
+          "p25": -0.431843,
+          "p75": 0.169154
+        }
+      },
+      "feature_profile_detected": {
+        "n": 47,
+        "log_amount": {
+          "median": 11.127665,
+          "p25": 10.543954,
+          "p75": 11.548044
+        },
+        "amount_to_sender_balance": {
+          "median": 0.684035,
+          "p25": 0.491786,
+          "p75": 0.786099
+        },
+        "s_history_days": {
+          "median": 88.961227,
+          "p25": 83.652396,
+          "p75": 92.816944
+        },
+        "s_prior_out_n": {
+          "median": 3.583519,
+          "p25": 3.511434,
+          "p75": 3.725621
+        },
+        "s_prior_in_n": {
+          "median": 1.791759,
+          "p25": 1.609438,
+          "p75": 2.138333
+        },
+        "s_amount_vs_prior_max": {
+          "median": 3.637774,
+          "p25": 1.84678,
+          "p75": 8.885973
+        },
+        "s_amount_z": {
+          "median": 15.848856,
+          "p25": 7.843687,
+          "p75": 42.281698
+        },
+        "s_distinct_recipients": {
+          "median": 3.496508,
+          "p25": 3.401197,
+          "p75": 3.637586
+        },
+        "s_hours_since_last_out": {
+          "median": 3.437127,
+          "p25": 2.771856,
+          "p75": 4.201575
+        },
+        "s_in_24h_to_amount": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "s_minutes_since_last_in": {
+          "median": 9.124861,
+          "p25": 8.508944,
+          "p75": 9.723476
+        },
+        "first_time_pair": {
+          "median": 1.0,
+          "p25": 1.0,
+          "p75": 1.0
+        },
+        "pair_prior_n": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "r_prior_in_n": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 1.609438
+        },
+        "r_prior_out_n": {
+          "median": 1.386294,
+          "p25": 0.693147,
+          "p75": 3.713572
+        },
+        "r_history_days": {
+          "median": 33.026863,
+          "p25": 7.748582,
+          "p75": 89.034051
+        },
+        "r_distinct_senders": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 1.386294
+        },
+        "r_in_n_24h": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "r_balance_before_log": {
+          "median": 7.911181,
+          "p25": 6.126952,
+          "p75": 11.007173
+        },
+        "hour_sin": {
+          "median": -0.325568,
+          "p25": -0.796484,
+          "p75": 0.382625
+        },
+        "hour_cos": {
+          "median": -0.522499,
+          "p25": -0.906966,
+          "p75": 0.292347
+        }
+      },
+      "all_scenario_steps_missed_by_step": {
+        "cash_out": 5,
+        "victim_transfer": 3,
+        "takeover_transfer": 3
+      }
+    },
+    "post_hoc_cold_ledger": {
+      "label": "POST-HOC, information only.",
+      "victim_transfers": 233,
+      "missed": 18,
+      "miss_rate": 0.0773,
+      "by_pattern_variant": {
+        "chain:standard": {
+          "victim_transfers": 29,
+          "missed": 3,
+          "miss_rate": 0.1034
+        },
+        "circular:standard": {
+          "victim_transfers": 13,
+          "missed": 2,
+          "miss_rate": 0.1538
+        },
+        "consolidation:standard": {
+          "victim_transfers": 32,
+          "missed": 0,
+          "miss_rate": 0.0
+        },
+        "direct:standard": {
+          "victim_transfers": 48,
+          "missed": 3,
+          "miss_rate": 0.0625
+        },
+        "multi_hop:slow": {
+          "victim_transfers": 10,
+          "missed": 0,
+          "miss_rate": 0.0
+        },
+        "multi_hop:standard": {
+          "victim_transfers": 21,
+          "missed": 1,
+          "miss_rate": 0.0476
+        },
+        "multi_victim:standard": {
+          "victim_transfers": 55,
+          "missed": 9,
+          "miss_rate": 0.1636
+        },
+        "split:standard": {
+          "victim_transfers": 15,
+          "missed": 0,
+          "miss_rate": 0.0
+        },
+        "split:structured": {
+          "victim_transfers": 10,
+          "missed": 0,
+          "miss_rate": 0.0
+        }
+      },
+      "missed_amount_median": 12000.0,
+      "detected_amount_median": 39611.75,
+      "missed_under_10k": 7,
+      "missed_share_of_balance_median": 0.481367,
+      "missed_scores_within_alt_band": 2,
+      "missed_scores_quantiles": [
+        0.000284,
+        0.000462,
+        0.000988
+      ],
+      "feature_profile_missed": {
+        "n": 18,
+        "log_amount": {
+          "median": 9.391877,
+          "p25": 9.118198,
+          "p75": 9.667955
+        },
+        "amount_to_sender_balance": {
+          "median": 0.481346,
+          "p25": 0.411695,
+          "p75": 0.590413
+        },
+        "s_history_days": {
+          "median": 66.860133,
+          "p25": 53.506892,
+          "p75": 82.343521
+        },
+        "s_prior_out_n": {
+          "median": 3.367296,
+          "p25": 3.142241,
+          "p75": 3.526361
+        },
+        "s_prior_in_n": {
+          "median": 1.386294,
+          "p25": 1.098612,
+          "p75": 1.690393
+        },
+        "s_amount_vs_prior_max": {
+          "median": 1.036699,
+          "p25": 0.758721,
+          "p75": 1.574629
+        },
+        "s_amount_z": {
+          "median": 3.47979,
+          "p25": 2.243666,
+          "p75": 6.318873
+        },
+        "s_distinct_recipients": {
+          "median": 3.332205,
+          "p25": 3.123001,
+          "p75": 3.401197
+        },
+        "s_hours_since_last_out": {
+          "median": 4.216426,
+          "p25": 3.571141,
+          "p75": 5.016327
+        },
+        "s_in_24h_to_amount": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "s_minutes_since_last_in": {
+          "median": 9.86376,
+          "p25": 9.362548,
+          "p75": 10.441976
+        },
+        "first_time_pair": {
+          "median": 1.0,
+          "p25": 1.0,
+          "p75": 1.0
+        },
+        "pair_prior_n": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "r_prior_in_n": {
+          "median": 1.700599,
+          "p25": 1.386294,
+          "p75": 2.167779
+        },
+        "r_prior_out_n": {
+          "median": 3.332205,
+          "p25": 3.044522,
+          "p75": 3.518897
+        },
+        "r_history_days": {
+          "median": 67.468027,
+          "p25": 53.572187,
+          "p75": 80.787957
+        },
+        "r_distinct_senders": {
+          "median": 1.386294,
+          "p25": 1.098612,
+          "p75": 1.861792
+        },
+        "r_in_n_24h": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 1.0
+        },
+        "r_balance_before_log": {
+          "median": 11.16613,
+          "p25": 10.279207,
+          "p75": 11.507084
+        },
+        "hour_sin": {
+          "median": -0.615656,
+          "p25": -0.802098,
+          "p75": -0.418611
+        },
+        "hour_cos": {
+          "median": 0.017132,
+          "p25": -0.806239,
+          "p75": 0.627266
+        }
+      },
+      "feature_profile_detected": {
+        "n": 215,
+        "log_amount": {
+          "median": 10.586906,
+          "p25": 9.882362,
+          "p75": 11.332861
+        },
+        "amount_to_sender_balance": {
+          "median": 0.608663,
+          "p25": 0.446652,
+          "p75": 0.773124
+        },
+        "s_history_days": {
+          "median": 73.856123,
+          "p25": 46.050874,
+          "p75": 95.003785
+        },
+        "s_prior_out_n": {
+          "median": 3.401197,
+          "p25": 2.970086,
+          "p75": 3.701226
+        },
+        "s_prior_in_n": {
+          "median": 1.609438,
+          "p25": 1.098612,
+          "p75": 1.94591
+        },
+        "s_amount_vs_prior_max": {
+          "median": 2.986574,
+          "p25": 1.43402,
+          "p75": 6.661261
+        },
+        "s_amount_z": {
+          "median": 11.754424,
+          "p25": 5.928064,
+          "p75": 26.950791
+        },
+        "s_distinct_recipients": {
+          "median": 3.295837,
+          "p25": 2.944439,
+          "p75": 3.583519
+        },
+        "s_hours_since_last_out": {
+          "median": 3.749079,
+          "p25": 2.653074,
+          "p75": 4.395282
+        },
+        "s_in_24h_to_amount": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "s_minutes_since_last_in": {
+          "median": 9.578233,
+          "p25": 8.977841,
+          "p75": 10.131531
+        },
+        "first_time_pair": {
+          "median": 1.0,
+          "p25": 1.0,
+          "p75": 1.0
+        },
+        "pair_prior_n": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "r_prior_in_n": {
+          "median": 0.693147,
+          "p25": 0.0,
+          "p75": 1.791759
+        },
+        "r_prior_out_n": {
+          "median": 1.386294,
+          "p25": 0.693147,
+          "p75": 3.449862
+        },
+        "r_history_days": {
+          "median": 28.787454,
+          "p25": 9.612731,
+          "p75": 65.312934
+        },
+        "r_distinct_senders": {
+          "median": 0.693147,
+          "p25": 0.0,
+          "p75": 1.386294
+        },
+        "r_in_n_24h": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "r_balance_before_log": {
+          "median": 9.411318,
+          "p25": 7.089458,
+          "p75": 11.27321
+        },
+        "hour_sin": {
+          "median": -0.275637,
+          "p25": -0.734316,
+          "p75": 0.557371
+        },
+        "hour_cos": {
+          "median": -0.625923,
+          "p25": -0.874611,
+          "p75": 0.01309
+        }
+      },
+      "all_scenario_steps_missed_by_step": {
+        "forward": 23,
+        "cash_out": 20,
+        "victim_transfer": 18,
+        "takeover_transfer": 17,
+        "secondary_victim_drain": 3
+      }
+    },
+    "post_hoc_served_ledger": {
+      "label": "POST-HOC, information only.",
+      "victim_transfers": 57,
+      "missed": 5,
+      "miss_rate": 0.0877,
+      "by_pattern_variant": {
+        "chain:standard": {
+          "victim_transfers": 6,
+          "missed": 1,
+          "miss_rate": 0.1667
+        },
+        "circular:standard": {
+          "victim_transfers": 4,
+          "missed": 0,
+          "miss_rate": 0.0
+        },
+        "consolidation:standard": {
+          "victim_transfers": 10,
+          "missed": 2,
+          "miss_rate": 0.2
+        },
+        "direct:standard": {
+          "victim_transfers": 9,
+          "missed": 0,
+          "miss_rate": 0.0
+        },
+        "multi_hop:slow": {
+          "victim_transfers": 4,
+          "missed": 0,
+          "miss_rate": 0.0
+        },
+        "multi_hop:standard": {
+          "victim_transfers": 4,
+          "missed": 0,
+          "miss_rate": 0.0
+        },
+        "multi_victim:standard": {
+          "victim_transfers": 13,
+          "missed": 2,
+          "miss_rate": 0.1538
+        },
+        "split:standard": {
+          "victim_transfers": 4,
+          "missed": 0,
+          "miss_rate": 0.0
+        },
+        "split:structured": {
+          "victim_transfers": 3,
+          "missed": 0,
+          "miss_rate": 0.0
+        }
+      },
+      "missed_amount_median": 6662.49,
+      "detected_amount_median": 40358.055,
+      "missed_under_10k": 4,
+      "missed_share_of_balance_median": 0.5238,
+      "missed_scores_within_alt_band": 3,
+      "missed_scores_quantiles": [
+        0.000295,
+        0.000978,
+        0.001074
+      ],
+      "feature_profile_missed": {
+        "n": 5,
+        "log_amount": {
+          "median": 8.804399,
+          "p25": 8.725064,
+          "p75": 8.896496
+        },
+        "amount_to_sender_balance": {
+          "median": 0.523759,
+          "p25": 0.406006,
+          "p75": 0.664681
+        },
+        "s_history_days": {
+          "median": 58.781875,
+          "p25": 20.447326,
+          "p75": 61.677766
+        },
+        "s_prior_out_n": {
+          "median": 3.135494,
+          "p25": 2.397895,
+          "p75": 3.258097
+        },
+        "s_prior_in_n": {
+          "median": 1.386294,
+          "p25": 0.693147,
+          "p75": 1.386294
+        },
+        "s_amount_vs_prior_max": {
+          "median": 0.617153,
+          "p25": 0.2625,
+          "p75": 0.730533
+        },
+        "s_amount_z": {
+          "median": 1.754889,
+          "p25": 0.798736,
+          "p75": 2.271186
+        },
+        "s_distinct_recipients": {
+          "median": 2.944439,
+          "p25": 2.397895,
+          "p75": 3.178054
+        },
+        "s_hours_since_last_out": {
+          "median": 3.61795,
+          "p25": 3.196198,
+          "p75": 4.309094
+        },
+        "s_in_24h_to_amount": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "s_minutes_since_last_in": {
+          "median": 8.733205,
+          "p25": 8.56056,
+          "p75": 9.036381
+        },
+        "first_time_pair": {
+          "median": 1.0,
+          "p25": 1.0,
+          "p75": 1.0
+        },
+        "pair_prior_n": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "r_prior_in_n": {
+          "median": 1.609438,
+          "p25": 1.098612,
+          "p75": 1.609438
+        },
+        "r_prior_out_n": {
+          "median": 2.833213,
+          "p25": 2.772589,
+          "p75": 3.178054
+        },
+        "r_history_days": {
+          "median": 23.971019,
+          "p25": 22.838935,
+          "p75": 77.955995
+        },
+        "r_distinct_senders": {
+          "median": 1.386294,
+          "p25": 1.098612,
+          "p75": 1.386294
+        },
+        "r_in_n_24h": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "r_balance_before_log": {
+          "median": 11.748978,
+          "p25": 11.717927,
+          "p75": 11.798159
+        },
+        "hour_sin": {
+          "median": 0.642788,
+          "p25": 0.160743,
+          "p75": 0.836286
+        },
+        "hour_cos": {
+          "median": -0.548293,
+          "p25": -0.766044,
+          "p75": -0.304864
+        }
+      },
+      "feature_profile_detected": {
+        "n": 52,
+        "log_amount": {
+          "median": 10.601483,
+          "p25": 9.964645,
+          "p75": 11.220644
+        },
+        "amount_to_sender_balance": {
+          "median": 0.65642,
+          "p25": 0.464922,
+          "p75": 0.780727
+        },
+        "s_history_days": {
+          "median": 47.49739,
+          "p25": 34.318759,
+          "p75": 62.443079
+        },
+        "s_prior_out_n": {
+          "median": 3.044522,
+          "p25": 2.772589,
+          "p75": 3.340977
+        },
+        "s_prior_in_n": {
+          "median": 1.098612,
+          "p25": 0.693147,
+          "p75": 1.44208
+        },
+        "s_amount_vs_prior_max": {
+          "median": 4.446937,
+          "p25": 2.103431,
+          "p75": 9.034028
+        },
+        "s_amount_z": {
+          "median": 16.45579,
+          "p25": 7.380965,
+          "p75": 37.443904
+        },
+        "s_distinct_recipients": {
+          "median": 2.995732,
+          "p25": 2.756454,
+          "p75": 3.188259
+        },
+        "s_hours_since_last_out": {
+          "median": 3.804221,
+          "p25": 2.7565,
+          "p75": 4.305378
+        },
+        "s_in_24h_to_amount": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "s_minutes_since_last_in": {
+          "median": 9.208332,
+          "p25": 8.83564,
+          "p75": 10.052288
+        },
+        "first_time_pair": {
+          "median": 1.0,
+          "p25": 1.0,
+          "p75": 1.0
+        },
+        "pair_prior_n": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "r_prior_in_n": {
+          "median": 0.693147,
+          "p25": 0.0,
+          "p75": 1.609438
+        },
+        "r_prior_out_n": {
+          "median": 2.393746,
+          "p25": 0.693147,
+          "p75": 2.96946
+        },
+        "r_history_days": {
+          "median": 29.894676,
+          "p25": 12.265634,
+          "p75": 46.126516
+        },
+        "r_distinct_senders": {
+          "median": 0.693147,
+          "p25": 0.0,
+          "p75": 1.386294
+        },
+        "r_in_n_24h": {
+          "median": 0.0,
+          "p25": 0.0,
+          "p75": 0.0
+        },
+        "r_balance_before_log": {
+          "median": 9.662494,
+          "p25": 6.841658,
+          "p75": 11.791617
+        },
+        "hour_sin": {
+          "median": -0.294423,
+          "p25": -0.854887,
+          "p75": 0.687413
+        },
+        "hour_cos": {
+          "median": -0.471342,
+          "p25": -0.79015,
+          "p75": -0.007756
+        }
+      },
+      "all_scenario_steps_missed_by_step": {
+        "cash_out": 18,
+        "victim_transfer": 5,
+        "takeover_transfer": 5,
+        "forward": 5,
+        "secondary_victim_drain": 1
+      }
+    }
+  },
+  "summary": {
+    "cause": "Not a held-out or out-of-range input (variant standard, 0 features outside the training range). The model saw a small transfer (6,662.49) that was not large for this sender (smaller than its earlier maximum, +2.3 SD) into a receiver that already had many outgoing transfers, at midday. Log-odds -1.971163 vs -1.744129 needed (short by 0.227034).",
+    "rules": "No fixed rule can fire: every rule has a minimum amount of 10,000 or 25,000, or needs a burst/recent inflow. An uncorroborated AMOUNT_ABOVE_OWN_HISTORY flag on a 10,795.53 merchant payment was the only trace seed and pre-empted the 'five largest outgoing' fallback, in which this transfer ranks second.",
+    "threshold": "On validation, moving from the selected threshold 0.0013016 to 0.000978 adds 40 false positives and 0 true positives; precision falls to 0.4897 (below the 50% target). Post-hoc cold ledger: +93 FP, +5 TP, recall +0.0038. Post-hoc engine counterfactual: the victim is flagged but none of the 3 other victims is surfaced (the intermediary is assessed unknown_role).",
+    "served_threshold_rounding": "metadata.json stores the selected threshold rounded up to 6 decimals; at the rounded value one validation positive (the one at exactly the selected score) falls below it, so served validation counts are tp 285 / fn 12 instead of the documented 286 / 11. Cold, temporal and served-ledger figures are unaffected. Reported only; nothing changed."
+  },
+  "recommendation": [
+    "Keep the validation-selected threshold. The alternative fails the documented precision target on validation and gains no validation positives; it would not have surfaced the other victims in this case either.",
+    "Closest-unflagged context panel: TX-303-0064858 is already the first entry (75.1% of the threshold) in the served report; it is context, never a flag or a trace seed.",
+    "Analyst-initiated trace from a chosen transfer (not available on the dynamic endpoint today; it would be a product change): labelled as analyst-selected, never as a model flag, and no automatic action.",
+    "Seed selection (owner decision, not changed): where the model is validated, a rule flag the model does not corroborate still replaces the five-largest fallback seeds.",
+    "Cross-case linkage: of the other victims' transfers into the same receiver, the model flags TX-303-0065870 (0.9148), TX-303-0066428 (0.1840); investigating either of those victims reaches the shared receiver.",
+    "Any model-side change (e.g. receiver-side features for many first-time senders paying large shares of their balance) must be trained and selected on train/validation only and scored once on the test ledgers."
+  ],
+  "runtime_seconds": 23.5
+}

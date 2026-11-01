@@ -2,10 +2,12 @@ import React, { useMemo } from 'react';
 import { ArrowRight, Database } from 'lucide-react';
 import { channelLabel, formatDateTime, formatMoney } from '../../lib/format';
 import { InvestigationResponse } from '../../types/investigation';
-import { FLAG_LABEL } from './labels';
+import { FLAG_LABEL, MODEL_FLAG_CODE } from './labels';
 import { whatHappened } from './narrative';
 import { useCase } from './caseModel';
 import { Disclosure, IdText, Ref, StageHeading } from './ui';
+import { IntelOverview } from './IntelOverview';
+import { ModelFlagBadge } from './intel';
 
 const Fact: React.FC<{ label: string; value: React.ReactNode; note?: string }> = ({ label, value, note }) => (
   <div className="py-2.5 border-b border-line last:border-0 flex items-baseline justify-between gap-4">
@@ -18,7 +20,7 @@ const Fact: React.FC<{ label: string; value: React.ReactNode; note?: string }> =
 );
 
 export const OverviewStage: React.FC<{ onFollow: () => void }> = ({ onFollow }) => {
-  const { report, trail } = useCase();
+  const { report, trail, intel } = useCase();
   const v = report.victim;
   const story = useMemo(() => whatHappened(report, trail), [report, trail]);
   const out = trail.branches.filter((b) => b.direction === 'downstream').length;
@@ -26,6 +28,7 @@ export const OverviewStage: React.FC<{ onFollow: () => void }> = ({ onFollow }) 
 
   return (
     <div className="space-y-8">
+      {intel && <IntelOverview intel={intel} />}
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px] items-start">
         <section aria-labelledby="happened-h" className="panel p-6 sm:p-7">
           <h2 id="happened-h" className="font-display text-2xl font-bold text-ink">What happened</h2>
@@ -78,12 +81,20 @@ export const OverviewStage: React.FC<{ onFollow: () => void }> = ({ onFollow }) 
                   <Ref id={t.transaction_id} />
                 </div>
                 <ul className="mt-4 space-y-2">
-                  {t.flags.map((f) => (
-                    <li key={f.code} className="rounded-xl bg-iris-soft/60 ring-1 ring-iris-line px-3 py-2 text-sm">
-                      <span className="font-semibold text-iris-deep">{FLAG_LABEL[f.code] ?? f.code}</span>
-                      <span className="block text-ink-soft">{f.explanation}</span>
-                    </li>
-                  ))}
+                  {t.flags.map((f) =>
+                    f.code === MODEL_FLAG_CODE ? (
+                      // A model output, not a rule: its own style and label.
+                      <li key={f.code} className="rounded-xl bg-ice-soft/60 ring-1 ring-[#C9DBFF] px-3 py-2 text-sm" data-testid="model-flag">
+                        <ModelFlagBadge />
+                        <span className="mt-1 block text-ink-soft">{f.explanation}</span>
+                      </li>
+                    ) : (
+                      <li key={f.code} className="rounded-xl bg-iris-soft/60 ring-1 ring-iris-line px-3 py-2 text-sm">
+                        <span className="font-semibold text-iris-deep">{FLAG_LABEL[f.code] ?? f.code}</span>
+                        <span className="block text-ink-soft">{f.explanation}</span>
+                      </li>
+                    ),
+                  )}
                 </ul>
               </li>
             ))}

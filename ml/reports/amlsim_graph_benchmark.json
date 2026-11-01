@@ -1,0 +1,347 @@
+{
+  "dataset": {
+    "name": "IBM AMLSim published samples (github.com/IBM/AMLSim, sample/)",
+    "license": "Apache-2.0",
+    "commit": "7338a4bcb1af9bcfea2201ad7daccfe2a4d569ca",
+    "archives": {
+      "20K_cycle200.tgz": "da85ffd26f2c0a082f69b038a9bb5ebd2b6e9c0df15707381aeddcfcb572ae20",
+      "20K_fanin200.tgz": "e2479ab7a1ecfcd369a7738c855364825561bf9d888d2ad53174e0ed10fd1f1b",
+      "20K_fanin200cycle200.tgz": "f187bc5784223cdee137ac603164f7183fd58f114090f39e2a12543b6bf48319"
+    }
+  },
+  "environment": {
+    "python": "3.12.4",
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "scikit_learn": "1.9.1",
+    "xgboost": "3.4.1",
+    "platform": "macOS-27.0.1",
+    "trained_at": "2026-10-31T17:00:54Z",
+    "seed": 20261031
+  },
+  "samples": {
+    "20K_cycle200": {
+      "accounts": 20000,
+      "pattern_accounts": 945,
+      "prevalence": 0.0473
+    },
+    "20K_fanin200": {
+      "accounts": 20000,
+      "pattern_accounts": 954,
+      "prevalence": 0.0477
+    }
+  },
+  "within_sample": {
+    "20K_cycle200": {
+      "behaviour_only": {
+        "validation": {
+          "pr_auc": 0.6916,
+          "roc_auc": 0.8744
+        },
+        "test": {
+          "split": "20K_cycle200 test",
+          "n": 3980,
+          "positives": 189,
+          "negatives": 3791,
+          "prevalence": 0.04749,
+          "threshold": 0.279353,
+          "precision": 0.502,
+          "recall": 0.6508,
+          "f1": 0.5668,
+          "false_positive_rate": 0.032181,
+          "confusion_matrix": {
+            "tn": 3669,
+            "fp": 122,
+            "fn": 66,
+            "tp": 123
+          },
+          "pr_auc": 0.6923,
+          "roc_auc": 0.8733,
+          "brier": 0.026338,
+          "ece": 0.05026,
+          "precision_at_k": {
+            "50": 1.0,
+            "100": 1.0,
+            "500": 0.268
+          },
+          "recall_at_precision": [
+            {
+              "precision_target": 0.5,
+              "recall": 0.6508,
+              "threshold": 0.31736472249031067
+            },
+            {
+              "precision_target": 0.8,
+              "recall": 0.6243,
+              "threshold": 0.46403008699417114
+            },
+            {
+              "precision_target": 0.9,
+              "recall": 0.5926,
+              "threshold": 0.5616915822029114
+            }
+          ]
+        },
+        "threshold_rule": "lowest validation threshold with precision >= 50%",
+        "logistic_test_pr_auc": 0.709
+      },
+      "behaviour_plus_graph": {
+        "validation": {
+          "pr_auc": 0.6997,
+          "roc_auc": 0.8855
+        },
+        "test": {
+          "split": "20K_cycle200 test",
+          "n": 3980,
+          "positives": 189,
+          "negatives": 3791,
+          "prevalence": 0.04749,
+          "threshold": 0.242899,
+          "precision": 0.4495,
+          "recall": 0.6825,
+          "f1": 0.542,
+          "false_positive_rate": 0.041678,
+          "confusion_matrix": {
+            "tn": 3633,
+            "fp": 158,
+            "fn": 60,
+            "tp": 129
+          },
+          "pr_auc": 0.6869,
+          "roc_auc": 0.8968,
+          "brier": 0.060374,
+          "ece": 0.16716,
+          "precision_at_k": {
+            "50": 1.0,
+            "100": 0.98,
+            "500": 0.296
+          },
+          "recall_at_precision": [
+            {
+              "precision_target": 0.5,
+              "recall": 0.672,
+              "threshold": 0.2443341165781021
+            },
+            {
+              "precision_target": 0.8,
+              "recall": 0.5767,
+              "threshold": 0.25717905163764954
+            },
+            {
+              "precision_target": 0.9,
+              "recall": 0.5397,
+              "threshold": 0.27206000685691833
+            }
+          ]
+        },
+        "threshold_rule": "lowest validation threshold with precision >= 50%",
+        "logistic_test_pr_auc": 0.7313
+      }
+    },
+    "20K_fanin200": {
+      "behaviour_only": {
+        "validation": {
+          "pr_auc": 0.7455,
+          "roc_auc": 0.9005
+        },
+        "test": {
+          "split": "20K_fanin200 test",
+          "n": 3980,
+          "positives": 191,
+          "negatives": 3789,
+          "prevalence": 0.04799,
+          "threshold": 0.201519,
+          "precision": 0.4912,
+          "recall": 0.733,
+          "f1": 0.5882,
+          "false_positive_rate": 0.038269,
+          "confusion_matrix": {
+            "tn": 3644,
+            "fp": 145,
+            "fn": 51,
+            "tp": 140
+          },
+          "pr_auc": 0.7426,
+          "roc_auc": 0.8841,
+          "brier": 0.022015,
+          "ece": 0.04971,
+          "precision_at_k": {
+            "50": 1.0,
+            "100": 1.0,
+            "500": 0.286
+          },
+          "recall_at_precision": [
+            {
+              "precision_target": 0.5,
+              "recall": 0.7277,
+              "threshold": 0.20955727994441986
+            },
+            {
+              "precision_target": 0.8,
+              "recall": 0.6754,
+              "threshold": 0.4306069016456604
+            },
+            {
+              "precision_target": 0.9,
+              "recall": 0.6649,
+              "threshold": 0.49888744950294495
+            }
+          ]
+        },
+        "threshold_rule": "lowest validation threshold with precision >= 50%",
+        "logistic_test_pr_auc": 0.7513
+      },
+      "behaviour_plus_graph": {
+        "validation": {
+          "pr_auc": 0.7531,
+          "roc_auc": 0.9039
+        },
+        "test": {
+          "split": "20K_fanin200 test",
+          "n": 3980,
+          "positives": 191,
+          "negatives": 3789,
+          "prevalence": 0.04799,
+          "threshold": 0.210007,
+          "precision": 0.478,
+          "recall": 0.7382,
+          "f1": 0.5802,
+          "false_positive_rate": 0.040644,
+          "confusion_matrix": {
+            "tn": 3635,
+            "fp": 154,
+            "fn": 50,
+            "tp": 141
+          },
+          "pr_auc": 0.7502,
+          "roc_auc": 0.8913,
+          "brier": 0.021935,
+          "ece": 0.04995,
+          "precision_at_k": {
+            "50": 1.0,
+            "100": 1.0,
+            "500": 0.296
+          },
+          "recall_at_precision": [
+            {
+              "precision_target": 0.5,
+              "recall": 0.733,
+              "threshold": 0.2212238907814026
+            },
+            {
+              "precision_target": 0.8,
+              "recall": 0.6754,
+              "threshold": 0.42016610503196716
+            },
+            {
+              "precision_target": 0.9,
+              "recall": 0.6649,
+              "threshold": 0.5218839645385742
+            }
+          ]
+        },
+        "threshold_rule": "lowest validation threshold with precision >= 50%",
+        "logistic_test_pr_auc": 0.7533
+      }
+    }
+  },
+  "pattern_transfer": {
+    "train 20K_cycle200 -> test 20K_fanin200": {
+      "test": {
+        "split": "20K_fanin200 (all accounts)",
+        "n": 20000,
+        "positives": 954,
+        "negatives": 19046,
+        "prevalence": 0.0477,
+        "threshold": 0.257862,
+        "precision": 0.5663,
+        "recall": 0.6447,
+        "f1": 0.6029,
+        "false_positive_rate": 0.02473,
+        "confusion_matrix": {
+          "tn": 18575,
+          "fp": 471,
+          "fn": 339,
+          "tp": 615
+        },
+        "pr_auc": 0.7016,
+        "roc_auc": 0.8997,
+        "brier": 0.047712,
+        "ece": 0.13669,
+        "precision_at_k": {
+          "50": 1.0,
+          "100": 1.0,
+          "500": 0.996
+        },
+        "recall_at_precision": [
+          {
+            "precision_target": 0.5,
+            "recall": 0.6771,
+            "threshold": 0.22820329666137695
+          },
+          {
+            "precision_target": 0.8,
+            "recall": 0.5839,
+            "threshold": 0.30871865153312683
+          },
+          {
+            "precision_target": 0.9,
+            "recall": 0.5713,
+            "threshold": 0.32264503836631775
+          }
+        ]
+      },
+      "shared_pattern_accounts": 101,
+      "note": "Background accounts share node IDs across samples; laundering-pattern membership differs."
+    },
+    "train 20K_fanin200 -> test 20K_cycle200": {
+      "test": {
+        "split": "20K_cycle200 (all accounts)",
+        "n": 20000,
+        "positives": 945,
+        "negatives": 19055,
+        "prevalence": 0.04725,
+        "threshold": 0.197087,
+        "precision": 0.5114,
+        "recall": 0.6878,
+        "f1": 0.5866,
+        "false_positive_rate": 0.03259,
+        "confusion_matrix": {
+          "tn": 18434,
+          "fp": 621,
+          "fn": 295,
+          "tp": 650
+        },
+        "pr_auc": 0.719,
+        "roc_auc": 0.9046,
+        "brier": 0.021541,
+        "ece": 0.03332,
+        "precision_at_k": {
+          "50": 1.0,
+          "100": 1.0,
+          "500": 0.992
+        },
+        "recall_at_precision": [
+          {
+            "precision_target": 0.5,
+            "recall": 0.691,
+            "threshold": 0.19191516935825348
+          },
+          {
+            "precision_target": 0.8,
+            "recall": 0.6233,
+            "threshold": 0.33784937858581543
+          },
+          {
+            "precision_target": 0.9,
+            "recall": 0.6032,
+            "threshold": 0.44201651215553284
+          }
+        ]
+      },
+      "shared_pattern_accounts": 101,
+      "note": "Background accounts share node IDs across samples; laundering-pattern membership differs."
+    }
+  },
+  "runtime_seconds": 34.6
+}

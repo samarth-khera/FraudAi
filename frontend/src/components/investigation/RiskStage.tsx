@@ -4,8 +4,9 @@ import { formatMoney } from '../../lib/format';
 import { AccountFinding, AnalystSection, FindingKind } from '../../types/investigation';
 import { KIND, ROLE_ASSESSMENT, splitCoded } from './labels';
 import type { Target } from './TrailTree';
-import { ROLE_TONE, SEVERITY_LABEL, SEVERITY_ORDER, Severity, Tone, severityOf, useCase } from './caseModel';
+import { SEVERITY_LABEL, SEVERITY_ORDER, Severity, Tone, roleDisplay, severityOf, useCase } from './caseModel';
 import { Badge, Disclosure, IdText, Refs, SeverityMeter, StageHeading } from './ui';
+import { AccountModelSummary } from './intel';
 
 const KIND_TONE: Record<string, Tone> = { observed: 'fact', rule: 'iris', model: 'ice', limitation: 'neutral', interpretation: 'elevated' };
 
@@ -29,7 +30,11 @@ const Part: React.FC<{ n: number; title: string; children: React.ReactNode }> = 
 );
 
 export const RiskStage: React.FC<{ onInspect: (t: Target) => void }> = ({ onInspect }) => {
-  const { report } = useCase();
+  const { report, intel } = useCase();
+  // A dynamic investigation reports its own account model; the trace report's model flag describes the older one.
+  const am = intel?.model_metadata.account_model;
+  const modelAvailable = am ? am.available : report.model_available;
+  const modelUnavailableReason = am ? am.unavailable_reason : report.model_unavailable_reason;
   const groups: { key: Severity | 'none'; label: string; items: AccountFinding[] }[] = [
     ...SEVERITY_ORDER.map((s) => ({ key: s, label: SEVERITY_LABEL[s], items: report.accounts.filter((a) => severityOf(a) === s) })),
     { key: 'none' as const, label: 'Not assessed', items: report.accounts.filter((a) => !severityOf(a)) },
@@ -49,11 +54,11 @@ export const RiskStage: React.FC<{ onInspect: (t: Target) => void }> = ({ onInsp
         <Badge tone="neutral">AI explanation: separate tab, never used here</Badge>
       </div>
 
-      {!report.model_available && (
+      {!modelAvailable && (
         <div role="alert" className="rounded-2xl bg-sev-critical-soft ring-1 ring-[#FBCFD8] px-4 py-3 text-sm text-[#881337] flex gap-3">
           <AlertTriangle className="w-5 h-5 shrink-0 text-sev-critical" aria-hidden="true" />
           <p>
-            <strong>The account model did not run.</strong> {report.model_unavailable_reason} Rule results and the money trace are still computed from the
+            <strong>The account model did not run.</strong> {modelUnavailableReason} Rule results and the money trace are still computed from the
             ledger; no model scores are shown.
           </p>
         </div>
@@ -83,6 +88,8 @@ export const RiskStage: React.FC<{ onInspect: (t: Target) => void }> = ({ onInsp
           <p className="mt-1 text-sm text-mute">Every statement in the report, labelled by where it comes from, with the records it cites.</p>
         </div>
         {KIND_GROUPS.map((k) => {
+          // A dynamic investigation's account model supersedes the trace report's older one, whose findings are left out.
+          if (intel && k.kind === 'model') return <IntelModelResults key={k.kind} />;
           const list = report.findings.filter((f) => f.kind === k.kind);
           if (!list.length) return null;
           return (
@@ -123,12 +130,46 @@ export const RiskStage: React.FC<{ onInspect: (t: Target) => void }> = ({ onInsp
   );
 };
 
+/** "Model results" for a dynamic investigation: its own account model per account, never the trace report's older model. */
+const IntelModelResults: React.FC = () => {
+  const { intel } = useCase();
+  const scored = (intel?.role_assessments ?? []).filter((r) => r.account_model.status === 'scored' || r.account_model.status === 'reference_only');
+  return (
+    <Disclosure
+      summary={
+        <span className="flex items-center gap-2">
+          <Badge tone={KIND_TONE.model}>{KIND.model.label}</Badge> Model results <span className="font-normal text-faint">{scored.length}</span>
+        </span>
+      }
+    >
+      <p className="text-xs text-mute" data-testid="v2-model-superseded">
+        The account behaviour model of this investigation, per account. The trace report’s older account model is not shown: this assessment supersedes it.
+      </p>
+      {scored.length ? (
+        <ul className="mt-3 space-y-2.5">
+          {scored.map((r) => (
+            <li key={r.account_id} className="rounded-xl ring-1 ring-line px-3.5 py-3 text-sm text-ink-soft">
+              <IdText className="text-ink mr-2">{r.account_id}</IdText>
+              <AccountModelSummary m={r.account_model} />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-3 text-sm text-mute">No account was scored by the account model in this run.</p>
+      )}
+    </Disclosure>
+  );
+};
+
 const AccountEvidence: React.FC<{ a: AccountFinding; onInspect: (t: Target) => void }> = ({ a, onInspect }) => {
-  const { report } = useCase();
-  const role = ROLE_ASSESSMENT[a.role_assessment];
+  const { report, intel } = useCase();
+  // The dynamic investigation's role and account model supersede the trace report's, so every view agrees.
+  const role = roleDisplay(a.account_id, a, intel, ROLE_ASSESSMENT)!;
+  const ra = intel?.role_assessments.find((x) => x.account_id === a.account_id) ?? null;
   const rule = a.rule_assessment;
   const signals = (rule?.reason_codes ?? []).map(splitCoded).filter((s) => s.code !== 'NORMAL_ACTIVITY');
-  const related = report.findings.filter((f) => f.subject_account_id === a.account_id && f.kind !== 'limitation');
+  // With a dynamic role assessment, the trace report's own model statements (older model) are left out here.
+  const related = report.findings.filter((f) => f.subject_account_id === a.account_id && f.kind !== 'limitation' && !(ra && f.kind === 'model'));
   const recommendation = rule ? splitCoded(rule.recommendation) : null;
   const threshold = report.model_review_threshold;
 
@@ -138,7 +179,7 @@ const AccountEvidence: React.FC<{ a: AccountFinding; onInspect: (t: Target) => v
         <span className="min-w-0 flex-1">
           <span className="flex flex-wrap items-center gap-2">
             <IdText className="text-[15px] font-semibold text-ink">{a.account_id}</IdText>
-            <Badge tone={ROLE_TONE[a.role_assessment]}>{role.label}</Badge>
+            <Badge tone={role.tone} title={role.help}>{role.label}</Badge>
           </span>
           <span className="mt-1 block text-xs text-mute truncate">
             {signals.length ? signals.map((s) => s.label).join(', ') : a.analyzed ? 'No rule signal' : a.not_analyzed_reason}
@@ -164,13 +205,15 @@ const AccountEvidence: React.FC<{ a: AccountFinding; onInspect: (t: Target) => v
           ) : (
             <p>No rule signal fired for this account.</p>
           )}
-          {a.model_assessment && (
+          {ra ? (
+            <AccountModelSummary m={ra.account_model} />
+          ) : a.model_assessment && (
             <p>
               <Badge tone="ice">Model {a.model_assessment.risk_score.toFixed(1)}%</Badge>{' '}
               {threshold !== null && (a.model_suggests_review ? `at or above the ${(threshold * 100).toFixed(1)}% review threshold` : `below the ${(threshold * 100).toFixed(1)}% review threshold`)}
             </p>
           )}
-          {a.disagreement_note && <p className="text-sev-elevated">{a.disagreement_note}</p>}
+          {!ra && a.disagreement_note && <p className="text-sev-elevated">{a.disagreement_note}</p>}
         </Part>
         <Part n={2} title="What it relates to">
           <p>
