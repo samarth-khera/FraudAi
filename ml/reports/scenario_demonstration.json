@@ -1,0 +1,4654 @@
+{
+  "title": "End-to-end scenario demonstration (synthetic data)",
+  "generated_at": "2026-11-01T16:38:02+00:00",
+  "ledger": "demo",
+  "database": "data/v3_forensic_scenarios.db",
+  "generator_seed": 303,
+  "engine_version": "dynamic-investigation-1.0.0",
+  "models": {
+    "transaction_model": "v3-transaction-1.0.0",
+    "account_model": "v3-account-1.0.0"
+  },
+  "notice": "All accounts and transfers are synthetic (forensic scenario generator). Ground truth was used only to choose examples and to score the output; the engine never received it. Results describe behaviour on this synthetic ledger and say nothing about real-world accuracy.",
+  "summary": [
+    {
+      "scenario": 1,
+      "name": "Direct victim -> attacker transfer",
+      "accounts": [
+        "FS-F1A91E8B"
+      ],
+      "pattern": "direct:standard",
+      "outcome": "pass",
+      "failed_checks": [],
+      "aggregate": ""
+    },
+    {
+      "scenario": 2,
+      "name": "Multi-hop chain",
+      "accounts": [
+        "FS-9D414D78"
+      ],
+      "pattern": "multi_hop:standard",
+      "outcome": "pass",
+      "failed_checks": [],
+      "aggregate": ""
+    },
+    {
+      "scenario": 3,
+      "name": "Split transfer",
+      "accounts": [
+        "FS-7B7C13AB"
+      ],
+      "pattern": "split:standard",
+      "outcome": "pass",
+      "failed_checks": [],
+      "aggregate": ""
+    },
+    {
+      "scenario": 4,
+      "name": "Multiple affected accounts",
+      "accounts": [
+        "FS-03BDFF00"
+      ],
+      "pattern": "multi_victim:standard",
+      "outcome": "fail",
+      "failed_checks": [
+        "status_flags_suspicious_activity",
+        "more_than_one_connected_account_assessed_separately",
+        "other_affected_sender_found"
+      ],
+      "aggregate": "18/21 victims detected; 9/21 surfaced >= 1 other victim (20/46 other victims found)"
+    },
+    {
+      "scenario": 5,
+      "name": "Innocent counterparty",
+      "accounts": [
+        "FS-DFFBEA16",
+        "FS-D5E3999D"
+      ],
+      "pattern": "chain:standard",
+      "outcome": "pass",
+      "failed_checks": [],
+      "aggregate": "21/22 innocent counterparties appeared; 0/22 labelled intermediary/suspicious; 0/22 given restriction review"
+    },
+    {
+      "scenario": 6,
+      "name": "Potential secondary victim",
+      "accounts": [
+        "FS-8AEE629E",
+        "FS-29869761"
+      ],
+      "pattern": "chain:standard",
+      "outcome": "fail",
+      "failed_checks": [
+        "labelled_potential_secondary_victim (original criterion)"
+      ],
+      "aggregate": "2/4 labelled victim-class and not intermediary (new criterion); 0/4 labelled exactly potential secondary victim (old criterion); 0/4 labelled intermediary/suspicious; 0/4 given restriction review"
+    },
+    {
+      "scenario": 7,
+      "name": "Unknown account",
+      "accounts": [
+        "FS-00000000"
+      ],
+      "pattern": null,
+      "outcome": "pass",
+      "failed_checks": [],
+      "aggregate": ""
+    },
+    {
+      "scenario": 8,
+      "name": "Insufficient history",
+      "accounts": [
+        "FS-36B3099E"
+      ],
+      "pattern": null,
+      "outcome": "pass",
+      "failed_checks": [],
+      "aggregate": ""
+    },
+    {
+      "scenario": 9,
+      "name": "Previously unseen account IDs",
+      "accounts": [
+        "FS-03BDFF00",
+        "FS-7B7C13AB",
+        "FS-8AEE629E"
+      ],
+      "pattern": null,
+      "outcome": "pass",
+      "failed_checks": [],
+      "aggregate": ""
+    },
+    {
+      "scenario": 10,
+      "name": "Normal legitimate accounts",
+      "accounts": [
+        "FS-00201CB9",
+        "FS-004BEB9F",
+        "FS-004C688E"
+      ],
+      "pattern": null,
+      "outcome": "pass",
+      "failed_checks": [],
+      "aggregate": ""
+    }
+  ],
+  "passed": 8,
+  "total": 10,
+  "runtime_seconds": 43.5,
+  "onward_attribution_conflicts": {
+    "description": "Accounts labelled intermediary/suspicious on pass-through (ONWARD) evidence although their traced onward transfers were at least twice the traced money they received and the engine's own balance-based attribution lower bound is 0: the onward money was mostly the account's own.",
+    "accounts": []
+  },
+  "scenario_6_criterion_change": {
+    "old_criterion": "role_candidate == 'potential_secondary_victim' (exact role name)",
+    "new_criterion": "role_candidate is victim-class (potential_secondary_victim, or suspicious_activity_victim_unconfirmed with may_be_victim true) AND role_candidate is not potential_intermediary / potentially_suspicious_account",
+    "changed_after_observing_result": true,
+    "scored_criterion": "old_criterion (original, pre-registered)",
+    "new_criterion_status": "exploratory only; not used for pass/fail",
+    "reason": "The owner's requirement is that the system distinguishes potential victim status from intermediary status, not that it uses one particular role name. The criterion was changed AFTER observing the result: the engine now labels FS-29869761 as an unconfirmed victim (suspicious_activity_victim_unconfirmed, may_be_victim true) because its balance-based attribution cannot show that the traced money itself moved on, so the 'passed traced money on' part of the secondary-victim rule is not supported. The scenario is scored with the ORIGINAL criterion; the revised one is an exploratory metric only, validated separately on the untouched hold-out ledger.",
+    "selected_example": "FS-29869761",
+    "selected_example_role": "suspicious_activity_victim_unconfirmed",
+    "selected_example_may_be_victim": true,
+    "old_criterion_result": "fail",
+    "new_criterion_result": "pass",
+    "all_secondary_victims_old_criterion": "0/4",
+    "all_secondary_victims_new_criterion": "2/4"
+  },
+  "scenarios": [
+    {
+      "scenario": 1,
+      "name": "Direct victim -> attacker transfer",
+      "expected_behaviour": "Victim's transfer to the attacker-controlled account is flagged and the destination is traced.",
+      "selection_rule": "First direct scenario (sorted by scenario_id) with a materialised victim and attacker; its first victim.",
+      "chosen_accounts": [
+        "FS-F1A91E8B"
+      ],
+      "scenario_id": "SC-DIRECT-0001",
+      "pattern": "direct:standard",
+      "ground_truth_role": "victim",
+      "engine": {
+        "investigation_seconds": 0.674,
+        "victim_assessment_status": "potential_victim",
+        "victim_assessment_label": "Potential victim",
+        "headline": "Money left this account in transfers that differ from its own history.",
+        "contradictory_evidence": [
+          "The ledger records a payment, not whether the holder authorised it or was deceived."
+        ],
+        "uncertainty_reason": null,
+        "suspicious_transaction_count": 3,
+        "suspicious_transactions": [
+          {
+            "transaction_id": "TX-303-0080293",
+            "timestamp": "2026-03-22T17:13:02",
+            "sender_account_id": "FS-F1A91E8B",
+            "receiver_account_id": "FS-55E6B26C",
+            "amount": 30277.34,
+            "channel": "UPI",
+            "model_score": 0.7815,
+            "calibrated_probability": 0.5449,
+            "risk_category": "high",
+            "rule_flags": [
+              "AMOUNT_ABOVE_OWN_HISTORY"
+            ],
+            "top_model_factors": [
+              "Amount 30,277",
+              "+8.1 standard deviations from the sender's usual outgoing amount",
+              "Receiver had been paid by 0 different account(s) before"
+            ]
+          },
+          {
+            "transaction_id": "TX-303-0080300",
+            "timestamp": "2026-03-22T17:18:42.161693",
+            "sender_account_id": "FS-F1A91E8B",
+            "receiver_account_id": "FS-55E6B26C",
+            "amount": 69112.63,
+            "channel": "NEFT",
+            "model_score": 0.9984,
+            "calibrated_probability": 0.9254,
+            "risk_category": "high",
+            "rule_flags": [
+              "AMOUNT_ABOVE_OWN_HISTORY",
+              "BALANCE_DRAIN"
+            ],
+            "top_model_factors": [
+              "Took 72% of the sender's balance just before it",
+              "Amount 69,113",
+              "0.1 h since the sender's previous outgoing transfer"
+            ]
+          },
+          {
+            "transaction_id": "TX-303-0080305",
+            "timestamp": "2026-03-22T17:20:06.228123",
+            "sender_account_id": "FS-F1A91E8B",
+            "receiver_account_id": "FS-55E6B26C",
+            "amount": 9767.4,
+            "channel": "IMPS",
+            "model_score": 0.958,
+            "calibrated_probability": 0.8892,
+            "risk_category": "high",
+            "rule_flags": [],
+            "top_model_factors": [
+              "Took 36% of the sender's balance just before it",
+              "0.0 h since the sender's previous outgoing transfer",
+              "Sender paid out 99,700 in the previous 24 h"
+            ]
+          }
+        ],
+        "uncorroborated_rule_flags": 1,
+        "branch_count": 16,
+        "downstream_branch_count": 15,
+        "max_hops": 2,
+        "branch_endings": {
+          "no_further_transaction_in_window": 4,
+          "cash_withdrawal_recorded": 9,
+          "already_examined_on_another_branch": 2,
+          "no_earlier_transaction_in_window": 1
+        },
+        "branches": [
+          {
+            "branch_id": "OUT-1",
+            "direction": "downstream",
+            "hops": 2,
+            "accounts": [
+              "FS-F1A91E8B",
+              "FS-F028B5D0",
+              "FS-C4E89947"
+            ],
+            "transaction_ids": [
+              "TX-303-0029589",
+              "TX-303-0030696"
+            ],
+            "amounts": [
+              14100.0,
+              1095.72
+            ],
+            "ending": "no_further_transaction_in_window"
+          },
+          {
+            "branch_id": "OUT-2",
+            "direction": "downstream",
+            "hops": 2,
+            "accounts": [
+              "FS-F1A91E8B",
+              "FS-F028B5D0",
+              "FS-A6FA51C3"
+            ],
+            "transaction_ids": [
+              "TX-303-0029589",
+              "TX-303-0031082"
+            ],
+            "amounts": [
+              14100.0,
+              7800.0
+            ],
+            "ending": "no_further_transaction_in_window"
+          },
+          {
+            "branch_id": "OUT-3",
+            "direction": "downstream",
+            "hops": 2,
+            "accounts": [
+              "FS-F1A91E8B",
+              "FS-F028B5D0",
+              "FS-2E8A4E3C"
+            ],
+            "transaction_ids": [
+              "TX-303-0029589",
+              "TX-303-0032933"
+            ],
+            "amounts": [
+              14100.0,
+              710.67
+            ],
+            "ending": "no_further_transaction_in_window"
+          },
+          {
+            "branch_id": "OUT-4",
+            "direction": "downstream",
+            "hops": 2,
+            "accounts": [
+              "FS-F1A91E8B",
+              "FS-55E6B26C",
+              "FS-7C40406F"
+            ],
+            "transaction_ids": [
+              "TX-303-0080293",
+              "TX-303-0080676"
+            ],
+            "amounts": [
+              30277.34,
+              13000.0
+            ],
+            "ending": "cash_withdrawal_recorded"
+          },
+          {
+            "branch_id": "OUT-5",
+            "direction": "downstream",
+            "hops": 2,
+            "accounts": [
+              "FS-F1A91E8B",
+              "FS-55E6B26C",
+              "FS-7C40406F"
+            ],
+            "transaction_ids": [
+              "TX-303-0080293",
+              "TX-303-0080678"
+            ],
+            "amounts": [
+              30277.34,
+              7100.0
+            ],
+            "ending": "cash_withdrawal_recorded"
+          },
+          {
+            "branch_id": "OUT-6",
+            "direction": "downstream",
+            "hops": 2,
+            "accounts": [
+              "FS-F1A91E8B",
+              "FS-55E6B26C",
+              "FS-7C40406F"
+            ],
+            "transaction_ids": [
+              "TX-303-0080293",
+              "TX-303-0080690"
+            ],
+            "amounts": [
+              30277.34,
+              2700.0
+            ],
+            "ending": "cash_withdrawal_recorded"
+          },
+          {
+            "branch_id": "OUT-7",
+            "direction": "downstream",
+            "hops": 2,
+            "accounts": [
+              "FS-F1A91E8B",
+              "FS-55E6B26C",
+              "FS-7C40406F"
+            ],
+            "transaction_ids": [
+              "TX-303-0080293",
+              "TX-303-0080703"
+            ],
+            "amounts": [
+              30277.34,
+              13000.0
+            ],
+            "ending": "cash_withdrawal_recorded"
+          },
+          {
+            "branch_id": "OUT-8",
+            "direction": "downstream",
+            "hops": 2,
+            "accounts": [
+              "FS-F1A91E8B",
+              "FS-55E6B26C",
+              "FS-7C40406F"
+            ],
+            "transaction_ids": [
+              "TX-303-0080293",
+              "TX-303-0080711"
+            ],
+            "amounts": [
+              30277.34,
+              2700.0
+            ],
+            "ending": "cash_withdrawal_recorded"
+          },
+          {
+            "branch_id": "OUT-9",
+            "direction": "downstream",
+            "hops": 2,
+            "accounts": [
+              "FS-F1A91E8B",
+              "FS-55E6B26C",
+              "FS-E916C859"
+            ],
+            "transaction_ids": [
+              "TX-303-0080293",
+              "TX-303-0080776"
+            ],
+            "amounts": [
+              30277.34,
+              2700.0
+            ],
+            "ending": "cash_withdrawal_recorded"
+          },
+          {
+            "branch_id": "OUT-10",
+            "direction": "downstream",
+            "hops": 2,
+            "accounts": [
+              "FS-F1A91E8B",
+              "FS-55E6B26C",
+              "FS-5970DE0C"
+            ],
+            "transaction_ids": [
+              "TX-303-0080293",
+              "TX-303-0080820"
+            ],
+            "amounts": [
+              30277.34,
+              7100.0
+            ],
+            "ending": "cash_withdrawal_recorded"
+          },
+          {
+            "branch_id": "OUT-11",
+            "direction": "downstream",
+            "hops": 2,
+            "accounts": [
+              "FS-F1A91E8B",
+              "FS-55E6B26C",
+              "FS-E916C859"
+            ],
+            "transaction_ids": [
+              "TX-303-0080293",
+              "TX-303-0080938"
+            ],
+            "amounts": [
+              30277.34,
+              7100.0
+            ],
+            "ending": "cash_withdrawal_recorded"
+          },
+          {
+            "branch_id": "OUT-12",
+            "direction": "downstream",
+            "hops": 2,
+            "accounts": [
+              "FS-F1A91E8B",
+              "FS-55E6B26C",
+              "FS-90334FA9"
+            ],
+            "transaction_ids": [
+              "TX-303-0080293",
+              "TX-303-0080945"
+            ],
+            "amounts": [
+              30277.34,
+              527.51
+            ],
+            "ending": "no_further_transaction_in_window"
+          },
+          {
+            "branch_id": "OUT-13",
+            "direction": "downstream",
+            "hops": 2,
+            "accounts": [
+              "FS-F1A91E8B",
+              "FS-55E6B26C",
+              "FS-E916C859"
+            ],
+            "transaction_ids": [
+              "TX-303-0080293",
+              "TX-303-0080959"
+            ],
+            "amounts": [
+              30277.34,
+              13000.0
+            ],
+            "ending": "cash_withdrawal_recorded"
+          },
+          {
+            "branch_id": "OUT-14",
+            "direction": "downstream",
+            "hops": 1,
+            "accounts": [
+              "FS-F1A91E8B",
+              "FS-55E6B26C"
+            ],
+            "transaction_ids": [
+              "TX-303-0080300"
+            ],
+            "amounts": [
+              69112.63
+            ],
+            "ending": "already_examined_on_another_branch"
+          },
+          {
+            "branch_id": "OUT-15",
+            "direction": "downstream",
+            "hops": 1,
+            "accounts": [
+              "FS-F1A91E8B",
+              "FS-55E6B26C"
+            ],
+            "transaction_ids": [
+              "TX-303-0080305"
+            ],
+            "amounts": [
+              9767.4
+            ],
+            "ending": "already_examined_on_another_branch"
+          },
+          {
+            "branch_id": "IN-1",
+            "direction": "upstream",
+            "hops": 1,
+            "accounts": [
+              "FS-F1A91E8B",
+              "FS-06E50BF0"
+            ],
+            "transaction_ids": [
+              "TX-303-0026368"
+            ],
+            "amounts": [
+              51311.24
+            ],
+            "ending": "no_earlier_transaction_in_window"
+          }
+        ],
+        "accounts_in_trace": 11,
+        "affected_accounts": {
+          "potential_victims": [],
+          "potential_secondary_victims": [],
+          "potential_intermediaries": [],
+          "suspicious_accounts": [
+            "FS-55E6B26C"
+          ],
+          "ordinary_counterparties": [
+            "FS-F028B5D0",
+            "FS-06E50BF0",
+            "FS-C4E89947",
+            "FS-A6FA51C3",
+            "FS-2E8A4E3C",
+            "FS-90334FA9"
+          ],
+          "unknown_roles": [],
+          "cash_withdrawal_points": [
+            "FS-7C40406F",
+            "FS-E916C859",
+            "FS-5970DE0C"
+          ]
+        },
+        "investigated_account_restriction": "urgent_manual_review_recommended",
+        "automatic_actions_taken": [],
+        "synthetic_data_notice": "Synthetic forensic scenario data. No real customers, accounts or bank transactions are involved.",
+        "models": {
+          "transaction_model_available": true,
+          "transaction_model_version": "v3-transaction-1.0.0",
+          "account_model_available": true,
+          "account_model_version": "v3-account-1.0.0",
+          "models_used_as_evidence": true,
+          "investigated_account_model_status": "scored",
+          "investigated_account_calibrated_probability": 0.0194,
+          "investigated_account_above_threshold": false,
+          "transfers_scored": 56,
+          "transfers_flagged_by_model": 12,
+          "accounts_where_account_model_abstained": []
+        }
+      },
+      "connected_accounts": [
+        {
+          "account_id": "FS-F028B5D0",
+          "true_role": "ordinary",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 1,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed: connected only through transfers that were not flagged.",
+          "contradictory_evidence": [
+            "Established records: 86 transfers over 32 days before it was reached.",
+            "The account behaviour model scores it below its review threshold (which does not clear it)."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 14100.0,
+          "sent_traced": 9606.39,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 9606.39
+        },
+        {
+          "account_id": "FS-55E6B26C",
+          "true_role": "attacker_controlled",
+          "engine_role": "potentially_suspicious_account",
+          "restriction": "consider_temporary_restriction_review",
+          "position": "downstream",
+          "hop": 1,
+          "evidence_strength": "strong",
+          "headline": "Moved part of the traced money on or withdrew it, with several independent signals.",
+          "contradictory_evidence": [],
+          "uncertainty_reason": "Partial onward movement; the ledger cannot show who controls the account.",
+          "evidence_categories": [
+            "ACCOUNT_MODEL",
+            "TXN_MODEL",
+            "CASH",
+            "NEW_RECORDS"
+          ],
+          "received_traced": 109157.37,
+          "sent_traced": 68927.51,
+          "forwarded_at_least": 66610.2,
+          "forwarded_at_most": 68927.51
+        },
+        {
+          "account_id": "FS-06E50BF0",
+          "true_role": "employer",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "upstream",
+          "hop": 1,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed: an earlier payer of the traced account with no flagged behaviour.",
+          "contradictory_evidence": [
+            "Established records: 216 transfers over 31 days before it was reached.",
+            "It is a business account; businesses routinely receive and pay out funds."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 0,
+          "sent_traced": 51311.24,
+          "forwarded_at_least": null,
+          "forwarded_at_most": null
+        },
+        {
+          "account_id": "FS-C4E89947",
+          "true_role": "merchant",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 2,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed: connected only through transfers that were not flagged.",
+          "contradictory_evidence": [
+            "Established records: 1195 transfers over 29 days before it was reached.",
+            "It is a business account; businesses routinely receive and pay out funds."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 1095.72,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 0.0
+        },
+        {
+          "account_id": "FS-A6FA51C3",
+          "true_role": "innocent_counterparty (other scenario SC-SPLIT-0029)",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 2,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed: connected only through transfers that were not flagged.",
+          "contradictory_evidence": [
+            "The account behaviour model scores it below its review threshold (which does not clear it).",
+            "Kept most of what it received: at most 0 of 7,800 left in the window."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [
+            "NEW_RECORDS"
+          ],
+          "received_traced": 7800.0,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 0.0
+        },
+        {
+          "account_id": "FS-2E8A4E3C",
+          "true_role": "merchant",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 2,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed: connected only through transfers that were not flagged.",
+          "contradictory_evidence": [
+            "Established records: 337 transfers over 34 days before it was reached.",
+            "It is a business account; businesses routinely receive and pay out funds."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 710.67,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 0.0
+        },
+        {
+          "account_id": "FS-7C40406F",
+          "true_role": "cash_network",
+          "engine_role": "cash_withdrawal_point",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 2,
+          "evidence_strength": "none",
+          "headline": "The ledger records cash withdrawals here; it stands for an ATM or cash network, not a person.",
+          "contradictory_evidence": [],
+          "uncertainty_reason": "Cash leaves the ledger here and cannot be followed.",
+          "evidence_categories": [],
+          "received_traced": 38500.0,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 0.0
+        },
+        {
+          "account_id": "FS-E916C859",
+          "true_role": "cash_network",
+          "engine_role": "cash_withdrawal_point",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 2,
+          "evidence_strength": "none",
+          "headline": "The ledger records cash withdrawals here; it stands for an ATM or cash network, not a person.",
+          "contradictory_evidence": [],
+          "uncertainty_reason": "Cash leaves the ledger here and cannot be followed.",
+          "evidence_categories": [],
+          "received_traced": 22800.0,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 0.0
+        },
+        {
+          "account_id": "FS-5970DE0C",
+          "true_role": "cash_network",
+          "engine_role": "cash_withdrawal_point",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 2,
+          "evidence_strength": "none",
+          "headline": "The ledger records cash withdrawals here; it stands for an ATM or cash network, not a person.",
+          "contradictory_evidence": [],
+          "uncertainty_reason": "Cash leaves the ledger here and cannot be followed.",
+          "evidence_categories": [],
+          "received_traced": 7100.0,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 0.0
+        },
+        {
+          "account_id": "FS-90334FA9",
+          "true_role": "innocent_counterparty",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 2,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed in the available data: ordinary records and no flagged behaviour.",
+          "contradictory_evidence": [
+            "Established records: 62 transfers over 80 days before it was reached.",
+            "The account behaviour model scores it below its review threshold (which does not clear it)."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 527.51,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 0.0
+        }
+      ],
+      "connected_roles_vs_truth": {
+        "ordinary -> no_suspicious_linkage_observed": 1,
+        "attacker_controlled -> potentially_suspicious_account": 1,
+        "employer -> no_suspicious_linkage_observed": 1,
+        "merchant -> no_suspicious_linkage_observed": 2,
+        "other-scenario innocent_counterparty -> no_suspicious_linkage_observed": 1,
+        "cash_network -> cash_withdrawal_point": 3,
+        "innocent_counterparty -> no_suspicious_linkage_observed": 1
+      },
+      "connected_restriction_states": {
+        "no_restriction_recommendation": 9,
+        "consider_temporary_restriction_review": 1
+      },
+      "safety_violations": [],
+      "checks": {
+        "status_flags_suspicious_activity": true,
+        "suspicious_transfer_to_destination_identified": true,
+        "destination_traced": true,
+        "no_safety_violation": true
+      },
+      "outcome": "pass",
+      "uncertain_or_missed": [],
+      "destination_accounts": [
+        "FS-55E6B26C"
+      ],
+      "ground_truth_victim_transfers": [
+        {
+          "transaction_id": "TX-303-0080293",
+          "destination_account_id": "FS-55E6B26C",
+          "amount": 30277.34
+        },
+        {
+          "transaction_id": "TX-303-0080300",
+          "destination_account_id": "FS-55E6B26C",
+          "amount": 69112.63
+        },
+        {
+          "transaction_id": "TX-303-0080305",
+          "destination_account_id": "FS-55E6B26C",
+          "amount": 9767.4
+        }
+      ],
+      "victim_transfers_flagged": "3/3"
+    },
+    {
+      "scenario": 2,
+      "name": "Multi-hop chain",
+      "expected_behaviour": "Victim -> intermediary -> ... -> destination followed for >= 2 hops, each movement explained.",
+      "selection_rule": "First multi_hop:standard scenario (sorted) whose victim, >= 2 mules and destination are materialised; its victim.",
+      "chosen_accounts": [
+        "FS-9D414D78"
+      ],
+      "scenario_id": "SC-MULTI-HOP-0018",
+      "pattern": "multi_hop:standard",
+      "ground_truth_role": "victim",
+      "engine": {
+        "investigation_seconds": 0.512,
+        "victim_assessment_status": "potential_victim",
+        "victim_assessment_label": "Potential victim",
+        "headline": "Money left this account in transfers that differ from its own history.",
+        "contradictory_evidence": [
+          "The ledger records a payment, not whether the holder authorised it or was deceived."
+        ],
+        "uncertainty_reason": null,
+        "suspicious_transaction_count": 1,
+        "suspicious_transactions": [
+          {
+            "transaction_id": "TX-303-0060185",
+            "timestamp": "2026-03-03T08:20:50",
+            "sender_account_id": "FS-9D414D78",
+            "receiver_account_id": "FS-200E2733",
+            "amount": 16259.65,
+            "channel": "IMPS",
+            "model_score": 0.9788,
+            "calibrated_probability": 0.9095,
+            "risk_category": "high",
+            "rule_flags": [
+              "AMOUNT_ABOVE_OWN_HISTORY"
+            ],
+            "top_model_factors": [
+              "Receiver's balance before: 1,088",
+              "Receiver had 1 earlier outgoing transfer(s)",
+              "Took 76% of the sender's balance just before it"
+            ]
+          }
+        ],
+        "uncorroborated_rule_flags": 0,
+        "branch_count": 3,
+        "downstream_branch_count": 2,
+        "max_hops": 3,
+        "branch_endings": {
+          "maximum_depth_reached": 1,
+          "no_further_transaction_in_window": 1,
+          "no_earlier_transaction_in_window": 1
+        },
+        "branches": [
+          {
+            "branch_id": "OUT-1",
+            "direction": "downstream",
+            "hops": 3,
+            "accounts": [
+              "FS-9D414D78",
+              "FS-200E2733",
+              "FS-5A064ACB",
+              "FS-87C71030"
+            ],
+            "transaction_ids": [
+              "TX-303-0060185",
+              "TX-303-0060209",
+              "TX-303-0060214"
+            ],
+            "amounts": [
+              16259.65,
+              14500.0,
+              13000.0
+            ],
+            "ending": "maximum_depth_reached"
+          },
+          {
+            "branch_id": "OUT-2",
+            "direction": "downstream",
+            "hops": 2,
+            "accounts": [
+              "FS-9D414D78",
+              "FS-200E2733",
+              "FS-41D22DB4"
+            ],
+            "transaction_ids": [
+              "TX-303-0060185",
+              "TX-303-0060739"
+            ],
+            "amounts": [
+              16259.65,
+              1528.18
+            ],
+            "ending": "no_further_transaction_in_window"
+          },
+          {
+            "branch_id": "IN-1",
+            "direction": "upstream",
+            "hops": 2,
+            "accounts": [
+              "FS-9D414D78",
+              "FS-CB2BC2CE",
+              "FS-DAAEEA81"
+            ],
+            "transaction_ids": [
+              "TX-303-0058077",
+              "TX-303-0055989"
+            ],
+            "amounts": [
+              20479.32,
+              37102.74
+            ],
+            "ending": "no_earlier_transaction_in_window"
+          }
+        ],
+        "accounts_in_trace": 7,
+        "affected_accounts": {
+          "potential_victims": [],
+          "potential_secondary_victims": [],
+          "potential_intermediaries": [
+            "FS-200E2733",
+            "FS-5A064ACB"
+          ],
+          "suspicious_accounts": [],
+          "ordinary_counterparties": [
+            "FS-CB2BC2CE",
+            "FS-41D22DB4",
+            "FS-DAAEEA81"
+          ],
+          "unknown_roles": [
+            "FS-87C71030"
+          ],
+          "cash_withdrawal_points": []
+        },
+        "investigated_account_restriction": "urgent_manual_review_recommended",
+        "automatic_actions_taken": [],
+        "synthetic_data_notice": "Synthetic forensic scenario data. No real customers, accounts or bank transactions are involved.",
+        "models": {
+          "transaction_model_available": true,
+          "transaction_model_version": "v3-transaction-1.0.0",
+          "account_model_available": true,
+          "account_model_version": "v3-account-1.0.0",
+          "models_used_as_evidence": true,
+          "investigated_account_model_status": "scored",
+          "investigated_account_calibrated_probability": 0.0152,
+          "investigated_account_above_threshold": false,
+          "transfers_scored": 47,
+          "transfers_flagged_by_model": 3,
+          "accounts_where_account_model_abstained": []
+        }
+      },
+      "connected_accounts": [
+        {
+          "account_id": "FS-200E2733",
+          "true_role": "intermediary",
+          "engine_role": "potential_intermediary",
+          "restriction": "consider_temporary_restriction_review",
+          "position": "downstream",
+          "hop": 1,
+          "evidence_strength": "strong",
+          "headline": "Received traced money and passed most of it on quickly - consistent with a pass-through, which does not establish that the holder knowingly took part.",
+          "contradictory_evidence": [],
+          "uncertainty_reason": "Pass-through behaviour has innocent explanations (paying suppliers, family, or following a scammer's instructions).",
+          "evidence_categories": [
+            "ONWARD",
+            "ACCOUNT_MODEL",
+            "TXN_MODEL",
+            "NEW_RECORDS"
+          ],
+          "received_traced": 16259.65,
+          "sent_traced": 16028.18,
+          "forwarded_at_least": 14939.97,
+          "forwarded_at_most": 16028.18
+        },
+        {
+          "account_id": "FS-CB2BC2CE",
+          "true_role": "attacker_controlled (other scenario SC-CONSOLIDATION-0033)",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "upstream",
+          "hop": 1,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed: an earlier payer of the traced account with no flagged behaviour.",
+          "contradictory_evidence": [
+            "Established records: 66 transfers over 57 days before it was reached.",
+            "The account behaviour model scores it below its review threshold (which does not clear it)."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 0,
+          "sent_traced": 20479.32,
+          "forwarded_at_least": null,
+          "forwarded_at_most": null
+        },
+        {
+          "account_id": "FS-5A064ACB",
+          "true_role": "intermediary",
+          "engine_role": "potential_intermediary",
+          "restriction": "additional_verification_recommended",
+          "position": "downstream",
+          "hop": 2,
+          "evidence_strength": "weak",
+          "headline": "Paid out or withdrew most of what it received within a day, in transfers the transaction model flags; the ledger cannot show that these were the same funds.",
+          "contradictory_evidence": [
+            "Established records: 43 transfers over 58 days before it was reached.",
+            "The account behaviour model scores it below its review threshold (which does not clear it)."
+          ],
+          "uncertainty_reason": "Its own balance could have paid these transfers, so this may be ordinary spending that happened to follow the receipt; pass-through behaviour also has innocent explanations.",
+          "evidence_categories": [
+            "TXN_MODEL"
+          ],
+          "received_traced": 14500.0,
+          "sent_traced": 13000.0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 13000.0
+        },
+        {
+          "account_id": "FS-41D22DB4",
+          "true_role": "merchant",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 2,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed in the available data: ordinary records and no flagged behaviour.",
+          "contradictory_evidence": [
+            "Established records: 376 transfers over 60 days before it was reached.",
+            "It is a business account; businesses routinely receive and pay out funds."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 1528.18,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 0.0
+        },
+        {
+          "account_id": "FS-DAAEEA81",
+          "true_role": "employer",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "upstream",
+          "hop": 2,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed: an earlier payer of the traced account with no flagged behaviour.",
+          "contradictory_evidence": [
+            "Established records: 188 transfers over 59 days before it was reached.",
+            "It is a business account; businesses routinely receive and pay out funds."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 0,
+          "sent_traced": 37102.74,
+          "forwarded_at_least": null,
+          "forwarded_at_most": null
+        },
+        {
+          "account_id": "FS-87C71030",
+          "true_role": "intermediary",
+          "engine_role": "unknown_role",
+          "restriction": "insufficient_evidence_to_recommend",
+          "position": "downstream",
+          "hop": 3,
+          "evidence_strength": "weak",
+          "headline": "One signal only; not enough to describe a role.",
+          "contradictory_evidence": [],
+          "uncertainty_reason": "A single signal is not evidence of a role.",
+          "evidence_categories": [
+            "ACCOUNT_MODEL",
+            "NEW_RECORDS"
+          ],
+          "received_traced": 13000.0,
+          "sent_traced": 0,
+          "forwarded_at_least": 10545.35,
+          "forwarded_at_most": 13000.0
+        }
+      ],
+      "connected_roles_vs_truth": {
+        "intermediary -> potential_intermediary": 2,
+        "other-scenario attacker_controlled -> no_suspicious_linkage_observed": 1,
+        "merchant -> no_suspicious_linkage_observed": 1,
+        "employer -> no_suspicious_linkage_observed": 1,
+        "intermediary -> unknown_role": 1
+      },
+      "connected_restriction_states": {
+        "consider_temporary_restriction_review": 1,
+        "no_restriction_recommendation": 3,
+        "additional_verification_recommended": 1,
+        "insufficient_evidence_to_recommend": 1
+      },
+      "safety_violations": [],
+      "checks": {
+        "status_flags_suspicious_activity": true,
+        "branch_with_at_least_2_hops": true,
+        "ground_truth_chain_followed_at_least_2_hops": true,
+        "each_followed_movement_scored_and_explained": true,
+        "no_safety_violation": true
+      },
+      "outcome": "pass",
+      "uncertain_or_missed": [
+        "FS-78226F94 (attacker_controlled) was not reached by the trace.",
+        "FS-87C71030 (intermediary) was reached but assessed as unknown_role (One signal only; not enough to describe a role.).",
+        "FS-FD90B781 (innocent_counterparty) was not reached by the trace.",
+        "The trace followed 3 of the 4 ground-truth hops (request max_depth=3); the remainder is beyond the trace or diverged."
+      ],
+      "ground_truth_chain": [
+        "FS-9D414D78",
+        "FS-200E2733",
+        "FS-5A064ACB",
+        "FS-87C71030",
+        "FS-78226F94"
+      ],
+      "ground_truth_hops_followed": 3,
+      "followed_branch": {
+        "branch_id": "OUT-1",
+        "direction": "downstream",
+        "hops": 3,
+        "accounts": [
+          "FS-9D414D78",
+          "FS-200E2733",
+          "FS-5A064ACB",
+          "FS-87C71030"
+        ],
+        "transaction_ids": [
+          "TX-303-0060185",
+          "TX-303-0060209",
+          "TX-303-0060214"
+        ],
+        "amounts": [
+          16259.65,
+          14500.0,
+          13000.0
+        ],
+        "ending": "maximum_depth_reached"
+      },
+      "movements_explained": [
+        {
+          "transaction_id": "TX-303-0060185",
+          "from": "FS-9D414D78",
+          "to": "FS-200E2733",
+          "amount": 16259.65,
+          "model_score": 0.9788,
+          "calibrated_probability": 0.9095,
+          "receiver_engine_role": "potential_intermediary",
+          "receiver_true_role": "intermediary",
+          "receiver_headline": "Received traced money and passed most of it on quickly - consistent with a pass-through, which does not establish that the holder knowingly took part."
+        },
+        {
+          "transaction_id": "TX-303-0060209",
+          "from": "FS-200E2733",
+          "to": "FS-5A064ACB",
+          "amount": 14500.0,
+          "model_score": 0.994,
+          "calibrated_probability": 0.9221,
+          "receiver_engine_role": "potential_intermediary",
+          "receiver_true_role": "intermediary",
+          "receiver_headline": "Paid out or withdrew most of what it received within a day, in transfers the transaction model flags; the ledger cannot show that these were the same funds."
+        },
+        {
+          "transaction_id": "TX-303-0060214",
+          "from": "FS-5A064ACB",
+          "to": "FS-87C71030",
+          "amount": 13000.0,
+          "model_score": 0.9959,
+          "calibrated_probability": 0.9235,
+          "receiver_engine_role": "unknown_role",
+          "receiver_true_role": "intermediary",
+          "receiver_headline": "One signal only; not enough to describe a role."
+        }
+      ]
+    },
+    {
+      "scenario": 3,
+      "name": "Split transfer",
+      "expected_behaviour": "One account distributes to several destinations; each destination is a separate branch.",
+      "selection_rule": "First split scenario (sorted) with a materialised splitting account and >= 2 legs; its victim.",
+      "chosen_accounts": [
+        "FS-7B7C13AB"
+      ],
+      "scenario_id": "SC-SPLIT-0025",
+      "pattern": "split:standard",
+      "ground_truth_role": "victim",
+      "engine": {
+        "investigation_seconds": 0.576,
+        "victim_assessment_status": "potential_victim",
+        "victim_assessment_label": "Potential victim",
+        "headline": "Money left this account in transfers that differ from its own history.",
+        "contradictory_evidence": [
+          "The ledger records a payment, not whether the holder authorised it or was deceived."
+        ],
+        "uncertainty_reason": null,
+        "suspicious_transaction_count": 1,
+        "suspicious_transactions": [
+          {
+            "transaction_id": "TX-303-0046080",
+            "timestamp": "2026-02-18T20:11:01",
+            "sender_account_id": "FS-7B7C13AB",
+            "receiver_account_id": "FS-EAAA344C",
+            "amount": 52000.0,
+            "channel": "UPI",
+            "model_score": 0.992,
+            "calibrated_probability": 0.9205,
+            "risk_category": "high",
+            "rule_flags": [
+              "AMOUNT_ABOVE_OWN_HISTORY",
+              "BALANCE_DRAIN"
+            ],
+            "top_model_factors": [
+              "Amount 52,000",
+              "Took 69% of the sender's balance just before it",
+              "+34.1 standard deviations from the sender's usual outgoing amount"
+            ]
+          }
+        ],
+        "uncorroborated_rule_flags": 0,
+        "branch_count": 11,
+        "downstream_branch_count": 9,
+        "max_hops": 3,
+        "branch_endings": {
+          "cash_withdrawal_recorded": 3,
+          "maximum_depth_reached": 5,
+          "no_further_transaction_in_window": 1,
+          "no_earlier_transaction_in_window": 1,
+          "already_examined_on_another_branch": 1
+        },
+        "branches": [
+          {
+            "branch_id": "OUT-1",
+            "direction": "downstream",
+            "hops": 3,
+            "accounts": [
+              "FS-7B7C13AB",
+              "FS-EAAA344C",
+              "FS-CE13E4F4",
+              "FS-7C40406F"
+            ],
+            "transaction_ids": [
+              "TX-303-0046080",
+              "TX-303-0046124",
+              "TX-303-0046203"
+            ],
+            "amounts": [
+              52000.0,
+              41621.41,
+              18700.0
+            ],
+            "ending": "cash_withdrawal_recorded"
+          },
+          {
+            "branch_id": "OUT-2",
+            "direction": "downstream",
+            "hops": 3,
+            "accounts": [
+              "FS-7B7C13AB",
+              "FS-EAAA344C",
+              "FS-5635F5AF",
+              "FS-E916C859"
+            ],
+            "transaction_ids": [
+              "TX-303-0046080",
+              "TX-303-0046133",
+              "TX-303-0046199"
+            ],
+            "amounts": [
+              52000.0,
+              3500.0,
+              1500.0
+            ],
+            "ending": "cash_withdrawal_recorded"
+          },
+          {
+            "branch_id": "OUT-3",
+            "direction": "downstream",
+            "hops": 3,
+            "accounts": [
+              "FS-7B7C13AB",
+              "FS-EAAA344C",
+              "FS-5635F5AF",
+              "FS-18CC0DD7"
+            ],
+            "transaction_ids": [
+              "TX-303-0046080",
+              "TX-303-0046133",
+              "TX-303-0046474"
+            ],
+            "amounts": [
+              52000.0,
+              3500.0,
+              224.95
+            ],
+            "ending": "maximum_depth_reached"
+          },
+          {
+            "branch_id": "OUT-4",
+            "direction": "downstream",
+            "hops": 3,
+            "accounts": [
+              "FS-7B7C13AB",
+              "FS-EAAA344C",
+              "FS-5635F5AF",
+              "FS-575AC446"
+            ],
+            "transaction_ids": [
+              "TX-303-0046080",
+              "TX-303-0046133",
+              "TX-303-0046502"
+            ],
+            "amounts": [
+              52000.0,
+              3500.0,
+              341.18
+            ],
+            "ending": "maximum_depth_reached"
+          },
+          {
+            "branch_id": "OUT-5",
+            "direction": "downstream",
+            "hops": 3,
+            "accounts": [
+              "FS-7B7C13AB",
+              "FS-EAAA344C",
+              "FS-5635F5AF",
+              "FS-41D22DB4"
+            ],
+            "transaction_ids": [
+              "TX-303-0046080",
+              "TX-303-0046133",
+              "TX-303-0046612"
+            ],
+            "amounts": [
+              52000.0,
+              3500.0,
+              88.83
+            ],
+            "ending": "no_further_transaction_in_window"
+          },
+          {
+            "branch_id": "OUT-6",
+            "direction": "downstream",
+            "hops": 3,
+            "accounts": [
+              "FS-7B7C13AB",
+              "FS-EAAA344C",
+              "FS-5635F5AF",
+              "FS-334DCFB3"
+            ],
+            "transaction_ids": [
+              "TX-303-0046080",
+              "TX-303-0046133",
+              "TX-303-0047192"
+            ],
+            "amounts": [
+              52000.0,
+              3500.0,
+              106.36
+            ],
+            "ending": "maximum_depth_reached"
+          },
+          {
+            "branch_id": "OUT-7",
+            "direction": "downstream",
+            "hops": 3,
+            "accounts": [
+              "FS-7B7C13AB",
+              "FS-EAAA344C",
+              "FS-5635F5AF",
+              "FS-E3CEC4B5"
+            ],
+            "transaction_ids": [
+              "TX-303-0046080",
+              "TX-303-0046133",
+              "TX-303-0047811"
+            ],
+            "amounts": [
+              52000.0,
+              3500.0,
+              1704.35
+            ],
+            "ending": "maximum_depth_reached"
+          },
+          {
+            "branch_id": "OUT-8",
+            "direction": "downstream",
+            "hops": 3,
+            "accounts": [
+              "FS-7B7C13AB",
+              "FS-EAAA344C",
+              "FS-5635F5AF",
+              "FS-7C40406F"
+            ],
+            "transaction_ids": [
+              "TX-303-0046080",
+              "TX-303-0046133",
+              "TX-303-0048578"
+            ],
+            "amounts": [
+              52000.0,
+              3500.0,
+              2000.0
+            ],
+            "ending": "cash_withdrawal_recorded"
+          },
+          {
+            "branch_id": "OUT-9",
+            "direction": "downstream",
+            "hops": 3,
+            "accounts": [
+              "FS-7B7C13AB",
+              "FS-EAAA344C",
+              "FS-D466702E",
+              "FS-29D9222C"
+            ],
+            "transaction_ids": [
+              "TX-303-0046080",
+              "TX-303-0046223",
+              "TX-303-0048717"
+            ],
+            "amounts": [
+              52000.0,
+              3500.0,
+              1985.33
+            ],
+            "ending": "maximum_depth_reached"
+          },
+          {
+            "branch_id": "IN-1",
+            "direction": "upstream",
+            "hops": 1,
+            "accounts": [
+              "FS-7B7C13AB",
+              "FS-B841C5DC"
+            ],
+            "transaction_ids": [
+              "TX-303-0044246"
+            ],
+            "amounts": [
+              846.07
+            ],
+            "ending": "no_earlier_transaction_in_window"
+          },
+          {
+            "branch_id": "IN-2",
+            "direction": "upstream",
+            "hops": 1,
+            "accounts": [
+              "FS-7B7C13AB",
+              "FS-B841C5DC"
+            ],
+            "transaction_ids": [
+              "TX-303-0046046"
+            ],
+            "amounts": [
+              2768.25
+            ],
+            "ending": "already_examined_on_another_branch"
+          }
+        ],
+        "accounts_in_trace": 14,
+        "affected_accounts": {
+          "potential_victims": [
+            "FS-7305E412"
+          ],
+          "potential_secondary_victims": [],
+          "potential_intermediaries": [
+            "FS-EAAA344C"
+          ],
+          "suspicious_accounts": [],
+          "ordinary_counterparties": [
+            "FS-D466702E",
+            "FS-18CC0DD7",
+            "FS-575AC446",
+            "FS-41D22DB4",
+            "FS-334DCFB3",
+            "FS-29D9222C"
+          ],
+          "unknown_roles": [
+            "FS-B841C5DC",
+            "FS-CE13E4F4",
+            "FS-5635F5AF",
+            "FS-E3CEC4B5"
+          ],
+          "cash_withdrawal_points": [
+            "FS-7C40406F",
+            "FS-E916C859"
+          ]
+        },
+        "investigated_account_restriction": "urgent_manual_review_recommended",
+        "automatic_actions_taken": [],
+        "synthetic_data_notice": "Synthetic forensic scenario data. No real customers, accounts or bank transactions are involved.",
+        "models": {
+          "transaction_model_available": true,
+          "transaction_model_version": "v3-transaction-1.0.0",
+          "account_model_available": true,
+          "account_model_version": "v3-account-1.0.0",
+          "models_used_as_evidence": true,
+          "investigated_account_model_status": "scored",
+          "investigated_account_calibrated_probability": 0.0887,
+          "investigated_account_above_threshold": true,
+          "transfers_scored": 53,
+          "transfers_flagged_by_model": 5,
+          "accounts_where_account_model_abstained": []
+        }
+      },
+      "connected_accounts": [
+        {
+          "account_id": "FS-EAAA344C",
+          "true_role": "intermediary",
+          "engine_role": "potential_intermediary",
+          "restriction": "urgent_manual_review_recommended",
+          "position": "downstream",
+          "hop": 1,
+          "evidence_strength": "moderate",
+          "headline": "Paid out or withdrew most of what it received within a day, in transfers the transaction model flags; the ledger cannot show that these were the same funds.",
+          "contradictory_evidence": [
+            "Established records: 45 transfers over 47 days before it was reached."
+          ],
+          "uncertainty_reason": "Its own balance could have paid these transfers, so this may be ordinary spending that happened to follow the receipt; pass-through behaviour also has innocent explanations.",
+          "evidence_categories": [
+            "ACCOUNT_MODEL",
+            "TXN_MODEL"
+          ],
+          "received_traced": 52000.0,
+          "sent_traced": 48621.41,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 48621.41
+        },
+        {
+          "account_id": "FS-B841C5DC",
+          "true_role": "attacker_controlled (other scenario SC-DIRECT-0004)",
+          "engine_role": "unknown_role",
+          "restriction": "insufficient_evidence_to_recommend",
+          "position": "upstream",
+          "hop": 1,
+          "evidence_strength": "weak",
+          "headline": "An earlier payer with some signals but no clear role.",
+          "contradictory_evidence": [
+            "Established records: 50 transfers over 40 days before it was reached."
+          ],
+          "uncertainty_reason": "Signals without a pattern.",
+          "evidence_categories": [
+            "ACCOUNT_MODEL"
+          ],
+          "received_traced": 0,
+          "sent_traced": 3614.32,
+          "forwarded_at_least": null,
+          "forwarded_at_most": null
+        },
+        {
+          "account_id": "FS-CE13E4F4",
+          "true_role": "intermediary",
+          "engine_role": "unknown_role",
+          "restriction": "insufficient_evidence_to_recommend",
+          "position": "downstream",
+          "hop": 2,
+          "evidence_strength": "moderate",
+          "headline": "Several signals, but no clear pattern of passing money on or collecting it.",
+          "contradictory_evidence": [],
+          "uncertainty_reason": "Mixed evidence.",
+          "evidence_categories": [
+            "ACCOUNT_MODEL",
+            "TXN_MODEL",
+            "NEW_RECORDS"
+          ],
+          "received_traced": 41621.41,
+          "sent_traced": 18700.0,
+          "forwarded_at_least": 17316.32,
+          "forwarded_at_most": 18700.0
+        },
+        {
+          "account_id": "FS-5635F5AF",
+          "true_role": "intermediary",
+          "engine_role": "unknown_role",
+          "restriction": "insufficient_evidence_to_recommend",
+          "position": "downstream",
+          "hop": 2,
+          "evidence_strength": "weak",
+          "headline": "One signal only; not enough to describe a role.",
+          "contradictory_evidence": [
+            "Established records: 48 transfers over 47 days before it was reached.",
+            "The account behaviour model scores it below its review threshold (which does not clear it)."
+          ],
+          "uncertainty_reason": "A single signal is not evidence of a role.",
+          "evidence_categories": [
+            "TXN_MODEL"
+          ],
+          "received_traced": 3500.0,
+          "sent_traced": 5965.67,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 3500.0
+        },
+        {
+          "account_id": "FS-D466702E",
+          "true_role": "innocent_counterparty",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 2,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed in the available data: ordinary records and no flagged behaviour.",
+          "contradictory_evidence": [
+            "Established records: 61 transfers over 48 days before it was reached.",
+            "The account behaviour model scores it below its review threshold (which does not clear it)."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 3500.0,
+          "sent_traced": 1985.33,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 1985.33
+        },
+        {
+          "account_id": "FS-7C40406F",
+          "true_role": "cash_network",
+          "engine_role": "cash_withdrawal_point",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 3,
+          "evidence_strength": "none",
+          "headline": "The ledger records cash withdrawals here; it stands for an ATM or cash network, not a person.",
+          "contradictory_evidence": [],
+          "uncertainty_reason": "Cash leaves the ledger here and cannot be followed.",
+          "evidence_categories": [],
+          "received_traced": 20700.0,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 0.0
+        },
+        {
+          "account_id": "FS-E916C859",
+          "true_role": "cash_network",
+          "engine_role": "cash_withdrawal_point",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 3,
+          "evidence_strength": "none",
+          "headline": "The ledger records cash withdrawals here; it stands for an ATM or cash network, not a person.",
+          "contradictory_evidence": [],
+          "uncertainty_reason": "Cash leaves the ledger here and cannot be followed.",
+          "evidence_categories": [],
+          "received_traced": 1500.0,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 0.0
+        },
+        {
+          "account_id": "FS-18CC0DD7",
+          "true_role": "merchant",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 3,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed in the available data: ordinary records and no flagged behaviour.",
+          "contradictory_evidence": [
+            "Established records: 355 transfers over 48 days before it was reached.",
+            "It is a business account; businesses routinely receive and pay out funds."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 224.95,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 224.95
+        },
+        {
+          "account_id": "FS-575AC446",
+          "true_role": "merchant",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 3,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed in the available data: ordinary records and no flagged behaviour.",
+          "contradictory_evidence": [
+            "Established records: 337 transfers over 48 days before it was reached.",
+            "It is a business account; businesses routinely receive and pay out funds."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 341.18,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 341.18
+        },
+        {
+          "account_id": "FS-41D22DB4",
+          "true_role": "merchant",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 3,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed in the available data: ordinary records and no flagged behaviour.",
+          "contradictory_evidence": [
+            "Established records: 376 transfers over 48 days before it was reached.",
+            "It is a business account; businesses routinely receive and pay out funds."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 88.83,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 0.0
+        },
+        {
+          "account_id": "FS-334DCFB3",
+          "true_role": "merchant",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 3,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed in the available data: ordinary records and no flagged behaviour.",
+          "contradictory_evidence": [
+            "Established records: 384 transfers over 49 days before it was reached.",
+            "It is a business account; businesses routinely receive and pay out funds."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 106.36,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 106.36
+        },
+        {
+          "account_id": "FS-E3CEC4B5",
+          "true_role": "merchant",
+          "engine_role": "unknown_role",
+          "restriction": "insufficient_evidence_to_recommend",
+          "position": "downstream",
+          "hop": 3,
+          "evidence_strength": "none",
+          "headline": "Only what it received stands out; receiving money is not, on its own, evidence of a role.",
+          "contradictory_evidence": [
+            "Established records: 421 transfers over 50 days before it was reached.",
+            "It is a business account; businesses routinely receive and pay out funds."
+          ],
+          "uncertainty_reason": "Several payers can be a shared bill, a collection among family or a small business.",
+          "evidence_categories": [
+            "RECEIPT_PATTERN"
+          ],
+          "received_traced": 1704.35,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 1704.35
+        },
+        {
+          "account_id": "FS-29D9222C",
+          "true_role": "ordinary",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 3,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed in the available data: ordinary records and no flagged behaviour.",
+          "contradictory_evidence": [
+            "Established records: 31 transfers over 49 days before it was reached.",
+            "The account behaviour model scores it below its review threshold (which does not clear it)."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 1985.33,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 970.32
+        },
+        {
+          "account_id": "FS-7305E412",
+          "true_role": "attacker_controlled (other scenario SC-DIRECT-0002)",
+          "engine_role": "potential_victim",
+          "restriction": "urgent_manual_review_recommended",
+          "position": "other_sender",
+          "hop": null,
+          "evidence_strength": "moderate",
+          "headline": "Sent a transfer the transaction model flags into FS-EAAA344C, which this trace assessed as a potential intermediary candidate.",
+          "contradictory_evidence": [
+            "Established records: 18 transfers over 34 days before it was reached."
+          ],
+          "uncertainty_reason": "Found by looking at other payments into FS-EAAA344C. The evidence here is the transaction model's flag on its own transfer, not the role given to FS-EAAA344C; that role is a candidate and may be wrong.",
+          "evidence_categories": [
+            "TXN_MODEL"
+          ],
+          "received_traced": 0.0,
+          "sent_traced": 12500.0,
+          "forwarded_at_least": null,
+          "forwarded_at_most": null
+        }
+      ],
+      "connected_roles_vs_truth": {
+        "intermediary -> potential_intermediary": 1,
+        "other-scenario attacker_controlled -> unknown_role": 1,
+        "intermediary -> unknown_role": 2,
+        "innocent_counterparty -> no_suspicious_linkage_observed": 1,
+        "cash_network -> cash_withdrawal_point": 2,
+        "merchant -> no_suspicious_linkage_observed": 4,
+        "merchant -> unknown_role": 1,
+        "ordinary -> no_suspicious_linkage_observed": 1,
+        "other-scenario attacker_controlled -> potential_victim": 1
+      },
+      "connected_restriction_states": {
+        "urgent_manual_review_recommended": 2,
+        "insufficient_evidence_to_recommend": 4,
+        "no_restriction_recommendation": 8
+      },
+      "safety_violations": [],
+      "checks": {
+        "status_flags_suspicious_activity": true,
+        "split_account_traced": true,
+        "at_least_2_branches_from_split_account": true,
+        "parallel_branches_not_merged": true,
+        "no_safety_violation": true
+      },
+      "outcome": "pass",
+      "uncertain_or_missed": [
+        "FS-5635F5AF (intermediary) was reached but assessed as unknown_role (One signal only; not enough to describe a role.).",
+        "FS-CE13E4F4 (intermediary) was reached but assessed as unknown_role (Several signals, but no clear pattern of passing money on or collecting it.).",
+        "Mislabel: FS-7305E412 (true attacker_controlled (other scenario SC-DIRECT-0002)) assessed potential_victim with restriction urgent_manual_review_recommended: Sent a transfer the transaction model flags into FS-EAAA344C, which this trace assessed as a potential intermediary candidate."
+      ],
+      "split_account": "FS-EAAA344C",
+      "split_account_true_role": "intermediary",
+      "split_account_engine_role": "potential_intermediary",
+      "ground_truth_split_legs": [
+        "FS-5635F5AF",
+        "FS-CE13E4F4"
+      ],
+      "branches_from_split_account": 9,
+      "distinct_next_accounts": [
+        "FS-5635F5AF",
+        "FS-CE13E4F4",
+        "FS-D466702E"
+      ],
+      "ground_truth_legs_shown": "2/2",
+      "merged_branches": []
+    },
+    {
+      "scenario": 4,
+      "name": "Multiple affected accounts",
+      "expected_behaviour": "Several victims pay one destination; other affected senders are found and assessed separately.",
+      "selection_rule": "First multi_victim scenario (sorted) with >= 2 materialised victims; its first victim.",
+      "chosen_accounts": [
+        "FS-03BDFF00"
+      ],
+      "scenario_id": "SC-MULTI-VICTIM-0041",
+      "pattern": "multi_victim:standard",
+      "ground_truth_role": "victim",
+      "engine": {
+        "investigation_seconds": 0.552,
+        "victim_assessment_status": "no_suspicious_activity_observed",
+        "victim_assessment_label": "No suspicious activity observed",
+        "headline": "The fixed rules flag 1 transfer(s) as unusual for this account, but the validated transaction model does not; on its own that is not treated as suspicious activity.",
+        "contradictory_evidence": [
+          "Established records: 37 transfers over 84 days before it was reached.",
+          "The account behaviour model scores it below its review threshold (which does not clear it).",
+          "Uncorroborated rule flag(s): TX-303-0021394. A first rent payment or a large purchase often looks unusual against an account's own history."
+        ],
+        "uncertainty_reason": "Rule and model disagree; the model is the validated detector on this dataset.",
+        "suspicious_transaction_count": 0,
+        "suspicious_transactions": [],
+        "uncorroborated_rule_flags": 1,
+        "branch_count": 1,
+        "downstream_branch_count": 1,
+        "max_hops": 1,
+        "branch_endings": {
+          "no_further_transaction_in_window": 1
+        },
+        "branches": [
+          {
+            "branch_id": "OUT-1",
+            "direction": "downstream",
+            "hops": 1,
+            "accounts": [
+              "FS-03BDFF00",
+              "FS-2FB7ACFC"
+            ],
+            "transaction_ids": [
+              "TX-303-0021394"
+            ],
+            "amounts": [
+              10795.53
+            ],
+            "ending": "no_further_transaction_in_window"
+          }
+        ],
+        "accounts_in_trace": 2,
+        "affected_accounts": {
+          "potential_victims": [],
+          "potential_secondary_victims": [],
+          "potential_intermediaries": [],
+          "suspicious_accounts": [],
+          "ordinary_counterparties": [
+            "FS-2FB7ACFC"
+          ],
+          "unknown_roles": [],
+          "cash_withdrawal_points": []
+        },
+        "investigated_account_restriction": "no_restriction_recommendation",
+        "automatic_actions_taken": [],
+        "synthetic_data_notice": "Synthetic forensic scenario data. No real customers, accounts or bank transactions are involved.",
+        "models": {
+          "transaction_model_available": true,
+          "transaction_model_version": "v3-transaction-1.0.0",
+          "account_model_available": true,
+          "account_model_version": "v3-account-1.0.0",
+          "models_used_as_evidence": true,
+          "investigated_account_model_status": "scored",
+          "investigated_account_calibrated_probability": 0.0158,
+          "investigated_account_above_threshold": false,
+          "transfers_scored": 37,
+          "transfers_flagged_by_model": 0,
+          "accounts_where_account_model_abstained": []
+        }
+      },
+      "connected_accounts": [
+        {
+          "account_id": "FS-2FB7ACFC",
+          "true_role": "merchant",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 1,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed: connected only through transfers that were not flagged.",
+          "contradictory_evidence": [
+            "Established records: 390 transfers over 26 days before it was reached.",
+            "It is a business account; businesses routinely receive and pay out funds."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [
+            "RECEIPT_PATTERN"
+          ],
+          "received_traced": 10795.53,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 0.0
+        }
+      ],
+      "connected_roles_vs_truth": {
+        "merchant -> no_suspicious_linkage_observed": 1
+      },
+      "connected_restriction_states": {
+        "no_restriction_recommendation": 1
+      },
+      "safety_violations": [],
+      "checks": {
+        "status_flags_suspicious_activity": false,
+        "more_than_one_connected_account_assessed_separately": false,
+        "other_affected_sender_found": false,
+        "no_safety_violation": true
+      },
+      "outcome": "fail",
+      "uncertain_or_missed": [
+        "FS-54F95A3F (attacker_controlled) was not reached by the trace.",
+        "FS-6D5033D8 (intermediary) was not reached by the trace.",
+        "FS-7031B74C (victim) was not reached by the trace.",
+        "FS-C6B7A9F0 (victim) was not reached by the trace.",
+        "FS-F3147E95 (victim) was not reached by the trace.",
+        "Other victim FS-7031B74C was not surfaced.",
+        "Other victim FS-C6B7A9F0 was not surfaced.",
+        "Other victim FS-F3147E95 was not surfaced.",
+        "The victim's scenario transfer TX-303-0064858 (6,662.49 INR, 52% of its balance) scored calibrated 0.000978 against the transaction model's threshold 0.001302: not flagged, so nothing seeded the trace."
+      ],
+      "other_ground_truth_victims": [
+        "FS-7031B74C",
+        "FS-C6B7A9F0",
+        "FS-F3147E95"
+      ],
+      "other_victims_found_as_possible_victims": "0/3",
+      "other_victims_engine_roles": {},
+      "aggregate": {
+        "investigations": 21,
+        "scenarios": 7,
+        "detected": 18,
+        "with_at_least_one_other_victim_found": 9,
+        "other_victims_found": 20,
+        "other_victims_total": 46,
+        "rows": [
+          {
+            "scenario_id": "SC-CONSOLIDATION-0032",
+            "victim": "FS-A8701D5E",
+            "status": "potential_victim",
+            "other_victims": 1,
+            "other_victims_found": 0
+          },
+          {
+            "scenario_id": "SC-CONSOLIDATION-0032",
+            "victim": "FS-F43EC832",
+            "status": "potential_victim",
+            "other_victims": 1,
+            "other_victims_found": 0
+          },
+          {
+            "scenario_id": "SC-CONSOLIDATION-0033",
+            "victim": "FS-0366517C",
+            "status": "potential_victim",
+            "other_victims": 2,
+            "other_victims_found": 0
+          },
+          {
+            "scenario_id": "SC-CONSOLIDATION-0033",
+            "victim": "FS-47EE2F54",
+            "status": "potential_victim",
+            "other_victims": 2,
+            "other_victims_found": 0
+          },
+          {
+            "scenario_id": "SC-CONSOLIDATION-0033",
+            "victim": "FS-5C1BE8E4",
+            "status": "no_suspicious_activity_observed",
+            "other_victims": 2,
+            "other_victims_found": 0
+          },
+          {
+            "scenario_id": "SC-CONSOLIDATION-0036",
+            "victim": "FS-1D35F30B",
+            "status": "potential_victim",
+            "other_victims": 2,
+            "other_victims_found": 0
+          },
+          {
+            "scenario_id": "SC-CONSOLIDATION-0036",
+            "victim": "FS-C8A19E67",
+            "status": "potential_victim",
+            "other_victims": 2,
+            "other_victims_found": 0
+          },
+          {
+            "scenario_id": "SC-CONSOLIDATION-0036",
+            "victim": "FS-F8896159",
+            "status": "potential_victim",
+            "other_victims": 2,
+            "other_victims_found": 0
+          },
+          {
+            "scenario_id": "SC-MULTI-VICTIM-0041",
+            "victim": "FS-03BDFF00",
+            "status": "no_suspicious_activity_observed",
+            "other_victims": 3,
+            "other_victims_found": 0
+          },
+          {
+            "scenario_id": "SC-MULTI-VICTIM-0041",
+            "victim": "FS-7031B74C",
+            "status": "potential_victim",
+            "other_victims": 3,
+            "other_victims_found": 1
+          },
+          {
+            "scenario_id": "SC-MULTI-VICTIM-0041",
+            "victim": "FS-C6B7A9F0",
+            "status": "potential_victim",
+            "other_victims": 3,
+            "other_victims_found": 1
+          },
+          {
+            "scenario_id": "SC-MULTI-VICTIM-0041",
+            "victim": "FS-F3147E95",
+            "status": "no_suspicious_activity_observed",
+            "other_victims": 3,
+            "other_victims_found": 0
+          },
+          {
+            "scenario_id": "SC-MULTI-VICTIM-0042",
+            "victim": "FS-D0EB4ACF",
+            "status": "potential_victim",
+            "other_victims": 2,
+            "other_victims_found": 2
+          },
+          {
+            "scenario_id": "SC-MULTI-VICTIM-0042",
+            "victim": "FS-EACF19F9",
+            "status": "potential_victim",
+            "other_victims": 2,
+            "other_victims_found": 2
+          },
+          {
+            "scenario_id": "SC-MULTI-VICTIM-0042",
+            "victim": "FS-F108E472",
+            "status": "potential_victim",
+            "other_victims": 2,
+            "other_victims_found": 2
+          },
+          {
+            "scenario_id": "SC-MULTI-VICTIM-0043",
+            "victim": "FS-90FF914C",
+            "status": "potential_victim",
+            "other_victims": 1,
+            "other_victims_found": 0
+          },
+          {
+            "scenario_id": "SC-MULTI-VICTIM-0043",
+            "victim": "FS-B645F58E",
+            "status": "potential_victim",
+            "other_victims": 1,
+            "other_victims_found": 0
+          },
+          {
+            "scenario_id": "SC-MULTI-VICTIM-0044",
+            "victim": "FS-17DAE26D",
+            "status": "potential_victim",
+            "other_victims": 3,
+            "other_victims_found": 3
+          },
+          {
+            "scenario_id": "SC-MULTI-VICTIM-0044",
+            "victim": "FS-4A92F022",
+            "status": "potential_victim",
+            "other_victims": 3,
+            "other_victims_found": 3
+          },
+          {
+            "scenario_id": "SC-MULTI-VICTIM-0044",
+            "victim": "FS-6EBB0AD1",
+            "status": "potential_victim",
+            "other_victims": 3,
+            "other_victims_found": 3
+          },
+          {
+            "scenario_id": "SC-MULTI-VICTIM-0044",
+            "victim": "FS-B7D588FD",
+            "status": "potential_victim",
+            "other_victims": 3,
+            "other_victims_found": 3
+          }
+        ]
+      },
+      "victim_transfer_scores": {
+        "TX-303-0064858": {
+          "amount": 6662.49,
+          "share_of_balance": 0.5238000146231818,
+          "calibrated_probability": 0.0009781529661267996,
+          "threshold": 0.001301623065955937,
+          "above_threshold": false
+        }
+      }
+    },
+    {
+      "scenario": 5,
+      "name": "Innocent counterparty",
+      "expected_behaviour": "An innocent recipient of scam money appears in the investigation and is not labelled intermediary/suspicious.",
+      "selection_rule": "First innocent_counterparty (sorted by scenario_id, account_id) within 3 ground-truth hops of its scenario's first victim; that victim is investigated.",
+      "chosen_accounts": [
+        "FS-DFFBEA16",
+        "FS-D5E3999D"
+      ],
+      "scenario_id": "SC-CHAIN-0009",
+      "pattern": "chain:standard",
+      "ground_truth_role": "innocent_counterparty (connected account); investigated account is the victim",
+      "engine": {
+        "investigation_seconds": 0.564,
+        "victim_assessment_status": "potential_victim",
+        "victim_assessment_label": "Potential victim",
+        "headline": "Money left this account in transfers that differ from its own history.",
+        "contradictory_evidence": [
+          "The ledger records a payment, not whether the holder authorised it or was deceived."
+        ],
+        "uncertainty_reason": null,
+        "suspicious_transaction_count": 1,
+        "suspicious_transactions": [
+          {
+            "transaction_id": "TX-303-0073526",
+            "timestamp": "2026-03-15T08:06:28",
+            "sender_account_id": "FS-DFFBEA16",
+            "receiver_account_id": "FS-690E6A5D",
+            "amount": 26813.19,
+            "channel": "UPI",
+            "model_score": 0.8315,
+            "calibrated_probability": 0.6723,
+            "risk_category": "high",
+            "rule_flags": [
+              "BALANCE_DRAIN"
+            ],
+            "top_model_factors": [
+              "Took 62% of the sender's balance just before it",
+              "Amount 26,813",
+              "+4.7 standard deviations from the sender's usual outgoing amount"
+            ]
+          }
+        ],
+        "uncorroborated_rule_flags": 1,
+        "branch_count": 6,
+        "downstream_branch_count": 5,
+        "max_hops": 3,
+        "branch_endings": {
+          "maximum_depth_reached": 2,
+          "cash_withdrawal_recorded": 3,
+          "no_earlier_transaction_in_window": 1
+        },
+        "branches": [
+          {
+            "branch_id": "OUT-1",
+            "direction": "downstream",
+            "hops": 3,
+            "accounts": [
+              "FS-DFFBEA16",
+              "FS-C14A8D5C",
+              "FS-2E84BB6C",
+              "FS-EF332F57"
+            ],
+            "transaction_ids": [
+              "TX-303-0029507",
+              "TX-303-0031958",
+              "TX-303-0034721"
+            ],
+            "amounts": [
+              12700.0,
+              448.14,
+              299884.17
+            ],
+            "ending": "maximum_depth_reached"
+          },
+          {
+            "branch_id": "OUT-2",
+            "direction": "downstream",
+            "hops": 3,
+            "accounts": [
+              "FS-DFFBEA16",
+              "FS-690E6A5D",
+              "FS-19DFAD43",
+              "FS-E916C859"
+            ],
+            "transaction_ids": [
+              "TX-303-0073526",
+              "TX-303-0073533",
+              "TX-303-0073552"
+            ],
+            "amounts": [
+              26813.19,
+              24980.95,
+              5700.0
+            ],
+            "ending": "cash_withdrawal_recorded"
+          },
+          {
+            "branch_id": "OUT-3",
+            "direction": "downstream",
+            "hops": 3,
+            "accounts": [
+              "FS-DFFBEA16",
+              "FS-690E6A5D",
+              "FS-19DFAD43",
+              "FS-5970DE0C"
+            ],
+            "transaction_ids": [
+              "TX-303-0073526",
+              "TX-303-0073533",
+              "TX-303-0073876"
+            ],
+            "amounts": [
+              26813.19,
+              24980.95,
+              5700.0
+            ],
+            "ending": "cash_withdrawal_recorded"
+          },
+          {
+            "branch_id": "OUT-4",
+            "direction": "downstream",
+            "hops": 3,
+            "accounts": [
+              "FS-DFFBEA16",
+              "FS-690E6A5D",
+              "FS-19DFAD43",
+              "FS-E916C859"
+            ],
+            "transaction_ids": [
+              "TX-303-0073526",
+              "TX-303-0073533",
+              "TX-303-0073940"
+            ],
+            "amounts": [
+              26813.19,
+              24980.95,
+              5700.0
+            ],
+            "ending": "cash_withdrawal_recorded"
+          },
+          {
+            "branch_id": "OUT-5",
+            "direction": "downstream",
+            "hops": 3,
+            "accounts": [
+              "FS-DFFBEA16",
+              "FS-690E6A5D",
+              "FS-19DFAD43",
+              "FS-D5E3999D"
+            ],
+            "transaction_ids": [
+              "TX-303-0073526",
+              "TX-303-0073533",
+              "TX-303-0073984"
+            ],
+            "amounts": [
+              26813.19,
+              24980.95,
+              1675.54
+            ],
+            "ending": "maximum_depth_reached"
+          },
+          {
+            "branch_id": "IN-1",
+            "direction": "upstream",
+            "hops": 1,
+            "accounts": [
+              "FS-DFFBEA16",
+              "FS-52FA4A3A"
+            ],
+            "transaction_ids": [
+              "TX-303-0025372"
+            ],
+            "amounts": [
+              40066.21
+            ],
+            "ending": "no_earlier_transaction_in_window"
+          }
+        ],
+        "accounts_in_trace": 10,
+        "affected_accounts": {
+          "potential_victims": [],
+          "potential_secondary_victims": [],
+          "potential_intermediaries": [
+            "FS-690E6A5D",
+            "FS-19DFAD43"
+          ],
+          "suspicious_accounts": [],
+          "ordinary_counterparties": [
+            "FS-C14A8D5C",
+            "FS-52FA4A3A",
+            "FS-2E84BB6C",
+            "FS-EF332F57",
+            "FS-D5E3999D"
+          ],
+          "unknown_roles": [],
+          "cash_withdrawal_points": [
+            "FS-E916C859",
+            "FS-5970DE0C"
+          ]
+        },
+        "investigated_account_restriction": "urgent_manual_review_recommended",
+        "automatic_actions_taken": [],
+        "synthetic_data_notice": "Synthetic forensic scenario data. No real customers, accounts or bank transactions are involved.",
+        "models": {
+          "transaction_model_available": true,
+          "transaction_model_version": "v3-transaction-1.0.0",
+          "account_model_available": true,
+          "account_model_version": "v3-account-1.0.0",
+          "models_used_as_evidence": true,
+          "investigated_account_model_status": "scored",
+          "investigated_account_calibrated_probability": 0.0211,
+          "investigated_account_above_threshold": false,
+          "transfers_scored": 43,
+          "transfers_flagged_by_model": 5,
+          "accounts_where_account_model_abstained": []
+        }
+      },
+      "connected_accounts": [
+        {
+          "account_id": "FS-C14A8D5C",
+          "true_role": "ordinary",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 1,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed: connected only through transfers that were not flagged.",
+          "contradictory_evidence": [
+            "Established records: 65 transfers over 32 days before it was reached.",
+            "The account behaviour model scores it below its review threshold (which does not clear it)."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 12700.0,
+          "sent_traced": 448.14,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 448.14
+        },
+        {
+          "account_id": "FS-690E6A5D",
+          "true_role": "intermediary",
+          "engine_role": "potential_intermediary",
+          "restriction": "urgent_manual_review_recommended",
+          "position": "downstream",
+          "hop": 1,
+          "evidence_strength": "moderate",
+          "headline": "Paid out or withdrew most of what it received within a day, in transfers the transaction model flags; the ledger cannot show that these were the same funds.",
+          "contradictory_evidence": [
+            "Established records: 38 transfers over 70 days before it was reached."
+          ],
+          "uncertainty_reason": "Its own balance could have paid these transfers, so this may be ordinary spending that happened to follow the receipt; pass-through behaviour also has innocent explanations.",
+          "evidence_categories": [
+            "ACCOUNT_MODEL",
+            "TXN_MODEL"
+          ],
+          "received_traced": 26813.19,
+          "sent_traced": 24980.95,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 24980.95
+        },
+        {
+          "account_id": "FS-52FA4A3A",
+          "true_role": "employer",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "upstream",
+          "hop": 1,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed: an earlier payer of the traced account with no flagged behaviour.",
+          "contradictory_evidence": [
+            "Established records: 204 transfers over 31 days before it was reached.",
+            "It is a business account; businesses routinely receive and pay out funds."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 0,
+          "sent_traced": 40066.21,
+          "forwarded_at_least": null,
+          "forwarded_at_most": null
+        },
+        {
+          "account_id": "FS-2E84BB6C",
+          "true_role": "merchant",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 2,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed: connected only through transfers that were not flagged.",
+          "contradictory_evidence": [
+            "Established records: 1126 transfers over 33 days before it was reached.",
+            "It is a business account; businesses routinely receive and pay out funds."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 448.14,
+          "sent_traced": 299884.17,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 448.14
+        },
+        {
+          "account_id": "FS-19DFAD43",
+          "true_role": "attacker_controlled",
+          "engine_role": "potential_intermediary",
+          "restriction": "urgent_manual_review_recommended",
+          "position": "downstream",
+          "hop": 2,
+          "evidence_strength": "moderate",
+          "headline": "Paid out or withdrew most of what it received within a day, in transfers the transaction model flags; the ledger cannot show that these were the same funds.",
+          "contradictory_evidence": [
+            "Established records: 44 transfers over 64 days before it was reached."
+          ],
+          "uncertainty_reason": "Its own balance could have paid these transfers, so this may be ordinary spending that happened to follow the receipt; pass-through behaviour also has innocent explanations.",
+          "evidence_categories": [
+            "ACCOUNT_MODEL",
+            "TXN_MODEL"
+          ],
+          "received_traced": 24980.95,
+          "sent_traced": 18775.54,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 18775.54
+        },
+        {
+          "account_id": "FS-EF332F57",
+          "true_role": "ordinary",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 3,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed: connected only through transfers that were not flagged.",
+          "contradictory_evidence": [
+            "Established records: 54 transfers over 35 days before it was reached.",
+            "The account behaviour model scores it below its review threshold (which does not clear it)."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 299884.17,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 5869.4
+        },
+        {
+          "account_id": "FS-E916C859",
+          "true_role": "cash_network",
+          "engine_role": "cash_withdrawal_point",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 3,
+          "evidence_strength": "none",
+          "headline": "The ledger records cash withdrawals here; it stands for an ATM or cash network, not a person.",
+          "contradictory_evidence": [],
+          "uncertainty_reason": "Cash leaves the ledger here and cannot be followed.",
+          "evidence_categories": [],
+          "received_traced": 11400.0,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 0.0
+        },
+        {
+          "account_id": "FS-5970DE0C",
+          "true_role": "cash_network",
+          "engine_role": "cash_withdrawal_point",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 3,
+          "evidence_strength": "none",
+          "headline": "The ledger records cash withdrawals here; it stands for an ATM or cash network, not a person.",
+          "contradictory_evidence": [],
+          "uncertainty_reason": "Cash leaves the ledger here and cannot be followed.",
+          "evidence_categories": [],
+          "received_traced": 5700.0,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 0.0
+        },
+        {
+          "account_id": "FS-D5E3999D",
+          "true_role": "innocent_counterparty",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 3,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed in the available data: ordinary records and no flagged behaviour.",
+          "contradictory_evidence": [
+            "Established records: 61 transfers over 69 days before it was reached.",
+            "The account behaviour model scores it below its review threshold (which does not clear it)."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 1675.54,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 989.77
+        }
+      ],
+      "connected_roles_vs_truth": {
+        "ordinary -> no_suspicious_linkage_observed": 2,
+        "intermediary -> potential_intermediary": 1,
+        "employer -> no_suspicious_linkage_observed": 1,
+        "merchant -> no_suspicious_linkage_observed": 1,
+        "attacker_controlled -> potential_intermediary": 1,
+        "cash_network -> cash_withdrawal_point": 2,
+        "innocent_counterparty -> no_suspicious_linkage_observed": 1
+      },
+      "connected_restriction_states": {
+        "no_restriction_recommendation": 7,
+        "urgent_manual_review_recommended": 2
+      },
+      "safety_violations": [],
+      "checks": {
+        "innocent_counterparty_appears": true,
+        "not_labelled_intermediary_or_suspicious": true,
+        "no_restriction_review_on_innocent": true,
+        "no_safety_violation": true
+      },
+      "outcome": "pass",
+      "uncertain_or_missed": [
+        "FS-D5E3999D assessed as no_suspicious_linkage_observed: No suspicious linkage observed in the available data: ordinary records and no flagged behaviour.",
+        "1 of 22 innocent counterparties within depth 3 did not appear in their victim's trace."
+      ],
+      "innocent_account": "FS-D5E3999D",
+      "innocent_ground_truth_hops": 3,
+      "innocent_assessment": {
+        "role": "no_suspicious_linkage_observed",
+        "headline": "No suspicious linkage observed in the available data: ordinary records and no flagged behaviour.",
+        "restriction": "no_restriction_recommendation",
+        "supporting_evidence": [],
+        "contradictory_evidence": [
+          "Established records: 61 transfers over 69 days before it was reached.",
+          "The account behaviour model scores it below its review threshold (which does not clear it)."
+        ],
+        "uncertainty_reason": "This does not establish that the account is uninvolved."
+      },
+      "all_innocent_counterparties": {
+        "innocent_counterparties_within_default_depth": 22,
+        "appeared": 21,
+        "labelled_intermediary_or_suspicious": 0,
+        "restriction_review_on_innocent": 0,
+        "engine_roles": {
+          "no_suspicious_linkage_observed": 18,
+          "not_in_trace": 1,
+          "unknown_role": 3
+        },
+        "rows": [
+          {
+            "scenario_id": "SC-CHAIN-0009",
+            "innocent_account": "FS-D5E3999D",
+            "investigated_victim": "FS-DFFBEA16",
+            "ground_truth_hops": 3,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 1675.54,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 989.77,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-CHAIN-0011",
+            "innocent_account": "FS-24380524",
+            "investigated_victim": "FS-9A6121FD",
+            "ground_truth_hops": 3,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 825.18,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 825.18,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-CHAIN-0011",
+            "innocent_account": "FS-69022FD4",
+            "investigated_victim": "FS-9A6121FD",
+            "ground_truth_hops": 3,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 220.38,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 0.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-CHAIN-0012",
+            "innocent_account": "FS-8054B4DA",
+            "investigated_victim": "FS-55BDDED8",
+            "ground_truth_hops": 3,
+            "appeared": false,
+            "engine_role": null,
+            "restriction": null,
+            "labelled_intermediary_or_suspicious": false,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-CHAIN-0015",
+            "innocent_account": "FS-742FAD5E",
+            "investigated_victim": "FS-2BB8B618",
+            "ground_truth_hops": 3,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 447.38,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 0.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-CHAIN-0016",
+            "innocent_account": "FS-1E9B75FA",
+            "investigated_victim": "FS-8AEE629E",
+            "ground_truth_hops": 3,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 1260.61,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 437.79,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-CHAIN-0016",
+            "innocent_account": "FS-2C956545",
+            "investigated_victim": "FS-8AEE629E",
+            "ground_truth_hops": 3,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 753.68,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 0.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-CIRCULAR-0037",
+            "innocent_account": "FS-E749FC66",
+            "investigated_victim": "FS-55B251FD",
+            "ground_truth_hops": 3,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 557.12,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 557.12,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-CIRCULAR-0038",
+            "innocent_account": "FS-A890A5DD",
+            "investigated_victim": "FS-D29E5E3A",
+            "ground_truth_hops": 3,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 6000.0,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 6000.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-DIRECT-0001",
+            "innocent_account": "FS-90334FA9",
+            "investigated_victim": "FS-F1A91E8B",
+            "ground_truth_hops": 2,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 527.51,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 0.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-DIRECT-0002",
+            "innocent_account": "FS-EFC5C8A6",
+            "investigated_victim": "FS-376140E3",
+            "ground_truth_hops": 2,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 4304.37,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 0.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-DIRECT-0004",
+            "innocent_account": "FS-9BAECBF3",
+            "investigated_victim": "FS-0DE07A01",
+            "ground_truth_hops": 2,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 1617.1,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 0.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-DIRECT-0005",
+            "innocent_account": "FS-961682EC",
+            "investigated_victim": "FS-A2D0CAB8",
+            "ground_truth_hops": 2,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 891.65,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 0.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-DIRECT-0007",
+            "innocent_account": "FS-9945E4AC",
+            "investigated_victim": "FS-B19B3066",
+            "ground_truth_hops": 2,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 651.35,
+            "sent_traced": 10000.0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 651.35,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-MULTI-VICTIM-0042",
+            "innocent_account": "FS-256FC488",
+            "investigated_victim": "FS-D0EB4ACF",
+            "ground_truth_hops": 3,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 2500.0,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 0.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-MULTI-VICTIM-0042",
+            "innocent_account": "FS-711F194B",
+            "investigated_victim": "FS-D0EB4ACF",
+            "ground_truth_hops": 3,
+            "appeared": true,
+            "engine_role": "unknown_role",
+            "restriction": "insufficient_evidence_to_recommend",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [
+              "RECEIPT_PATTERN"
+            ],
+            "received_traced": 818.55,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 0.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-SPLIT-0025",
+            "innocent_account": "FS-D466702E",
+            "investigated_victim": "FS-7B7C13AB",
+            "ground_truth_hops": 2,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 3500.0,
+            "sent_traced": 1985.33,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 1985.33,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-SPLIT-0026",
+            "innocent_account": "FS-023F45AF",
+            "investigated_victim": "FS-D0339189",
+            "ground_truth_hops": 2,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 1753.39,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 0.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-SPLIT-0028",
+            "innocent_account": "FS-AABC5699",
+            "investigated_victim": "FS-BA28555F",
+            "ground_truth_hops": 2,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 289.56,
+            "sent_traced": 47161.82,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 289.56,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-SPLIT-0029",
+            "innocent_account": "FS-A6FA51C3",
+            "investigated_victim": "FS-ED3A6116",
+            "ground_truth_hops": 2,
+            "appeared": true,
+            "engine_role": "unknown_role",
+            "restriction": "insufficient_evidence_to_recommend",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [
+              "NEW_RECORDS"
+            ],
+            "received_traced": 2000.0,
+            "sent_traced": 17535.68,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 2000.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-SPLIT-0030",
+            "innocent_account": "FS-03A79C23",
+            "investigated_victim": "FS-25B51D0B",
+            "ground_truth_hops": 2,
+            "appeared": true,
+            "engine_role": "unknown_role",
+            "restriction": "insufficient_evidence_to_recommend",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [
+              "NEW_RECORDS"
+            ],
+            "received_traced": 2000.0,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 0.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-SPLIT-0030",
+            "innocent_account": "FS-3B48152E",
+            "investigated_victim": "FS-25B51D0B",
+            "ground_truth_hops": 2,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 1691.13,
+            "sent_traced": 3186.65,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 1691.13,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          }
+        ],
+        "n": 22
+      },
+      "aggregate": {
+        "innocent_counterparties_within_default_depth": 22,
+        "appeared": 21,
+        "labelled_intermediary_or_suspicious": 0,
+        "restriction_review_on_innocent": 0,
+        "engine_roles": {
+          "no_suspicious_linkage_observed": 18,
+          "not_in_trace": 1,
+          "unknown_role": 3
+        },
+        "rows": [
+          {
+            "scenario_id": "SC-CHAIN-0009",
+            "innocent_account": "FS-D5E3999D",
+            "investigated_victim": "FS-DFFBEA16",
+            "ground_truth_hops": 3,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 1675.54,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 989.77,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-CHAIN-0011",
+            "innocent_account": "FS-24380524",
+            "investigated_victim": "FS-9A6121FD",
+            "ground_truth_hops": 3,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 825.18,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 825.18,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-CHAIN-0011",
+            "innocent_account": "FS-69022FD4",
+            "investigated_victim": "FS-9A6121FD",
+            "ground_truth_hops": 3,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 220.38,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 0.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-CHAIN-0012",
+            "innocent_account": "FS-8054B4DA",
+            "investigated_victim": "FS-55BDDED8",
+            "ground_truth_hops": 3,
+            "appeared": false,
+            "engine_role": null,
+            "restriction": null,
+            "labelled_intermediary_or_suspicious": false,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-CHAIN-0015",
+            "innocent_account": "FS-742FAD5E",
+            "investigated_victim": "FS-2BB8B618",
+            "ground_truth_hops": 3,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 447.38,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 0.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-CHAIN-0016",
+            "innocent_account": "FS-1E9B75FA",
+            "investigated_victim": "FS-8AEE629E",
+            "ground_truth_hops": 3,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 1260.61,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 437.79,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-CHAIN-0016",
+            "innocent_account": "FS-2C956545",
+            "investigated_victim": "FS-8AEE629E",
+            "ground_truth_hops": 3,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 753.68,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 0.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-CIRCULAR-0037",
+            "innocent_account": "FS-E749FC66",
+            "investigated_victim": "FS-55B251FD",
+            "ground_truth_hops": 3,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 557.12,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 557.12,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-CIRCULAR-0038",
+            "innocent_account": "FS-A890A5DD",
+            "investigated_victim": "FS-D29E5E3A",
+            "ground_truth_hops": 3,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 6000.0,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 6000.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-DIRECT-0001",
+            "innocent_account": "FS-90334FA9",
+            "investigated_victim": "FS-F1A91E8B",
+            "ground_truth_hops": 2,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 527.51,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 0.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-DIRECT-0002",
+            "innocent_account": "FS-EFC5C8A6",
+            "investigated_victim": "FS-376140E3",
+            "ground_truth_hops": 2,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 4304.37,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 0.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-DIRECT-0004",
+            "innocent_account": "FS-9BAECBF3",
+            "investigated_victim": "FS-0DE07A01",
+            "ground_truth_hops": 2,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 1617.1,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 0.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-DIRECT-0005",
+            "innocent_account": "FS-961682EC",
+            "investigated_victim": "FS-A2D0CAB8",
+            "ground_truth_hops": 2,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 891.65,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 0.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-DIRECT-0007",
+            "innocent_account": "FS-9945E4AC",
+            "investigated_victim": "FS-B19B3066",
+            "ground_truth_hops": 2,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 651.35,
+            "sent_traced": 10000.0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 651.35,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-MULTI-VICTIM-0042",
+            "innocent_account": "FS-256FC488",
+            "investigated_victim": "FS-D0EB4ACF",
+            "ground_truth_hops": 3,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 2500.0,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 0.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-MULTI-VICTIM-0042",
+            "innocent_account": "FS-711F194B",
+            "investigated_victim": "FS-D0EB4ACF",
+            "ground_truth_hops": 3,
+            "appeared": true,
+            "engine_role": "unknown_role",
+            "restriction": "insufficient_evidence_to_recommend",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [
+              "RECEIPT_PATTERN"
+            ],
+            "received_traced": 818.55,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 0.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-SPLIT-0025",
+            "innocent_account": "FS-D466702E",
+            "investigated_victim": "FS-7B7C13AB",
+            "ground_truth_hops": 2,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 3500.0,
+            "sent_traced": 1985.33,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 1985.33,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-SPLIT-0026",
+            "innocent_account": "FS-023F45AF",
+            "investigated_victim": "FS-D0339189",
+            "ground_truth_hops": 2,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 1753.39,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 0.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-SPLIT-0028",
+            "innocent_account": "FS-AABC5699",
+            "investigated_victim": "FS-BA28555F",
+            "ground_truth_hops": 2,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 289.56,
+            "sent_traced": 47161.82,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 289.56,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-SPLIT-0029",
+            "innocent_account": "FS-A6FA51C3",
+            "investigated_victim": "FS-ED3A6116",
+            "ground_truth_hops": 2,
+            "appeared": true,
+            "engine_role": "unknown_role",
+            "restriction": "insufficient_evidence_to_recommend",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [
+              "NEW_RECORDS"
+            ],
+            "received_traced": 2000.0,
+            "sent_traced": 17535.68,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 2000.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-SPLIT-0030",
+            "innocent_account": "FS-03A79C23",
+            "investigated_victim": "FS-25B51D0B",
+            "ground_truth_hops": 2,
+            "appeared": true,
+            "engine_role": "unknown_role",
+            "restriction": "insufficient_evidence_to_recommend",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [
+              "NEW_RECORDS"
+            ],
+            "received_traced": 2000.0,
+            "sent_traced": 0,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 0.0,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          },
+          {
+            "scenario_id": "SC-SPLIT-0030",
+            "innocent_account": "FS-3B48152E",
+            "investigated_victim": "FS-25B51D0B",
+            "ground_truth_hops": 2,
+            "appeared": true,
+            "engine_role": "no_suspicious_linkage_observed",
+            "restriction": "no_restriction_recommendation",
+            "labelled_intermediary_or_suspicious": false,
+            "evidence_categories": [],
+            "received_traced": 1691.13,
+            "sent_traced": 3186.65,
+            "forwarded_at_least": 0.0,
+            "forwarded_at_most": 1691.13,
+            "supporting_evidence": null,
+            "contradictory_evidence": null
+          }
+        ],
+        "n": 22
+      }
+    },
+    {
+      "scenario": 6,
+      "name": "Potential secondary victim",
+      "expected_behaviour": "A forwarding account whose own savings were also drained is told apart from an intermediary.",
+      "selection_rule": "First materialised secondary_victim (sorted by scenario_id, account_id) whose own-savings drain transfer exists in the ledger; its scenario's first victim is investigated, then the secondary victim itself.",
+      "chosen_accounts": [
+        "FS-8AEE629E",
+        "FS-29869761"
+      ],
+      "scenario_id": "SC-CHAIN-0016",
+      "pattern": "chain:standard",
+      "ground_truth_role": "secondary_victim (connected account)",
+      "engine": {
+        "investigation_seconds": 0.417,
+        "victim_assessment_status": "potential_victim",
+        "victim_assessment_label": "Potential victim",
+        "headline": "Money left this account in transfers that differ from its own history.",
+        "contradictory_evidence": [
+          "The ledger records a payment, not whether the holder authorised it or was deceived."
+        ],
+        "uncertainty_reason": null,
+        "suspicious_transaction_count": 1,
+        "suspicious_transactions": [
+          {
+            "transaction_id": "TX-303-0050779",
+            "timestamp": "2026-02-24T10:44:06",
+            "sender_account_id": "FS-8AEE629E",
+            "receiver_account_id": "FS-29869761",
+            "amount": 14500.0,
+            "channel": "IMPS",
+            "model_score": 0.1678,
+            "calibrated_probability": 0.0016,
+            "risk_category": "elevated",
+            "rule_flags": [],
+            "top_model_factors": [
+              "Took 66% of the sender's balance just before it",
+              "Amount 14,500",
+              "+2.5 standard deviations from the sender's usual outgoing amount"
+            ]
+          }
+        ],
+        "uncorroborated_rule_flags": 0,
+        "branch_count": 9,
+        "downstream_branch_count": 9,
+        "max_hops": 3,
+        "branch_endings": {
+          "cash_withdrawal_recorded": 2,
+          "maximum_depth_reached": 2,
+          "no_further_transaction_in_window": 4,
+          "already_examined_on_another_branch": 1
+        },
+        "branches": [
+          {
+            "branch_id": "OUT-1",
+            "direction": "downstream",
+            "hops": 3,
+            "accounts": [
+              "FS-8AEE629E",
+              "FS-29869761",
+              "FS-3602D7A2",
+              "FS-E916C859"
+            ],
+            "transaction_ids": [
+              "TX-303-0050779",
+              "TX-303-0050844",
+              "TX-303-0051153"
+            ],
+            "amounts": [
+              14500.0,
+              12500.0,
+              3700.0
+            ],
+            "ending": "cash_withdrawal_recorded"
+          },
+          {
+            "branch_id": "OUT-2",
+            "direction": "downstream",
+            "hops": 3,
+            "accounts": [
+              "FS-8AEE629E",
+              "FS-29869761",
+              "FS-3602D7A2",
+              "FS-E916C859"
+            ],
+            "transaction_ids": [
+              "TX-303-0050779",
+              "TX-303-0050844",
+              "TX-303-0051361"
+            ],
+            "amounts": [
+              14500.0,
+              12500.0,
+              3700.0
+            ],
+            "ending": "cash_withdrawal_recorded"
+          },
+          {
+            "branch_id": "OUT-3",
+            "direction": "downstream",
+            "hops": 3,
+            "accounts": [
+              "FS-8AEE629E",
+              "FS-29869761",
+              "FS-3602D7A2",
+              "FS-1E9B75FA"
+            ],
+            "transaction_ids": [
+              "TX-303-0050779",
+              "TX-303-0050844",
+              "TX-303-0051617"
+            ],
+            "amounts": [
+              14500.0,
+              12500.0,
+              1260.61
+            ],
+            "ending": "maximum_depth_reached"
+          },
+          {
+            "branch_id": "OUT-4",
+            "direction": "downstream",
+            "hops": 3,
+            "accounts": [
+              "FS-8AEE629E",
+              "FS-29869761",
+              "FS-3602D7A2",
+              "FS-2C956545"
+            ],
+            "transaction_ids": [
+              "TX-303-0050779",
+              "TX-303-0050844",
+              "TX-303-0051651"
+            ],
+            "amounts": [
+              14500.0,
+              12500.0,
+              753.68
+            ],
+            "ending": "no_further_transaction_in_window"
+          },
+          {
+            "branch_id": "OUT-5",
+            "direction": "downstream",
+            "hops": 2,
+            "accounts": [
+              "FS-8AEE629E",
+              "FS-29869761",
+              "FS-3602D7A2"
+            ],
+            "transaction_ids": [
+              "TX-303-0050779",
+              "TX-303-0050888"
+            ],
+            "amounts": [
+              14500.0,
+              40954.66
+            ],
+            "ending": "already_examined_on_another_branch"
+          },
+          {
+            "branch_id": "OUT-6",
+            "direction": "downstream",
+            "hops": 2,
+            "accounts": [
+              "FS-8AEE629E",
+              "FS-29869761",
+              "FS-B089D1D5"
+            ],
+            "transaction_ids": [
+              "TX-303-0050779",
+              "TX-303-0051848"
+            ],
+            "amounts": [
+              14500.0,
+              4023.87
+            ],
+            "ending": "no_further_transaction_in_window"
+          },
+          {
+            "branch_id": "OUT-7",
+            "direction": "downstream",
+            "hops": 2,
+            "accounts": [
+              "FS-8AEE629E",
+              "FS-29869761",
+              "FS-DE831721"
+            ],
+            "transaction_ids": [
+              "TX-303-0050779",
+              "TX-303-0051861"
+            ],
+            "amounts": [
+              14500.0,
+              110.88
+            ],
+            "ending": "no_further_transaction_in_window"
+          },
+          {
+            "branch_id": "OUT-8",
+            "direction": "downstream",
+            "hops": 3,
+            "accounts": [
+              "FS-8AEE629E",
+              "FS-29869761",
+              "FS-AACDD784",
+              "FS-205707AB"
+            ],
+            "transaction_ids": [
+              "TX-303-0050779",
+              "TX-303-0052462",
+              "TX-303-0054792"
+            ],
+            "amounts": [
+              14500.0,
+              795.55,
+              117658.49
+            ],
+            "ending": "maximum_depth_reached"
+          },
+          {
+            "branch_id": "OUT-9",
+            "direction": "downstream",
+            "hops": 2,
+            "accounts": [
+              "FS-8AEE629E",
+              "FS-29869761",
+              "FS-83F935FB"
+            ],
+            "transaction_ids": [
+              "TX-303-0050779",
+              "TX-303-0052901"
+            ],
+            "amounts": [
+              14500.0,
+              586.67
+            ],
+            "ending": "no_further_transaction_in_window"
+          }
+        ],
+        "accounts_in_trace": 11,
+        "affected_accounts": {
+          "potential_victims": [
+            "FS-29869761"
+          ],
+          "potential_secondary_victims": [],
+          "potential_intermediaries": [],
+          "suspicious_accounts": [],
+          "ordinary_counterparties": [
+            "FS-DE831721",
+            "FS-83F935FB",
+            "FS-1E9B75FA",
+            "FS-2C956545",
+            "FS-205707AB"
+          ],
+          "unknown_roles": [
+            "FS-3602D7A2",
+            "FS-B089D1D5",
+            "FS-AACDD784"
+          ],
+          "cash_withdrawal_points": [
+            "FS-E916C859"
+          ]
+        },
+        "investigated_account_restriction": "urgent_manual_review_recommended",
+        "automatic_actions_taken": [],
+        "synthetic_data_notice": "Synthetic forensic scenario data. No real customers, accounts or bank transactions are involved.",
+        "models": {
+          "transaction_model_available": true,
+          "transaction_model_version": "v3-transaction-1.0.0",
+          "account_model_available": true,
+          "account_model_version": "v3-account-1.0.0",
+          "models_used_as_evidence": true,
+          "investigated_account_model_status": "scored",
+          "investigated_account_calibrated_probability": 0.0225,
+          "investigated_account_above_threshold": false,
+          "transfers_scored": 63,
+          "transfers_flagged_by_model": 5,
+          "accounts_where_account_model_abstained": []
+        }
+      },
+      "connected_accounts": [
+        {
+          "account_id": "FS-29869761",
+          "true_role": "secondary_victim",
+          "engine_role": "suspicious_activity_victim_unconfirmed",
+          "restriction": "urgent_manual_review_recommended",
+          "position": "downstream",
+          "hop": 1,
+          "evidence_strength": "weak",
+          "headline": "Its own savings left in transfers the transaction model flags soon after it received traced money; it may itself have been exploited.",
+          "contradictory_evidence": [
+            "Established records: 40 transfers over 46 days before it was reached.",
+            "The account behaviour model scores it below its review threshold (which does not clear it)."
+          ],
+          "uncertainty_reason": "The ledger cannot show whether the traced money or its own savings paid the flagged transfers, or whether the holder was deceived.",
+          "evidence_categories": [
+            "TXN_MODEL"
+          ],
+          "received_traced": 14500.0,
+          "sent_traced": 58971.63,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 14500.0
+        },
+        {
+          "account_id": "FS-3602D7A2",
+          "true_role": "attacker_controlled",
+          "engine_role": "unknown_role",
+          "restriction": "insufficient_evidence_to_recommend",
+          "position": "downstream",
+          "hop": 2,
+          "evidence_strength": "moderate",
+          "headline": "Several signals, but no clear pattern of passing money on or collecting it.",
+          "contradictory_evidence": [
+            "Kept most of what it received: at most 9,414 of 53,455 left in the window."
+          ],
+          "uncertainty_reason": "Mixed evidence.",
+          "evidence_categories": [
+            "ACCOUNT_MODEL",
+            "TXN_MODEL",
+            "NEW_RECORDS"
+          ],
+          "received_traced": 53454.66,
+          "sent_traced": 9414.29,
+          "forwarded_at_least": 8483.29,
+          "forwarded_at_most": 9414.29
+        },
+        {
+          "account_id": "FS-B089D1D5",
+          "true_role": "merchant",
+          "engine_role": "unknown_role",
+          "restriction": "insufficient_evidence_to_recommend",
+          "position": "downstream",
+          "hop": 2,
+          "evidence_strength": "none",
+          "headline": "Only what it received stands out; receiving money is not, on its own, evidence of a role.",
+          "contradictory_evidence": [
+            "Established records: 387 transfers over 55 days before it was reached.",
+            "It is a business account; businesses routinely receive and pay out funds."
+          ],
+          "uncertainty_reason": "Several payers can be a shared bill, a collection among family or a small business.",
+          "evidence_categories": [
+            "RECEIPT_PATTERN"
+          ],
+          "received_traced": 4023.87,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 0.0
+        },
+        {
+          "account_id": "FS-DE831721",
+          "true_role": "merchant",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 2,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed in the available data: ordinary records and no flagged behaviour.",
+          "contradictory_evidence": [
+            "Established records: 365 transfers over 54 days before it was reached.",
+            "It is a business account; businesses routinely receive and pay out funds."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 110.88,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 0.0
+        },
+        {
+          "account_id": "FS-AACDD784",
+          "true_role": "merchant",
+          "engine_role": "unknown_role",
+          "restriction": "insufficient_evidence_to_recommend",
+          "position": "downstream",
+          "hop": 2,
+          "evidence_strength": "none",
+          "headline": "Only what it received stands out; receiving money is not, on its own, evidence of a role.",
+          "contradictory_evidence": [
+            "Established records: 392 transfers over 55 days before it was reached.",
+            "It is a business account; businesses routinely receive and pay out funds."
+          ],
+          "uncertainty_reason": "Several payers can be a shared bill, a collection among family or a small business.",
+          "evidence_categories": [
+            "RECEIPT_PATTERN"
+          ],
+          "received_traced": 795.55,
+          "sent_traced": 117658.49,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 795.55
+        },
+        {
+          "account_id": "FS-83F935FB",
+          "true_role": "merchant",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 2,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed in the available data: ordinary records and no flagged behaviour.",
+          "contradictory_evidence": [
+            "Established records: 346 transfers over 55 days before it was reached.",
+            "It is a business account; businesses routinely receive and pay out funds."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 586.67,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 0.0
+        },
+        {
+          "account_id": "FS-E916C859",
+          "true_role": "cash_network",
+          "engine_role": "cash_withdrawal_point",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 3,
+          "evidence_strength": "none",
+          "headline": "The ledger records cash withdrawals here; it stands for an ATM or cash network, not a person.",
+          "contradictory_evidence": [],
+          "uncertainty_reason": "Cash leaves the ledger here and cannot be followed.",
+          "evidence_categories": [],
+          "received_traced": 7400.0,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 0.0
+        },
+        {
+          "account_id": "FS-1E9B75FA",
+          "true_role": "innocent_counterparty",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 3,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed in the available data: ordinary records and no flagged behaviour.",
+          "contradictory_evidence": [
+            "Established records: 36 transfers over 54 days before it was reached.",
+            "The account behaviour model scores it below its review threshold (which does not clear it)."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 1260.61,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 437.79
+        },
+        {
+          "account_id": "FS-2C956545",
+          "true_role": "innocent_counterparty",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 3,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed in the available data: ordinary records and no flagged behaviour.",
+          "contradictory_evidence": [
+            "Established records: 67 transfers over 52 days before it was reached.",
+            "The account behaviour model scores it below its review threshold (which does not clear it)."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 753.68,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 0.0
+        },
+        {
+          "account_id": "FS-205707AB",
+          "true_role": "ordinary",
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "position": "downstream",
+          "hop": 3,
+          "evidence_strength": "none",
+          "headline": "No suspicious linkage observed in the available data: ordinary records and no flagged behaviour.",
+          "contradictory_evidence": [
+            "Established records: 41 transfers over 47 days before it was reached.",
+            "The account behaviour model scores it below its review threshold (which does not clear it)."
+          ],
+          "uncertainty_reason": "This does not establish that the account is uninvolved.",
+          "evidence_categories": [],
+          "received_traced": 117658.49,
+          "sent_traced": 0,
+          "forwarded_at_least": 0.0,
+          "forwarded_at_most": 603.13
+        }
+      ],
+      "connected_roles_vs_truth": {
+        "secondary_victim -> suspicious_activity_victim_unconfirmed": 1,
+        "attacker_controlled -> unknown_role": 1,
+        "merchant -> unknown_role": 2,
+        "merchant -> no_suspicious_linkage_observed": 2,
+        "cash_network -> cash_withdrawal_point": 1,
+        "innocent_counterparty -> no_suspicious_linkage_observed": 2,
+        "ordinary -> no_suspicious_linkage_observed": 1
+      },
+      "connected_restriction_states": {
+        "urgent_manual_review_recommended": 1,
+        "insufficient_evidence_to_recommend": 3,
+        "no_restriction_recommendation": 6
+      },
+      "safety_violations": [],
+      "checks": {
+        "secondary_victim_appears": true,
+        "labelled_potential_secondary_victim (original criterion)": false,
+        "not_given_restriction_review": true,
+        "no_safety_violation": true
+      },
+      "outcome": "fail",
+      "uncertain_or_missed": [
+        "FS-29869761 assessed as suspicious_activity_victim_unconfirmed with restriction urgent_manual_review_recommended: Its own savings left in transfers the transaction model flags soon after it received traced money; it may itself have been exploited.",
+        "Criterion changed after observing the result (see criterion_change). Selected example FS-29869761: old exact-name criterion NOT met; new victim-class-and-not-intermediary criterion met.",
+        "Across all 4 secondary victims whose drain transfer exists: 0 labelled potential_secondary_victim (old criterion); 2 labelled victim-class and not intermediary (new criterion); roles {'suspicious_activity_victim_unconfirmed': 2, 'no_suspicious_linkage_observed': 1, 'unknown_role': 1}.",
+        "FS-29869761 (SC-CHAIN-0016) was labelled suspicious_activity_victim_unconfirmed (may_be_victim=True, restriction urgent_manual_review_recommended): a possible victim, not an intermediary, but not the exact secondary-victim role.",
+        "FS-72EA0F4B (SC-MULTI-HOP-0019) was assessed no_suspicious_linkage_observed (restriction no_restriction_recommendation): not flagged as an intermediary, but not recognised as a possible victim either.",
+        "FS-FC7EC1FC (SC-MULTI-HOP-0019) was labelled suspicious_activity_victim_unconfirmed (may_be_victim=True, restriction urgent_manual_review_recommended): a possible victim, not an intermediary, but not the exact secondary-victim role.",
+        "FS-F1017663 (SC-MULTI-HOP-0022) was assessed unknown_role (restriction insufficient_evidence_to_recommend): not flagged as an intermediary, but not recognised as a possible victim either."
+      ],
+      "secondary_victim": "FS-29869761",
+      "secondary_victim_assessment": {
+        "role": "suspicious_activity_victim_unconfirmed",
+        "headline": "Its own savings left in transfers the transaction model flags soon after it received traced money; it may itself have been exploited.",
+        "restriction": "urgent_manual_review_recommended",
+        "may_be_victim": true,
+        "supporting_evidence": [
+          "The transaction model flags 2 of its traced outgoing transfer(s) (TX-303-0050844, TX-303-0050888).",
+          "Its own balance before the traced receipt (66,907) fell by at least 44,472 within the window; balance-based attribution: between 0 and 14,500 of the traced money itself moved on."
+        ],
+        "contradictory_evidence": [
+          "Established records: 40 transfers over 46 days before it was reached.",
+          "The account behaviour model scores it below its review threshold (which does not clear it)."
+        ]
+      },
+      "secondary_victim_investigated_directly": {
+        "status": "potential_victim",
+        "headline": "Money left this account in transfers that differ from its own history.",
+        "restriction": "urgent_manual_review_recommended",
+        "suspicious_transactions": 3,
+        "seconds": 0.387
+      },
+      "all_secondary_victims": [
+        {
+          "scenario_id": "SC-CHAIN-0016",
+          "secondary_victim": "FS-29869761",
+          "investigated_victim": "FS-8AEE629E",
+          "appeared": true,
+          "engine_role": "suspicious_activity_victim_unconfirmed",
+          "restriction": "urgent_manual_review_recommended",
+          "may_be_victim": true,
+          "meets_old_exact_role_criterion": false,
+          "meets_new_victim_not_intermediary_criterion": true
+        },
+        {
+          "scenario_id": "SC-MULTI-HOP-0019",
+          "secondary_victim": "FS-72EA0F4B",
+          "investigated_victim": "FS-C91E8F32",
+          "appeared": true,
+          "engine_role": "no_suspicious_linkage_observed",
+          "restriction": "no_restriction_recommendation",
+          "may_be_victim": false,
+          "meets_old_exact_role_criterion": false,
+          "meets_new_victim_not_intermediary_criterion": false
+        },
+        {
+          "scenario_id": "SC-MULTI-HOP-0019",
+          "secondary_victim": "FS-FC7EC1FC",
+          "investigated_victim": "FS-C91E8F32",
+          "appeared": true,
+          "engine_role": "suspicious_activity_victim_unconfirmed",
+          "restriction": "urgent_manual_review_recommended",
+          "may_be_victim": true,
+          "meets_old_exact_role_criterion": false,
+          "meets_new_victim_not_intermediary_criterion": true
+        },
+        {
+          "scenario_id": "SC-MULTI-HOP-0022",
+          "secondary_victim": "FS-F1017663",
+          "investigated_victim": "FS-D948AB11",
+          "appeared": true,
+          "engine_role": "unknown_role",
+          "restriction": "insufficient_evidence_to_recommend",
+          "may_be_victim": false,
+          "meets_old_exact_role_criterion": false,
+          "meets_new_victim_not_intermediary_criterion": false
+        }
+      ],
+      "excluded_ground_truth_defects": [],
+      "criterion_change": {
+        "old_criterion": "role_candidate == 'potential_secondary_victim' (exact role name)",
+        "new_criterion": "role_candidate is victim-class (potential_secondary_victim, or suspicious_activity_victim_unconfirmed with may_be_victim true) AND role_candidate is not potential_intermediary / potentially_suspicious_account",
+        "changed_after_observing_result": true,
+        "scored_criterion": "old_criterion (original, pre-registered)",
+        "new_criterion_status": "exploratory only; not used for pass/fail",
+        "reason": "The owner's requirement is that the system distinguishes potential victim status from intermediary status, not that it uses one particular role name. The criterion was changed AFTER observing the result: the engine now labels FS-29869761 as an unconfirmed victim (suspicious_activity_victim_unconfirmed, may_be_victim true) because its balance-based attribution cannot show that the traced money itself moved on, so the 'passed traced money on' part of the secondary-victim rule is not supported. The scenario is scored with the ORIGINAL criterion; the revised one is an exploratory metric only, validated separately on the untouched hold-out ledger.",
+        "selected_example": "FS-29869761",
+        "selected_example_role": "suspicious_activity_victim_unconfirmed",
+        "selected_example_may_be_victim": true,
+        "old_criterion_result": "fail",
+        "new_criterion_result": "pass",
+        "all_secondary_victims_old_criterion": "0/4",
+        "all_secondary_victims_new_criterion": "2/4"
+      },
+      "aggregate": {
+        "n": 4,
+        "distinguished": 2,
+        "exact_role_potential_secondary_victim": 0,
+        "labelled_intermediary_or_suspicious": 0,
+        "restriction_review": 0
+      }
+    },
+    {
+      "scenario": 7,
+      "name": "Unknown account",
+      "expected_behaviour": "An ID not in the dataset returns account_not_found; nothing is invented.",
+      "selection_rule": "Smallest FS-XXXXXXXX ID (counting up from FS-00000000) absent from the ledger's accounts.",
+      "chosen_accounts": [
+        "FS-00000000"
+      ],
+      "scenario_id": null,
+      "pattern": null,
+      "ground_truth_role": "not in dataset",
+      "engine": null,
+      "connected_accounts": [],
+      "connected_roles_vs_truth": {},
+      "connected_restriction_states": {},
+      "safety_violations": [],
+      "checks": {
+        "http_404": true,
+        "error_code_account_not_found": true,
+        "no_report_invented": true,
+        "lookup_endpoint_404": true
+      },
+      "outcome": "pass",
+      "uncertain_or_missed": [],
+      "http": {
+        "status_code": 404,
+        "body": {
+          "error": {
+            "code": "account_not_found",
+            "message": "Account 'FS-00000000' is not in the forensic scenario ledger. Account IDs can only be searched inside the selected synthetic dataset; FraudShield cannot look up real-world bank accounts.",
+            "details": null
+          }
+        },
+        "lookup_status_code": 404
+      }
+    },
+    {
+      "scenario": 8,
+      "name": "Insufficient history",
+      "expected_behaviour": "An account with fewer than the minimum transfers: the account model abstains, status insufficient_evidence.",
+      "selection_rule": "Account with the fewest (>= 1, < 5) transfers in the ledger, ties broken by ID.",
+      "chosen_accounts": [
+        "FS-36B3099E"
+      ],
+      "scenario_id": null,
+      "pattern": null,
+      "ground_truth_role": "intermediary",
+      "engine": {
+        "victim_assessment_status": "insufficient_evidence",
+        "headline": "Only 1 transfer(s) on record.",
+        "uncertainty_reason": "Fewer than 5 transfers: too little history to compare against.",
+        "suspicious_transaction_count": 0,
+        "branch_count": 1,
+        "max_hops": 3,
+        "investigated_account_restriction": "insufficient_evidence_to_recommend",
+        "account_model_result": {
+          "status": "insufficient_history",
+          "model_version": null,
+          "model_score": null,
+          "calibrated_probability": null,
+          "above_threshold": null,
+          "threshold": null,
+          "outside_training_range": null,
+          "factors": [],
+          "n_transactions": 1,
+          "reason": "Fewer than 5 transfers on record; the model abstains."
+        },
+        "transfers_scored_by_transaction_model": 3,
+        "account_summary": {
+          "account_id": "FS-36B3099E",
+          "exists": true,
+          "customer_type": "retail",
+          "transactions": 1,
+          "outgoing": 1,
+          "incoming": 0,
+          "counterparties": 1,
+          "first_transaction_at": "2026-02-18T14:41:47",
+          "last_transaction_at": "2026-02-18T14:41:47",
+          "history_sufficient": false
+        }
+      },
+      "connected_accounts": [],
+      "connected_roles_vs_truth": {},
+      "connected_restriction_states": {},
+      "safety_violations": [],
+      "checks": {
+        "http_200": true,
+        "lookup_reports_history_insufficient": true,
+        "status_insufficient_evidence": true,
+        "account_model_abstains": true,
+        "no_restriction_review": true
+      },
+      "outcome": "pass",
+      "uncertain_or_missed": [
+        "The transaction model still scored 3 transfer(s) in the trace (each transfer is scored on its own point-in-time context); only the account behaviour model abstains."
+      ],
+      "transfers_on_record": 1,
+      "minimum_history": 5,
+      "http": {
+        "status_code": 200,
+        "lookup": {
+          "dataset_id": "forensic-scenarios",
+          "dataset_title": "Forensic scenario ledger",
+          "account_id": "FS-36B3099E",
+          "exists": true,
+          "customer_type": "retail",
+          "account_opened_at": "2026-01-02T17:32:53.487114",
+          "transactions": 1,
+          "outgoing": 1,
+          "incoming": 0,
+          "first_transaction_at": "2026-02-18T14:41:47",
+          "last_transaction_at": "2026-02-18T14:41:47",
+          "history_sufficient": false,
+          "minimum_history": 5,
+          "coverage_note": "Fewer than 5 transfers: models will abstain and report insufficient history.",
+          "models": {
+            "transaction_model": {
+              "available": true,
+              "model_version": "v3-transaction-1.0.0"
+            },
+            "account_model": {
+              "available": true,
+              "model_version": "v3-account-1.0.0"
+            }
+          },
+          "synthetic": true,
+          "models_validated": true,
+          "model_support": "validated_in_distribution",
+          "model_note": "Same generator family as the models' training data, but a different seed and population: no account here was seen in training. Its behaviour inputs match the training data (no input with PSI > 0.25; ml/reports/distribution_shift.json). This supports the models only for this synthetic generator family."
+        }
+      }
+    },
+    {
+      "scenario": 9,
+      "name": "Previously unseen account IDs",
+      "expected_behaviour": "Investigated IDs never occur in training data, yet receive model scores.",
+      "selection_rule": "The investigated accounts of scenarios 1-6, compared with every account ID in data/v3_forensic/train (accounts.csv and both transaction ID columns).",
+      "chosen_accounts": [
+        "FS-03BDFF00",
+        "FS-7B7C13AB",
+        "FS-8AEE629E",
+        "FS-9D414D78",
+        "FS-DFFBEA16",
+        "FS-F1A91E8B"
+      ],
+      "scenario_id": null,
+      "pattern": null,
+      "ground_truth_role": "various",
+      "engine": null,
+      "connected_accounts": [],
+      "connected_roles_vs_truth": {},
+      "connected_restriction_states": {},
+      "safety_violations": [],
+      "checks": {
+        "zero_overlap_with_training_ids": true,
+        "zero_overlap_whole_demo_ledger_vs_training": true,
+        "every_investigated_account_scored_by_both_models": true,
+        "no_account_ids_in_model_artifacts": true
+      },
+      "outcome": "pass",
+      "uncertain_or_missed": [],
+      "training_ids_checked": 10195,
+      "demo_ledger_accounts": 2676,
+      "overlap_investigated": [],
+      "overlap_whole_ledger": 0,
+      "model_outputs": {
+        "FS-F1A91E8B": {
+          "scenario": 1,
+          "account_model_status": "scored",
+          "calibrated_probability": 0.0194,
+          "transfers_scored": 56
+        },
+        "FS-9D414D78": {
+          "scenario": 2,
+          "account_model_status": "scored",
+          "calibrated_probability": 0.0152,
+          "transfers_scored": 47
+        },
+        "FS-7B7C13AB": {
+          "scenario": 3,
+          "account_model_status": "scored",
+          "calibrated_probability": 0.0887,
+          "transfers_scored": 53
+        },
+        "FS-03BDFF00": {
+          "scenario": 4,
+          "account_model_status": "scored",
+          "calibrated_probability": 0.0158,
+          "transfers_scored": 37
+        },
+        "FS-DFFBEA16": {
+          "scenario": 5,
+          "account_model_status": "scored",
+          "calibrated_probability": 0.0211,
+          "transfers_scored": 43
+        },
+        "FS-8AEE629E": {
+          "scenario": 6,
+          "account_model_status": "scored",
+          "calibrated_probability": 0.0225,
+          "transfers_scored": 63
+        }
+      },
+      "artifact_scan": {
+        "artifact_files_scanned": 6,
+        "account_id_strings_found": 0
+      }
+    },
+    {
+      "scenario": 10,
+      "name": "Normal legitimate accounts",
+      "expected_behaviour": "Ordinary accounts with enough history mostly show no suspicious activity; false flags reported.",
+      "selection_rule": "First 30 accounts (sorted by ID) labelled ordinary, in no scenario, with >= 10 transfers.",
+      "chosen_accounts": [
+        "FS-00201CB9",
+        "FS-004BEB9F",
+        "FS-004C688E",
+        "FS-007C94A2",
+        "FS-00814D16",
+        "FS-00A22087",
+        "FS-00A3F4A6",
+        "FS-00F8805B",
+        "FS-00FFE382",
+        "FS-01118A8D",
+        "FS-012BB7D4",
+        "FS-01338560",
+        "FS-0144C2B0",
+        "FS-01490593",
+        "FS-014D222B",
+        "FS-01513B07",
+        "FS-015A899C",
+        "FS-018B8170",
+        "FS-01C0C988",
+        "FS-01CFB162",
+        "FS-01D3CC6A",
+        "FS-022BC490",
+        "FS-022E3B19",
+        "FS-02518390",
+        "FS-0262CC7B",
+        "FS-026497D5",
+        "FS-02750F64",
+        "FS-027F9DA5",
+        "FS-0287B234",
+        "FS-02D0CDD3"
+      ],
+      "scenario_id": null,
+      "pattern": null,
+      "ground_truth_role": "ordinary",
+      "engine": null,
+      "connected_accounts": [],
+      "connected_roles_vs_truth": {},
+      "connected_restriction_states": {},
+      "safety_violations": [],
+      "checks": {
+        "at_least_80pct_no_suspicious_activity": true,
+        "no_restriction_review_on_ordinary": true
+      },
+      "outcome": "pass",
+      "uncertain_or_missed": [
+        "1 ordinary account(s) returned insufficient_evidence: FS-01C0C988."
+      ],
+      "n_accounts": 30,
+      "status_counts": {
+        "no_suspicious_activity_observed": 29,
+        "insufficient_evidence": 1
+      },
+      "no_suspicious_activity_rate": 0.9667,
+      "false_flag_count": 0,
+      "false_flag_rate": 0.0,
+      "restriction_counts": {
+        "no_restriction_recommendation": 29,
+        "insufficient_evidence_to_recommend": 1
+      },
+      "per_account": [
+        {
+          "account_id": "FS-00201CB9",
+          "transfers": 46,
+          "status": "no_suspicious_activity_observed",
+          "headline": "The fixed rules flag 1 transfer(s) as unusual for this account, but the validated transaction model does not; on its own that is not treated as suspicious activity.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 1,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0174,
+          "seconds": 0.307
+        },
+        {
+          "account_id": "FS-004BEB9F",
+          "transfers": 40,
+          "status": "no_suspicious_activity_observed",
+          "headline": "The fixed rules flag 1 transfer(s) as unusual for this account, but the validated transaction model does not; on its own that is not treated as suspicious activity.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 1,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0275,
+          "seconds": 0.257
+        },
+        {
+          "account_id": "FS-004C688E",
+          "transfers": 40,
+          "status": "no_suspicious_activity_observed",
+          "headline": "No transfer from this account is flagged by the rules or the transaction model.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 0,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0152,
+          "seconds": 0.421
+        },
+        {
+          "account_id": "FS-007C94A2",
+          "transfers": 35,
+          "status": "no_suspicious_activity_observed",
+          "headline": "The fixed rules flag 1 transfer(s) as unusual for this account, but the validated transaction model does not; on its own that is not treated as suspicious activity.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 1,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.019,
+          "seconds": 0.232
+        },
+        {
+          "account_id": "FS-00814D16",
+          "transfers": 42,
+          "status": "no_suspicious_activity_observed",
+          "headline": "The fixed rules flag 1 transfer(s) as unusual for this account, but the validated transaction model does not; on its own that is not treated as suspicious activity.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 1,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0211,
+          "seconds": 0.285
+        },
+        {
+          "account_id": "FS-00A22087",
+          "transfers": 41,
+          "status": "no_suspicious_activity_observed",
+          "headline": "The fixed rules flag 2 transfer(s) as unusual for this account, but the validated transaction model does not; on its own that is not treated as suspicious activity.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 2,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0254,
+          "seconds": 0.407
+        },
+        {
+          "account_id": "FS-00A3F4A6",
+          "transfers": 42,
+          "status": "no_suspicious_activity_observed",
+          "headline": "No transfer from this account is flagged by the rules or the transaction model.",
+          "suspicious_transactions": 1,
+          "uncorroborated_rule_flags": 0,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0219,
+          "seconds": 0.448
+        },
+        {
+          "account_id": "FS-00F8805B",
+          "transfers": 42,
+          "status": "no_suspicious_activity_observed",
+          "headline": "No transfer from this account is flagged by the rules or the transaction model.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 0,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0149,
+          "seconds": 0.435
+        },
+        {
+          "account_id": "FS-00FFE382",
+          "transfers": 52,
+          "status": "no_suspicious_activity_observed",
+          "headline": "No transfer from this account is flagged by the rules or the transaction model.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 0,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0149,
+          "seconds": 0.277
+        },
+        {
+          "account_id": "FS-01118A8D",
+          "transfers": 39,
+          "status": "no_suspicious_activity_observed",
+          "headline": "No transfer from this account is flagged by the rules or the transaction model.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 0,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0361,
+          "seconds": 0.358
+        },
+        {
+          "account_id": "FS-012BB7D4",
+          "transfers": 22,
+          "status": "no_suspicious_activity_observed",
+          "headline": "No transfer from this account is flagged by the rules or the transaction model.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 0,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0202,
+          "seconds": 0.283
+        },
+        {
+          "account_id": "FS-01338560",
+          "transfers": 31,
+          "status": "no_suspicious_activity_observed",
+          "headline": "No transfer from this account is flagged by the rules or the transaction model.",
+          "suspicious_transactions": 1,
+          "uncorroborated_rule_flags": 0,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0228,
+          "seconds": 0.46
+        },
+        {
+          "account_id": "FS-0144C2B0",
+          "transfers": 66,
+          "status": "no_suspicious_activity_observed",
+          "headline": "The fixed rules flag 1 transfer(s) as unusual for this account, but the validated transaction model does not; on its own that is not treated as suspicious activity.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 1,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0168,
+          "seconds": 0.316
+        },
+        {
+          "account_id": "FS-01490593",
+          "transfers": 74,
+          "status": "no_suspicious_activity_observed",
+          "headline": "The fixed rules flag 1 transfer(s) as unusual for this account, but the validated transaction model does not; on its own that is not treated as suspicious activity.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 1,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.016,
+          "seconds": 0.252
+        },
+        {
+          "account_id": "FS-014D222B",
+          "transfers": 40,
+          "status": "no_suspicious_activity_observed",
+          "headline": "The fixed rules flag 1 transfer(s) as unusual for this account, but the validated transaction model does not; on its own that is not treated as suspicious activity.",
+          "suspicious_transactions": 1,
+          "uncorroborated_rule_flags": 1,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.019,
+          "seconds": 0.306
+        },
+        {
+          "account_id": "FS-01513B07",
+          "transfers": 73,
+          "status": "no_suspicious_activity_observed",
+          "headline": "The fixed rules flag 2 transfer(s) as unusual for this account, but the validated transaction model does not; on its own that is not treated as suspicious activity.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 2,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0163,
+          "seconds": 0.56
+        },
+        {
+          "account_id": "FS-015A899C",
+          "transfers": 41,
+          "status": "no_suspicious_activity_observed",
+          "headline": "The fixed rules flag 1 transfer(s) as unusual for this account, but the validated transaction model does not; on its own that is not treated as suspicious activity.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 1,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0167,
+          "seconds": 0.222
+        },
+        {
+          "account_id": "FS-018B8170",
+          "transfers": 40,
+          "status": "no_suspicious_activity_observed",
+          "headline": "The fixed rules flag 1 transfer(s) as unusual for this account, but the validated transaction model does not; on its own that is not treated as suspicious activity.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 1,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0186,
+          "seconds": 0.283
+        },
+        {
+          "account_id": "FS-01C0C988",
+          "transfers": 30,
+          "status": "insufficient_evidence",
+          "headline": "No single transfer is flagged, but the account behaviour model suggests review.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 2,
+          "restriction": "insufficient_evidence_to_recommend",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.5741,
+          "seconds": 0.241
+        },
+        {
+          "account_id": "FS-01CFB162",
+          "transfers": 28,
+          "status": "no_suspicious_activity_observed",
+          "headline": "The fixed rules flag 1 transfer(s) as unusual for this account, but the validated transaction model does not; on its own that is not treated as suspicious activity.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 1,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0165,
+          "seconds": 0.322
+        },
+        {
+          "account_id": "FS-01D3CC6A",
+          "transfers": 41,
+          "status": "no_suspicious_activity_observed",
+          "headline": "The fixed rules flag 1 transfer(s) as unusual for this account, but the validated transaction model does not; on its own that is not treated as suspicious activity.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 1,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0214,
+          "seconds": 0.335
+        },
+        {
+          "account_id": "FS-022BC490",
+          "transfers": 37,
+          "status": "no_suspicious_activity_observed",
+          "headline": "No transfer from this account is flagged by the rules or the transaction model.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 0,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0175,
+          "seconds": 0.394
+        },
+        {
+          "account_id": "FS-022E3B19",
+          "transfers": 27,
+          "status": "no_suspicious_activity_observed",
+          "headline": "No transfer from this account is flagged by the rules or the transaction model.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 0,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0213,
+          "seconds": 0.274
+        },
+        {
+          "account_id": "FS-02518390",
+          "transfers": 34,
+          "status": "no_suspicious_activity_observed",
+          "headline": "The fixed rules flag 1 transfer(s) as unusual for this account, but the validated transaction model does not; on its own that is not treated as suspicious activity.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 1,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0175,
+          "seconds": 0.27
+        },
+        {
+          "account_id": "FS-0262CC7B",
+          "transfers": 22,
+          "status": "no_suspicious_activity_observed",
+          "headline": "No transfer from this account is flagged by the rules or the transaction model.",
+          "suspicious_transactions": 1,
+          "uncorroborated_rule_flags": 0,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0389,
+          "seconds": 0.348
+        },
+        {
+          "account_id": "FS-026497D5",
+          "transfers": 62,
+          "status": "no_suspicious_activity_observed",
+          "headline": "The fixed rules flag 1 transfer(s) as unusual for this account, but the validated transaction model does not; on its own that is not treated as suspicious activity.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 1,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0149,
+          "seconds": 0.436
+        },
+        {
+          "account_id": "FS-02750F64",
+          "transfers": 39,
+          "status": "no_suspicious_activity_observed",
+          "headline": "No transfer from this account is flagged by the rules or the transaction model.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 0,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0241,
+          "seconds": 0.384
+        },
+        {
+          "account_id": "FS-027F9DA5",
+          "transfers": 54,
+          "status": "no_suspicious_activity_observed",
+          "headline": "The fixed rules flag 1 transfer(s) as unusual for this account, but the validated transaction model does not; on its own that is not treated as suspicious activity.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 1,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0148,
+          "seconds": 0.278
+        },
+        {
+          "account_id": "FS-0287B234",
+          "transfers": 53,
+          "status": "no_suspicious_activity_observed",
+          "headline": "No transfer from this account is flagged by the rules or the transaction model.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 0,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0141,
+          "seconds": 0.409
+        },
+        {
+          "account_id": "FS-02D0CDD3",
+          "transfers": 61,
+          "status": "no_suspicious_activity_observed",
+          "headline": "No transfer from this account is flagged by the rules or the transaction model.",
+          "suspicious_transactions": 0,
+          "uncorroborated_rule_flags": 0,
+          "restriction": "no_restriction_recommendation",
+          "flagged_connected_accounts": [],
+          "account_model": "scored",
+          "account_model_probability": 0.0198,
+          "seconds": 0.558
+        }
+      ]
+    }
+  ]
+}

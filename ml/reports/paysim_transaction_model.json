@@ -1,0 +1,487 @@
+{
+  "dataset": {
+    "name": "PaySim (Kaggle ealaxi/paysim1)",
+    "license": "CC BY-SA 4.0",
+    "file": "data/raw/PS_20174392719_1491204439457_log.csv",
+    "sha256": "16910f90577b0d981bf8ff289714510bb89bc71bff7d3f220f024e287e4eea6b"
+  },
+  "environment": {
+    "python": "3.12.4",
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "scikit_learn": "1.9.1",
+    "xgboost": "3.4.1",
+    "platform": "macOS-27.0.1",
+    "trained_at": "2026-11-01T13:03:11Z",
+    "seed": 20261031
+  },
+  "validation": {
+    "rows_in": 6362620,
+    "rows_valid": 6362604,
+    "errors": {
+      "invalid_amount": 16
+    },
+    "warnings": {
+      "sender_balance_below_amount": 4079080,
+      "channel_missing": 6362604
+    }
+  },
+  "account_history_profile": {
+    "senders": 6353307,
+    "senders_appearing_once_share": 0.99854,
+    "receivers": 2722362,
+    "fraud_rows_where_amount_equals_sender_balance": 0.9782,
+    "non_fraud_rows_where_amount_equals_sender_balance": 1e-06,
+    "fraud_by_type": {
+      "CASH_IN": 0,
+      "CASH_OUT": 4116,
+      "DEBIT": 0,
+      "PAYMENT": 0,
+      "TRANSFER": 4097
+    }
+  },
+  "splits": {
+    "train": {
+      "steps": "1-323",
+      "rows": 1951895,
+      "positives": 3643,
+      "prevalence": 0.00187
+    },
+    "validation": {
+      "steps": "324-378",
+      "rows": 427991,
+      "positives": 564,
+      "prevalence": 0.00132
+    },
+    "test": {
+      "steps": "379-743",
+      "rows": 390523,
+      "positives": 4006,
+      "prevalence": 0.01026
+    },
+    "test_senders_seen_in_train": 350,
+    "test_receivers_seen_in_train_share": 0.6375
+  },
+  "excluded_features": {
+    "channel one-hots": "PaySim has no channel",
+    "type_PAYMENT": "never fraud-labelled in PaySim; not scored",
+    "type_CASH_IN": "never fraud-labelled in PaySim; not scored",
+    "type_DEBIT": "never fraud-labelled in PaySim; not scored",
+    "is_weekend": "PaySim steps have no calendar date; weekday would come from the adapter's arbitrary base date"
+  },
+  "results": {
+    "decision_time_features": {
+      "candidates": [
+        {
+          "family": "logistic_regression",
+          "train_rows": 76503,
+          "imbalance": "20:1 undersampled training split + class weights",
+          "validation": {
+            "pr_auc": 0.1864,
+            "roc_auc": 0.9036
+          },
+          "train": {
+            "pr_auc": 0.5722,
+            "roc_auc": 0.9125
+          }
+        },
+        {
+          "family": "random_forest",
+          "train_rows": 76503,
+          "imbalance": "20:1 undersampled training split + class weights",
+          "validation": {
+            "pr_auc": 0.9719,
+            "roc_auc": 1.0
+          },
+          "train": {
+            "pr_auc": 0.9981,
+            "roc_auc": 0.9998
+          }
+        },
+        {
+          "family": "xgboost",
+          "train_rows": 1951895,
+          "imbalance": "full training split, scale_pos_weight",
+          "validation": {
+            "pr_auc": 0.9408,
+            "roc_auc": 0.9999
+          },
+          "train": {
+            "pr_auc": 0.965,
+            "roc_auc": 0.9999
+          }
+        }
+      ],
+      "selected": "random_forest",
+      "threshold": {
+        "value": 0.554144761457346,
+        "rule": "lowest validation threshold with precision >= 50%",
+        "on": "uncalibrated score"
+      },
+      "validation": {
+        "split": "validation",
+        "n": 427991,
+        "positives": 564,
+        "negatives": 427427,
+        "prevalence": 0.00132,
+        "threshold": 0.554145,
+        "precision": 0.5377,
+        "recall": 1.0,
+        "f1": 0.6993,
+        "false_positive_rate": 0.001135,
+        "confusion_matrix": {
+          "tn": 426942,
+          "fp": 485,
+          "fn": 0,
+          "tp": 564
+        },
+        "pr_auc": 0.9719,
+        "roc_auc": 1.0,
+        "brier": 0.013265,
+        "ece": 0.07272,
+        "precision_at_k": {
+          "50": 1.0,
+          "100": 1.0,
+          "500": 0.948
+        },
+        "recall_at_precision": [
+          {
+            "precision_target": 0.5,
+            "recall": 1.0,
+            "threshold": 0.554144761457346
+          },
+          {
+            "precision_target": 0.8,
+            "recall": 0.9716,
+            "threshold": 0.7185034388407879
+          },
+          {
+            "precision_target": 0.9,
+            "recall": 0.8936,
+            "threshold": 0.7826141628948952
+          }
+        ]
+      },
+      "test": {
+        "split": "test (scored once)",
+        "n": 390523,
+        "positives": 4006,
+        "negatives": 386517,
+        "prevalence": 0.01026,
+        "threshold": 0.554145,
+        "precision": 0.8675,
+        "recall": 0.9973,
+        "f1": 0.9279,
+        "false_positive_rate": 0.001578,
+        "confusion_matrix": {
+          "tn": 385907,
+          "fp": 610,
+          "fn": 11,
+          "tp": 3995
+        },
+        "pr_auc": 0.9926,
+        "roc_auc": 0.9999,
+        "brier": 0.014775,
+        "ece": 0.07746,
+        "precision_at_k": {
+          "50": 1.0,
+          "100": 1.0,
+          "500": 1.0
+        },
+        "recall_at_precision": [
+          {
+            "precision_target": 0.5,
+            "recall": 0.9983,
+            "threshold": 0.41051656243532736
+          },
+          {
+            "precision_target": 0.8,
+            "recall": 0.9975,
+            "threshold": 0.5214727731122507
+          },
+          {
+            "precision_target": 0.9,
+            "recall": 0.9943,
+            "threshold": 0.613491379178148
+          }
+        ]
+      },
+      "calibration_curve_test": [
+        {
+          "n": 39053,
+          "mean_score": 0.0178,
+          "observed_rate": 0.0
+        },
+        {
+          "n": 39053,
+          "mean_score": 0.0241,
+          "observed_rate": 0.0
+        },
+        {
+          "n": 39053,
+          "mean_score": 0.0279,
+          "observed_rate": 0.0
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.0313,
+          "observed_rate": 0.0
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.0349,
+          "observed_rate": 0.0
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.0403,
+          "observed_rate": 0.0
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.0528,
+          "observed_rate": 0.0
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.0859,
+          "observed_rate": 0.0
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.1841,
+          "observed_rate": 0.0
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.378,
+          "observed_rate": 0.1026
+        }
+      ],
+      "feature_importance": {
+        "amount_to_sender_balance": 0.5385,
+        "r_in_n_24h": 0.0778,
+        "log_amount": 0.0754,
+        "first_time_pair": 0.056,
+        "r_prior_out_n": 0.0552,
+        "r_history_days": 0.0434,
+        "r_balance_before_log": 0.0399,
+        "type_TRANSFER": 0.0359,
+        "hour_cos": 0.0282,
+        "r_distinct_senders": 0.0259,
+        "hour_sin": 0.0235,
+        "s_history_days": 0.0001,
+        "s_distinct_recipients": 0.0,
+        "r_prior_in_n": 0.0,
+        "s_prior_out_n": 0.0
+      }
+    },
+    "without_balance_drain_ratio": {
+      "candidates": [
+        {
+          "family": "logistic_regression",
+          "train_rows": 76503,
+          "imbalance": "20:1 undersampled training split + class weights",
+          "validation": {
+            "pr_auc": 0.2036,
+            "roc_auc": 0.865
+          },
+          "train": {
+            "pr_auc": 0.5375,
+            "roc_auc": 0.8827
+          }
+        },
+        {
+          "family": "random_forest",
+          "train_rows": 76503,
+          "imbalance": "20:1 undersampled training split + class weights",
+          "validation": {
+            "pr_auc": 0.2167,
+            "roc_auc": 0.9301
+          },
+          "train": {
+            "pr_auc": 0.7611,
+            "roc_auc": 0.9636
+          }
+        },
+        {
+          "family": "xgboost",
+          "train_rows": 1951895,
+          "imbalance": "full training split, scale_pos_weight",
+          "validation": {
+            "pr_auc": 0.4676,
+            "roc_auc": 0.939
+          },
+          "train": {
+            "pr_auc": 0.5308,
+            "roc_auc": 0.9626
+          }
+        }
+      ],
+      "selected": "xgboost",
+      "threshold": {
+        "value": 0.8165918588638306,
+        "rule": "lowest validation threshold with precision >= 50%",
+        "on": "uncalibrated score"
+      },
+      "validation": {
+        "split": "validation",
+        "n": 427991,
+        "positives": 564,
+        "negatives": 427427,
+        "prevalence": 0.00132,
+        "threshold": 0.816592,
+        "precision": 0.4769,
+        "recall": 0.4202,
+        "f1": 0.4467,
+        "false_positive_rate": 0.000608,
+        "confusion_matrix": {
+          "tn": 427167,
+          "fp": 260,
+          "fn": 327,
+          "tp": 237
+        },
+        "pr_auc": 0.4676,
+        "roc_auc": 0.939,
+        "brier": 0.004439,
+        "ece": 0.01591,
+        "precision_at_k": {
+          "50": 1.0,
+          "100": 1.0,
+          "500": 0.478
+        },
+        "recall_at_precision": [
+          {
+            "precision_target": 0.5,
+            "recall": 0.4167,
+            "threshold": 0.8165918588638306
+          },
+          {
+            "precision_target": 0.8,
+            "recall": 0.406,
+            "threshold": 0.8198348879814148
+          },
+          {
+            "precision_target": 0.9,
+            "recall": 0.3723,
+            "threshold": 0.8746902346611023
+          }
+        ]
+      },
+      "test": {
+        "split": "test (scored once)",
+        "n": 390523,
+        "positives": 4006,
+        "negatives": 386517,
+        "prevalence": 0.01026,
+        "threshold": 0.816592,
+        "precision": 0.5119,
+        "recall": 0.4653,
+        "f1": 0.4875,
+        "false_positive_rate": 0.004597,
+        "confusion_matrix": {
+          "tn": 384740,
+          "fp": 1777,
+          "fn": 2142,
+          "tp": 1864
+        },
+        "pr_auc": 0.5444,
+        "roc_auc": 0.944,
+        "brier": 0.010754,
+        "ece": 0.01829,
+        "precision_at_k": {
+          "50": 1.0,
+          "100": 1.0,
+          "500": 0.986
+        },
+        "recall_at_precision": [
+          {
+            "precision_target": 0.5,
+            "recall": 0.5037,
+            "threshold": 0.7707285284996033
+          },
+          {
+            "precision_target": 0.8,
+            "recall": 0.2696,
+            "threshold": 0.9628464579582214
+          },
+          {
+            "precision_target": 0.9,
+            "recall": 0.2294,
+            "threshold": 0.9713456630706787
+          }
+        ]
+      },
+      "calibration_curve_test": [
+        {
+          "n": 39053,
+          "mean_score": 0.0005,
+          "observed_rate": 0.0
+        },
+        {
+          "n": 39053,
+          "mean_score": 0.0019,
+          "observed_rate": 0.0004
+        },
+        {
+          "n": 39053,
+          "mean_score": 0.0039,
+          "observed_rate": 0.0012
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.0046,
+          "observed_rate": 0.0013
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.0055,
+          "observed_rate": 0.0012
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.0068,
+          "observed_rate": 0.0016
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.0094,
+          "observed_rate": 0.0016
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.0135,
+          "observed_rate": 0.0022
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.0187,
+          "observed_rate": 0.0041
+        },
+        {
+          "n": 39052,
+          "mean_score": 0.2207,
+          "observed_rate": 0.089
+        }
+      ],
+      "feature_importance": {
+        "type_TRANSFER": 0.2385,
+        "r_balance_before_log": 0.2155,
+        "log_amount": 0.1511,
+        "hour_sin": 0.1471,
+        "hour_cos": 0.071,
+        "r_prior_in_n": 0.0623,
+        "type_CASH_OUT": 0.0504,
+        "r_history_days": 0.0398,
+        "r_distinct_senders": 0.016,
+        "r_in_n_24h": 0.0082,
+        "s_hours_since_last_out": 0.0001,
+        "s_history_days": 0.0001,
+        "r_prior_out_n": 0.0,
+        "s_amount_vs_prior_max": 0.0
+      }
+    }
+  },
+  "reading": "PaySim fraud is generated by emptying the sender's balance, so the balance-drain ratio nearly determines the label; the second feature set shows performance without it. Near-perfect PaySim scores describe the simulator, not real-world detection.",
+  "runtime_seconds": 102.8
+}

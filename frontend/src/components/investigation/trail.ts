@@ -27,6 +27,13 @@ export type EndingKind = 'cycle' | 'converges' | 'depth_limit' | 'no_onward';
 
 export interface BranchEnding {
   kind: EndingKind;
+  /**
+   * The ending reason code. When the dynamic investigation is available this is the server's own reason for the same
+   * branch (`fund_trace.branches[].ending.reason`); otherwise the local equivalent. Unknown codes are kept as strings.
+   */
+  reason: string;
+  /** 'server' when the reason and detail come from the dynamic investigation's branch, 'local' when derived here. */
+  source: 'server' | 'local';
   title: string;
   /** The full explanation for this branch. */
   detail: string;
@@ -34,6 +41,12 @@ export interface BranchEnding {
   shared: string;
   /** A fact specific to this branch's last account, if the data has one. */
   extra?: string;
+}
+
+/** The part of a server branch (dynamic investigation `fund_trace.branches[]`) the trail uses. */
+export interface ServerBranch {
+  transaction_ids: string[];
+  ending: { reason: string; detail: string };
 }
 
 export interface Branch {
@@ -69,28 +82,135 @@ export function farAccount(e: TraceEdge): string {
   return e.direction === 'downstream' ? e.destination_account_id : e.origin_account_id;
 }
 
-function ending(report: InvestigationResponse, last: TraceEdge): BranchEnding {
+/** Which side of the investigated account the trace first reached an account on, from the report's node roles. */
+function sideOf(report: InvestigationResponse, accountId: string): FlowDirection | 'root' | null {
+  const node = report.trace.nodes.find((n) => n.account_id === accountId);
+  if (!node) return null;
+  if (node.is_root || node.graph_role === 'investigated_account') return 'root';
+  return node.graph_role === 'direct_sender' || node.graph_role === 'upstream_sender' ? 'upstream' : 'downstream';
+}
+
+/** Title, kind and account-free wording for each server ending reason. Unknown reasons get a safe generic label. */
+const SERVER_ENDINGS: Record<string, { kind: EndingKind; title: string; shared: string }> = {
+  cycle_detected: {
+    kind: 'cycle',
+    title: 'Closes a loop of payments',
+    shared: 'These transfers reach an account already in the trace in a way that closes a loop, so the trace does not follow them again.',
+  },
+  already_examined_on_another_branch: {
+    kind: 'converges',
+    title: 'Joins money traced on another branch',
+    shared: 'These accounts were already reached through a different transfer, so they are not followed a second time.',
+  },
+  joins_opposite_direction_trace: {
+    kind: 'converges',
+    title: 'Joins the trace from the other side',
+    shared: 'This part of the flow is already traced from the other side of the investigated account, so it is not repeated here.',
+  },
+  maximum_depth_reached: {
+    kind: 'depth_limit',
+    title: 'Stopped at the depth limit',
+    shared: 'The trace was configured to follow money only so many hops from the investigated account, so these accounts were not followed further.',
+  },
+  maximum_node_limit_reached: {
+    kind: 'depth_limit',
+    title: 'Stopped at the account limit',
+    shared: 'The trace reached its limit on the number of accounts, so further transfers from these accounts were not added.',
+  },
+  per_account_limit_applied: {
+    kind: 'depth_limit',
+    title: 'Only the largest transfers followed',
+    shared: "Only these accounts' largest transfers in the window were followed; others may continue.",
+  },
+  cash_withdrawal_recorded: {
+    kind: 'no_onward',
+    title: 'Cash withdrawal recorded',
+    shared: 'These transfers are recorded as cash withdrawals; the ledger cannot follow cash any further.',
+  },
+  no_further_transaction_in_window: {
+    kind: 'no_onward',
+    title: 'No further outgoing transfer found',
+    shared: 'No transfer out of these accounts was found in the available window, in the available ledger data.',
+  },
+  no_earlier_transaction_in_window: {
+    kind: 'no_onward',
+    title: 'No earlier incoming transfer found',
+    shared: 'No transfer into these accounts was found in the available window, in the available ledger data.',
+  },
+  incomplete_or_missing_data: {
+    kind: 'no_onward',
+    title: 'Records not available',
+    shared: "These accounts' records are not in this dataset, so the trail cannot continue.",
+  },
+};
+const UNKNOWN_SERVER_ENDING = {
+  kind: 'no_onward' as EndingKind,
+  title: 'Trace stops here',
+  shared: 'The trace does not continue past these accounts. This says nothing about what happened to the money.',
+};
+
+/** A branch ending stated by the server for the same transfers. */
+export function serverEnding(reason: string, detail: string): BranchEnding {
+  const known = Object.prototype.hasOwnProperty.call(SERVER_ENDINGS, reason) ? SERVER_ENDINGS[reason] : UNKNOWN_SERVER_ENDING;
+  return { kind: known.kind, reason, source: 'server', title: known.title, detail: detail || known.shared, shared: known.shared };
+}
+
+function ending(report: InvestigationResponse, last: TraceEdge, path: TraceEdge[]): BranchEnding {
   const account = farAccount(last);
   const depth = report.request.max_depth;
   const window = report.request.onward_window_hours;
   const nodeLimitHit = report.trace.truncation_notes.some((n) => n.startsWith('The account limit'));
-  const caveat = nodeLimitHit ? ' The account limit was reached during this trace, so some transfers may not have been added.' : '';
+  const side = sideOf(report, account);
+  const otherSide = side !== null && side !== 'root' && side !== last.direction;
 
   if (last.is_cycle) {
+    const onPath = account === report.victim.account_id || path.slice(0, -1).some((t) => farAccount(t) === account);
+    return onPath || !otherSide
+      ? {
+          kind: 'cycle',
+          reason: 'cycle_detected',
+          source: 'local',
+          title: 'Returns to an account already on this path',
+          detail: `${account} already appears earlier on this branch, so the trace does not follow it again.`,
+          shared: 'These accounts already appear earlier on their branch, so the trace does not follow them again.',
+        }
+      : {
+          kind: 'cycle',
+          reason: 'cycle_detected',
+          source: 'local',
+          title: 'Closes a loop of payments',
+          detail: `This transfer closes a loop of payments through the investigated account: ${account} was already reached on the other side of the trace.`,
+          shared: 'These transfers close a loop of payments through the investigated account, so the trace does not follow them again.',
+        };
+  }
+  if (last.direction === 'downstream' && last.channel === 'ATM_CASH_OUT') {
     return {
-      kind: 'cycle',
-      title: 'Returns to an account already on this path',
-      detail: `${account} already appears earlier on this branch, so the trace does not follow it again.`,
-      shared: 'These accounts already appear earlier on their branch, so the trace does not follow them again.',
+      kind: 'no_onward',
+      reason: 'cash_withdrawal_recorded',
+      source: 'local',
+      title: 'Cash withdrawal recorded',
+      detail: `The money left ${last.origin_account_id} as a cash withdrawal; the ledger cannot follow cash any further.`,
+      shared: 'These transfers are recorded as cash withdrawals; the ledger cannot follow cash any further.',
     };
   }
   if (last.converges) {
-    return {
-      kind: 'converges',
-      title: 'Joins money traced on another branch',
-      detail: `${account} was already reached through a different transfer. Its onward movement is followed on that branch.`,
-      shared: 'These accounts were already reached through a different transfer; their onward movement is followed on that branch.',
-    };
+    return otherSide
+      ? {
+          kind: 'converges',
+          reason: 'joins_opposite_direction_trace',
+          source: 'local',
+          title: 'Joins the trace from the other side',
+          detail: `${account} was already reached from the other side of the investigated account, so it is not followed a second time.`,
+          shared: 'These accounts were already reached from the other side of the investigated account, so they are not followed a second time.',
+        }
+      : {
+          kind: 'converges',
+          reason: 'already_examined_on_another_branch',
+          source: 'local',
+          title: 'Joins money traced on another branch',
+          detail: `${account} was already reached through a different transfer. Its onward movement is followed on that branch.`,
+          shared: 'These accounts were already reached through a different transfer; their onward movement is followed on that branch.',
+        };
   }
   if (last.hop >= depth) {
     const line = report.exposure.per_account.find((x) => x.account_id === account);
@@ -101,29 +221,58 @@ function ending(report: InvestigationResponse, last: TraceEdge): BranchEnding {
     const hops = `${depth} hop${depth === 1 ? '' : 's'}`;
     return {
       kind: 'depth_limit',
+      reason: 'maximum_depth_reached',
+      source: 'local',
       title: `Stopped at the depth limit of ${hops}`,
       detail: `The trace was configured to follow money ${hops} from the investigated account, so ${account} was not followed further.${unseen ? ` ${unseen}` : ''}`,
       shared: `The trace was configured to follow money ${hops} from the investigated account, so these accounts were not followed further. Raising the depth would follow them.`,
       extra: unseen,
     };
   }
+  if (nodeLimitHit) {
+    // The trace report does not say which accounts the limit cut short, so this neither claims nothing followed nor that something did.
+    const verb = last.direction === 'downstream' ? `out of ${account} within ${window} h of it receiving this money` : `into ${account} within ${window} h before it paid this money on`;
+    return {
+      kind: 'no_onward',
+      reason: 'maximum_node_limit_reached',
+      source: 'local',
+      title: 'No further transfer added (account limit reached)',
+      detail: `No transfer ${verb} was added to the trace. The account limit was reached during this trace, so a transfer may exist that was not added.`,
+      shared: 'No further transfer was added for these accounts. The account limit was reached during this trace, so a transfer may exist that was not added.',
+    };
+  }
   return last.direction === 'downstream'
     ? {
         kind: 'no_onward',
+        reason: 'no_further_transaction_in_window',
+        source: 'local',
         title: 'No further outgoing transfer found',
-        detail: `No transfer out of ${account} was found within ${window} h of it receiving this money, in the available ledger data.${caveat}`,
-        shared: `No transfer out of these accounts was found within ${window} h of them receiving the money, in the available ledger data.${caveat}`,
+        detail: `No transfer out of ${account} was found within ${window} h of it receiving this money, in the available ledger data.`,
+        shared: `No transfer out of these accounts was found within ${window} h of them receiving the money, in the available ledger data.`,
       }
     : {
         kind: 'no_onward',
+        reason: 'no_earlier_transaction_in_window',
+        source: 'local',
         title: 'No earlier incoming transfer found',
-        detail: `No transfer into ${account} was found within ${window} h before it paid this money on, in the available ledger data.${caveat}`,
-        shared: `No transfer into these accounts was found within ${window} h before they paid the money on, in the available ledger data.${caveat}`,
+        detail: `No transfer into ${account} was found within ${window} h before it paid this money on, in the available ledger data.`,
+        shared: `No transfer into these accounts was found within ${window} h before they paid the money on, in the available ledger data.`,
       };
 }
 
-export function buildTrail(report: InvestigationResponse): Trail {
+const branchKey = (ids: string[]) => [...ids].sort().join('|');
+
+/**
+ * Splits the trace into branches. `serverBranches` (the dynamic investigation's `fund_trace.branches` for the same
+ * run) supply each branch's ending when a server branch has exactly the same transfers; any branch without a match
+ * keeps the ending derived here from the trace report.
+ */
+export function buildTrail(report: InvestigationResponse, serverBranches?: readonly ServerBranch[] | null): Trail {
   const rootId = report.victim.account_id;
+  const fromServer = new Map<string, ServerBranch['ending']>();
+  for (const b of serverBranches ?? []) {
+    if (b && Array.isArray(b.transaction_ids) && b.transaction_ids.length && b.ending) fromServer.set(branchKey(b.transaction_ids), b.ending);
+  }
   const edges = report.trace.edges;
   const edgesById = new Map(edges.map((e) => [e.transaction_id, e]));
   const childEdges = new Map<string, TraceEdge[]>();
@@ -159,6 +308,8 @@ export function buildTrail(report: InvestigationResponse): Trail {
     const transfers = direction === 'downstream' ? here : [...here].reverse();
     const accounts = [transfers[0].origin_account_id, ...transfers.map((t) => t.destination_account_id)];
     const n = branches.filter((b) => b.direction === direction).length + 1;
+    const local = ending(report, node.edge!, here);
+    const server = fromServer.get(branchKey(here.map((t) => t.transaction_id)));
     branches.push({
       id: `${direction}-${n}`,
       direction,
@@ -166,7 +317,7 @@ export function buildTrail(report: InvestigationResponse): Trail {
       transfers,
       accounts,
       endAccountId: farAccount(node.edge!),
-      ending: ending(report, node.edge!),
+      ending: server ? { ...serverEnding(server.reason, server.detail), extra: local.extra } : local,
     });
   };
   downstream.forEach((n) => walk(n, [], 'downstream'));

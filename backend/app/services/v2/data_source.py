@@ -37,6 +37,10 @@ except ModuleNotFoundError:
 SYNTHETIC = "synthetic_demo_ledger"
 AUTHORIZED = "authorized_institution_ledger"
 KNOWN_KINDS = (SYNTHETIC, AUTHORIZED)
+# The forensic scenario ledger (app/intelligence/datasets.py) is a second server-built synthetic ledger. It is never
+# configured through FRAUDSHIELD_DATA_SOURCE; it is selected per investigation by dataset ID.
+SYNTHETIC_FORENSIC = "synthetic_forensic_scenarios"
+SYNTHETIC_KINDS = (SYNTHETIC, SYNTHETIC_FORENSIC)
 
 
 class DataSourceUnavailable(Exception):

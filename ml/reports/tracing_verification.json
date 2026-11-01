@@ -1,0 +1,8342 @@
+{
+ "purpose": "Independent verification of fund tracing (amount reconciliation, branch endings, cycles, depth/node limits) against direct SQL on the served synthetic ledger. Synthetic data only; no accuracy claims.",
+ "database": "data/v3_forensic_scenarios.db",
+ "generated_by": "ml/forensics/verify_tracing.py",
+ "engine_called_as": "DynamicInvestigation.compute(DatasetRegistry, None, DynamicInvestigationRequest(dataset_id='forensic-scenarios', max_depth=d, max_nodes=n))",
+ "ground_truth_use": "data/v3_forensic/demo/{roles,scenarios,accounts,transactions}.csv read by this verifier only, to select accounts and identify the planted loop transfers; never passed to the engine.",
+ "cases": {
+  "victim_roots": 61,
+  "circular_members": 25,
+  "lookalike_hubs": 10,
+  "ordinary": 60
+ },
+ "distinct_accounts": 152,
+ "grid": {
+  "all_accounts": {
+   "max_depth": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "max_nodes": [
+    200
+   ]
+  },
+  "subset": {
+   "accounts": 56,
+   "max_depth": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "max_nodes": [
+    10,
+    50,
+    200
+   ]
+  },
+  "determinism_subset": {
+   "accounts": 15,
+   "requests": [
+    "d3/n200",
+    "d6/n50",
+    "d2/n10"
+   ]
+  }
+ },
+ "engine_rules_verified_against": {
+  "received_traced_amount": "Investigated account: always 0. Every other account: sum of traced transfers INTO it whose direction is 'downstream' and that are not loop-closing (is_cycle) transfers.",
+  "sent_traced_amount": "Sum of ALL traced transfers OUT of the account, whatever their direction, loop-closing ones included.",
+  "forwarded_at_least/forwarded_at_most": "Copied from investigation.exposure.per_account (downstream accounts only, first 60): over [first traced downstream non-loop receipt, +onward_window_hours], ordered by (timestamp, transaction_id): traced += receipt; traced = min(traced, balance_after); forwarded_min = received - traced, forwarded_max = min(received, outgoing in window). 'received' counts only traced receipts inside that window.",
+  "observed_downstream_total": "Sum of distinct traced downstream transfers (each transfer once).",
+  "traced_outgoing_total": "Sum of the downstream seed transfers selected for tracing.",
+  "is_cycle": "Far party already on the edge's own path back to the root, or first reached from the opposite side of the root with timing that lets money run round: upstream edge: follows(intro(far), edge) or follows(own_seed, other_seed); downstream edge: follows(edge, intro(far)) or follows(other_seed, own_seed); follows(r, p) = r.ts <= p.ts <= r.ts + window.",
+  "in_cycle": "Account on a closed loop of at least 3 distinct accounts formed by traced transfers.",
+  "endings_order": "cycle, cash withdrawal (downstream ATM_CASH_OUT), convergence (opposite side -> joins_opposite, same side -> already_examined), hop >= max_depth, node limit, per-account cap, nothing in window."
+ },
+ "result": {
+  "a1_trace_edges_match_ledger": {
+   "checked": 14856,
+   "passed": 14856,
+   "failed": 0
+  },
+  "a2_branch_steps_match_ledger": {
+   "checked": 20730,
+   "passed": 20730,
+   "failed": 0
+  },
+  "a3_every_transaction_dict_matches_ledger": {
+   "checked": 40215,
+   "passed": 40215,
+   "failed": 0
+  },
+  "a4_trace_edges_unique": {
+   "checked": 1584,
+   "passed": 1584,
+   "failed": 0
+  },
+  "a5_received_traced_rule": {
+   "checked": 14107,
+   "passed": 14107,
+   "failed": 0
+  },
+  "a6_sent_traced_rule": {
+   "checked": 14107,
+   "passed": 14107,
+   "failed": 0
+  },
+  "a7_forwarded_bounds_ordered": {
+   "checked": 17610,
+   "passed": 17610,
+   "failed": 0
+  },
+  "a8_exposure_recomputed_from_ledger": {
+   "checked": 8805,
+   "passed": 8805,
+   "failed": 0
+  },
+  "a9_exposure_received_equals_graph_received": {
+   "checked": 8805,
+   "passed": 8805,
+   "failed": 0
+  },
+  "a10_totals_equal_edge_sums": {
+   "checked": 1584,
+   "passed": 1584,
+   "failed": 0
+  },
+  "a11_seeds_are_traced": {
+   "checked": 1584,
+   "passed": 1584,
+   "failed": 0
+  },
+  "a12_graph_relationship_counts": {
+   "checked": 12523,
+   "passed": 12523,
+   "failed": 0
+  },
+  "a13_other_sender_transfer_matches_ledger": {
+   "checked": 333,
+   "passed": 333,
+   "failed": 0
+  },
+  "b1_ending_condition_holds": {
+   "checked": 10377,
+   "passed": 10377,
+   "failed": 0
+  },
+  "b2_max_depth_only_at_max_depth": {
+   "checked": 1304,
+   "passed": 1304,
+   "failed": 0
+  },
+  "b3_max_depth_has_onward_transfers": {
+   "checked": 1304,
+   "passed": 1304,
+   "failed": 0
+  },
+  "b4_no_forbidden_claims": {
+   "checked": 10377,
+   "passed": 10377,
+   "failed": 0
+  },
+  "b5_every_leaf_has_one_branch": {
+   "checked": 10568,
+   "passed": 10568,
+   "failed": 0
+  },
+  "b6_depth_note_counts_accounts_with_onward": {
+   "checked": 721,
+   "passed": 721,
+   "failed": 0
+  },
+  "b7_per_account_cap_shown_on_branches": {
+   "checked": 31,
+   "passed": 31,
+   "failed": 0
+  },
+  "c1_cycle_edges_consistent_with_ledger": {
+   "checked": 303,
+   "passed": 303,
+   "failed": 0
+  },
+  "c2_no_missed_same_path_cycle": {
+   "checked": 14553,
+   "passed": 14553,
+   "failed": 0
+  },
+  "c3_in_cycle_accounts_on_real_loop": {
+   "checked": 997,
+   "passed": 997,
+   "failed": 0
+  },
+  "c4_circular_loops_detected": {
+   "checked": 230,
+   "passed": 230,
+   "failed": 0
+  },
+  "d1_hop_within_max_depth": {
+   "checked": 1584,
+   "passed": 1584,
+   "failed": 0
+  },
+  "d2_nodes_within_max_nodes": {
+   "checked": 1584,
+   "passed": 1584,
+   "failed": 0
+  },
+  "d3_depth_monotonic": {
+   "checked": 1320,
+   "passed": 1320,
+   "failed": 0
+  },
+  "d4_deterministic": {
+   "checked": 45,
+   "passed": 45,
+   "failed": 0
+  },
+  "d5_branches_are_valid_chains": {
+   "checked": 13545,
+   "passed": 13545,
+   "failed": 0
+  }
+ },
+ "all_passed": true,
+ "defects": [],
+ "seconds_total": 552.2,
+ "checks": {
+  "a1_trace_edges_match_ledger": {
+   "description": "Every investigation.trace.edges transfer exists in the ledger with identical timestamp, sender, receiver, amount, channel and balances.",
+   "checked": 14856,
+   "passed": 14856,
+   "failed": 0,
+   "violations": []
+  },
+  "a2_branch_steps_match_ledger": {
+   "description": "Every fund_trace.branches step exists in the ledger; its amount equals the ledger amount, its accounts list follows the ledger's sender/receiver.",
+   "checked": 20730,
+   "passed": 20730,
+   "failed": 0,
+   "violations": []
+  },
+  "a3_every_transaction_dict_matches_ledger": {
+   "description": "Every object anywhere in the response that names a transaction_id and an amount matches the ledger (amount, timestamp, sender, receiver).",
+   "checked": 40215,
+   "passed": 40215,
+   "failed": 0,
+   "violations": []
+  },
+  "a4_trace_edges_unique": {
+   "description": "No transfer appears twice in investigation.trace.edges.",
+   "checked": 1584,
+   "passed": 1584,
+   "failed": 0,
+   "violations": []
+  },
+  "a5_received_traced_rule": {
+   "description": "graph_relationship.received_traced_amount equals the engine's stated rule recomputed from the ledger amounts of the traced transfers.",
+   "checked": 14107,
+   "passed": 14107,
+   "failed": 0,
+   "violations": []
+  },
+  "a6_sent_traced_rule": {
+   "description": "graph_relationship.sent_traced_amount equals the engine's stated rule recomputed from ledger amounts.",
+   "checked": 14107,
+   "passed": 14107,
+   "failed": 0,
+   "violations": []
+  },
+  "a7_forwarded_bounds_ordered": {
+   "description": "0 <= forwarded_at_least <= forwarded_at_most <= received_traced_amount.",
+   "checked": 17610,
+   "passed": 17610,
+   "failed": 0,
+   "violations": []
+  },
+  "a8_exposure_recomputed_from_ledger": {
+   "description": "exposure.per_account traced_in/outgoing/forwarded_min/forwarded_max/lowest balance equal an independent SQL recomputation of the documented balance rule.",
+   "checked": 8805,
+   "passed": 8805,
+   "failed": 0,
+   "violations": []
+  },
+  "a9_exposure_received_equals_graph_received": {
+   "description": "exposure traced_in_amount (all traced receipts, per-window rule) equals graph_relationship.received_traced_amount, so the forwarded range describes all traced money the account received.",
+   "checked": 8805,
+   "passed": 8805,
+   "failed": 0,
+   "violations": []
+  },
+  "a10_totals_equal_edge_sums": {
+   "description": "observed_downstream_total = sum of distinct downstream edges; traced_outgoing_total = sum of downstream seeds; flagged_outgoing_total <= traced_outgoing_total when flagged; fund_trace.transactions = distinct edges = union of branch transfers; fund_trace.accounts = nodes; cycles_detected = loop-closing edges.",
+   "checked": 1584,
+   "passed": 1584,
+   "failed": 0,
+   "violations": []
+  },
+  "a11_seeds_are_traced": {
+   "description": "Every downstream/upstream seed transfer (counted in traced_outgoing_total) is in the trace.",
+   "checked": 1584,
+   "passed": 1584,
+   "failed": 0,
+   "violations": []
+  },
+  "a12_graph_relationship_counts": {
+   "description": "onward_destinations, traced_paths_in and hop in graph_relationship follow their stated rules over the traced transfers.",
+   "checked": 12523,
+   "passed": 12523,
+   "failed": 0,
+   "violations": []
+  },
+  "a13_other_sender_transfer_matches_ledger": {
+   "description": "For accounts added as other senders, sent_traced_amount equals their flagged transfer in the ledger, received_traced_amount is 0, and that transfer pays an account in the trace.",
+   "checked": 333,
+   "passed": 333,
+   "failed": 0,
+   "violations": []
+  },
+  "b1_ending_condition_holds": {
+   "description": "Each ending reason's condition holds against the ledger (see per-reason rules in the report).",
+   "checked": 10377,
+   "passed": 10377,
+   "failed": 0,
+   "violations": []
+  },
+  "b2_max_depth_only_at_max_depth": {
+   "description": "maximum_depth_reached only on a branch whose last hop == max_depth.",
+   "checked": 1304,
+   "passed": 1304,
+   "failed": 0,
+   "violations": []
+  },
+  "b3_max_depth_has_onward_transfers": {
+   "description": "maximum_depth_reached only where the last account actually has a further qualifying transfer in the window (owner rule).",
+   "checked": 1304,
+   "passed": 1304,
+   "failed": 0,
+   "violations": []
+  },
+  "b4_no_forbidden_claims": {
+   "description": "No ending (reason or detail) claims money was recovered, frozen or lost.",
+   "checked": 10377,
+   "passed": 10377,
+   "failed": 0,
+   "violations": []
+  },
+  "b5_every_leaf_has_one_branch": {
+   "description": "Every traced transfer with no traced continuation ends exactly one branch; every loop-closing transfer ends a branch with cycle_detected or a cross-side join.",
+   "checked": 10568,
+   "passed": 10568,
+   "failed": 0,
+   "violations": []
+  },
+  "b6_depth_note_counts_accounts_with_onward": {
+   "description": "The 'depth limit reached; K account(s) not followed further' note counts only accounts that have a further transfer in the window.",
+   "checked": 721,
+   "passed": 721,
+   "failed": 0,
+   "violations": []
+  },
+  "b7_per_account_cap_shown_on_branches": {
+   "description": "An account whose transfers were cut to the 10 largest (truncation note) has at least one branch through it ending 'per_account_limit_applied', and it really had more than 10 qualifying transfers.",
+   "checked": 31,
+   "passed": 31,
+   "failed": 0,
+   "violations": []
+  },
+  "c1_cycle_edges_consistent_with_ledger": {
+   "description": "Every is_cycle transfer closes a loop under the documented rule, recomputed from ledger timestamps (own-path or opposite-side timing).",
+   "checked": 303,
+   "passed": 303,
+   "failed": 0,
+   "violations": []
+  },
+  "c2_no_missed_same_path_cycle": {
+   "description": "No non-cycle transfer reaches an account already on its own branch path.",
+   "checked": 14553,
+   "passed": 14553,
+   "failed": 0,
+   "violations": []
+  },
+  "c3_in_cycle_accounts_on_real_loop": {
+   "description": "Every in_cycle account lies on a directed loop of >= 3 distinct accounts formed by traced transfers.",
+   "checked": 997,
+   "passed": 997,
+   "failed": 0,
+   "violations": []
+  },
+  "c4_circular_loops_detected": {
+   "description": "Every SC-CIRCULAR loop that lies within max_depth of the investigated account (given the engine's own seeds) is closed by an is_cycle transfer and all its members carry in_cycle.",
+   "checked": 230,
+   "passed": 230,
+   "failed": 0,
+   "violations": []
+  },
+  "d1_hop_within_max_depth": {
+   "description": "No edge or node hop exceeds max_depth; fund_trace.max_depth_reached <= max_depth.",
+   "checked": 1584,
+   "passed": 1584,
+   "failed": 0,
+   "violations": []
+  },
+  "d2_nodes_within_max_nodes": {
+   "description": "fund_trace.accounts <= max_nodes.",
+   "checked": 1584,
+   "passed": 1584,
+   "failed": 0,
+   "violations": []
+  },
+  "d3_depth_monotonic": {
+   "description": "Raising max_depth (same max_nodes) never removes or alters an earlier traced transfer.",
+   "checked": 1320,
+   "passed": 1320,
+   "failed": 0,
+   "violations": []
+  },
+  "d4_deterministic": {
+   "description": "Identical requests give the same investigation_digest and identical fund_trace.",
+   "checked": 45,
+   "passed": 45,
+   "failed": 0,
+   "violations": []
+  },
+  "d5_branches_are_valid_chains": {
+   "description": "Each branch is a separate time-ordered chain of ledger transfers (parent links, 72 h window, connected accounts), amounts are per transfer (never merged), no two branches are identical, and branches cover exactly the traced transfers.",
+   "checked": 13545,
+   "passed": 13545,
+   "failed": 0,
+   "violations": []
+  }
+ },
+ "errors": [],
+ "runs": 1584,
+ "plan": 1584,
+ "seconds_per_run": {
+  "median": 0.304,
+  "p95": 0.616
+ },
+ "ending_reason_counts": {
+  "maximum_depth_reached": 1304,
+  "cash_withdrawal_recorded": 1779,
+  "cycle_detected": 303,
+  "no_further_transaction_in_window": 2636,
+  "no_earlier_transaction_in_window": 2441,
+  "already_examined_on_another_branch": 1571,
+  "per_account_limit_applied": 31,
+  "joins_opposite_direction_trace": 81,
+  "maximum_node_limit_reached": 231
+ },
+ "circular_loops": [
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "victim": "FS-55B251FD",
+   "members": [
+    "FS-7106DC59",
+    "FS-85B6CEC8",
+    "FS-A36BD91F",
+    "FS-D0746A75"
+   ],
+   "entry_transfer": "TX-303-0021541",
+   "loop_transfers": [
+    "TX-303-0021601",
+    "TX-303-0021619",
+    "TX-303-0021659",
+    "TX-303-0021676"
+   ],
+   "loop_path": [
+    "FS-85B6CEC8",
+    "FS-A36BD91F",
+    "FS-D0746A75",
+    "FS-7106DC59",
+    "FS-85B6CEC8"
+   ]
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "victim": "FS-D29E5E3A",
+   "members": [
+    "FS-450EDD8C",
+    "FS-871D0C65",
+    "FS-CA088F35",
+    "FS-FE39D120"
+   ],
+   "entry_transfer": "TX-303-0078308",
+   "loop_transfers": [
+    "TX-303-0078316",
+    "TX-303-0078389",
+    "TX-303-0078454",
+    "TX-303-0078528"
+   ],
+   "loop_path": [
+    "FS-CA088F35",
+    "FS-FE39D120",
+    "FS-871D0C65",
+    "FS-450EDD8C",
+    "FS-CA088F35"
+   ]
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "victim": "FS-2CBE8DF7",
+   "members": [
+    "FS-5CBDFEC6",
+    "FS-61C6DC36",
+    "FS-949E8968",
+    "FS-F2B06CCD"
+   ],
+   "entry_transfer": "TX-303-0035466",
+   "loop_transfers": [
+    "TX-303-0035494",
+    "TX-303-0035545",
+    "TX-303-0035594",
+    "TX-303-0035686"
+   ],
+   "loop_path": [
+    "FS-F2B06CCD",
+    "FS-949E8968",
+    "FS-61C6DC36",
+    "FS-5CBDFEC6",
+    "FS-F2B06CCD"
+   ]
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "victim": "FS-00C12D37",
+   "members": [
+    "FS-3F6BE7CF",
+    "FS-BE0CB56B",
+    "FS-FAE93C57"
+   ],
+   "entry_transfer": "TX-303-0018579",
+   "loop_transfers": [
+    "TX-303-0018594",
+    "TX-303-0018617",
+    "TX-303-0018642"
+   ],
+   "loop_path": [
+    "FS-3F6BE7CF",
+    "FS-BE0CB56B",
+    "FS-FAE93C57",
+    "FS-3F6BE7CF"
+   ]
+  }
+ ],
+ "circular_loop_runs": [
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-00C12D37",
+   "root_role": "victim",
+   "max_depth": 1,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "0/3",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": false,
+    "FS-BE0CB56B": null,
+    "FS-FAE93C57": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-00C12D37",
+   "root_role": "victim",
+   "max_depth": 2,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "1/3",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": false,
+    "FS-BE0CB56B": false,
+    "FS-FAE93C57": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-00C12D37",
+   "root_role": "victim",
+   "max_depth": 3,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/3",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": false,
+    "FS-BE0CB56B": false,
+    "FS-FAE93C57": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-00C12D37",
+   "root_role": "victim",
+   "max_depth": 4,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-00C12D37",
+   "root_role": "victim",
+   "max_depth": 5,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-00C12D37",
+   "root_role": "victim",
+   "max_depth": 6,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-2CBE8DF7",
+   "root_role": "victim",
+   "max_depth": 1,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "0/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": null,
+    "FS-949E8968": null,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-2CBE8DF7",
+   "root_role": "victim",
+   "max_depth": 2,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "1/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": null,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-2CBE8DF7",
+   "root_role": "victim",
+   "max_depth": 3,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": false,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-2CBE8DF7",
+   "root_role": "victim",
+   "max_depth": 4,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": false,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-2CBE8DF7",
+   "root_role": "victim",
+   "max_depth": 5,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035686"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-2CBE8DF7",
+   "root_role": "victim",
+   "max_depth": 6,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035686"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-3F6BE7CF",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/3",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": false,
+    "FS-BE0CB56B": false,
+    "FS-FAE93C57": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-3F6BE7CF",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018617"
+   ],
+   "cross_side_closures": [
+    "IN-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-3F6BE7CF",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018617"
+   ],
+   "cross_side_closures": [
+    "IN-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-3F6BE7CF",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018617"
+   ],
+   "cross_side_closures": [
+    "IN-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-3F6BE7CF",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018617"
+   ],
+   "cross_side_closures": [
+    "IN-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-3F6BE7CF",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018617"
+   ],
+   "cross_side_closures": [
+    "IN-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-450EDD8C",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": false,
+    "FS-CA088F35": false,
+    "FS-FE39D120": null
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-450EDD8C",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": false,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-450EDD8C",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-450EDD8C",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-450EDD8C",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-450EDD8C",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-55B251FD",
+   "root_role": "victim",
+   "max_depth": 1,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "0/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": null,
+    "FS-D0746A75": null
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-55B251FD",
+   "root_role": "victim",
+   "max_depth": 2,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "1/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": null
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-55B251FD",
+   "root_role": "victim",
+   "max_depth": 3,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-55B251FD",
+   "root_role": "victim",
+   "max_depth": 4,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-55B251FD",
+   "root_role": "victim",
+   "max_depth": 5,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021676"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-55B251FD",
+   "root_role": "victim",
+   "max_depth": 6,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021676"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-5CBDFEC6",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": false,
+    "FS-949E8968": null,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-5CBDFEC6",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": false,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-5CBDFEC6",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-5CBDFEC6",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-5CBDFEC6",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-5CBDFEC6",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-61C6DC36",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": false,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": null
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-61C6DC36",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-61C6DC36",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-61C6DC36",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-61C6DC36",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-61C6DC36",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-7106DC59",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": null,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-7106DC59",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-7106DC59",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-7106DC59",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-7106DC59",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-7106DC59",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-85B6CEC8",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": null
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-85B6CEC8",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021659"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-85B6CEC8",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021659"
+   ],
+   "cross_side_closures": [
+    "OUT-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-85B6CEC8",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021659"
+   ],
+   "cross_side_closures": [
+    "OUT-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-85B6CEC8",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021659"
+   ],
+   "cross_side_closures": [
+    "OUT-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-85B6CEC8",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021659"
+   ],
+   "cross_side_closures": [
+    "OUT-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-871D0C65",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": false,
+    "FS-CA088F35": null,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-871D0C65",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-871D0C65",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-871D0C65",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-871D0C65",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-871D0C65",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-949E8968",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": null,
+    "FS-61C6DC36": false,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-949E8968",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": false,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-949E8968",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035686"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-949E8968",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035686"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-949E8968",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035686"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-949E8968",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035686"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-A36BD91F",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": null,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-A36BD91F",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-A36BD91F",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021676"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-A36BD91F",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021676"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-A36BD91F",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021676"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-A36BD91F",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021676"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-BE0CB56B",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/3",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": false,
+    "FS-BE0CB56B": false,
+    "FS-FAE93C57": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-BE0CB56B",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-BE0CB56B",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-BE0CB56B",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-BE0CB56B",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-BE0CB56B",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-CA088F35",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": null,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-CA088F35",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078454"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-CA088F35",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078454"
+   ],
+   "cross_side_closures": [
+    "OUT-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-CA088F35",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078454"
+   ],
+   "cross_side_closures": [
+    "OUT-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-CA088F35",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078454"
+   ],
+   "cross_side_closures": [
+    "OUT-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-CA088F35",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078454"
+   ],
+   "cross_side_closures": [
+    "OUT-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-D0746A75",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": null,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-D0746A75",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-D0746A75",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-D0746A75",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-D0746A75",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-D0746A75",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-D29E5E3A",
+   "root_role": "victim",
+   "max_depth": 1,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "0/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": null,
+    "FS-CA088F35": false,
+    "FS-FE39D120": null
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-D29E5E3A",
+   "root_role": "victim",
+   "max_depth": 2,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "1/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": null,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-D29E5E3A",
+   "root_role": "victim",
+   "max_depth": 3,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": false,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-D29E5E3A",
+   "root_role": "victim",
+   "max_depth": 4,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": false,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-D29E5E3A",
+   "root_role": "victim",
+   "max_depth": 5,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078528"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-D29E5E3A",
+   "root_role": "victim",
+   "max_depth": 6,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078528"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-F2B06CCD",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": null,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-F2B06CCD",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035594"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-F2B06CCD",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035594"
+   ],
+   "cross_side_closures": [
+    "OUT-1"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-F2B06CCD",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035594"
+   ],
+   "cross_side_closures": [
+    "OUT-1"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-F2B06CCD",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035594"
+   ],
+   "cross_side_closures": [
+    "OUT-1"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-F2B06CCD",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035594"
+   ],
+   "cross_side_closures": [
+    "OUT-1"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-FAE93C57",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/3",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": false,
+    "FS-BE0CB56B": false,
+    "FS-FAE93C57": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-FAE93C57",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018594"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-FAE93C57",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018594"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-FAE93C57",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018594"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-FAE93C57",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018594"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-FAE93C57",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018594"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-FE39D120",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": null,
+    "FS-871D0C65": false,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-FE39D120",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": false,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-FE39D120",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078528"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-FE39D120",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078528"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-FE39D120",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078528"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-FE39D120",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 200,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": true,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078528"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-00C12D37",
+   "root_role": "victim",
+   "max_depth": 1,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "0/3",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": false,
+    "FS-BE0CB56B": null,
+    "FS-FAE93C57": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-00C12D37",
+   "root_role": "victim",
+   "max_depth": 2,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "1/3",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": false,
+    "FS-BE0CB56B": false,
+    "FS-FAE93C57": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-00C12D37",
+   "root_role": "victim",
+   "max_depth": 3,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/3",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": false,
+    "FS-BE0CB56B": false,
+    "FS-FAE93C57": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-00C12D37",
+   "root_role": "victim",
+   "max_depth": 4,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-00C12D37",
+   "root_role": "victim",
+   "max_depth": 5,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-00C12D37",
+   "root_role": "victim",
+   "max_depth": 6,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-00C12D37",
+   "root_role": "victim",
+   "max_depth": 1,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "0/3",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": false,
+    "FS-BE0CB56B": null,
+    "FS-FAE93C57": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-00C12D37",
+   "root_role": "victim",
+   "max_depth": 2,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "1/3",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": false,
+    "FS-BE0CB56B": false,
+    "FS-FAE93C57": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-00C12D37",
+   "root_role": "victim",
+   "max_depth": 3,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/3",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": false,
+    "FS-BE0CB56B": false,
+    "FS-FAE93C57": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-00C12D37",
+   "root_role": "victim",
+   "max_depth": 4,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-00C12D37",
+   "root_role": "victim",
+   "max_depth": 5,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-00C12D37",
+   "root_role": "victim",
+   "max_depth": 6,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-2CBE8DF7",
+   "root_role": "victim",
+   "max_depth": 1,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "0/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": null,
+    "FS-949E8968": null,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-2CBE8DF7",
+   "root_role": "victim",
+   "max_depth": 2,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "1/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": null,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-2CBE8DF7",
+   "root_role": "victim",
+   "max_depth": 3,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": false,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-2CBE8DF7",
+   "root_role": "victim",
+   "max_depth": 4,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": false,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-2CBE8DF7",
+   "root_role": "victim",
+   "max_depth": 5,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035686"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-2CBE8DF7",
+   "root_role": "victim",
+   "max_depth": 6,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035686"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-2CBE8DF7",
+   "root_role": "victim",
+   "max_depth": 1,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "0/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": null,
+    "FS-949E8968": null,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-2CBE8DF7",
+   "root_role": "victim",
+   "max_depth": 2,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "1/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": null,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-2CBE8DF7",
+   "root_role": "victim",
+   "max_depth": 3,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": false,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-2CBE8DF7",
+   "root_role": "victim",
+   "max_depth": 4,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": false,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-2CBE8DF7",
+   "root_role": "victim",
+   "max_depth": 5,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035686"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-2CBE8DF7",
+   "root_role": "victim",
+   "max_depth": 6,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035686"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-3F6BE7CF",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/3",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": false,
+    "FS-BE0CB56B": false,
+    "FS-FAE93C57": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-3F6BE7CF",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018617"
+   ],
+   "cross_side_closures": [
+    "IN-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-3F6BE7CF",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018617"
+   ],
+   "cross_side_closures": [
+    "IN-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-3F6BE7CF",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018617"
+   ],
+   "cross_side_closures": [
+    "IN-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-3F6BE7CF",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018617"
+   ],
+   "cross_side_closures": [
+    "IN-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-3F6BE7CF",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018617"
+   ],
+   "cross_side_closures": [
+    "IN-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-3F6BE7CF",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/3",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": false,
+    "FS-BE0CB56B": false,
+    "FS-FAE93C57": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-3F6BE7CF",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018617"
+   ],
+   "cross_side_closures": [
+    "IN-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-3F6BE7CF",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018617"
+   ],
+   "cross_side_closures": [
+    "IN-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-3F6BE7CF",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018617"
+   ],
+   "cross_side_closures": [
+    "IN-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-3F6BE7CF",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018617"
+   ],
+   "cross_side_closures": [
+    "IN-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-3F6BE7CF",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018617"
+   ],
+   "cross_side_closures": [
+    "IN-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-450EDD8C",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": false,
+    "FS-CA088F35": false,
+    "FS-FE39D120": null
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-450EDD8C",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": false,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-450EDD8C",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-450EDD8C",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-450EDD8C",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-450EDD8C",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-450EDD8C",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": false,
+    "FS-CA088F35": false,
+    "FS-FE39D120": null
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-450EDD8C",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": false,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-450EDD8C",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-450EDD8C",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-450EDD8C",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-450EDD8C",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-55B251FD",
+   "root_role": "victim",
+   "max_depth": 1,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "0/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": null,
+    "FS-D0746A75": null
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-55B251FD",
+   "root_role": "victim",
+   "max_depth": 2,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "1/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": null
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-55B251FD",
+   "root_role": "victim",
+   "max_depth": 3,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-55B251FD",
+   "root_role": "victim",
+   "max_depth": 4,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-55B251FD",
+   "root_role": "victim",
+   "max_depth": 5,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-55B251FD",
+   "root_role": "victim",
+   "max_depth": 6,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-55B251FD",
+   "root_role": "victim",
+   "max_depth": 1,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "0/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": null,
+    "FS-D0746A75": null
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-55B251FD",
+   "root_role": "victim",
+   "max_depth": 2,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "1/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": null
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-55B251FD",
+   "root_role": "victim",
+   "max_depth": 3,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-55B251FD",
+   "root_role": "victim",
+   "max_depth": 4,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-55B251FD",
+   "root_role": "victim",
+   "max_depth": 5,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021676"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-55B251FD",
+   "root_role": "victim",
+   "max_depth": 6,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021676"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-5CBDFEC6",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": false,
+    "FS-949E8968": null,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-5CBDFEC6",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": false,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-5CBDFEC6",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-5CBDFEC6",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-5CBDFEC6",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-5CBDFEC6",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-5CBDFEC6",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": false,
+    "FS-949E8968": null,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-5CBDFEC6",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": false,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-5CBDFEC6",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-5CBDFEC6",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-5CBDFEC6",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-5CBDFEC6",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-61C6DC36",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": false,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": null
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-61C6DC36",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-61C6DC36",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-61C6DC36",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-61C6DC36",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-61C6DC36",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-61C6DC36",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": false,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": null
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-61C6DC36",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-61C6DC36",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-61C6DC36",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-61C6DC36",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-61C6DC36",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035494"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-7106DC59",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": null,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-7106DC59",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-7106DC59",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-7106DC59",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-7106DC59",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-7106DC59",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-7106DC59",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": null,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-7106DC59",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-7106DC59",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-7106DC59",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-7106DC59",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-7106DC59",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-85B6CEC8",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": null
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-85B6CEC8",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021659"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-85B6CEC8",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021659"
+   ],
+   "cross_side_closures": [
+    "OUT-1"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-85B6CEC8",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021659"
+   ],
+   "cross_side_closures": [
+    "OUT-1"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-85B6CEC8",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021659"
+   ],
+   "cross_side_closures": [
+    "OUT-1"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-85B6CEC8",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021659"
+   ],
+   "cross_side_closures": [
+    "OUT-1"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-85B6CEC8",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": null
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-85B6CEC8",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021659"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-85B6CEC8",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021659"
+   ],
+   "cross_side_closures": [
+    "OUT-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-85B6CEC8",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021659"
+   ],
+   "cross_side_closures": [
+    "OUT-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-85B6CEC8",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021659"
+   ],
+   "cross_side_closures": [
+    "OUT-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-85B6CEC8",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021659"
+   ],
+   "cross_side_closures": [
+    "OUT-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-871D0C65",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": false,
+    "FS-CA088F35": null,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-871D0C65",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-871D0C65",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-871D0C65",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-871D0C65",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-871D0C65",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-871D0C65",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": false,
+    "FS-CA088F35": null,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-871D0C65",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-871D0C65",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-871D0C65",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-871D0C65",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-871D0C65",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078316"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-949E8968",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": null,
+    "FS-61C6DC36": false,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-949E8968",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": false,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-949E8968",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035686"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-949E8968",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035686"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-949E8968",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035686"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-949E8968",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035686"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-949E8968",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": null,
+    "FS-61C6DC36": false,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-949E8968",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": false,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-949E8968",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035686"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-949E8968",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035686"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-949E8968",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035686"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-949E8968",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035686"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-A36BD91F",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": null,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-A36BD91F",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-A36BD91F",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021676"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-A36BD91F",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021676"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-A36BD91F",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021676"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-A36BD91F",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021676"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-A36BD91F",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": null,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-A36BD91F",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": false,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-A36BD91F",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021676"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-A36BD91F",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021676"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-A36BD91F",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021676"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-A36BD91F",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021676"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-BE0CB56B",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/3",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": false,
+    "FS-BE0CB56B": false,
+    "FS-FAE93C57": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-BE0CB56B",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-BE0CB56B",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-BE0CB56B",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-BE0CB56B",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-BE0CB56B",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-BE0CB56B",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/3",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": false,
+    "FS-BE0CB56B": false,
+    "FS-FAE93C57": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-BE0CB56B",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-BE0CB56B",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-BE0CB56B",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-BE0CB56B",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-BE0CB56B",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018642"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-CA088F35",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": null,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-CA088F35",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078454"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-CA088F35",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078454"
+   ],
+   "cross_side_closures": [
+    "OUT-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-CA088F35",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078454"
+   ],
+   "cross_side_closures": [
+    "OUT-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-CA088F35",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078454"
+   ],
+   "cross_side_closures": [
+    "OUT-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-CA088F35",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078454"
+   ],
+   "cross_side_closures": [
+    "OUT-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-CA088F35",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": null,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-CA088F35",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078454"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-CA088F35",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078454"
+   ],
+   "cross_side_closures": [
+    "OUT-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-CA088F35",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078454"
+   ],
+   "cross_side_closures": [
+    "OUT-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-CA088F35",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078454"
+   ],
+   "cross_side_closures": [
+    "OUT-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-CA088F35",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078454"
+   ],
+   "cross_side_closures": [
+    "OUT-2"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-D0746A75",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": null,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-D0746A75",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-D0746A75",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-D0746A75",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-D0746A75",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-D0746A75",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-D0746A75",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-7106DC59": false,
+    "FS-85B6CEC8": null,
+    "FS-A36BD91F": false,
+    "FS-D0746A75": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-D0746A75",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-D0746A75",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-D0746A75",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-D0746A75",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0037",
+   "root": "FS-D0746A75",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0021601"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-7106DC59": true,
+    "FS-85B6CEC8": true,
+    "FS-A36BD91F": true,
+    "FS-D0746A75": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-D29E5E3A",
+   "root_role": "victim",
+   "max_depth": 1,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "0/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": null,
+    "FS-CA088F35": false,
+    "FS-FE39D120": null
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-D29E5E3A",
+   "root_role": "victim",
+   "max_depth": 2,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "1/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": null,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-D29E5E3A",
+   "root_role": "victim",
+   "max_depth": 3,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "1/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": null,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-D29E5E3A",
+   "root_role": "victim",
+   "max_depth": 4,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "1/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": null,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-D29E5E3A",
+   "root_role": "victim",
+   "max_depth": 5,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "1/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": null,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-D29E5E3A",
+   "root_role": "victim",
+   "max_depth": 6,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "1/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": null,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-D29E5E3A",
+   "root_role": "victim",
+   "max_depth": 1,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "0/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": null,
+    "FS-CA088F35": false,
+    "FS-FE39D120": null
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-D29E5E3A",
+   "root_role": "victim",
+   "max_depth": 2,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "1/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": null,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-D29E5E3A",
+   "root_role": "victim",
+   "max_depth": 3,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": false,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-D29E5E3A",
+   "root_role": "victim",
+   "max_depth": 4,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": false,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-D29E5E3A",
+   "root_role": "victim",
+   "max_depth": 5,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078528"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-D29E5E3A",
+   "root_role": "victim",
+   "max_depth": 6,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 5,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078528"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-F2B06CCD",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": null,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-F2B06CCD",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035594"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-F2B06CCD",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035594"
+   ],
+   "cross_side_closures": [
+    "OUT-1"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-F2B06CCD",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035594"
+   ],
+   "cross_side_closures": [
+    "OUT-1"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-F2B06CCD",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035594"
+   ],
+   "cross_side_closures": [
+    "OUT-1"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-F2B06CCD",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035594"
+   ],
+   "cross_side_closures": [
+    "OUT-1"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-F2B06CCD",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": false,
+    "FS-61C6DC36": null,
+    "FS-949E8968": false,
+    "FS-F2B06CCD": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-F2B06CCD",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035594"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-F2B06CCD",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035594"
+   ],
+   "cross_side_closures": [
+    "OUT-1"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-F2B06CCD",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035594"
+   ],
+   "cross_side_closures": [
+    "OUT-1"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-F2B06CCD",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035594"
+   ],
+   "cross_side_closures": [
+    "OUT-1"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0039",
+   "root": "FS-F2B06CCD",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0035594"
+   ],
+   "cross_side_closures": [
+    "OUT-1"
+   ],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-5CBDFEC6": true,
+    "FS-61C6DC36": true,
+    "FS-949E8968": true,
+    "FS-F2B06CCD": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-FAE93C57",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/3",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": false,
+    "FS-BE0CB56B": false,
+    "FS-FAE93C57": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-FAE93C57",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018594"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-FAE93C57",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018594"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-FAE93C57",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018594"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-FAE93C57",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018594"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-FAE93C57",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018594"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-FAE93C57",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/3",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": false,
+    "FS-BE0CB56B": false,
+    "FS-FAE93C57": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-FAE93C57",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018594"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-FAE93C57",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018594"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-FAE93C57",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018594"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-FAE93C57",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018594"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0040",
+   "root": "FS-FAE93C57",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 3,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/3",
+   "closing_transfers": [
+    "TX-303-0018594"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-3F6BE7CF": true,
+    "FS-BE0CB56B": true,
+    "FS-FAE93C57": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-FE39D120",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": null,
+    "FS-871D0C65": false,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-FE39D120",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": false,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-FE39D120",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078528"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-FE39D120",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078528"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-FE39D120",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078528"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-FE39D120",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 10,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078528"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-FE39D120",
+   "root_role": "loop_member",
+   "max_depth": 1,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "2/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": null,
+    "FS-871D0C65": false,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-FE39D120",
+   "root_role": "loop_member",
+   "max_depth": 2,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "3/4",
+   "closing_transfers": [],
+   "cross_side_closures": [],
+   "detected": false,
+   "members_in_cycle": {
+    "FS-450EDD8C": false,
+    "FS-871D0C65": false,
+    "FS-CA088F35": false,
+    "FS-FE39D120": false
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-FE39D120",
+   "root_role": "loop_member",
+   "max_depth": 3,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": false,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078528"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-FE39D120",
+   "root_role": "loop_member",
+   "max_depth": 4,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078528"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-FE39D120",
+   "root_role": "loop_member",
+   "max_depth": 5,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078528"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  },
+  {
+   "scenario_id": "SC-CIRCULAR-0038",
+   "root": "FS-FE39D120",
+   "root_role": "loop_member",
+   "max_depth": 6,
+   "max_nodes": 50,
+   "seeded": true,
+   "loop_closes_at_hop": 4,
+   "within_depth": true,
+   "expected_detected": false,
+   "loop_transfers_traced": "4/4",
+   "closing_transfers": [
+    "TX-303-0078528"
+   ],
+   "cross_side_closures": [],
+   "detected": true,
+   "members_in_cycle": {
+    "FS-450EDD8C": true,
+    "FS-871D0C65": true,
+    "FS-CA088F35": true,
+    "FS-FE39D120": true
+   }
+  }
+ ],
+ "in_cycle_accounts_outside_planted_loops": {
+  "distinct_accounts": 10,
+  "account_runs": [
+   {
+    "account_id": "FS-023F45AF",
+    "run": "FS-871D0C65@d6n50"
+   },
+   {
+    "account_id": "FS-023F45AF",
+    "run": "FS-871D0C65@d6n200"
+   },
+   {
+    "account_id": "FS-104858B8",
+    "run": "FS-871D0C65@d6n50"
+   },
+   {
+    "account_id": "FS-104858B8",
+    "run": "FS-871D0C65@d6n200"
+   },
+   {
+    "account_id": "FS-224406E4",
+    "run": "FS-01513B07@d4n50"
+   },
+   {
+    "account_id": "FS-224406E4",
+    "run": "FS-01513B07@d4n200"
+   },
+   {
+    "account_id": "FS-224406E4",
+    "run": "FS-01513B07@d5n50"
+   },
+   {
+    "account_id": "FS-224406E4",
+    "run": "FS-01513B07@d5n200"
+   },
+   {
+    "account_id": "FS-224406E4",
+    "run": "FS-01513B07@d6n50"
+   },
+   {
+    "account_id": "FS-224406E4",
+    "run": "FS-01513B07@d6n200"
+   },
+   {
+    "account_id": "FS-78E1BBCA",
+    "run": "FS-871D0C65@d6n50"
+   },
+   {
+    "account_id": "FS-78E1BBCA",
+    "run": "FS-871D0C65@d6n200"
+   },
+   {
+    "account_id": "FS-87E4E0D7",
+    "run": "FS-F3544284@d6n50"
+   },
+   {
+    "account_id": "FS-87E4E0D7",
+    "run": "FS-F3544284@d6n200"
+   },
+   {
+    "account_id": "FS-B761C60D",
+    "run": "FS-01513B07@d4n50"
+   },
+   {
+    "account_id": "FS-B761C60D",
+    "run": "FS-01513B07@d4n200"
+   },
+   {
+    "account_id": "FS-B761C60D",
+    "run": "FS-01513B07@d5n50"
+   },
+   {
+    "account_id": "FS-B761C60D",
+    "run": "FS-01513B07@d5n200"
+   },
+   {
+    "account_id": "FS-B761C60D",
+    "run": "FS-01513B07@d6n50"
+   },
+   {
+    "account_id": "FS-B761C60D",
+    "run": "FS-01513B07@d6n200"
+   },
+   {
+    "account_id": "FS-C4E89947",
+    "run": "FS-F3544284@d6n50"
+   },
+   {
+    "account_id": "FS-C4E89947",
+    "run": "FS-F3544284@d6n200"
+   },
+   {
+    "account_id": "FS-DE27A1BB",
+    "run": "FS-F3544284@d6n50"
+   },
+   {
+    "account_id": "FS-DE27A1BB",
+    "run": "FS-F3544284@d6n200"
+   },
+   {
+    "account_id": "FS-EFC5C8A6",
+    "run": "FS-871D0C65@d6n50"
+   },
+   {
+    "account_id": "FS-EFC5C8A6",
+    "run": "FS-871D0C65@d6n200"
+   },
+   {
+    "account_id": "FS-F09FB4C1",
+    "run": "FS-01513B07@d4n50"
+   },
+   {
+    "account_id": "FS-F09FB4C1",
+    "run": "FS-01513B07@d4n200"
+   },
+   {
+    "account_id": "FS-F09FB4C1",
+    "run": "FS-01513B07@d5n50"
+   },
+   {
+    "account_id": "FS-F09FB4C1",
+    "run": "FS-01513B07@d5n200"
+   },
+   {
+    "account_id": "FS-F09FB4C1",
+    "run": "FS-01513B07@d6n50"
+   },
+   {
+    "account_id": "FS-F09FB4C1",
+    "run": "FS-01513B07@d6n200"
+   }
+  ]
+ },
+ "node_limit_monotonicity_informational": {
+  "violations": 0,
+  "examples": []
+ }
+}

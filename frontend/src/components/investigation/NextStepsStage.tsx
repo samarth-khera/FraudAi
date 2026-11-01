@@ -4,7 +4,8 @@ import { AccountFinding, InvestigationRequest, Recommendation } from '../../type
 import { ACTION_LABEL } from './labels';
 import type { Target } from './TrailTree';
 import { Tone, useCase } from './caseModel';
-import { Badge, IdText, Refs, StageHeading } from './ui';
+import { Badge, Disclosure, IdText, Refs, StageHeading } from './ui';
+import { RestrictionPanel, RoleBadge } from './intel';
 
 const ACTION_TONE: Record<Recommendation['action'], Tone> = {
   consider_escalation: 'high',
@@ -39,8 +40,18 @@ const Why: React.FC<{ r: Recommendation; accounts: AccountFinding[] }> = ({ r, a
 };
 
 export const NextStepsStage: React.FC<{ onInspect: (t: Target) => void; onRerun: (r: InvestigationRequest) => void }> = ({ onInspect, onRerun }) => {
-  const { report } = useCase();
+  const { report, intel } = useCase();
   const [first, ...rest] = report.recommendations;
+  // Connected-account checks come from the role assessment when there is one, so they cannot contradict it.
+  const STATE_ORDER = ['consider_temporary_restriction_review', 'urgent_manual_review_recommended', 'additional_verification_recommended'];
+  const roleSteps = (intel?.role_assessments ?? [])
+    .filter((a) => a.account_id !== report.victim.account_id)
+    .filter((a) => ['potential_victim', 'potential_secondary_victim', 'potential_intermediary', 'potentially_suspicious_account'].includes(a.role_candidate))
+    .sort((x, y) => ((STATE_ORDER.indexOf(x.restriction.state) + 9) % 9) - ((STATE_ORDER.indexOf(y.restriction.state) + 9) % 9));
+  const inTrace = new Set(report.trace.nodes.map((n) => n.account_id));
+  const otherReviews = (intel?.role_assessments ?? []).filter(
+    (a) => a.account_id !== report.victim.account_id && ['consider_temporary_restriction_review', 'urgent_manual_review_recommended'].includes(a.restriction.state),
+  );
   const [showAll, setShowAll] = useState(false);
   const shown = showAll ? rest : rest.slice(0, 3);
   const depth = report.request.max_depth;
@@ -48,34 +59,7 @@ export const NextStepsStage: React.FC<{ onInspect: (t: Target) => void; onRerun:
   const canGoDeeper = Boolean(depthNote) && depth < 6;
 
 
-  return (
-    <div className="space-y-8">
-      <StageHeading title="What to do next" lead="Investigation steps suggested by the evidence, most direct first. Each says why it is suggested and what it rests on." />
-
-      <div className="rounded-2xl bg-ice-soft ring-1 ring-[#C9DBFF] px-4 py-3 text-sm text-[#1E3A8A] flex gap-2.5">
-        <ShieldCheck className="w-5 h-5 shrink-0" aria-hidden="true" />
-        <p>Advisory only. Nothing has been frozen, blocked or flagged. Any restriction needs an authorised institution process with documented grounds.</p>
-      </div>
-
-      {first && (
-        <section aria-label="Start here" className="panel p-6 sm:p-7 relative overflow-hidden">
-          <span className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-iris to-ice" aria-hidden="true" />
-          <p className="text-sm font-semibold text-iris-deep">Start here</p>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <Badge tone={ACTION_TONE[first.action]}>{ACTION_LABEL[first.action]}</Badge>
-            {first.account_id && <IdText className="text-sm font-semibold text-ink">{first.account_id}</IdText>}
-          </div>
-          <p className="mt-3 font-display text-xl font-semibold text-ink leading-snug max-w-3xl">{first.statement}</p>
-          <Why r={first} accounts={report.accounts} />
-          {first.account_id && (
-            <button type="button" className="btn-primary mt-5" onClick={() => onInspect({ kind: 'account', id: first.account_id! })}>
-              <Crosshair className="w-4 h-4" aria-hidden="true" /> Inspect {first.account_id}
-            </button>
-          )}
-        </section>
-      )}
-
-      {rest.length > 0 && (
+  const baseList = (
         <section aria-labelledby="then-h">
           <h3 id="then-h" className="text-sm font-semibold text-ink">Then</h3>
           <ol className="mt-3 space-y-3">
@@ -105,7 +89,95 @@ export const NextStepsStage: React.FC<{ onInspect: (t: Target) => void; onRerun:
             </button>
           )}
         </section>
+  );
+
+  return (
+    <div className="space-y-8">
+      <StageHeading title="What to do next" lead="Investigation steps suggested by the evidence, most direct first. Each says why it is suggested and what it rests on." />
+
+      <div className="rounded-2xl bg-ice-soft ring-1 ring-[#C9DBFF] px-4 py-3 text-sm text-[#1E3A8A] flex gap-2.5">
+        <ShieldCheck className="w-5 h-5 shrink-0" aria-hidden="true" />
+        <p>Advisory only. Nothing has been frozen, blocked or flagged. Any restriction needs an authorised institution process with documented grounds.</p>
+      </div>
+
+      {intel && (
+        <section aria-labelledby="restrict-h" className="space-y-3">
+          <h3 id="restrict-h" className="font-display text-xl font-bold text-ink">Should a restriction be considered?</h3>
+          <RestrictionPanel r={intel.restriction_recommendation} />
+          {otherReviews.length > 0 && (
+            <Disclosure summary={`${otherReviews.length} connected account(s) where urgent review or a restriction review is suggested`}>
+              <div className="space-y-3">
+                {otherReviews.map((a) => (
+                  <RestrictionPanel key={a.account_id} r={a.restriction} />
+                ))}
+              </div>
+            </Disclosure>
+          )}
+        </section>
       )}
+
+      {first && (
+        <section aria-label="Start here" className="panel p-6 sm:p-7 relative overflow-hidden">
+          <span className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-iris to-ice" aria-hidden="true" />
+          <p className="text-sm font-semibold text-iris-deep">Start here</p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <Badge tone={ACTION_TONE[first.action]}>{ACTION_LABEL[first.action]}</Badge>
+            {first.account_id && <IdText className="text-sm font-semibold text-ink">{first.account_id}</IdText>}
+          </div>
+          <p className="mt-3 font-display text-xl font-semibold text-ink leading-snug max-w-3xl">{first.statement}</p>
+          <Why r={first} accounts={report.accounts} />
+          {first.account_id && (
+            <button type="button" className="btn-primary mt-5" onClick={() => onInspect({ kind: 'account', id: first.account_id! })}>
+              <Crosshair className="w-4 h-4" aria-hidden="true" /> Inspect {first.account_id}
+            </button>
+          )}
+        </section>
+      )}
+
+      {intel && (
+        <section aria-labelledby="then-v3-h" data-testid="role-next-checks">
+          <h3 id="then-v3-h" className="text-sm font-semibold text-ink">Then, for connected accounts</h3>
+          {roleSteps.length ? (
+            <ol className="mt-3 space-y-3">
+              {roleSteps.map((a) => (
+                <li key={a.account_id} className="panel-quiet bg-white px-5 py-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0 max-w-3xl">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <RoleBadge role={a.role_candidate} label={a.role_label} />
+                        <IdText className="text-sm font-semibold text-ink">{a.account_id}</IdText>
+                      </div>
+                      <p className="mt-2 text-[15px] text-ink">{a.recommended_next_check}</p>
+                      <p className="mt-1 text-sm text-ink-soft">
+                        <span className="font-semibold text-ink">Why:</span> {a.supporting_evidence[0] ?? a.headline}
+                      </p>
+                      <p className="mt-1 text-sm text-mute">
+                        <span className="font-semibold text-ink-soft">Restriction:</span> {a.restriction.label}
+                      </p>
+                    </div>
+                    {inTrace.has(a.account_id) && (
+                      <button type="button" className="btn-ghost shrink-0" onClick={() => onInspect({ kind: 'account', id: a.account_id })}>
+                        <Crosshair className="w-4 h-4" aria-hidden="true" /> Inspect
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="mt-2 text-sm text-mute">No connected account needs further review from this evidence.</p>
+          )}
+        </section>
+      )}
+
+      {rest.length > 0 &&
+        (intel ? (
+          <Disclosure summary="Trace-report recommendations (simpler rules; where they differ, the role assessment above takes precedence)">
+            {baseList}
+          </Disclosure>
+        ) : (
+          baseList
+        ))}
 
       {canGoDeeper && (
         <section className="panel p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">

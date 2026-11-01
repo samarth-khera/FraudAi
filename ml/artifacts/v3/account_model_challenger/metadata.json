@@ -1,0 +1,524 @@
+{
+  "format": "xgboost_json",
+  "features": [
+    "n_out_log",
+    "n_in_log",
+    "history_days",
+    "active_days_log",
+    "total_in_log",
+    "total_out_log",
+    "out_to_in_ratio",
+    "distinct_senders_log",
+    "distinct_recipients_log",
+    "top_sender_share",
+    "top_recipient_share",
+    "out_amount_cv",
+    "max_out_to_median_out",
+    "pass_through_1h",
+    "pass_through_24h",
+    "median_hold_hours",
+    "new_recipient_out_share",
+    "max_gap_days",
+    "out_share_after_max_gap",
+    "night_out_share",
+    "cash_out_share",
+    "max_out_to_balance",
+    "max_out_burst_1h",
+    "senders_drained_in",
+    "share_in_from_drains",
+    "recipients_young_share",
+    "recipient_forwarders_share",
+    "sender_forwarders_share",
+    "cycle_len_le3",
+    "two_hop_out_reach_log",
+    "shared_recipient_senders_log"
+  ],
+  "model_version": "v3-account-1.1.0",
+  "model": "account_model",
+  "family": "xgboost",
+  "feature_set": "behaviour_plus_graph",
+  "feature_schema_version": "pit-features-1.0.0",
+  "generator_version": "forensic-scenarios-1.0.0",
+  "label_definition": "positive at an as_of date if the account held a role in ('intermediary', 'attacker_controlled') that had materialised by that date: intermediary = it had received AND sent money of its scenario; attacker_controlled = it had received money of its scenario (the generator's corrected 'materialised' rule, evaluated at as_of). Unmaterialised suspicious roles, victims, innocent counterparties, look-alikes and ordinary accounts are negatives.",
+  "abstain_below_transactions": 5,
+  "dataset": {
+    "source": "forensic-scenarios (synthetic, this repository)",
+    "train_ledger_seed": 101,
+    "ledger_days": 120,
+    "as_of_days": [
+      30,
+      60,
+      90,
+      120
+    ],
+    "as_of_rule": "features use only the account's (and its counterparties') records with timestamp <= as_of",
+    "split": "sha256('20261031:' + scenario instance or account id) < 0.25 -> validation; all snapshots of an account and of its scenario instance stay in one split",
+    "excluded": [
+      "secondary_victim",
+      "< 5 transactions by as_of",
+      "in-progress suspicious roles (some but not all defining transfers by as_of)",
+      "cash_network"
+    ],
+    "label_definition": "positive at an as_of date if the account held a role in ('intermediary', 'attacker_controlled') that had materialised by that date: intermediary = it had received AND sent money of its scenario; attacker_controlled = it had received money of its scenario (the generator's corrected 'materialised' rule, evaluated at as_of). Unmaterialised suspicious roles, victims, innocent counterparties, look-alikes and ordinary accounts are negatives.",
+    "materialised_rule": "intermediary: received AND sent scenario money; attacker_controlled / innocent counterparty: received it; victim: sent it; secondary victim: its drain transfer exists; evaluated at each as_of date",
+    "train_rows": 28613,
+    "train_positives": 1022,
+    "validation_rows": 9656,
+    "validation_positives": 446
+  },
+  "calibration": {
+    "method": "isotonic",
+    "x": [
+      1.1802206927313819e-06,
+      0.0002546371251810342,
+      0.0002557334373705089,
+      0.00041833901195786893,
+      0.00041946329292841256,
+      0.001302716787904501,
+      0.0013043538201600313,
+      0.0037099113687872887,
+      0.0037129903212189674,
+      0.005945821758359671,
+      0.005977419670671225,
+      0.015533583238720894,
+      0.015544252470135689,
+      0.025197094306349754,
+      0.02527557872235775,
+      0.027982762083411217,
+      0.028023069724440575,
+      0.02969861775636673,
+      0.02977653034031391,
+      0.03499572351574898,
+      0.03501216694712639,
+      0.10003306716680527,
+      0.10017793625593185,
+      0.108541339635849,
+      0.10959219187498093,
+      0.1415875405073166,
+      0.14194464683532715,
+      0.14358878135681152,
+      0.14449262619018555,
+      0.1895427405834198,
+      0.19044514000415802,
+      0.2377319633960724,
+      0.23841775953769684,
+      0.2904527485370636,
+      0.29067209362983704,
+      0.3837188482284546,
+      0.38678354024887085,
+      0.40256479382514954,
+      0.40980368852615356,
+      0.5018243193626404,
+      0.5036743879318237,
+      0.6208572387695312,
+      0.6218796372413635,
+      0.8133119344711304,
+      0.8178765177726746,
+      0.927323043346405,
+      0.9313352108001709,
+      0.9365872144699097,
+      0.9374139308929443,
+      0.9950214624404907,
+      0.9953083395957947,
+      0.9999198913574219
+    ],
+    "y": [
+      0.0,
+      0.0,
+      0.001700680237263441,
+      0.001700680237263441,
+      0.0032867707777768373,
+      0.0032867707777768373,
+      0.005519779399037361,
+      0.005519779399037361,
+      0.010799136012792587,
+      0.010799136012792587,
+      0.01726618781685829,
+      0.01726618781685829,
+      0.017543859779834747,
+      0.017543859779834747,
+      0.019607843831181526,
+      0.019607843831181526,
+      0.03333333507180214,
+      0.03333333507180214,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05747126415371895,
+      0.05747126415371895,
+      0.06896551698446274,
+      0.06896551698446274,
+      0.09090909361839294,
+      0.09090909361839294,
+      0.20000000298023224,
+      0.20000000298023224,
+      0.2380952388048172,
+      0.2380952388048172,
+      0.261904776096344,
+      0.261904776096344,
+      0.2702702581882477,
+      0.2702702581882477,
+      0.3488371968269348,
+      0.3488371968269348,
+      0.4000000059604645,
+      0.4000000059604645,
+      0.4285714328289032,
+      0.4285714328289032,
+      0.5,
+      0.5,
+      0.5476190447807312,
+      0.5476190447807312,
+      0.6666666865348816,
+      0.6666666865348816,
+      0.75,
+      0.75,
+      0.9876543283462524,
+      0.9876543283462524,
+      1.0,
+      1.0
+    ],
+    "cross_fitted_brier_on_validation": {
+      "uncalibrated": 0.015244,
+      "isotonic": 0.01527,
+      "sigmoid": 0.016613
+    },
+    "cross_fit": "5-fold cross-fit over validation groups (seeded random group order)",
+    "fitted_on": "validation split (all rows)"
+  },
+  "threshold": {
+    "value": 0.05747126415371895,
+    "display_value": 0.057471,
+    "on": "calibrated",
+    "rule": "lowest validation threshold with precision >= 50%",
+    "chosen_on": "validation split",
+    "value_provenance": "exact validation-selected score, recovered 2026-11-01 without retraining: the frozen model.json and this file's calibration map re-scored the same validation rows as the training script and the rule above was re-applied; its 6-decimal rounding equals the value stored before. Earlier metadata stored only that rounding.",
+    "validation_rows": "validation split (training ledger, pooled snapshots, current labels): 9656 rows, 446 positives",
+    "validation_at_value_ties_counted": {
+      "tp": 407,
+      "fp": 635,
+      "fn": 39,
+      "tn": 8575,
+      "rows_tied_at_value": 348,
+      "precision": 0.3906
+    },
+    "known_issue": "pick_threshold stopped inside a block of 348 validation rows tied on one isotonic plateau; applying score >= value flags the whole block, so realised validation precision is 0.3906, below the 50% target. Reported only; the selected value is unchanged."
+  },
+  "training_ranges": {
+    "n_out_log": [
+      1.6094379124341003,
+      4.248495242049359
+    ],
+    "n_in_log": [
+      0.0,
+      6.139884552226255
+    ],
+    "active_days_log": [
+      1.6094379124341003,
+      4.77912349311153
+    ],
+    "total_in_log": [
+      0.0,
+      15.33090233296021
+    ],
+    "total_out_log": [
+      8.192091405442516,
+      15.885000913819555
+    ],
+    "out_to_in_ratio": [
+      0.0240994960830752,
+      5.0
+    ],
+    "distinct_senders_log": [
+      0.0,
+      6.0889086665347705
+    ],
+    "distinct_recipients_log": [
+      0.6931471805599453,
+      4.110873864173311
+    ],
+    "top_sender_share": [
+      0.0,
+      1.0
+    ],
+    "top_recipient_share": [
+      0.07974174166620608,
+      0.9999999999999999
+    ],
+    "out_amount_cv": [
+      0.3040016141305236,
+      3.855330697703624
+    ],
+    "max_out_to_median_out": [
+      1.2876430597894022,
+      170.0112840431233
+    ],
+    "pass_through_1h": [
+      0.0,
+      0.848913543346808
+    ],
+    "pass_through_24h": [
+      0.0,
+      1.0
+    ],
+    "median_hold_hours": [
+      0.21930555555555556,
+      720.0
+    ],
+    "new_recipient_out_share": [
+      0.0750733680711154,
+      1.0
+    ],
+    "max_gap_days": [
+      1.1127641203703704,
+      27.363318518518337
+    ],
+    "out_share_after_max_gap": [
+      0.0,
+      0.6120824023531112
+    ],
+    "night_out_share": [
+      0.0,
+      0.5291930607619936
+    ],
+    "cash_out_share": [
+      0.0,
+      0.8468966991315541
+    ],
+    "max_out_to_balance": [
+      0.006404483935607255,
+      0.9936118935798482
+    ],
+    "max_out_burst_1h": [
+      1.0,
+      5.0
+    ],
+    "senders_drained_in": [
+      0.0,
+      12.0
+    ],
+    "share_in_from_drains": [
+      0.0,
+      1.0
+    ],
+    "recipients_young_share": [
+      0.0,
+      1.0
+    ],
+    "recipient_forwarders_share": [
+      0.37063298770195324,
+      1.0
+    ],
+    "sender_forwarders_share": [
+      0.0,
+      1.0
+    ],
+    "two_hop_out_reach_log": [
+      0.0,
+      3.7612001156935624
+    ],
+    "shared_recipient_senders_log": [
+      3.58351893845611,
+      8.53245217428515
+    ]
+  },
+  "training_ranges_excluded": {
+    "history_days": "days since the account's first record; grows with calendar position"
+  },
+  "environment": {
+    "python": "3.12.4",
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "scikit_learn": "1.9.1",
+    "xgboost": "3.4.1",
+    "platform": "macOS-27.0.1",
+    "trained_at": "2026-11-01T13:14:40Z",
+    "seed": 20261031
+  },
+  "params": {
+    "objective": "binary:logistic",
+    "eval_metric": "aucpr",
+    "eta": 0.05,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "seed": 20261031,
+    "max_depth": 4,
+    "min_child_weight": 1,
+    "lambda": 10,
+    "alpha": 0.5,
+    "scale_pos_weight": 5.2
+  },
+  "metrics": {
+    "train": {
+      "n": 28613,
+      "positives": 1022,
+      "precision": 0.3729,
+      "recall": 1.0,
+      "pr_auc": 0.9993,
+      "roc_auc": 1.0,
+      "brier": 0.002924,
+      "ece": 0.00739,
+      "confusion_matrix": {
+        "tn": 25872,
+        "fp": 1719,
+        "fn": 0,
+        "tp": 1022
+      }
+    },
+    "validation": {
+      "n": 9656,
+      "positives": 446,
+      "precision": 0.3906,
+      "recall": 0.9126,
+      "pr_auc": 0.8407,
+      "roc_auc": 0.9772,
+      "brier": 0.014542,
+      "ece": 0.00041,
+      "confusion_matrix": {
+        "tn": 8575,
+        "fp": 635,
+        "fn": 39,
+        "tp": 407
+      }
+    },
+    "validation_at_ledger_end": {
+      "n": 2534,
+      "positives": 202,
+      "precision": 0.4092,
+      "recall": 0.9257,
+      "pr_auc": 0.8752,
+      "roc_auc": 0.9731,
+      "brier": 0.021675,
+      "ece": 0.00415,
+      "confusion_matrix": {
+        "tn": 2062,
+        "fp": 270,
+        "fn": 15,
+        "tp": 187
+      }
+    },
+    "cold_ledger_test": {
+      "n": 6703,
+      "positives": 515,
+      "precision": 0.3961,
+      "recall": 0.9146,
+      "pr_auc": 0.87,
+      "roc_auc": 0.9708,
+      "brier": 0.021474,
+      "ece": 0.00465,
+      "confusion_matrix": {
+        "tn": 5470,
+        "fp": 718,
+        "fn": 44,
+        "tp": 471
+      }
+    },
+    "cold_ledger_snapshots": {
+      "n": 25380,
+      "positives": 996,
+      "precision": 0.3662,
+      "recall": 0.9177,
+      "pr_auc": 0.8515,
+      "roc_auc": 0.9818,
+      "brier": 0.011911,
+      "ece": 0.00186,
+      "confusion_matrix": {
+        "tn": 22802,
+        "fp": 1582,
+        "fn": 82,
+        "tp": 914
+      }
+    },
+    "served_demo_ledger": {
+      "n": 2646,
+      "positives": 142,
+      "precision": 0.4397,
+      "recall": 0.8732,
+      "pr_auc": 0.8091,
+      "roc_auc": 0.974,
+      "brier": 0.019708,
+      "ece": 0.01082,
+      "confusion_matrix": {
+        "tn": 2346,
+        "fp": 158,
+        "fn": 18,
+        "tp": 124
+      }
+    },
+    "served_demo_ledger_snapshots": {
+      "n": 7599,
+      "positives": 221,
+      "precision": 0.3752,
+      "recall": 0.8643,
+      "pr_auc": 0.7793,
+      "roc_auc": 0.9808,
+      "brier": 0.011386,
+      "ece": 0.00329,
+      "confusion_matrix": {
+        "tn": 7060,
+        "fp": 318,
+        "fn": 30,
+        "tp": 191
+      }
+    },
+    "cold_seen_variants": {
+      "n": 6527,
+      "positives": 424,
+      "precision": 0.3567,
+      "recall": 0.9245,
+      "pr_auc": 0.8773,
+      "roc_auc": 0.9758,
+      "brier": 0.017539,
+      "ece": 0.00537,
+      "confusion_matrix": {
+        "tn": 5396,
+        "fp": 707,
+        "fn": 32,
+        "tp": 392
+      }
+    },
+    "temporal_test": {
+      "n": 2589,
+      "positives": 221,
+      "precision": 0.6542,
+      "recall": 0.8733,
+      "pr_auc": 0.8816,
+      "roc_auc": 0.9724,
+      "brier": 0.023582,
+      "ece": 0.01306,
+      "confusion_matrix": {
+        "tn": 2266,
+        "fp": 102,
+        "fn": 28,
+        "tp": 193
+      }
+    }
+  },
+  "feature_importance": {
+    "pass_through_24h": 0.3386,
+    "pass_through_1h": 0.1015,
+    "sender_forwarders_share": 0.0644,
+    "share_in_from_drains": 0.0556,
+    "out_to_in_ratio": 0.0434,
+    "cash_out_share": 0.0391,
+    "top_sender_share": 0.0367,
+    "n_in_log": 0.0358,
+    "max_out_burst_1h": 0.0283,
+    "distinct_senders_log": 0.0274,
+    "total_in_log": 0.0258,
+    "active_days_log": 0.0252,
+    "median_hold_hours": 0.0243,
+    "max_gap_days": 0.0236,
+    "recipients_young_share": 0.0153
+  },
+  "promotion": {
+    "promoted": false,
+    "status": "challenger_not_served",
+    "owner_decision": "Not served. The automatic promotion rule passed, but the owner decided (2026-11-01) to keep v3-account-1.1.0 as a challenger until its long-history false-positive rate and train-validation gap are resolved; see ml/reports/account_model_champion_challenger.json. The served champion is v3-account-1.0.0 at ml/artifacts/v3/account_model.",
+    "automatic_rule_outcome": {
+      "would_promote": true,
+      "reason": "validation PR-AUC at ledger end new 0.8752 vs previous 0.8511 (within 0.01 below allowed); validation FPR with < 60 days of history new 0.0375 vs previous 0.2421 (lower)"
+    },
+    "rule": "promote only if validation PR-AUC at ledger end is not lower than the previous model's by more than 0.01 AND validation false-positive rate on accounts with < 60 days of records is lower; both on the current labels",
+    "decided_on": "validation split only",
+    "served_champion": "ml/artifacts/v3/account_model (v3-account-1.0.0)"
+  }
+}
