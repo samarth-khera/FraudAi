@@ -177,6 +177,38 @@ describe('ModelInsightsPage Component', () => {
     expect(screen.getByText('Model Comparison & Scope')).toBeInTheDocument();
   });
 
+  it('names the v3 models that investigations use, with held-out results and per-dataset support (QA-07)', async () => {
+    const v3 = (version: string, threshold: number) => ({
+      available: true, purpose: 'purpose', model_version: version, threshold,
+      held_out_evaluation: { n: 1000, positives: 40, precision: 0.5, recall: 0.25, pr_auc: 0.4 },
+    });
+    vi.mocked(v2Api.getModelsStatus).mockResolvedValue({
+      ...mockModelStatusResponse,
+      investigation_models: {
+        used_by: 'Investigate page (dynamic investigations)', ready: true,
+        transaction_model: v3('v3-transaction-1.0.0', 0.0013), account_model: v3('v3-account-1.0.0', 0.0521),
+        datasets: [
+          { dataset_id: 'demo-ledger', title: 'FraudShield demo ledger', model_support: 'unsupported_distribution_shift' },
+          { dataset_id: 'forensic-scenarios', title: 'Forensic scenario ledger', model_support: 'validated_in_distribution' },
+        ],
+      },
+    });
+    render(
+      <MemoryRouter>
+        <ModelInsightsPage />
+      </MemoryRouter>
+    );
+    const panel = await screen.findByTestId('investigation-models');
+    expect(panel).toHaveTextContent('Models behind investigations (v3)');
+    expect(panel).toHaveTextContent('v3-transaction-1.0.0');
+    expect(panel).toHaveTextContent('v3-account-1.0.0');
+    expect(panel).toHaveTextContent('0.13% calibrated');
+    expect(panel).toHaveTextContent('Held-out precision50.0%');
+    expect(screen.getByTestId('v3-support-demo-ledger')).toHaveTextContent('Reference only: out of distribution');
+    expect(screen.getByTestId('v3-support-forensic-scenarios')).toHaveTextContent('Validated');
+    expect(screen.getByText('01 / Accounts tool & case review')).toBeInTheDocument();
+  });
+
   it('renders V2 Account Model performance metrics and confusion matrix', async () => {
     render(
       <MemoryRouter>

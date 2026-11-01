@@ -2,15 +2,19 @@
 
 Runs only after the deterministic engine has produced the report, and never changes it. Steps:
 
-1. Configuration: disabled unless GEMINI_ANALYST_ENABLED=true; not_configured without GEMINI_API_KEY.
+1. Configuration: disabled unless GEMINI_ANALYST_ENABLED=true; not_configured without GEMINI_API_KEY. In production
+   (ENVIRONMENT=production) it also needs GEMINI_ANALYST_PRODUCTION_APPROVED=true, and public states stay generic so a
+   response never reveals whether a key is configured.
 2. Privacy policy (GEMINI_PRIVACY_POLICY, default "synthetic_only"): the external call is made only when the
    server-side data-source configuration identifies the ledger as the synthetic demo ledger. Anything else is
    skipped unless the operator sets "allow_non_synthetic".
 3. Minimisation: a bounded extract with pseudonymised account and transaction IDs (mapping kept here), relative
    times, no names or contact details, and no free text from the ledger.
 4. One Gemini call (no retries) with a JSON response schema and an output-token budget.
-5. Strict validation, then grounding: statements citing IDs that were not in the extract are dropped, unknown
-   references are omitted, and statements asserting guilt or directing account restrictions are removed.
+5. Strict validation, then grounding and safety (fail closed): any ID-like token that was not in the extract, any
+   guilt or certainty claim and any punitive or restriction wording removes the statement, or rejects the whole answer
+   when it is in the summary or confidence note, when a required section would be empty, or when more than half of
+   the statements had to be removed.
 6. Pseudonyms are mapped back to the report's own IDs for display.
 
 Nothing here logs the prompt, the payload, the provider's text or the key.
@@ -18,11 +22,15 @@ Nothing here logs the prompt, the payload, the provider's text or the key.
 
 from __future__ import annotations
 
+import copy
+import hashlib
 import json
 import logging
 import os
 import re
 import time
+import unicodedata
+from collections import OrderedDict, deque
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Literal, Optional, Protocol
@@ -59,6 +67,39 @@ DEFAULT_THINKING_LEVEL = "low"
 SUPPORTED_THINKING_LEVELS = {"gemini-3.8-flash": ("low", "medium", "high")}
 PRIVACY_SYNTHETIC_ONLY = "synthetic_only"
 PRIVACY_ALLOW_NON_SYNTHETIC = "allow_non_synthetic"
+# Production gate: in ENVIRONMENT=production the analyst stays off unless an operator ALSO sets this to true, after the
+# safeguards listed in docs/AI_ANALYST.md are in place. GEMINI_ANALYST_ENABLED=true alone never turns it on there.
+PRODUCTION_APPROVAL_ENV = "GEMINI_ANALYST_PRODUCTION_APPROVED"
+PUBLIC_OFF_MESSAGE = "The optional AI analyst is not available on this server."
+# At most this many provider calls run at once (each can hold a worker for the whole timeout).
+MAX_CONCURRENT_PROVIDER_CALLS = 1
+# A completed explanation is reused for the same report digest instead of calling the provider again.
+EXPLANATION_CACHE_SECONDS = 3600
+EXPLANATION_CACHE_SIZE = 64
+
+DEFAULT_MAX_CALLS_PER_HOUR = 30
+
+# The only manual checks the AI may recommend. It picks codes; the text shown is this fixed, reviewed wording, so a
+# recommendation can never carry a restriction directive or an accusation.
+MANUAL_CHECKS = {
+    "confirm_authorisation_with_holder": "Ask the investigated account holder, through a verified channel, whether they made "
+                                         "and authorised the flagged transfers.",
+    "verify_recipient_relationship": "Check whether the investigated account holder knows each recipient, and the stated "
+                                     "purpose of each payment.",
+    "request_recipient_bank_records": "Request the receiving banks' records (KYC, account opening and statements) for the "
+                                      "accounts that received the money.",
+    "review_onward_transfers": "Review the onward transfers from the receiving accounts, and the time between each receipt and "
+                               "the next movement.",
+    "obtain_cash_withdrawal_records": "Obtain ATM or branch records for the cash withdrawals in the trail.",
+    "check_device_and_session_history": "Check device, login and session records around the flagged transfers.",
+    "check_complaints_and_disputes": "Check for customer complaints, dispute claims or reports linked to these transfers.",
+    "review_activity_outside_period": "Review activity before and after the traced period, to see whether the pattern is "
+                                      "ongoing or a one-off.",
+    "compare_rule_and_model_results": "Where the rules and the model disagree, compare their evidence and record which an "
+                                      "investigator relied on.",
+    "confirm_business_purpose": "For business or merchant recipients, confirm the business purpose of the payments they "
+                                "received.",
+}
 
 MAX_EDGES = 40
 MAX_ACCOUNTS = 20
@@ -77,6 +118,9 @@ class AnalystConfig:
     max_output_tokens: int
     thinking_level: Optional[str]
     privacy_policy: str
+    requested: bool = False  # GEMINI_ANALYST_ENABLED=true was set
+    production: bool = False  # ENVIRONMENT=production: public states stay generic
+    production_gate_closed: bool = False  # requested in production without GEMINI_ANALYST_PRODUCTION_APPROVED=true
 
     @classmethod
     def from_env(cls) -> "AnalystConfig":
@@ -90,8 +134,12 @@ class AnalystConfig:
         if policy not in (PRIVACY_SYNTHETIC_ONLY, PRIVACY_ALLOW_NON_SYNTHETIC):
             policy = PRIVACY_SYNTHETIC_ONLY  # unknown values fall back to the conservative policy
         thinking = (os.environ.get("GEMINI_THINKING_LEVEL", DEFAULT_THINKING_LEVEL) or "").strip().lower()
+        requested = os.environ.get("GEMINI_ANALYST_ENABLED", "false").strip().lower() == "true"
+        production = os.environ.get("ENVIRONMENT", "development").strip().lower() == "production"
+        approved = os.environ.get(PRODUCTION_APPROVAL_ENV, "false").strip().lower() == "true"
+        gate_closed = requested and production and not approved
         return cls(
-            enabled=(os.environ.get("GEMINI_ANALYST_ENABLED", "false").strip().lower() == "true"),
+            enabled=requested and not gate_closed,
             api_key_present=bool(os.environ.get("GEMINI_API_KEY", "").strip()),
             model=(os.environ.get("GEMINI_MODEL") or DEFAULT_MODEL).strip(),
             # Standard-tier latency is documented as "seconds to minutes" (Google's own server default is 600 s).
@@ -99,6 +147,9 @@ class AnalystConfig:
             max_output_tokens=int(number("GEMINI_MAX_OUTPUT_TOKENS", DEFAULT_MAX_OUTPUT_TOKENS, 512, 8192)),
             thinking_level=thinking if thinking in ("minimal", "low", "medium", "high") else None,
             privacy_policy=policy,
+            requested=requested,
+            production=production,
+            production_gate_closed=gate_closed,
         )
 
 
@@ -136,7 +187,9 @@ def privacy_decision(data_source: dict, policy: str) -> tuple[bool, str]:
 
 
 _ISO_TIME = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?")
-_PSEUDO_TOKEN = re.compile(r"\b(?:PA|PT)-\d{3}\b|\bF-\d{3}\b")
+# Aliases are zero-padded to at least three digits (PA-001, PT-1000); findings are F-001.
+_PSEUDO_TOKEN = re.compile(r"\b(?:PA|PT|F)-\d{3,}\b")
+_ALIAS_ANY_SPELLING = re.compile("\\b(PA|PT|F)[-\u2010-\u2015\u2212\ufe58\ufe63\uff0d](\\d{3,})\\b", re.IGNORECASE)
 
 
 class Pseudonymizer:
@@ -169,7 +222,10 @@ class Pseudonymizer:
         return re.sub(r"\b(?:ACC|TXN|FS|TX)-[A-Za-z0-9-]+\b", "[other id]", text)
 
     def restore(self, text: str) -> str:
-        return _PSEUDO_TOKEN.sub(lambda m: self.reverse.get(m.group(0), m.group(0)), text)
+        # Tolerates the spellings grounding accepts (lower case, typographic hyphens) so no alias is left unmapped.
+        def real(m: re.Match) -> str:
+            return self.reverse.get(f"{m.group(1).upper()}-{m.group(2)}", m.group(0))
+        return _ALIAS_ANY_SPELLING.sub(real, text)
 
 
 def build_payload(report: dict, dynamic: Optional[dict] = None) -> tuple[dict, Pseudonymizer, set[str]]:
@@ -297,7 +353,9 @@ def _apply_dynamic(payload: dict, report: dict, dyn: dict, ps: Pseudonymizer, mi
             "evidence": [{"kind": e["kind"], "category": e["category"], "text": ps.scrub(e["text"])} for e in ra["evidence_items"][:8]],
             "contradictory_evidence": [ps.scrub(t) for t in ra["contradictory_evidence"][:6]],
             "uncertainty": ps.scrub(ra["uncertainty_reason"]) if ra["uncertainty_reason"] else None,
-            "restriction_state": ra["restriction"]["state"], "may_be_victim": ra["may_be_victim"],
+            # The advisory restriction state is deliberately not sent: restriction is for an authorised human and the
+            # explanation must not discuss it (system rule 5).
+            "may_be_victim": ra["may_be_victim"],
             "rule_score_of_100": rule["risk_score"] if rule else None, "rule_level": rule["risk_level"] if rule else None,
             "rule_reason_codes": [r.split(":")[0] for r in rule["reason_codes"]][:6] if rule else [],
             # The account model counts only where it is validated (status 'scored'); a reference-only score is not sent.
@@ -318,10 +376,10 @@ def _apply_dynamic(payload: dict, report: dict, dyn: dict, ps: Pseudonymizer, mi
          "rule_flags": [f["code"] for f in t["rule_flags"]]}
         for t in dyn["suspicious_transactions"][:20]
     ]
-    va, rr = dyn["victim_assessment"], dyn["restriction_recommendation"]
+    va = dyn["victim_assessment"]
     payload["investigation_assessment"] = {
         "investigated_account_status": va["status"], "headline": ps.scrub(va["headline"]),
-        "restriction_state": rr["state"], "models_validated_on_this_dataset": dyn["model_validation"]["validated_for_this_dataset"],
+        "models_validated_on_this_dataset": dyn["model_validation"]["validated_for_this_dataset"],
         "network_findings": [ps.scrub(t) for t in dyn["network_findings"][:8]],
     }
     scope = payload["scope"]
@@ -349,10 +407,15 @@ Rules:
    basis "observed", "rule" or "model" needs at least one evidence ID. Anything the data does not directly show must
    use basis "hypothesis" or "limitation".
 4. Receiving or forwarding money, graph proximity, a model score or a rule result is not proof of fraud or intent.
-   Never call an account or person guilty, a fraudster or a criminal.
-5. Never recommend freezing, blocking or closing an account. Recommend verification steps for an authorised human.
+   Never describe an account or person as guilty, a fraudster, a criminal, a scammer, a mule, a perpetrator or a
+   suspect, and never say anyone stole, laundered or committed anything. Never state that something is proven, certain
+   or definitely fraudulent.
+5. Never mention or recommend freezing, blocking, suspending, closing, restricting, seizing or holding an account or
+   funds, even to rule it out; restriction is decided by an authorised human outside this explanation. Recommend
+   verification steps only.
 6. Account IDs are pseudonyms. Do not try to work out real identities.
 7. confidence_note describes how complete the evidence is. Do not give a probability of guilt.
+8. recommended_manual_checks: choose check codes from the allowed list only, each with the evidence IDs it concerns.
 Be concise: summary under 120 words, at most 8 observations, 6 limitations and 6 manual checks."""
 
 RESPONSE_SCHEMA = {
@@ -377,8 +440,9 @@ RESPONSE_SCHEMA = {
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {"text": {"type": "string"}, "evidence_ids": {"type": "array", "items": {"type": "string"}}},
-                "required": ["text", "evidence_ids"],
+                "properties": {"check": {"type": "string", "enum": list(MANUAL_CHECKS)},
+                               "evidence_ids": {"type": "array", "items": {"type": "string"}}},
+                "required": ["check", "evidence_ids"],
             },
         },
         "confidence_note": {"type": "string"},
@@ -409,7 +473,8 @@ class _Observation(_Strict):
 
 
 class _Check(_Strict):
-    text: str = Field(min_length=1, max_length=600)
+    # A code from MANUAL_CHECKS: the wording shown to the investigator is the server's, never the model's.
+    check: Literal[tuple(MANUAL_CHECKS)]  # type: ignore[valid-type]
     evidence_ids: list[str] = Field(max_length=15)
 
 
@@ -422,15 +487,110 @@ class _Report(_Strict):
     confidence_note: str = Field(min_length=1, max_length=800)
 
 
-_POLICY_VIOLATIONS = [
-    re.compile(r"\b(is|are|was|were)\s+(definitely\s+|clearly\s+|certainly\s+)?(guilty|a\s+fraudster|fraudsters|a\s+criminal|criminals)\b", re.I),
-    re.compile(r"(?<!not )(?<!never )\b(should|must)\s+(be\s+)?(immediately\s+)?(frozen|blocked|closed)\b", re.I),
-    re.compile(r"(?<!not )(?<!never )(?<!n't )\b(freeze|block|close)\s+(the|this|these|all|that)\s+accounts?\b", re.I),
-]
+# ---------------------------------------------------------------- output safety (fail closed)
+# Every statement is normalised first (compatibility forms, accents, zero-width and soft-hyphen characters, curly
+# quotes, letter-spaced words), so look-alike spellings cannot slip past the rules below.
+_INVISIBLE = re.compile("[\u00ad\u034f\u061c\u115f\u1160\u17b4\u17b5\u180e\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]")
+_HYPHENS = re.compile("[\u2010-\u2015\u2212\ufe58\ufe63\uff0d]")
+_LOOKALIKE_SCRIPTS = ("CYRILLIC", "GREEK", "ARMENIAN", "CHEROKEE", "COPTIC")
+# A word written letter by letter ("f r e e z e", "f.r.e.e.z.e") is joined before matching.
+_SPACED_LETTERS = re.compile(r"(?<![a-z0-9])(?:[a-z][\s.\-_*/|\u00b7\u2022]{1,3}){3,}[a-z](?![a-z0-9])")
+
+# Restriction or punitive wording is never appropriate in an AI explanation, affirmed or ruled out: the advisory
+# restriction state is computed deterministically and decided by an authorised human. Inflections are matched by stem.
+_PUNITIVE = re.compile(
+    r"\b(?:freez\w*|froze\w*|unfreez\w*|seiz\w*|confiscat\w*|suspend\w*|suspension\w*|block(?:s|ed|ing|age)?|unblock\w*|"
+    r"black-?list\w*|deactivat\w*|restrict\w*|embargo\w*|garnish\w*|impound\w*|lien|prosecut\w*|arrest\w*|"
+    r"(?:put|puts|putting|place|places|placed|placing)\s+(?:an?\s+|the\s+)?(?:\w+\s+)?hold)\b")
+# Everyday verbs that are punitive only with an account, card, transfer or money as their object, e.g. "close the
+# account", "shut down PA-002's account", "PA-002 should be closed"; "close in time to the transfers" is not.
+_DET = r"(?:(?:the|this|that|these|those|its|their|his|her|both|all|any|each|every|an?)\s+)?"
+_OBJECT = (r"(?:accounts?|funds?|money|cards?|transfers?|payments?|transactions?|withdrawals?|pa-\d+(?:'s)?|holders?|"
+           r"customers?|users?|recipients?|beneficiar\w*)")
+_PUNITIVE_WITH_OBJECT = re.compile(
+    r"\b(?:close|closes|closed|closing|closure\s+of|shut|shuts|shutting|lock|locks|locked|locking|ban|bans|banned|banning|"
+    r"terminat\w*|claw(?:s|ed|ing)?\s+back|recover|recovering|withhold\w*|halt\w*|disabl\w*)\s+"
+    r"(?:(?:down|off|out|up)\s+)?" + _DET
+    + r"(?:(?!(?:to|in|on|at|by|of|with|from|after|before|than|for|and|or)\b)[\w'-]+\s+)?" + _OBJECT + r"\b"
+    r"|\b" + _OBJECT + r"(?:\s+account)?\s+(?:[\w'-]+\s+){0,3}?(?:be|been|being|is|are|was|were|get|gets|got)\s+(?:\w+\s+)?"
+    r"(?:closed|shut(?:\s+down)?|locked|banned|terminated|withheld|disabled|recovered|clawed\s+back)\b")
+# Guilt, criminal identity or criminal acts: never stated about anyone, affirmed or denied.
+_GUILT = re.compile(
+    r"\b(?:guilt\w*|culpab\w*|fraudsters?|criminals?|criminality|scammers?|swindlers?|perpetrators?|culprits?|crooks?|"
+    r"thie(?:f|ves)|launderers?|mules?|accomplices?|complicit|conspirators?|masterminds?|ringleaders?|wrongdoers?|"
+    r"offenders?|suspects?|villains?|con\s?artists?|bad\s+actors?|stole|stolen|steal|steals|stealing|defraud\w*|"
+    r"swindl\w*|embezzl\w*|launder\w*|"
+    r"(?:committed|commits|commit|committing|perpetrated|perpetrating|orchestrated|orchestrating|engineered|masterminded|"
+    r"ran|runs|running|carried\s+out|behind)\s+(?:\w+\s+){0,3}?(?:the\s+)?(?:fraud|scams?|crimes?|theft|scheme|heist|con))\b")
+# Certainty about wrongdoing. Negated forms ("does not prove", "no proof") are allowed.
+_CERTAINTY = re.compile(
+    r"\b(?:definitely|certainly|undoubtedly|unquestionably|indisputabl\w*|conclusive\w*|irrefutabl\w*|"
+    r"without\s+(?:a\s+|any\s+)?doubt|beyond\s+(?:any\s+|all\s+|reasonable\s+)?doubt|clearly\s+(?:fraudulent|a\s+fraud)|"
+    r"prove[sdn]?|proving|proof|confirm(?:s|ed|ing)?\s+(?:that\s+)?(?:the\s+)?(?:fraud|guilt|scam|theft|wrongdoing|criminal)|"
+    r"(?:is|was|are|were|be|been)\s+(?:an?\s+|the\s+)?(?:fraudulent|fraud|scam|crime|criminal))\b")
+_NEGATED = re.compile(
+    r"\b(?:no|not|never|nothing|cannot|can't|does\s+not|doesn't|did\s+not|didn't|is\s+not|isn't|was\s+not|wasn't|"
+    r"were\s+not|weren't|has\s+not|hasn't|have\s+not|haven't|will\s+not|won't|would\s+not|wouldn't|must\s+not|"
+    r"should\s+not|shouldn't|neither|nor|without|insufficient|lack\s+of|absence\s+of)\s+(?:\w+\s+){0,2}?$")
+_INJECTION = re.compile(r"\b(?:ignore\s+(?:all\s+|any\s+|the\s+)?(?:previous|prior|above|earlier|system)\s+(?:instructions|rules)|"
+                        r"system\s+(?:override|prompt)|developer\s+mode|jailbreak\w*|as\s+an\s+ai\b|new\s+instructions)")
+# Every ID-like token must be an alias that was sent. Real-format IDs are never sent (they are pseudonymised or
+# scrubbed), so citing one is always a fabrication or a leak.
+_REF_TOKEN = re.compile(r"\b(PA|PT|F)-(\d+)\b", re.IGNORECASE)
+_REAL_ID = re.compile(r"\b(?:ACC|TXN|TX|FS|CASE|SC)-[A-Z0-9][A-Z0-9-]*\b", re.IGNORECASE)
+
+
+def _normalise(text: str) -> str:
+    t = unicodedata.normalize("NFKC", text)
+    t = _INVISIBLE.sub("", t)
+    t = "".join(c for c in unicodedata.normalize("NFKD", t) if not unicodedata.combining(c))
+    t = _HYPHENS.sub("-", t).replace("\u2019", "'").replace("\u2018", "'").lower()
+    t = re.sub(r"\s+", " ", t)
+    return _SPACED_LETTERS.sub(lambda m: re.sub(r"[^a-z]", "", m.group(0)), t)
+
+
+def _lookalike_letters(text: str) -> bool:
+    """Letters from scripts that imitate Latin ones (e.g. Cyrillic '\u0435'), which an English explanation never needs."""
+    for c in text:
+        if c.isalpha() and ord(c) > 0x024F:
+            try:
+                if unicodedata.name(c).startswith(_LOOKALIKE_SCRIPTS):
+                    return True
+            except ValueError:
+                return True
+    return False
+
+
+def safety_findings(text: str) -> list[str]:
+    """Deterministic safety findings for one AI statement (empty when it is safe to show)."""
+    t = _normalise(text)
+    found = []
+    if _lookalike_letters(text):
+        found.append("obfuscated_text")
+    if _GUILT.search(t):
+        found.append("guilt_or_criminal_claim")
+    if _PUNITIVE.search(t) or _PUNITIVE_WITH_OBJECT.search(t):
+        found.append("punitive_action")
+    for m in _CERTAINTY.finditer(t):
+        if not _NEGATED.search(t[max(0, m.start() - 60):m.start()]):
+            found.append("certainty_claim")
+            break
+    if _INJECTION.search(t):
+        found.append("instruction_text")
+    return found
 
 
 def violates_policy(text: str) -> bool:
-    return any(p.search(text) for p in _POLICY_VIOLATIONS)
+    return bool(safety_findings(text))
+
+
+def unknown_references(text: str, allowed: set[str]) -> bool:
+    """True when the text cites any ID-like token that was not in the extract sent to the model, in any spelling
+    (lower case, a different hyphen, extra digits) or in a real-ledger format."""
+    t = _HYPHENS.sub("-", unicodedata.normalize("NFKC", _INVISIBLE.sub("", text)))
+    if _REAL_ID.search(t):
+        return True
+    return any(f"{p.upper()}-{d}" not in allowed for p, d in _REF_TOKEN.findall(t))
 
 
 class OutputRejected(Exception):
@@ -453,7 +613,7 @@ def validate_and_ground(raw: Optional[str], allowed: set[str], ps: Pseudonymizer
         raise OutputRejected("invalid_output")
 
     def unknown_tokens(text: str) -> bool:
-        return any(tok not in allowed for tok in _PSEUDO_TOKEN.findall(text))
+        return unknown_references(text, allowed)
 
     for whole in (parsed.summary, parsed.confidence_note):
         if violates_policy(whole):
@@ -477,16 +637,26 @@ def validate_and_ground(raw: Optional[str], allowed: set[str], ps: Pseudonymizer
     dropped += len(set(parsed.evidence_references)) - len(refs)
 
     checks = []
+    seen_checks: set[str] = set()
     for c in parsed.recommended_manual_checks:
-        if violates_policy(c.text) or unknown_tokens(c.text):
-            dropped += 1
+        if c.check in seen_checks:
             continue
+        seen_checks.add(c.check)
         ids = [i for i in dict.fromkeys(c.evidence_ids) if i in allowed]
         dropped += len(set(c.evidence_ids)) - len(ids)
-        checks.append({"text": c.text, "evidence_ids": ids})
+        checks.append({"check": c.check, "text": MANUAL_CHECKS[c.check], "evidence_ids": ids})
 
     limits = [t for t in parsed.reasoning_and_limitations if not violates_policy(t) and not unknown_tokens(t)]
     dropped += len(parsed.reasoning_and_limitations) - len(limits)
+
+    # Fail closed: a required section left empty, or more than half of the statements removed, means the answer as a
+    # whole cannot be trusted, so nothing is shown.
+    if not checks or not limits:
+        raise OutputRejected("policy_violation")
+    statements = len(parsed.key_observations) + len(seen_checks) + len(parsed.reasoning_and_limitations)
+    removed = statements - (len(observations) + len(checks) + len(limits))
+    if removed * 2 > statements:
+        raise OutputRejected("policy_violation")
 
     r = ps.restore
     return {
@@ -494,7 +664,8 @@ def validate_and_ground(raw: Optional[str], allowed: set[str], ps: Pseudonymizer
         "key_observations": [{"text": r(o["text"]), "basis": o["basis"], "evidence_ids": [r(i) for i in o["evidence_ids"]]} for o in observations],
         "evidence_references": [r(i) for i in refs],
         "reasoning_and_limitations": [r(t) for t in limits],
-        "recommended_manual_checks": [{"text": r(c["text"]), "evidence_ids": [r(i) for i in c["evidence_ids"]]} for c in checks],
+        "recommended_manual_checks": [{"check": c["check"], "text": c["text"], "evidence_ids": [r(i) for i in c["evidence_ids"]]}
+                                      for c in checks],
         "confidence_note": r(parsed.confidence_note),
     }, dropped
 
@@ -525,8 +696,11 @@ UNAVAILABLE_MESSAGES = {
     "truncated_output": "The AI explanation was cut off before it was complete.",
     "malformed_output": "The AI provider's answer was not valid JSON.",
     "invalid_output": "The AI explanation did not pass validation (missing fields, or references to records that are not in this investigation).",
-    "policy_violation": "The AI explanation was discarded because it asserted guilt or directed an account restriction.",
+    "policy_violation": "The AI explanation was discarded by the safety checks (for example wording that asserts guilt or "
+                        "certainty, or that mentions restricting an account), so none of it is shown.",
     "invalid_configuration": "The server's AI settings are not supported by the configured model, so no request was sent.",
+    "busy": "Another AI explanation is being written on this server, so no request was sent. Try again in a minute.",
+    "local_rate_limited": "This server's hourly limit on AI explanations has been reached, so no request was sent. Try again later.",
 }
 
 
@@ -549,13 +723,19 @@ def _result(state: str, message: str, config: AnalystConfig, **extra: Any) -> di
 
 
 def deferred() -> dict:
-    """ai_analysis for a report whose explanation is requested separately. No configuration is read and nothing is sent."""
+    """ai_analysis for a report whose explanation can be requested separately. No configuration is read, nothing is sent."""
     return {
         "state": "deferred", "status": "not_configured", "provider": None, "model": None,
-        "message": "The AI explanation is requested separately so this report is not held up by it.",
+        "message": "An AI explanation of this report can be requested separately. It is never generated automatically.",
         "unavailable_reason": None, "privacy_policy": None, "pseudonymized": False, "report": None, "sections": [],
         "rejected_claims": 0, "latency_ms": None,
     }
+
+
+def _public_off(config: AnalystConfig) -> dict:
+    out = _result("disabled", f"{PUBLIC_OFF_MESSAGE} The evidence summary in this report was produced by fixed templates.", config)
+    out["privacy_policy"] = None
+    return out
 
 
 def precheck(report: Optional[dict] = None, provider: Optional[Provider] = None,
@@ -565,9 +745,13 @@ def precheck(report: Optional[dict] = None, provider: Optional[Provider] = None,
     send a request. Reads only settings; never contacts a provider."""
     config = config or AnalystConfig.from_env()
     template_note = "The evidence summary in this report was produced by fixed templates."
-    if not config.enabled:
-        return _result("disabled", f"The AI analyst is turned off on this server. {template_note}", config)
-    if provider is None and not config.api_key_present:
+    if not config.enabled or (provider is None and not config.api_key_present):
+        if config.production:
+            # Production answers the same way whether the analyst is switched off, held by the production gate or has
+            # no key, so a response never reveals which settings or secrets the server has.
+            return _public_off(config)
+        if not config.enabled:
+            return _result("disabled", f"The AI analyst is turned off on this server. {template_note}", config)
         return _result("not_configured", f"The AI analyst is enabled but no Gemini API key is configured on the server. {template_note}", config)
     if report is not None:
         allowed_to_send, privacy_note = privacy_decision(report["data_source"], config.privacy_policy)
@@ -582,6 +766,65 @@ def precheck(report: Optional[dict] = None, provider: Optional[Provider] = None,
             provider=getattr(provider, "name", "gemini"), unavailable_reason="invalid_configuration", pseudonymized=True, latency_ms=0,
         )
     return None
+
+
+class ExplanationGuard:
+    """Process-wide limits on real provider calls: at most `max_concurrent` at once, at most `max_per_hour` in any rolling
+    hour, and a completed explanation of the identical extract is reused instead of being requested again. In memory,
+    per process; it resets when the server restarts. The guard never waits: a refused call returns at once."""
+
+    def __init__(self, max_concurrent: int = MAX_CONCURRENT_PROVIDER_CALLS, max_per_hour: Optional[int] = None,
+                 cache_seconds: float = EXPLANATION_CACHE_SECONDS, cache_size: int = EXPLANATION_CACHE_SIZE,
+                 clock=time.monotonic) -> None:
+        if max_per_hour is None:
+            try:
+                max_per_hour = int(os.environ.get("GEMINI_MAX_CALLS_PER_HOUR", DEFAULT_MAX_CALLS_PER_HOUR))
+            except ValueError:
+                max_per_hour = DEFAULT_MAX_CALLS_PER_HOUR
+        self.max_concurrent = max(1, max_concurrent)
+        self.max_per_hour = min(1000, max(1, max_per_hour))
+        self.cache_seconds, self.cache_size, self.clock = cache_seconds, cache_size, clock
+        self.active = 0
+        self.calls: deque[float] = deque()
+        self._cache: OrderedDict[str, tuple[float, dict]] = OrderedDict()
+
+    def cached(self, key: str) -> Optional[dict]:
+        hit = self._cache.get(key)
+        if hit is None:
+            return None
+        if self.clock() - hit[0] > self.cache_seconds:
+            del self._cache[key]
+            return None
+        self._cache.move_to_end(key)
+        return copy.deepcopy(hit[1])
+
+    def store(self, key: str, result: dict) -> None:
+        self._cache[key] = (self.clock(), copy.deepcopy(result))
+        self._cache.move_to_end(key)
+        while len(self._cache) > self.cache_size:
+            self._cache.popitem(last=False)
+
+    def refusal(self) -> Optional[str]:
+        """'busy', 'local_rate_limited' or None (a call may start now)."""
+        now = self.clock()
+        while self.calls and now - self.calls[0] > 3600:
+            self.calls.popleft()
+        if self.active >= self.max_concurrent:
+            return "busy"
+        if len(self.calls) >= self.max_per_hour:
+            return "local_rate_limited"
+        return None
+
+    def begin(self) -> None:
+        self.active += 1
+        self.calls.append(self.clock())
+
+    def end(self) -> None:
+        self.active = max(0, self.active - 1)
+
+
+# Guards the real (Gemini) provider; an injected test provider is unguarded unless a guard is passed explicitly.
+_GUARD = ExplanationGuard()
 
 
 def _gemini_module():
@@ -599,6 +842,10 @@ def preload_provider() -> bool:
     `unavailable` per request as before. Returns whether the module is loaded.
     """
     config = AnalystConfig.from_env()
+    if config.production_gate_closed:
+        logger.warning("AI analyst requested with GEMINI_ANALYST_ENABLED=true but %s is not true in production: the "
+                       "analyst stays off and the SDK is not loaded", PRODUCTION_APPROVAL_ENV)
+        return False
     if not config.enabled:
         return False
     problem = config_problem(config)
@@ -615,10 +862,11 @@ def preload_provider() -> bool:
 
 
 async def analyze(report: dict, provider: Optional[Provider] = None, config: Optional[AnalystConfig] = None,
-                  dynamic: Optional[dict] = None) -> dict:
+                  dynamic: Optional[dict] = None, guard: Optional[ExplanationGuard] = None) -> dict:
     """Produces the ai_analysis block. Never raises; every outcome is reported with its real state.
 
-    `provider` replaces the Gemini provider (tests); the configuration and privacy checks still apply.
+    `provider` replaces the Gemini provider (tests); the configuration and privacy checks still apply. The real provider
+    always goes through the process-wide guard; an injected provider only through an explicitly passed `guard`.
     """
     config = config or AnalystConfig.from_env()
     template_note = "The evidence summary in this report was produced by fixed templates."
@@ -627,8 +875,12 @@ async def analyze(report: dict, provider: Optional[Provider] = None, config: Opt
         return early
 
     payload, ps, allowed = build_payload(report, dynamic)
+    contents = build_contents(payload)
     started = time.perf_counter()
     name = getattr(provider, "name", "gemini")
+    if guard is None and provider is None:
+        guard = _GUARD
+    cache_key = hashlib.sha256(f"{name}\n{config.model}\n{SYSTEM_INSTRUCTION}\n{contents}".encode()).hexdigest()
 
     def unavailable(reason: str, http_status: Optional[int] = None, error_type: Optional[str] = None,
                     diagnostics: Optional[dict] = None) -> dict:
@@ -647,19 +899,30 @@ async def analyze(report: dict, provider: Optional[Provider] = None, config: Opt
             latency_ms=int((time.perf_counter() - started) * 1000),
         )
 
+    if guard is not None:
+        reused = guard.cached(cache_key)
+        if reused is not None:
+            reused["message"] += " (Reused from an identical earlier request; no new request was sent.)"
+            return reused
+        refused = guard.refusal()
+        if refused:
+            return unavailable(refused)
+        guard.begin()
     try:
         if provider is None:
             gp = _gemini_module()
             provider = gp.GeminiProvider(config.model, config.timeout_seconds, config.thinking_level)
         out = await provider.generate(
             system_instruction=SYSTEM_INSTRUCTION,
-            contents=build_contents(payload),
+            contents=contents,
             response_json_schema=RESPONSE_SCHEMA,
             max_output_tokens=config.max_output_tokens,
         )
     except Exception as exc:  # noqa: BLE001 - mapped to a fixed reason; the exception text is never shown or logged
         reason = getattr(exc, "reason", None)
         if reason == "not_configured":
+            if config.production:
+                return _public_off(config)
             return _result("not_configured", f"No Gemini API key is configured on the server. {template_note}", config)
         known = reason in UNAVAILABLE_MESSAGES
         status = getattr(exc, "http_code", None)
@@ -671,6 +934,9 @@ async def analyze(report: dict, provider: Optional[Provider] = None, config: Opt
             error_type=None if known else type(exc).__name__,
             diagnostics=diagnostics if known and isinstance(diagnostics, dict) else None,
         )
+    finally:
+        if guard is not None:
+            guard.end()
 
     if out.blocked:
         return unavailable("blocked")
@@ -689,9 +955,12 @@ async def analyze(report: dict, provider: Optional[Provider] = None, config: Opt
         "claims": [{"text": o["text"], "kind": kind[o["basis"]], "refs": o["evidence_ids"]} for o in ai_report["key_observations"]],
     }]
     note = f" {dropped} statement(s) or reference(s) citing unknown records or breaking policy were removed." if dropped else ""
-    return _result(
+    done = _result(
         "completed",
         f"Written by {'Google Gemini' if name == 'gemini' else name} ({config.model}) from a pseudonymised extract of this report and checked against its records. "
         f"It explains the findings; it does not change any score or amount.{note}",
         config, provider=name, pseudonymized=True, report=ai_report, sections=sections, rejected_claims=dropped, latency_ms=latency,
     )
+    if guard is not None:
+        guard.store(cache_key, done)
+    return done

@@ -24,6 +24,29 @@ export function describeModelStatus(status: V2ModelStatusResponse | null, failed
   if (!status) {
     return { state: 'checking', label: 'Checking model', detail: 'Checking whether the account model is loaded…', status: null };
   }
+  const im = status.investigation_models;
+  if (im) {
+    // Investigations run on the v3 models; the v2 account model only serves the Accounts tool and the case review.
+    const tm = im.transaction_model.model_version ?? 'transaction model';
+    const am = im.account_model.model_version ?? 'account model';
+    const v2 = status.inference_ready
+      ? ` The Accounts tool and case review use the older account model ${status.account_model?.version ?? 'v2'}.`
+      : ' The older v2 account model used by the Accounts tool and case review is not loaded.';
+    if (im.ready) {
+      return {
+        state: 'ready',
+        label: 'Models ready',
+        detail: `Investigations use the transaction model ${tm} and the account behaviour model ${am}: validated on the forensic scenario ledger, reference only on the demo ledger.${v2}`,
+        status,
+      };
+    }
+    return {
+      state: 'unavailable',
+      label: 'Models unavailable',
+      detail: `The investigation models are not loaded (${im.transaction_model.unavailable_reason ?? im.account_model.unavailable_reason ?? 'unknown reason'}). Fund tracing and the fixed rules still work.${v2}`,
+      status,
+    };
+  }
   if (status.inference_ready) {
     const version = status.account_model?.version ?? 'account model';
     return {

@@ -1,0 +1,364 @@
+{
+  "steps": [
+    {
+      "name": "QA-16 dataset cards state model support before an account is chosen",
+      "ok": true,
+      "detail": "Models reference only: out of distribution | Models validated on this dataset"
+    },
+    {
+      "name": "QA-03/QA-08 samples: FS-10B80A33 no longer suggested; basis says own money",
+      "ok": true,
+      "detail": "FS-D948AB11 One transfer of ₹8,16,099.97 took 92% of the balance it already held. FS-F1017663 One transfer of ₹6,33,500 took 83% of the balance it already held. FS-6FD017A3 One transfer of ₹3,11,500 took 61% of the balance it already held. FS-D0D054F1 One transfer of ₹2,97,000 took 89% of the balanc"
+    },
+    {
+      "name": "QA-03 FS-10B80A33 is no longer called an intermediary; investigated status abstains",
+      "ok": true,
+      "detail": "What the records show about FS-10B80A33 Insufficient evidence Account assessment Its flagged outgoing transfer(s) were paid out of money it had just received. That one observation does not establish a role. 1 of its 1 flagged outgoing transfer(s) (TX-303-00270"
+    },
+    {
+      "name": "QA-12 neutral heading for a non-victim result",
+      "ok": true,
+      "detail": "What the records show about FS-10B80A33"
+    },
+    {
+      "name": "QA-06 suspicious-transactions heading counts the model and rule-only flags apart",
+      "ok": true,
+      "detail": "Suspicious transactions 1 of this account's transfers was flagged by the validated transaction model. 1 more was flagged by a fixed rule only; it is listed below and not treated as suspicious. Each was scored using only records from before it."
+    },
+    {
+      "name": "QA-06 narrative splits model-flagged and rule-only transfers",
+      "ok": true,
+      "detail": "FS-10B80A33 made 2 flagged transfers, starting 1 Feb 2026, 12:57 pm: 1 transfer (₹30,124) flagged by the transaction model and 1 (₹50,843) by a fixed rule only, which the validated transaction model does not support."
+    },
+    {
+      "name": "QA-01 AI stage: off in production, generic message, nothing sent",
+      "ok": true,
+      "detail": "AI analyst: turned off disabled The optional AI analyst is not available on this server. The evidence summary in this report was produced by fixed templates. Nothing from this investigation was sent to an AI provider. The overview, fund trail, risk evidence an"
+    },
+    {
+      "name": "QA-01 no explanation request was sent by the page",
+      "ok": true,
+      "detail": "0 request(s)"
+    },
+    {
+      "name": "QA-03 FS-7305E412 is no longer called a potential victim",
+      "ok": true,
+      "detail": "FS-7305E412 Role unknown Sent a transfer the transaction model flags into FS-EAAA344C, which this trace assessed as a potential intermediary candidate; on its own that does not describe a role. How it is connected Sent a flagged transfer to FS-EAAA344C, an account in the trace. Introduced by TX-303-"
+    },
+    {
+      "name": "QA-03 the model flag on its transfer is labelled a model output, not a recorded fact",
+      "ok": true,
+      "detail": "What the records show Each item says whether it is a recorded fact, a model output or a fixed rule. Model output Its own transfer TX-303-0043807 is flagged by the transaction model."
+    },
+    {
+      "name": "QA-05 connected account shows innocent explanations, verification and missing information",
+      "ok": true,
+      "detail": "Restriction recommendation for FS-EAAA344C Urgent manual review recommended Two independent kinds of evidence support urgent review. Accounts used to move scam money are often operated by people who were deceived themselves. Innocent explanations to rule out The holder may have been deceived into re"
+    },
+    {
+      "name": "QA-03 UI keeps records, interpretation and unknowns apart",
+      "ok": true,
+      "detail": "Interpretation Possible role: Potential intermediary (moderate evidence (two sources)) A candidate for human review from documented rules; not a finding about the holder. Against it Established record"
+    },
+    {
+      "name": "QA-05 account Inspector shows innocent explanations, missing information, records and unknowns",
+      "ok": true,
+      "detail": "Account inspector FS-EAAA344C Tanvi Kapoor, retail, tier 2 verified Direct recipient, hop 1 Potential intermediary Paid out or withdrew most of what it received within a day, in transfers the transact"
+    },
+    {
+      "name": "QA-07 badge names the v3 models investigations use, and v2 only for the Accounts tool",
+      "ok": true,
+      "detail": "Models ready Investigations use the transaction model v3-transaction-1.0.0 and the account behaviour model v3-account-1.0.0: validated on the forensic scenario ledger, reference only on the demo ledger. The Accounts tool and case review use the older account model v2-account-2.0.0. Model performance"
+    },
+    {
+      "name": "QA-07 model page leads with the v3 models and their per-dataset support",
+      "ok": true,
+      "detail": "Models behind investigations (v3) Every investigation on the Investigate page uses these two models. The v2 models further down this page are older models used by the Accounts tool, the case review and the transaction model check; they are not used in investigations. TRANSACTION MODEL v3-transaction"
+    },
+    {
+      "name": "QA-06 demo ledger heading names the fixed rules and the unvalidated model",
+      "ok": true,
+      "detail": "unsupported_distribution_shift; Suspicious transactions 1 of this account's transfers was flagged by the fixed rules (the transaction model is not validated on this dataset, so its scores are reference only). Each was scored using o; 2735 ms"
+    },
+    {
+      "name": "QA-12 model note has no file paths or PSI jargon",
+      "ok": true,
+      "detail": "Models unsupported on this dataset (out of distribution). Out of distribution: the v3 models were trained on data from a different synthetic generator, and this ledger's behaviour differs clearly from that training data (9 of the transaction model's 29 behavio"
+    },
+    {
+      "name": "QA-04 case pages called the trace/graph/transactions GETs (writes checked by DB snapshot)",
+      "ok": true,
+      "detail": "200 /api/cases/FS-2001/trace | 200 /api/cases/FS-2001/graph | 200 /api/cases/FS-1042/trace | 200 /api/cases/FS-1042/graph"
+    },
+    {
+      "name": "QA-11 audit filters have accessible names",
+      "ok": true,
+      "detail": "Time range:1, Actor:1, Sort order:1, Search audit events:1, Filter by case ID:1"
+    },
+    {
+      "name": "QA-11 fund-flow search has an accessible name",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "QA-01 explanation requests sent during the whole walkthrough",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "QA-15 CSP violations reported by Chrome",
+      "ok": true,
+      "detail": "none"
+    },
+    {
+      "name": "console errors",
+      "ok": null,
+      "detail": "0: "
+    }
+  ],
+  "api": [
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/datasets/forensic-scenarios/sample-accounts",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/datasets",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/datasets/forensic-scenarios/accounts/FS-10B80A33",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "POST",
+      "p": "/api/v2/dynamic-investigations",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/datasets/forensic-scenarios/accounts/FS-7B7C13AB",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "POST",
+      "p": "/api/v2/dynamic-investigations",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000001/ml-assessment",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/datasets/demo-ledger/accounts/ACC-000001",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000001/assessment",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000001",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/data-source",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "POST",
+      "p": "/api/v2/dynamic-investigations",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-2001",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-2001/trace?max_depth=10",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-2001/accounts?max_depth=10",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-2001/graph?max_depth=10",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000003",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000003/assessment",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000003/ml-assessment",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/health",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-2001/audit-trail",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-1042",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-1042/trace?max_depth=10",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-1042/graph?max_depth=10",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-1042/accounts?max_depth=10",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/health",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-1042/audit-trail",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/audit?skip=0&limit=25&sort_order=desc",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/trace?account_id=ACC-000001&direction=outgoing&max_depth=2&max_nodes=60",
+      "ms": null
+    }
+  ],
+  "explanationRequests": [],
+  "console": [],
+  "csp": []
+}

@@ -134,6 +134,10 @@ class AccountEvidence:
     paid_account_id: Optional[str] = None    # other senders only: the traced account they paid...
     paid_account_role: Optional[str] = None  # ...and the role candidate that account was given
     paid_account_paid_by_investigated: bool = False  # ...and whether the investigated account paid it in a flagged transfer
+    # Other senders only (QA-03): money it received in the ONWARD_HOURS before its own flagged transfer, as a share of
+    # that transfer, and the transfer as a share of its balance just before it. None when a balance is missing.
+    recent_inflow_share: Optional[float] = None
+    balance_share: Optional[float] = None
 
 
 @dataclass
@@ -388,6 +392,20 @@ def _assess(e: AccountEvidence, cats: list[str], sup: list[str]) -> RoleResult:
                   "out of money received in the previous 24 h from payers that had not paid it before, which its own earlier "
                   "balance could not have covered.")
             c2 = cats + ["FUNDED_FORWARD"]
+            if len(independent_kinds(c2)) < 2:
+                # QA-03: forwarding money it had just received is the only kind of evidence. On the train ledger 3 of the
+                # 4 investigated accounts labelled an intermediary on this alone were not (a victim, a legitimate
+                # look-alike, an account without a scenario role); with a second independent kind all 122 were. One kind
+                # of evidence does not establish a role, so the label abstains and the observation stays visible.
+                r = RoleResult("unknown_role", "assessed",
+                               "Its flagged outgoing transfer(s) were paid out of money it had just received. That one "
+                               "observation does not establish a role.",
+                               sup + [ff] + in_note, con, c2, strength_of(c2),
+                               "Only one kind of evidence: passing on money just received is also what deceived holders and "
+                               "people paying family or suppliers do, and nothing else in the records points either way.",
+                               "Ask the holder where the incoming money came from and why it was sent on.")
+                r.category_text = {"FUNDED_FORWARD": ff}
+                return r
             r = RoleResult("potential_intermediary", "assessed",
                            "Its flagged outgoing transfers mostly forwarded money it had just received.",
                            sup + [ff] + in_note, con, c2, strength_of(c2),
@@ -434,6 +452,28 @@ def _assess(e: AccountEvidence, cats: list[str], sup: list[str]) -> RoleResult:
         basis = (f"The evidence here is the transaction model's flag on its own transfer, not the role given to {paid}; "
                  "that role is a candidate and may be wrong.")
         tid = e.flagged_out_ids[0] if e.flagged_out_ids else None
+        # QA-03: a potential victim found this way must have lost its OWN money: money received in the 24 h before
+        # covered less than INTERMEDIARY_SHARE of the payment, and the payment took at least OWN_FUNDS_SHARE of its
+        # balance (the engine's existing victim-side thresholds). On the train ledger, all 49 intermediaries labelled
+        # potential victims here had received at least the payment's amount in the 24 h before it (no victim had more
+        # than 69%); the balance condition removes the same 49 and also keeps out an ordinary-looking payment that took
+        # a small part of the balance, at the cost of 11 of the 53 true other victims (they become role unknown).
+        own_money = e.recent_inflow_share is not None and e.recent_inflow_share < INTERMEDIARY_SHARE
+        material = e.balance_share is not None and e.balance_share >= OWN_FUNDS_SHARE
+        if e.flagged_out_unfunded_ids and e.deviation and established and not (own_money and material):
+            why = []
+            if not own_money:
+                why.append(f"money it received in the 24 h before covered at least {INTERMEDIARY_SHARE:.0%} of this payment, so "
+                           "it may have been passing money on rather than losing its own"
+                           if e.recent_inflow_share is not None else "its recent incoming money could not be measured")
+            if not material:
+                why.append(f"the payment took less than {OWN_FUNDS_SHARE:.0%} of its balance at the time"
+                           if e.balance_share is not None else "its balance before the payment is not recorded")
+            return RoleResult("unknown_role", "assessed",
+                              f"Sent a transfer the transaction model flags into {what}; on its own that does not describe a role.",
+                              sup + ([f"Its own transfer {tid} is flagged by the transaction model."] if tid else []), con, cats,
+                              "none", "Not called a potential victim: " + "; ".join(why) + ". " + basis,
+                              "No action from this evidence alone; if the holder reports a loss, review this payment.")
         if e.flagged_out_unfunded_ids and e.deviation and established:
             return RoleResult("potential_victim", "assessed",
                               f"Sent a transfer the transaction model flags into {what}.",

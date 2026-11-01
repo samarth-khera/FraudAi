@@ -35,6 +35,13 @@ import pandas as pd
 LEDGER = "holdout"
 DB = Path("data/v3_forensic_holdout.db")
 REPORT = Path("ml/reports/holdout_evaluation.json")
+
+
+def paths_for(ledger: str) -> tuple[Path, Path]:
+    """Seed 404 keeps its original paths; a later untouched ledger gets its own database and report."""
+    if ledger == "holdout":
+        return DB, REPORT
+    return Path(f"data/v3_forensic_{ledger}.db"), Path(f"ml/reports/holdout_evaluation_{ledger}.json")
 FROZEN_GLOBS = [
     "backend/app/intelligence/*.py",
     "backend/app/services/v2/graph_tracer.py",
@@ -60,11 +67,11 @@ def manifest() -> dict:
     return {"sha256": h.hexdigest(), "files": per_file}
 
 
-def secondary_victim_check(registry, run) -> dict:
+def secondary_victim_check(registry, run, ledger: str = LEDGER) -> dict:
     """Original criterion (pre-registered in the owner's brief): the engine labels a materialised secondary victim exactly
     `potential_secondary_victim`. Exploratory criterion (introduced after seeing scenario 6 on the served ledger): a
     victim-class role with may_be_victim true and not an intermediary/suspicious role."""
-    gt = pd.read_csv(f"data/v3_forensic/{LEDGER}/roles.csv")
+    gt = pd.read_csv(f"data/v3_forensic/{ledger}/roles.csv")
     gt = gt[gt.materialised]
     rows = []
     for _, sv in gt[gt.role == "secondary_victim"].sort_values(["scenario_id", "account_id"]).iterrows():
@@ -96,33 +103,36 @@ def secondary_victim_check(registry, run) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--ordinary", type=int, default=60)
+    ap.add_argument("--ledger", default=LEDGER, help="an untouched ledger in generator.LEDGERS (default: seed 404)")
     a = ap.parse_args()
+    db_path, report_path = paths_for(a.ledger)
     m = manifest()
-    if REPORT.exists():
-        prev = json.loads(REPORT.read_text())
+    if report_path.exists():
+        prev = json.loads(report_path.read_text())
         if prev["manifest"]["sha256"] == m["sha256"]:
             print("Hold-out already evaluated for this exact code; stored result (not recomputed):")
             print(json.dumps(prev["summary"], indent=2))
             return 0
         changed = sorted(k for k in set(m["files"]) | set(prev["manifest"]["files"])
                          if m["files"].get(k) != prev["manifest"]["files"].get(k))
-        print("REFUSED: seed 404 was already evaluated under different code, so it is no longer untouched.\n"
+        print(f"REFUSED: {a.ledger} was already evaluated under different code, so it is no longer untouched.\n"
               f"Changed since then: {changed}\nAdd a new hold-out seed and record why; never re-tune against this one.")
         return 2
 
     sys.path[:0] = [".", "backend"]
     from ml.forensics import evaluate_investigations as ev
     from backend.app.intelligence.datasets import DatasetRegistry
+    from ml.forensics.generator import LEDGERS
 
     t0 = time.perf_counter()
-    if not DB.exists():
-        subprocess.run([sys.executable, "scripts/build_forensic_ledger.py", "--ledger", LEDGER, "--db", str(DB)], check=True)
-    report = ev.main(LEDGER, sample_ordinary=a.ordinary)
-    registry = DatasetRegistry(f"sqlite:///{DB}")
-    sv = secondary_victim_check(registry, ev.run)
+    if not db_path.exists():
+        subprocess.run([sys.executable, "scripts/build_forensic_ledger.py", "--ledger", a.ledger, "--db", str(db_path)], check=True)
+    report = ev.main(a.ledger, sample_ordinary=a.ordinary)
+    registry = DatasetRegistry(f"sqlite:///{db_path}")
+    sv = secondary_victim_check(registry, ev.run, a.ledger)
     status = report["investigated_account_status"]
     summary = {
-        "ledger": f"forensic generator seed 404 ({LEDGER}); never used for any design, tuning or threshold choice",
+        "ledger": f"forensic generator seed {LEDGERS[a.ledger].seed} ({a.ledger}); never used for any design, tuning or threshold choice",
         "investigations": report["investigations"],
         "victims": status["victims"],
         "victims_by_pattern": status["victims_by_pattern"],
@@ -143,7 +153,7 @@ def main() -> int:
         "secondary_victim_accounts": sv["accounts"],
         "runtime_seconds": round(time.perf_counter() - t0, 1),
     }
-    REPORT.write_text(json.dumps(out, indent=2, default=str))
+    report_path.write_text(json.dumps(out, indent=2, default=str))
     print(json.dumps(summary, indent=2, default=str))
     return 0
 

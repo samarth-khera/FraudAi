@@ -18,12 +18,14 @@ try:
         RiskSignalValues,
     )
     from app.db.v2.models import AccountModel, TransactionModel
+    from app.services.v2.formatting import inr
 except ModuleNotFoundError:
     from backend.app.api.v2.schemas import (
         AccountAssessmentResponse,
         RiskSignalValues,
     )
     from backend.app.db.v2.models import AccountModel, TransactionModel
+    from backend.app.services.v2.formatting import inr
 
 
 class AccountRiskAssessor:
@@ -192,7 +194,7 @@ class AccountRiskAssessor:
         if amount_spike_ratio >= 6.0 and max_amt >= 25000.0:
             score += 15.0
             reason_codes.append(
-                f"UNUSUAL_AMOUNT_SPIKE: Maximum transaction ({max_amt:.2f}) is {amount_spike_ratio:.1f}x higher than average."
+                f"UNUSUAL_AMOUNT_SPIKE: Largest transfer ({inr(max_amt)}) is {amount_spike_ratio:.1f}x its average transfer."
             )
 
         if len(inflows) >= 6 and fan_in_ratio >= 0.80:

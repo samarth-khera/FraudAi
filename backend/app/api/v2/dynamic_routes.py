@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import copy
 import logging
+import threading
 import time
+from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Path, status
-from sqlalchemy import func, or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
@@ -16,10 +19,12 @@ try:
     from app.db.v2.models import AccountModel, TransactionModel
     from app.db.v2.session import get_v2_db
     from app.intelligence import models as mdl
+    from app.intelligence import roles
     from app.intelligence.datasets import DATASETS, DatasetRegistry, get_dataset_registry
     from app.intelligence.engine import DynamicInvestigation
     from app.intelligence.features import MIN_ACCOUNT_TRANSACTIONS
     from app.services.v2 import ai_analyst, data_source
+    from app.services.v2.formatting import inr
     from app.services.v2.investigation import AccountNotFound, InvestigationService
 except ModuleNotFoundError:
     from backend.app.api.v2.dynamic_schemas import DatasetId, DatasetSummary, DynamicInvestigationRequest, DynamicInvestigationResponse
@@ -27,10 +32,12 @@ except ModuleNotFoundError:
     from backend.app.db.v2.models import AccountModel, TransactionModel
     from backend.app.db.v2.session import get_v2_db
     from backend.app.intelligence import models as mdl
+    from backend.app.intelligence import roles
     from backend.app.intelligence.datasets import DATASETS, DatasetRegistry, get_dataset_registry
     from backend.app.intelligence.engine import DynamicInvestigation
     from backend.app.intelligence.features import MIN_ACCOUNT_TRANSACTIONS
     from backend.app.services.v2 import ai_analyst, data_source
+    from backend.app.services.v2.formatting import inr
     from backend.app.services.v2.investigation import AccountNotFound, InvestigationService
 
 logger = logging.getLogger("fraudshield.v2.dynamic")
@@ -62,7 +69,8 @@ def list_datasets(db: Session = Depends(get_v2_db), registry: DatasetRegistry = 
     out = []
     for ds_id, spec in DATASETS.items():
         item = {"dataset_id": ds_id, "title": spec.title, "description": spec.description,
-                "evaluation_labels_note": spec.evaluation_labels_note, "available": False}
+                "evaluation_labels_note": spec.evaluation_labels_note, "model_support": spec.model_support,
+                "model_note": spec.model_note, "available": False}
         try:
             s = _session(registry, ds_id, db)
             try:
@@ -116,30 +124,85 @@ def dataset_account(dataset_id: DatasetId, account_id: str = AccountIdPath, db: 
             s.close()
 
 
+# Sample accounts are deterministic for a given ledger snapshot, and computing them scans every large transfer (6-7 s
+# on the free production instance), so they are cached per dataset, database and latest transfer time, for at most
+# SAMPLE_CACHE_SECONDS (the ledgers are read-only at run time; the limit only bounds staleness if one is replaced).
+SAMPLE_CACHE_SECONDS = 900.0
+SAMPLE_CANDIDATES = 60
+SAMPLE_COUNT = 6
+_sample_cache: dict[tuple, tuple[float, dict]] = {}
+_sample_lock = threading.Lock()
+
+
+def _own_money_samples(s: Session) -> list[tuple[str, float, float]]:
+    """(account, share of balance, amount) for established personal accounts with a large transfer (10,000 or more)
+    that took at least OWN_FUNDS_SHARE of a balance they already held, largest such transfer first. "Already held": at
+    least ESTABLISHED_TXNS earlier transfers over ESTABLISHED_DAYS, and the money received in the ONWARD_HOURS before
+    the transfer covered less than INTERMEDIARY_SHARE of it (otherwise the account was passing on money it had just
+    received, which is not a victim-first starting point). Recorded transfers only; no label, score or scenario field
+    is read. Chosen on the train ledger (QA-03): ranking by amount gave 5 scenario victims and 1 legitimate look-alike,
+    all assessed in line with their scenario role; ranking by share of balance gave mostly small ordinary payments."""
+    ratio = TransactionModel.amount / TransactionModel.origin_balance_before
+    big = and_(TransactionModel.amount >= 10_000, TransactionModel.origin_balance_before > 0, ratio >= roles.OWN_FUNDS_SHARE)
+    cands = s.execute(
+        select(TransactionModel.origin_account_id, func.max(TransactionModel.amount).label("a"))
+        .join(AccountModel, AccountModel.account_id == TransactionModel.origin_account_id)
+        .where(AccountModel.customer_type.in_(("retail", "student")), big)
+        .group_by(TransactionModel.origin_account_id)
+        .order_by(func.max(TransactionModel.amount).desc(), TransactionModel.origin_account_id)
+        .limit(SAMPLE_CANDIDATES)
+    ).all()
+    out = []
+    for acc, _ in cands:
+        t = s.execute(select(TransactionModel.timestamp, TransactionModel.amount, ratio.label("r"))
+                      .where(TransactionModel.origin_account_id == acc, big)
+                      .order_by(TransactionModel.amount.desc(), TransactionModel.timestamp).limit(1)).one()
+        involves = or_(TransactionModel.origin_account_id == acc, TransactionModel.destination_account_id == acc)
+        n_before, first = s.execute(select(func.count(), func.min(TransactionModel.timestamp))
+                                    .where(involves, TransactionModel.timestamp < t.timestamp)).one()
+        if n_before < roles.ESTABLISHED_TXNS or first is None or (t.timestamp - first).total_seconds() < roles.ESTABLISHED_DAYS * 86400:
+            continue
+        recent_in = s.scalar(select(func.coalesce(func.sum(TransactionModel.amount), 0)).where(
+            TransactionModel.destination_account_id == acc, TransactionModel.timestamp < t.timestamp,
+            TransactionModel.timestamp >= t.timestamp - timedelta(hours=roles.ONWARD_HOURS))) or 0
+        if float(recent_in) >= roles.INTERMEDIARY_SHARE * float(t.amount):
+            continue
+        out.append((acc, float(t.r), float(t.amount)))
+        if len(out) == SAMPLE_COUNT:
+            break
+    return out
+
+
 @router.get("/datasets/{dataset_id}/sample-accounts",
             summary="A few accounts with notable observable activity, as starting points (not findings)")
 def sample_accounts(dataset_id: DatasetId, db: Session = Depends(get_v2_db),
                     registry: DatasetRegistry = Depends(get_dataset_registry)) -> dict:
-    """Chosen only from recorded transfers (largest outgoing transfer relative to the balance it was paid from, 10,000
-    or more, personal accounts). Scenario labels are not used, so a suggestion says nothing about the account."""
+    """Chosen only from recorded transfers (see _own_money_samples). Scenario labels are not used, so a suggestion says
+    nothing about the account."""
     try:
         s = _session(registry, dataset_id, db)
     except data_source.DataSourceUnavailable as exc:
         raise _unavailable(exc)
     try:
-        ratio = func.max(TransactionModel.amount / TransactionModel.origin_balance_before)
-        rows = s.execute(
-            select(TransactionModel.origin_account_id, ratio.label("r"), func.max(TransactionModel.amount).label("a"))
-            .join(AccountModel, AccountModel.account_id == TransactionModel.origin_account_id)
-            .where(AccountModel.customer_type.in_(("retail", "student")), TransactionModel.amount >= 10_000,
-                   TransactionModel.origin_balance_before > 0)
-            .group_by(TransactionModel.origin_account_id).order_by(ratio.desc(), TransactionModel.origin_account_id).limit(6)
-        ).all()
-        return {"dataset_id": dataset_id,
-                "basis": "Personal accounts whose largest outgoing transfer (10,000 or more) took the biggest share of the "
-                         "balance it was paid from. Observable activity only; not a finding about any account.",
-                "accounts": [{"account_id": a, "reason": f"One transfer took {r:.0%} of its balance (largest transfer {amt:,.0f})."}
+        bind = s.get_bind()
+        key = (dataset_id, str(bind.url) if bind is not None else "", s.scalar(select(func.max(TransactionModel.timestamp))))
+        now = time.monotonic()
+        with _sample_lock:
+            hit = _sample_cache.get(key)
+            if hit and now - hit[0] <= SAMPLE_CACHE_SECONDS:
+                return copy.deepcopy(hit[1])
+        rows = _own_money_samples(s)
+        body = {"dataset_id": dataset_id,
+                "basis": "Established personal accounts with a large transfer (10,000 or more) that took at least half of a "
+                         "balance they already held, not money they had just received; largest first. Observable activity "
+                         "only; not a finding about any account.",
+                "accounts": [{"account_id": a, "reason": f"One transfer of {inr(amt)} took {r:.0%} of the balance it already held."}
                              for a, r, amt in rows]}
+        with _sample_lock:
+            _sample_cache[key] = (now, copy.deepcopy(body))
+            for k in [k for k, (t0, _) in _sample_cache.items() if now - t0 > SAMPLE_CACHE_SECONDS]:
+                _sample_cache.pop(k, None)
+        return body
     finally:
         if s is not db:
             s.close()

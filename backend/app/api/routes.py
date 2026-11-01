@@ -83,10 +83,11 @@ def get_repository(db: Optional[Session] = Depends(get_db)) -> CaseRepository:
     return SqlCaseRepository(db)
 
 
+MAX_TRACE_DEPTH = 50
 MaxDepth = Query(
     DEFAULT_MAX_DEPTH,
     ge=0,
-    le=50,
+    le=MAX_TRACE_DEPTH,
     description="Maximum downstream hops from the origin transaction (origin = hop 0).",
 )
 
@@ -120,6 +121,24 @@ def _case_overview(repo: CaseRepository, case: FraudCase) -> CaseOverview:
 
 
 def _run_trace(repo: CaseRepository, case_id: str, max_depth: int) -> TraceResult:
+    """Computes the case's trace. Read-only: viewing a case never writes to the database or the audit trail."""
+    case = _require_case(repo, case_id)
+    try:
+        return trace_case(
+            case,
+            repo.get_transactions(case_id),
+            repo.get_accounts(),
+            repo.get_review_statuses(case_id),
+            max_depth=max_depth,
+        )
+    except TraceError as exc:
+        raise HTTPException(status_code=409, detail={"code": exc.code, "message": exc.message})
+
+
+def _store_trace_for_review(repo: CaseRepository, case_id: str) -> None:
+    """Runs only on the authorised review write: stores the case's trace at the deepest depth a page can request, so
+    an account an investigator saw in the trace at any depth is in the case's review scope. The repository only
+    rewrites (and audits) the stored paths when they changed."""
     case = _require_case(repo, case_id)
     try:
         result = trace_case(
@@ -127,13 +146,11 @@ def _run_trace(repo: CaseRepository, case_id: str, max_depth: int) -> TraceResul
             repo.get_transactions(case_id),
             repo.get_accounts(),
             repo.get_review_statuses(case_id),
-            max_depth=max_depth,
+            max_depth=MAX_TRACE_DEPTH,
         )
-        # Persist calculated trace paths
-        repo.save_trace_paths(case_id, result.paths)
-        return result
-    except TraceError as exc:
-        raise HTTPException(status_code=409, detail={"code": exc.code, "message": exc.message})
+    except TraceError:
+        return  # no traceable origin: the review scope rests on the case's own transactions and earlier reviews
+    repo.save_trace_paths(case_id, result.paths)
 
 
 # ---------------- System ----------------
@@ -250,6 +267,7 @@ def record_account_review(
 ) -> AccountReviewStatus:
     """Record an account review decision with reviewer identity and append-only audit event."""
     try:
+        _store_trace_for_review(repo, case_id)
         return repo.update_account_review(
             case_id=case_id,
             account_id=account_id,

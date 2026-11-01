@@ -82,7 +82,7 @@ export const AI_STATE: Record<AIState, { title: string; tone: Tone }> = {
   not_configured: { title: 'AI analyst: not configured', tone: 'neutral' },
   skipped_privacy_policy: { title: 'AI analyst: skipped by privacy policy', tone: 'amber' },
   unavailable: { title: 'AI analyst: unavailable', tone: 'rose' },
-  deferred: { title: 'AI analyst: requested separately', tone: 'neutral' },
+  deferred: { title: 'AI analyst: available on request', tone: 'neutral' },
 };
 
 export const BASIS: Record<ObservationBasis, { label: string; tone: Tone }> = {

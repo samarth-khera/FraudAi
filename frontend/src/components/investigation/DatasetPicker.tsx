@@ -82,6 +82,21 @@ export const DatasetPicker: React.FC<{ value: DatasetId; onChange: (d: DatasetId
                     {d.source.accounts_count.toLocaleString('en-IN')} accounts, {d.source.transactions_count.toLocaleString('en-IN')} transfers, synthetic
                   </span>
                 )}
+                {d.model_support && (
+                  <span
+                    className={`mt-2 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ${
+                      d.model_support === 'validated_in_distribution' ? 'bg-[#ECFDF5] text-[#065F46] ring-[#A7F3D0]' : 'bg-sev-elevated-soft text-sev-elevated ring-[#F5E3A8]'
+                    }`}
+                    data-testid={`model-support-${d.dataset_id}`}
+                    title={d.model_note}
+                  >
+                    {d.model_support === 'validated_in_distribution'
+                      ? 'Models validated on this dataset'
+                      : d.model_support === 'unsupported_distribution_shift'
+                        ? 'Models reference only: out of distribution'
+                        : 'Models reference only: not validated'}
+                  </span>
+                )}
                 {!d.available && d.unavailable_reason && <span className="mt-2 block text-[11px] text-sev-elevated">{d.unavailable_reason}</span>}
               </button>
             );

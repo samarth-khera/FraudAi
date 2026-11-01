@@ -26,6 +26,7 @@ try:
     from app.api.v2.investigation_schemas import InvestigationExplanationResponse, InvestigationRequest, InvestigationResponse
     from app.db.v2.models import AccountModel, TransactionModel
     from app.services.v2 import ai_analyst, data_source
+    from app.services.v2.formatting import inr
     from app.services.v2.graph_tracer import FlowEdge, FlowTrace, ForensicGraphTracer
     from app.services.v2.live_analysis import compare_review_suggestions
     from app.services.v2.ml_service import ModelUnavailableException, V2MLInferenceService
@@ -34,6 +35,7 @@ except ModuleNotFoundError:
     from backend.app.api.v2.investigation_schemas import InvestigationExplanationResponse, InvestigationRequest, InvestigationResponse
     from backend.app.db.v2.models import AccountModel, TransactionModel
     from backend.app.services.v2 import ai_analyst, data_source
+    from backend.app.services.v2.formatting import inr
     from backend.app.services.v2.graph_tracer import FlowEdge, FlowTrace, ForensicGraphTracer
     from backend.app.services.v2.live_analysis import compare_review_suggestions
     from backend.app.services.v2.ml_service import ModelUnavailableException, V2MLInferenceService
@@ -70,13 +72,7 @@ V2_MODEL_NOT_USED = ("the demo-ledger account model is not used on this dataset 
 
 def _money(x: float) -> str:
     """Indian digit grouping (₹2,50,000), matching the frontend; paise only when present."""
-    sign, x = ("-" if x < 0 else ""), abs(round(x, 2))
-    whole, paise = divmod(round(x * 100), 100)
-    digits = str(whole)
-    head, tail = digits[:-3], digits[-3:]
-    groups = [head[max(0, i - 2):i] for i in range(len(head), 0, -2)][::-1]
-    grouped = ",".join(groups + [tail]) if head else tail
-    return f"{sign}₹{grouped}" + (f".{paise:02d}" if paise else "")
+    return inr(x)
 
 
 def _ts(t: datetime) -> str:
@@ -186,14 +182,23 @@ class InvestigationService:
         """
         report, clock = await run_in_threadpool(cls.compute, db, req)
         if req.ai_explanation == "separate":
-            report["ai_analysis"] = ai_analyst.deferred()
+            # 'deferred' only when an explanation request could produce one; otherwise the analyst's real state now.
+            report["ai_analysis"] = ai_analyst.precheck(report, provider) or ai_analyst.deferred()
         else:
             report["ai_analysis"] = await ai_analyst.analyze(report, provider)
         return cls._finish(report, clock)
 
     @classmethod
     async def explain_async(cls, db: Session, req: InvestigationRequest, provider: Any = None) -> InvestigationExplanationResponse:
-        """Recomputes the deterministic report on the server (the browser never supplies evidence) and explains it."""
+        """Recomputes the deterministic report on the server (the browser never supplies evidence) and explains it.
+
+        When no explanation can be produced (analyst off, gated or without a key) nothing is recomputed."""
+        early = ai_analyst.precheck(None, provider)
+        if early is not None:
+            clock = time.perf_counter()
+            await run_in_threadpool(cls.require_account, db, req.account_id)
+            return InvestigationExplanationResponse(account_id=req.account_id, report_digest="", data_as_of=None,
+                                                    duration_ms=int((time.perf_counter() - clock) * 1000), ai_analysis=early)
         report, clock = await run_in_threadpool(cls.compute, db, req)
         ai = await ai_analyst.analyze(report, provider)
         return InvestigationExplanationResponse(
@@ -216,6 +221,13 @@ class InvestigationService:
         report["completed_at"] = datetime.now(timezone.utc).isoformat()
         report["duration_ms"] = int((time.perf_counter() - clock) * 1000)
         return InvestigationResponse.model_validate(report)
+
+    @staticmethod
+    def require_account(db: Session, account_id: str) -> None:
+        """Raises DataSourceUnavailable or AccountNotFound; one indexed lookup, nothing computed."""
+        data_source.describe(db)
+        if db.scalar(select(AccountModel.account_id).where(AccountModel.account_id == account_id)) is None:
+            raise AccountNotFound(account_id)
 
     @classmethod
     def compute(cls, db: Session, req: InvestigationRequest) -> tuple[dict, float]:

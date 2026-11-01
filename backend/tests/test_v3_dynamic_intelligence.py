@@ -315,8 +315,13 @@ def test_investigated_victim_and_unfunded_flags():
     r = roles.assess(victim)
     assert r.role_candidate == "potential_victim" and r.may_be_victim
     assert roles.restriction(victim, r, [])["state"] == "urgent_manual_review_recommended"
+    # QA-03: forwarding money just received, with no other kind of evidence, abstains instead of naming a role ...
     forwarder = ev(position="investigated", hop=0, flagged_out_ids=["T1", "T2"], flagged_out_unfunded_ids=[])
-    assert roles.assess(forwarder).role_candidate == "potential_intermediary"
+    r = roles.assess(forwarder)
+    assert r.role_candidate == "unknown_role" and "FUNDED_FORWARD" in r.categories and r.uncertainty_reason
+    # ... and with a second, independent kind of evidence it is an intermediary candidate.
+    backed = ev(position="investigated", hop=0, flagged_out_ids=["T1", "T2"], flagged_out_unfunded_ids=[], account_model=SCORED_HIGH)
+    assert roles.assess(backed).role_candidate == "potential_intermediary"
     quiet = ev(position="investigated", hop=0)
     assert roles.assess(quiet).role_candidate == "no_suspicious_activity_observed"
     short = ev(position="investigated", hop=0, n_transactions=3)

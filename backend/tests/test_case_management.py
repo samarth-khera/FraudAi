@@ -398,18 +398,23 @@ def test_invalid_requests_validation(db_client):
     assert res_empty_tx.status_code == 422
 
 
-def test_trace_persists_trace_paths(db_client):
-    """Calling /api/cases/{case_id}/trace computes downstream trace and saves trace paths & audit."""
+def test_trace_view_is_computed_and_stores_nothing(db_client):
+    """GET /api/cases/{case_id}/trace computes the downstream trace without writing (QA-04): trace paths are stored,
+    and audited, only by the authorised review write (see test_qa_remediation_cases.py)."""
     res = db_client.get("/api/cases/FS-1042/trace")
     assert res.status_code == 200
     data = res.json()
     assert data["case_id"] == "FS-1042"
     assert len(data["paths"]) > 0
 
-    # Verify audit trail recorded trace_paths_persisted
     audit_res = db_client.get("/api/cases/FS-1042/audit-trail")
     assert audit_res.status_code == 200
     actions = [e["action"] for e in audit_res.json()["events"]]
+    assert "trace_paths_persisted" not in actions
+
+    review = db_client.put("/api/cases/FS-1042/accounts/A100/review", json={"review_state": "under_review", "reviewer_id": "t"})
+    assert review.status_code == 200
+    actions = [e["action"] for e in db_client.get("/api/cases/FS-1042/audit-trail").json()["events"]]
     assert "trace_paths_persisted" in actions
 
 
