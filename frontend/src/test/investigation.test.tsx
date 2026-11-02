@@ -284,11 +284,13 @@ describe('input-first investigation flow', () => {
     [Object.assign(new Error('nope'), { status: 404, code: 'not_found' }), 'Account not found', false],
     [new TypeError('Failed to fetch'), 'The server could not be reached', true],
   ])('reports an account that cannot be loaded (%#)', async (err, title, retry) => {
-    getDatasetAccount.mockRejectedValueOnce(err);
+    getDatasetAccount.mockRejectedValue(err);
     renderPage('/investigate?account=ACC-X');
-    const alert = await screen.findByRole('alert');
+    const alert = await screen.findByRole('alert', {}, { timeout: 3000 });
     expect(alert).toHaveTextContent(title);
     expect(!!within(alert).queryByRole('button', { name: /Try again/ })).toBe(retry);
+    // A dropped connection is read once more before the error is shown; a server answer (404) is not.
+    expect(getDatasetAccount).toHaveBeenCalledTimes(retry ? 2 : 1);
     expect(run).not.toHaveBeenCalled();
   });
 

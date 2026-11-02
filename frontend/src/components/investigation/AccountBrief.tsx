@@ -2,6 +2,7 @@ import React, { useEffect, useId, useState } from 'react';
 import { ArrowLeftRight, ArrowRight, FlaskConical, Route, SlidersHorizontal } from 'lucide-react';
 import { formatDateTime, formatMoney } from '../../lib/format';
 import { v2Api } from '../../services/v2Api';
+import { retryRead } from '../../lib/retry';
 import { DataSourceInfo } from '../../types/investigation';
 import { V2AccountAssessmentResponse, V2AccountProfileResponse } from '../../types/v2';
 import { ErrorState } from '../ui/StateViews';
@@ -70,10 +71,10 @@ export const AccountBrief: React.FC<{
     const demo = datasetId === 'demo-ledger';
     const none = Promise.resolve(null);
     Promise.allSettled([
-      v2Api.getDatasetAccount(datasetId, accountId, signal),
-      demo ? v2Api.getAccount(accountId, signal) : none,
-      demo ? v2Api.getAssessment(accountId, signal) : none,
-      demo ? v2Api.getDataSource(signal) : none,
+      retryRead(() => v2Api.getDatasetAccount(datasetId, accountId, signal), signal),
+      demo ? retryRead(() => v2Api.getAccount(accountId, signal), signal) : none,
+      demo ? retryRead(() => v2Api.getAssessment(accountId, signal), signal) : none,
+      demo ? retryRead(() => v2Api.getDataSource(signal), signal) : none,
     ]).then(([d, p, a, s]) => {
       if (signal.aborted) return;
       if (d.status === 'rejected') {

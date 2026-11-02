@@ -28,6 +28,7 @@ import { DatasetSummary } from '../types/dynamic';
 import { FraudCase, GlobalAuditResponse } from '../types/api';
 import { InvestigationModelInfo } from '../types/v2';
 import { nextActionFor } from './InvestigationsPage';
+import { retryRead } from '../lib/retry';
 
 export const SAMPLE_CASE_ID = 'FS-2001';
 
@@ -44,10 +45,11 @@ function useOverview() {
     const c = new AbortController();
     const settle = <T,>(p: Promise<T>, set: (x: Part<T>) => void) =>
       p.then((value) => !c.signal.aborted && set({ state: 'ready', value })).catch(() => !c.signal.aborted && set({ state: 'failed' }));
-    settle(v2Api.getDataSource(c.signal), setSource);
-    settle(v2Api.listDatasets(c.signal), setDatasets);
-    settle(api.getCases(0, 100).then((r) => r.cases), setCases);
-    settle(api.getGlobalAudit({ limit: 6, sort_order: 'desc' }), setAudit);
+    // Idempotent reads: one quiet retry if the connection drops before an answer arrives.
+    settle(retryRead(() => v2Api.getDataSource(c.signal), c.signal), setSource);
+    settle(retryRead(() => v2Api.listDatasets(c.signal), c.signal), setDatasets);
+    settle(retryRead(() => api.getCases(0, 100), c.signal).then((r) => r.cases), setCases);
+    settle(retryRead(() => api.getGlobalAudit({ limit: 6, sort_order: 'desc' }), c.signal), setAudit);
     return () => c.abort();
   }, []);
 
