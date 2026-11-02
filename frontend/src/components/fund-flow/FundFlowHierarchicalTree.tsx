@@ -962,13 +962,13 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
   const getCustomerIcon = (customerType: string) => {
     switch (customerType?.toLowerCase()) {
       case 'corporate':
-        return <Building className="w-3.5 h-3.5 text-[#5C6079]" />;
+        return <Building className="w-3.5 h-3.5 text-mute" />;
       case 'student':
-        return <GraduationCap className="w-3.5 h-3.5 text-[#3B82F6]" />;
+        return <GraduationCap className="w-3.5 h-3.5 text-ice" />;
       case 'sme':
-        return <CreditCard className="w-3.5 h-3.5 text-[#4F33D6]" />;
+        return <CreditCard className="w-3.5 h-3.5 text-iris-deep" />;
       default:
-        return <User className="w-3.5 h-3.5 text-[#868AA2]" />;
+        return <User className="w-3.5 h-3.5 text-faint" />;
     }
   };
 
@@ -982,16 +982,16 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      className={`relative w-full rounded-2xl border border-[#E4E5F0] bg-[#F6F6FC] overflow-hidden select-none blueprint-grid-warm shadow-xs outline-none focus:ring-1 focus:ring-[#6246EA]/40 ${
+      className={`relative w-full rounded-2xl border border-line bg-well overflow-hidden select-none blueprint-grid-warm shadow-xs outline-none focus:ring-1 focus:ring-iris/40 ${
         isDragging ? 'cursor-grabbing' : 'cursor-grab'
       }`}
     >
       {/* Floating Canvas Action Controls Toolbar */}
-      <div className="absolute top-3 right-3 flex flex-wrap items-center gap-1.5 bg-white/95 backdrop-blur-xs border border-[#E4E5F0] rounded-xl p-1.5 shadow-sm z-20">
+      <div className="absolute top-3 right-3 flex flex-wrap items-center gap-1.5 bg-white/95 backdrop-blur-xs border border-line rounded-xl p-1.5 shadow-sm z-20">
         <button
           type="button"
           onClick={handleZoomIn}
-          className="p-1.5 rounded-lg text-[#5C6079] hover:text-[#141526] hover:bg-[#F6F6FC] transition-colors cursor-pointer"
+          className="p-1.5 rounded-lg text-mute hover:text-ink hover:bg-well transition-colors cursor-pointer"
           title="Zoom In (+)"
           aria-label="Zoom In"
         >
@@ -1000,7 +1000,7 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
         <button
           type="button"
           onClick={handleZoomOut}
-          className="p-1.5 rounded-lg text-[#5C6079] hover:text-[#141526] hover:bg-[#F6F6FC] transition-colors cursor-pointer"
+          className="p-1.5 rounded-lg text-mute hover:text-ink hover:bg-well transition-colors cursor-pointer"
           title="Zoom Out (-)"
           aria-label="Zoom Out"
         >
@@ -1009,7 +1009,7 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
         <button
           type="button"
           onClick={handleFitView}
-          className="p-1.5 rounded-lg text-[#5C6079] hover:text-[#141526] hover:bg-[#F6F6FC] transition-colors cursor-pointer"
+          className="p-1.5 rounded-lg text-mute hover:text-ink hover:bg-well transition-colors cursor-pointer"
           title="Fit Tree to Screen (0)"
           aria-label="Fit View"
         >
@@ -1018,7 +1018,7 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
         <button
           type="button"
           onClick={handleResetView}
-          className="p-1.5 rounded-lg text-[#5C6079] hover:text-[#141526] hover:bg-[#F6F6FC] transition-colors cursor-pointer"
+          className="p-1.5 rounded-lg text-mute hover:text-ink hover:bg-well transition-colors cursor-pointer"
           title="Reset Zoom & Selection"
           aria-label="Reset View"
         >
@@ -1027,14 +1027,14 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
 
         {selectedNodeId && (
           <>
-            <div className="w-px h-4 bg-[#E4E5F0] mx-0.5" />
+            <div className="w-px h-4 bg-line mx-0.5" />
             <button
               type="button"
               onClick={() => focusNode(selectedNodeId)}
               className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
                 !isSelectedNodeInView
-                  ? 'bg-[#6246EA] text-white border-[#4F33D6] shadow-2xs font-bold animate-pulse'
-                  : 'bg-[#F6F6FC] hover:bg-[#EFECFF] text-[#5C6079] hover:text-[#6246EA] border-[#E4E5F0]'
+                ? 'bg-iris text-white border-iris-deep shadow-2xs font-bold animate-pulse'
+                : 'bg-well hover:bg-iris-soft text-mute hover:text-iris border-line'
               }`}
               title="Center Selected Account in Viewport (F)"
               aria-label="Center Selected Account"
@@ -1045,7 +1045,7 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
           </>
         )}
 
-        <div className="w-px h-4 bg-[#E4E5F0] mx-0.5" />
+        <div className="w-px h-4 bg-line mx-0.5" />
 
         {/* Customize Layout Toggle */}
         <button
@@ -1053,8 +1053,8 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
           onClick={() => setIsCustomizeMode((prev) => !prev)}
           className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
             isCustomizeMode
-              ? 'bg-[#6246EA] text-white border-[#4F33D6] shadow-2xs ring-2 ring-[#6246EA]/30 font-bold'
-              : 'bg-[#F6F6FC] hover:bg-[#EFECFF] text-[#5C6079] hover:text-[#6246EA] border-[#E4E5F0]'
+            ? 'bg-iris text-white border-iris-deep shadow-2xs ring-2 ring-iris/30 font-bold'
+            : 'bg-well hover:bg-iris-soft text-mute hover:text-iris border-line'
           }`}
           title={isCustomizeMode ? 'Finish custom layout' : 'Customize layout by dragging nodes'}
           aria-pressed={isCustomizeMode}
@@ -1071,8 +1071,8 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
             onClick={handleSaveLayout}
             className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
               isLayoutDirty
-                ? 'bg-[#10B981] text-white border-[#059669] shadow-2xs animate-pulse font-bold'
-                : 'bg-[#F6F6FC] hover:bg-[#EAF7EE] text-[#4F33D6] border-[#A7F3D0]'
+              ? 'bg-ok text-white border-ok shadow-2xs animate-pulse font-bold'
+              : 'bg-well hover:bg-ok-soft text-iris-deep border-ok-line'
             }`}
             title="Save manual node positions for this graph context in browser"
             aria-label="Save Layout"
@@ -1087,7 +1087,7 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
           <button
             type="button"
             onClick={handleResetLayout}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-[#F6F6FC] hover:bg-[#FFF0F2] text-[#BE123C] border border-[#FECDD3] transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-well hover:bg-danger-soft text-danger border border-danger-line transition-colors cursor-pointer"
             title="Restore standard automatic tree layout"
             aria-label="Reset to Tree Layout"
           >
@@ -1096,11 +1096,11 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
           </button>
         )}
 
-        <div className="w-px h-4 bg-[#E4E5F0] mx-0.5" />
+        <div className="w-px h-4 bg-line mx-0.5" />
         <button
           type="button"
           onClick={collapsedNodes.size > 0 ? handleExpandAll : handleCollapseAllChildren}
-          className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-[#F6F6FC] hover:bg-[#EFECFF] text-[#5C6079] hover:text-[#6246EA] border border-[#E4E5F0] transition-colors cursor-pointer"
+          className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-well hover:bg-iris-soft text-mute hover:text-iris border border-line transition-colors cursor-pointer"
           title="Toggle downstream branches visibility"
         >
           {collapsedNodes.size > 0 ? 'Expand All' : 'Collapse Deep'}
@@ -1114,31 +1114,31 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
             initial={{ opacity: 0, y: -8, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.96 }}
-            className="absolute top-14 left-1/2 -translate-x-1/2 bg-[#141526] text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg flex items-center gap-2 z-30 pointer-events-none"
+            className="absolute top-14 left-1/2 -translate-x-1/2 bg-ink text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg flex items-center gap-2 z-30 pointer-events-none"
           >
-            <CheckCircle2 className="w-4 h-4 text-[#22C55E]" />
+            <CheckCircle2 className="w-4 h-4 text-ok-fill" />
             <span>{feedbackMessage}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Floating Canvas Hop Depth Headers Ribbon */}
-      <div className="absolute top-3 left-4 flex items-center gap-4 text-[11px] font-mono text-[#868AA2] pointer-events-none z-10">
-        <span className="flex items-center gap-1.5 font-bold text-[#6246EA]">
-          <span className="w-2 h-2 rounded-full bg-[#6246EA]" />
+      <div className="absolute top-3 left-4 flex items-center gap-4 text-[11px] font-mono text-faint pointer-events-none z-10">
+        <span className="flex items-center gap-1.5 font-bold text-iris">
+          <span className="w-2 h-2 rounded-full bg-iris" />
           ORIGIN (HOP 0)
         </span>
         <span className="flex items-center gap-1.5">
-          <ArrowRight className="w-3 h-3 text-[#A8ACC2]" />
+          <ArrowRight className="w-3 h-3 text-faint" />
           <span>DIRECT RECIPIENTS (HOP 1)</span>
         </span>
         <span className="hidden sm:flex items-center gap-1.5">
-          <ArrowRight className="w-3 h-3 text-[#A8ACC2]" />
+          <ArrowRight className="w-3 h-3 text-faint" />
           <span>INTERMEDIARY (HOP 2+)</span>
         </span>
         {Object.keys(customPositions).length > 0 && (
-          <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[#EFECFF] text-[#4F33D6] border border-[#D7CFFF] flex items-center gap-1">
-            <Move className="w-3 h-3 text-[#6246EA]" />
+          <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-iris-soft text-iris-deep border border-iris-line flex items-center gap-1">
+            <Move className="w-3 h-3 text-iris" />
             MANUAL LAYOUT ACTIVE
           </span>
         )}
@@ -1278,15 +1278,15 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
                   <div
                     className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold flex items-center justify-center gap-1 shadow-2xs border transition-all ${
                       isSelected || isInActivePath
-                        ? 'bg-[#EFECFF] text-[#4F33D6] border-[#6246EA] scale-105 ring-2 ring-[#6246EA]/25'
-                        : le.isCycle
-                        ? 'bg-[#F5F3FF] text-[#4F33D6] border-[#D7CFFF]'
-                        : 'bg-white text-[#141526] border-[#E4E5F0] hover:border-[#6246EA] hover:text-[#6246EA]'
+                      ? 'bg-iris-soft text-iris-deep border-iris scale-105 ring-2 ring-iris/25'
+                      : le.isCycle
+                      ? 'bg-iris-wash text-iris-deep border-iris-line'
+                      : 'bg-white text-ink border-line hover:border-iris hover:text-iris'
                     }`}
                   >
-                    {le.isCycle && <Repeat className="w-2.5 h-2.5 text-[#6246EA]" />}
+                    {le.isCycle && <Repeat className="w-2.5 h-2.5 text-iris" />}
                     <span>₹{le.edge.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-                    <span className="text-[9px] text-[#5C6079] font-normal">{le.edge.channel}</span>
+                    <span className="text-[9px] text-mute font-normal">{le.edge.channel}</span>
                   </div>
                 </foreignObject>
               </g>
@@ -1353,34 +1353,34 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
                 }}
                 className={`interactive-node-card group relative w-full h-full bg-white rounded-xl p-2.5 flex flex-col justify-between border-2 transition-all shadow-xs select-none ${
                   isCustomizeMode
-                    ? isCurrentlyDragged
-                      ? 'cursor-grabbing border-[#6246EA] ring-4 ring-[#6246EA]/30 shadow-xl bg-[#FAFAFE]'
-                      : 'cursor-grab border-[#E4E5F0] hover:border-[#6246EA] hover:shadow-md'
-                    : isSelected
-                    ? 'cursor-pointer border-[#6246EA] ring-4 ring-[#6246EA]/15 bg-[#FAFAFE]'
-                    : ln.node.isRoot
-                    ? 'cursor-pointer border-[#6246EA] bg-[#F5F3FF]'
-                    : 'cursor-pointer border-[#E4E5F0] hover:border-[#6246EA]/60 hover:shadow-md'
+                  ? isCurrentlyDragged
+                  ? 'cursor-grabbing border-iris ring-4 ring-iris/30 shadow-xl bg-well'
+                  : 'cursor-grab border-line hover:border-iris hover:shadow-md'
+                  : isSelected
+                  ? 'cursor-pointer border-iris ring-4 ring-iris/15 bg-well'
+                  : ln.node.isRoot
+                  ? 'cursor-pointer border-iris bg-iris-wash'
+                  : 'cursor-pointer border-line hover:border-iris/60 hover:shadow-md'
                 }`}
               >
                 {/* Card Top: Icon, ID & Status Badge */}
                 <div className="flex items-center justify-between gap-1.5">
                   <div className="flex items-center gap-1.5 min-w-0">
                     {isCustomizeMode && (
-                      <span className="p-0.5 rounded text-[#868AA2] group-hover:text-[#6246EA] cursor-grab">
+                      <span className="p-0.5 rounded text-faint group-hover:text-iris cursor-grab">
                         <GripVertical className="w-3.5 h-3.5 text-current" />
                       </span>
                     )}
                     <span
                       className={`p-1 rounded-lg shrink-0 ${
                         ln.node.isRoot
-                          ? 'bg-[#6246EA] text-white'
-                          : 'bg-[#F6F6FC] border border-[#E4E5F0]'
+                        ? 'bg-iris text-white'
+                        : 'bg-well border border-line'
                       }`}
                     >
                       {getCustomerIcon(ln.node.customerType)}
                     </span>
-                    <span className="font-mono font-bold text-xs text-[#141526] truncate">
+                    <span className="font-mono font-bold text-xs text-ink truncate">
                       {ln.node.id}
                     </span>
                   </div>
@@ -1388,12 +1388,12 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
                   <span
                     className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-md border shrink-0 ${
                       ln.node.isRoot
-                        ? 'bg-[#EFECFF] text-[#4F33D6] border-[#D7CFFF]'
-                        : ln.node.statusVariant === 'cleared'
-                        ? 'bg-[#EAF7EE] text-[#166534] border-[#BBF7D0]'
-                        : ln.node.statusVariant === 'investigation'
-                        ? 'bg-[#FFF0F2] text-[#BE123C] border-[#FECDD3]'
-                        : 'bg-[#F6F6FC] text-[#5C6079] border-[#E4E5F0]'
+                      ? 'bg-iris-soft text-iris-deep border-iris-line'
+                      : ln.node.statusVariant === 'cleared'
+                      ? 'bg-ok-soft text-ok border-ok-line'
+                      : ln.node.statusVariant === 'investigation'
+                      ? 'bg-danger-soft text-danger border-danger-line'
+                      : 'bg-well text-mute border-line'
                     }`}
                   >
                     {isCustomizeMode && isCurrentlyDragged ? 'Moving...' : ln.node.statusLabel}
@@ -1401,13 +1401,13 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
                 </div>
 
                 {/* Card Bottom: Customer Name & Hop / Balance */}
-                <div className="flex items-end justify-between gap-1 text-[11px] pt-1 border-t border-[#F6F6FC]">
-                  <div className="truncate text-[#5C6079] font-medium leading-tight">
-                    <span className="truncate block font-display text-[#141526]">
+                <div className="flex items-end justify-between gap-1 text-[11px] pt-1 border-t border-well">
+                  <div className="truncate text-mute font-medium leading-tight">
+                    <span className="truncate block font-display text-ink">
                       {ln.node.name}
                     </span>
                   </div>
-                  <span className="font-mono text-[10px] text-[#868AA2] shrink-0">
+                  <span className="font-mono text-[10px] text-faint shrink-0">
                     {ln.node.isRoot ? 'Root' : `Hop ${ln.node.hop}`}
                   </span>
                 </div>
@@ -1420,8 +1420,8 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
                     title={isCollapsed ? 'Expand downstream branch' : 'Collapse downstream branch'}
                     className={`absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-mono font-bold shadow-xs border transition-all z-20 cursor-pointer ${
                       isCollapsed
-                        ? 'bg-[#6246EA] text-white border-[#4F33D6] hover:scale-110'
-                        : 'bg-white text-[#5C6079] border-[#E4E5F0] hover:border-[#6246EA] hover:text-[#6246EA]'
+                      ? 'bg-iris text-white border-iris-deep hover:scale-110'
+                      : 'bg-white text-mute border-line hover:border-iris hover:text-iris'
                     }`}
                   >
                     {isCollapsed ? '+' : '–'}
@@ -1434,28 +1434,28 @@ export const FundFlowHierarchicalTree: React.FC<FundFlowHierarchicalTreeProps> =
       </div>
 
       {/* Bottom Forensic Legend Overlay */}
-      <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-xs border border-[#E4E5F0] rounded-xl px-3.5 py-1.5 text-[11px] text-[#5C6079] shadow-sm flex flex-wrap items-center gap-4 z-20">
+      <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-xs border border-line rounded-xl px-3.5 py-1.5 text-[11px] text-mute shadow-sm flex flex-wrap items-center gap-4 z-20">
         <span className="flex items-center gap-1.5 font-medium">
-          <span className="w-3 h-3 rounded-md bg-[#EFECFF] border-2 border-[#6246EA]" />
+          <span className="w-3 h-3 rounded-md bg-iris-soft border-2 border-iris" />
           <span>Root Origin</span>
         </span>
         <span className="flex items-center gap-1.5 font-medium">
-          <span className="w-3 h-3 rounded-md bg-white border border-[#D5D7E6]" />
+          <span className="w-3 h-3 rounded-md bg-white border border-line-strong" />
           <span>Counterparty</span>
         </span>
         <span className="flex items-center gap-1.5 font-medium">
-          <span className="w-4 h-0.5 bg-[#6246EA]" />
+          <span className="w-4 h-0.5 bg-iris" />
           <span>Selected Route</span>
         </span>
         <span className="flex items-center gap-1.5 font-medium">
-          <span className="w-5 h-0 border-t-2 border-dashed border-[#6246EA]" />
+          <span className="w-5 h-0 border-t-2 border-dashed border-iris" />
           <span>Cycle / Loop</span>
         </span>
       </div>
 
       {/* Interactive Navigation Helper Hint */}
-      <div className="absolute bottom-3 right-3 flex items-center gap-2 bg-white/95 backdrop-blur-xs border border-[#E4E5F0] rounded-xl px-3 py-1.5 text-[11px] font-mono text-[#5C6079] shadow-xs z-20 pointer-events-none">
-        <span className="w-1.5 h-1.5 rounded-full bg-[#6246EA] shrink-0" />
+      <div className="absolute bottom-3 right-3 flex items-center gap-2 bg-white/95 backdrop-blur-xs border border-line rounded-xl px-3 py-1.5 text-[11px] font-mono text-mute shadow-xs z-20 pointer-events-none">
+        <span className="w-1.5 h-1.5 rounded-full bg-iris shrink-0" />
         {isCustomizeMode ? (
           <span>Drag cards to rearrange · Click Save Layout when finished</span>
         ) : (

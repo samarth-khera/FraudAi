@@ -350,7 +350,7 @@ export function countDescendants(node: TrailNode): number {
 }
 
 // ---------------------------------------------------------------- tree layout (left to right, in the direction money moved)
-export const TREE = { nodeW: 184, nodeH: 62, colW: 284, rowH: 82, pad: 28 } as const;
+export const TREE = { nodeW: 226, nodeH: 82, colW: 350, rowH: 104, pad: 32 } as const;
 
 export interface PlacedNode {
   node: TrailNode;

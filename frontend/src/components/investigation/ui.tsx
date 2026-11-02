@@ -5,12 +5,12 @@ import { SEVERITY_LABEL, SEVERITY_ORDER, Severity, Tone, useCase } from './caseM
 const TONE: Record<Tone, string> = {
   neutral: 'bg-well text-mute ring-line',
   iris: 'bg-iris-soft text-iris-deep ring-iris-line',
-  ice: 'bg-ice-soft text-[#1D4ED8] ring-[#C9DBFF]',
-  fact: 'bg-[#EEF4FF] text-[#334E8A] ring-[#D3E0FA]',
-  critical: 'bg-sev-critical-soft text-sev-critical ring-[#FBCFD8]',
-  high: 'bg-sev-high-soft text-sev-high ring-[#FCD9C2]',
-  elevated: 'bg-sev-elevated-soft text-sev-elevated ring-[#F5E3A8]',
-  low: 'bg-sev-low-soft text-sev-low ring-[#DCE1EB]',
+  ice: 'bg-ice-soft text-ice-deep ring-ice-line',
+  fact: 'bg-ice-soft text-info ring-ice-line',
+  critical: 'bg-sev-critical-soft text-sev-critical ring-danger-line',
+  high: 'bg-sev-high-soft text-sev-high ring-sev-high-line',
+  elevated: 'bg-sev-elevated-soft text-sev-elevated ring-warn-line',
+  low: 'bg-sev-low-soft text-sev-low ring-sev-low-line',
 };
 
 export const Badge: React.FC<{ tone?: Tone; children: React.ReactNode; title?: string; className?: string }> = ({
@@ -74,14 +74,14 @@ export const Ref: React.FC<{ id: string }> = ({ id }) => {
   const base = 'inline-flex items-center rounded-md px-1.5 py-0.5 font-mono text-[11px] font-medium ring-1 ring-inset transition-colors';
   if (nav.trail.edgesById.has(id) || nav.report.victim.flagged_transfers.some((t) => t.transaction_id === id)) {
     return (
-      <button type="button" onClick={() => nav.openTransfer(id)} className={`${base} bg-iris-soft text-iris-deep ring-iris-line hover:bg-[#E4DDFF]`} title="Open this transfer">
+      <button type="button" onClick={() => nav.openTransfer(id)} className={`${base} bg-iris-soft text-iris-deep ring-iris-line hover:bg-iris-line`} title="Open this transfer">
         {id}
       </button>
     );
   }
   if (nav.report.trace.nodes.some((n) => n.account_id === id)) {
     return (
-      <button type="button" onClick={() => nav.openAccount(id)} className={`${base} bg-ice-soft text-[#1D4ED8] ring-[#C9DBFF] hover:bg-[#DCE8FF]`} title="Open this account">
+      <button type="button" onClick={() => nav.openAccount(id)} className={`${base} bg-ice-soft text-ice-deep ring-ice-line hover:bg-ice-soft`} title="Open this account">
         {id}
       </button>
     );

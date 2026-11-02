@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, FlaskConical, RotateCcw } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Presence, springSnappy } from '../../lib/motion';
 import { formatDateTime } from '../../lib/format';
 import { ExplanationView, InvestigationRequest, InvestigationResponse } from '../../types/investigation';
 import { DynamicReport } from '../../types/dynamic';
@@ -131,40 +133,46 @@ export const CaseView: React.FC<{
   return (
     <CaseContext.Provider value={nav}>
       <div className="space-y-6" data-testid="investigation-report">
-        {synthetic && (
-          <div role="note" className="sticky top-16 lg:top-4 z-30 rounded-xl bg-[rgba(254,249,231,0.94)] backdrop-blur ring-1 ring-[#F5E3A8] px-4 py-2 text-[13px] text-[#7A4B05] flex items-center gap-2 shadow-sm">
-            <FlaskConical className="w-4 h-4 shrink-0" aria-hidden="true" />
-            <span>
-              <strong>Synthetic {intel && intel.dataset.dataset_id !== 'demo-ledger' ? 'data' : 'demo data'}.</strong>{' '}
-              {report.data_source.disclosure.replace(/^Synthetic[^.]*\.\s*/, '')}
-            </span>
+        <header data-reveal className="space-y-4">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-[13px] text-mute">
+                Investigation {intel?.investigation_id ?? report.investigation_id}
+                {intel && <span className="ml-1.5 text-faint">in the {intel.dataset.title.toLowerCase()}</span>}
+              </p>
+              <h1 className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span className="page-title !text-[30px] sm:!text-[36px] font-mono !tracking-[-0.02em]">{report.victim.account_id}</span>
+                <span className="font-display text-xl sm:text-2xl font-medium text-faint">{report.victim.customer_name}</span>
+              </h1>
+              <p className="mt-1.5 text-sm text-mute">
+                Computed {formatDateTime(report.completed_at)} in {(report.duration_ms / 1000).toFixed(1)} s from fresh ledger queries. Not stored.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <AIStatusChip ai={report.ai_analysis} explanation={explanation} onOpen={() => go('ai')} />
+              <button type="button" onClick={onNew} className="btn-secondary">
+                <RotateCcw className="w-4 h-4" aria-hidden="true" />
+                New investigation
+              </button>
+            </div>
           </div>
-        )}
-
-        <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-          <div className="min-w-0">
-            <p className="text-sm text-mute">
-              Investigation {intel?.investigation_id ?? report.investigation_id}
-              {intel && <span className="ml-2 text-faint">in the {intel.dataset.title.toLowerCase()}</span>}
-            </p>
-            <h1 className="mt-1 font-display text-3xl sm:text-4xl font-bold text-ink tracking-tight">
-              <span>{report.victim.account_id}</span>
-              <span className="ml-3 text-xl sm:text-2xl font-medium text-faint">{report.victim.customer_name}</span>
-            </h1>
-            <p className="mt-1.5 text-sm text-mute">
-              Computed {formatDateTime(report.completed_at)} in {(report.duration_ms / 1000).toFixed(1)} s from fresh ledger queries. Not stored.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <AIStatusChip ai={report.ai_analysis} explanation={explanation} onOpen={() => go('ai')} />
-            <button type="button" onClick={onNew} className="btn-secondary">
-              <RotateCcw className="w-4 h-4" aria-hidden="true" />
-              New investigation
-            </button>
-          </div>
+          {synthetic && (
+            <div role="note" className="flex items-start gap-2.5 rounded-xl bg-warn-soft/80 ring-1 ring-warn-line px-4 py-2.5 text-[13px] text-warn">
+              <FlaskConical className="w-4 h-4 mt-px shrink-0" aria-hidden="true" />
+              <span>
+                <strong>Synthetic {intel && intel.dataset.dataset_id !== 'demo-ledger' ? 'data' : 'demo data'}.</strong>{' '}
+                {report.data_source.disclosure.replace(/^Synthetic[^.]*\.\s*/, '')}
+              </span>
+            </div>
+          )}
         </header>
 
-        <div role="tablist" aria-label="Investigation stages" className="flex gap-1 overflow-x-auto no-scrollbar rounded-2xl bg-white/70 ring-1 ring-line p-1.5">
+        <div
+          data-reveal
+          role="tablist"
+          aria-label="Investigation stages"
+          className="sticky top-16 lg:top-[3.75rem] z-30 flex gap-1 overflow-x-auto no-scrollbar rounded-2xl bg-[rgba(255,255,255,0.78)] backdrop-blur-xl ring-1 ring-line p-1.5 shadow-[var(--shadow-xs)]"
+        >
           {stages.map((s, i) => {
             const on = s.id === stage;
             return (
@@ -181,24 +189,32 @@ export const CaseView: React.FC<{
                 tabIndex={on ? 0 : -1}
                 onClick={() => setStage(s.id)}
                 onKeyDown={(e) => onTabKey(e, i)}
-                className={`flex-1 min-w-[132px] rounded-xl px-3.5 py-2.5 text-left transition-all ${on ? 'bg-white shadow-[var(--shadow-float)] ring-1 ring-line' : 'hover:bg-white/80'}`}
+                title={s.question}
+                className={`relative isolate flex-1 min-w-max rounded-xl px-3.5 py-2 text-left transition-colors duration-150 ${on ? '' : 'hover:bg-white/80'}`}
               >
+                {on && (
+                  <motion.span
+                    layoutId="stage-tab"
+                    transition={springSnappy}
+                    className="absolute inset-0 -z-10 rounded-xl bg-white shadow-[var(--shadow-float)] ring-1 ring-line"
+                    aria-hidden="true"
+                  />
+                )}
                 <span className={`flex items-center gap-2 text-sm font-semibold ${on ? 'text-ink' : 'text-mute'}`}>
                   <span
-                    className={`w-5 h-5 rounded-full text-[11px] font-bold flex items-center justify-center ${on ? 'bg-gradient-to-br from-iris to-ice text-white' : 'bg-well text-faint ring-1 ring-line'}`}
+                    className={`w-5 h-5 rounded-full text-[11px] font-bold flex items-center justify-center shrink-0 transition-colors ${on ? 'bg-gradient-to-br from-iris to-ice text-white' : 'bg-well text-faint ring-1 ring-line'}`}
                     aria-hidden="true"
                   >
                     {i + 1}
                   </span>
-                  {s.label}
+                  <span className="whitespace-nowrap">{s.label}</span>
                 </span>
-                <span className="mt-0.5 hidden xl:block text-[11px] text-faint truncate">{s.question}</span>
               </button>
             );
           })}
         </div>
 
-        <div role="tabpanel" id={`stage-${stage}`} aria-labelledby={`tab-${stage}`} key={stage} className="rise-in">
+        <div role="tabpanel" id={`stage-${stage}`} aria-labelledby={`tab-${stage}`} key={stage} data-reveal className="scroll-mt-32">
           {stage === 'overview' && <OverviewStage onFollow={() => go('trail')} />}
           {stage === 'trail' && (
             <FundTrailStage
@@ -231,7 +247,7 @@ export const CaseView: React.FC<{
         </div>
 
         {nextStage && (
-          <div className="flex justify-end">
+          <div className="flex justify-end border-t border-line pt-5">
             <button type="button" className="btn-secondary" onClick={() => go(nextStage.id)}>
               Continue: {nextStage.label}
               <ArrowRight className="w-4 h-4" aria-hidden="true" />
@@ -240,18 +256,21 @@ export const CaseView: React.FC<{
         )}
       </div>
 
-      {inspecting && target && (
-        <Inspector
-          target={target}
-          branch={branch}
-          onClose={() => setInspecting(false)}
-          onNavigate={select}
-          onFocusBranch={() => {
-            setStage('trail');
-            focusOn();
-          }}
-        />
-      )}
+      <Presence>
+        {inspecting && target && (
+          <Inspector
+            key="inspector"
+            target={target}
+            branch={branch}
+            onClose={() => setInspecting(false)}
+            onNavigate={select}
+            onFocusBranch={() => {
+              setStage('trail');
+              focusOn();
+            }}
+          />
+        )}
+      </Presence>
     </CaseContext.Provider>
   );
 };

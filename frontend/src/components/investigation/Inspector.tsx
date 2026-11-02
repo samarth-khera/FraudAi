@@ -1,4 +1,6 @@
 import React, { useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { drawerFromRight } from '../../lib/motion';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Crosshair, ExternalLink, X } from 'lucide-react';
 import { channelLabel, formatDateTime, formatMoney, formatDuration } from '../../lib/format';
@@ -10,6 +12,7 @@ import type { Target } from './TrailTree';
 import { ROLE_TONE, STRENGTH_LABEL, severityOf, useCase } from './caseModel';
 import { Badge, IdText, Ref, Refs, SeverityMeter } from './ui';
 import { AccountModelFactors, EvidenceList, RestrictionPanel, RoleBadge } from './intel';
+import { EvidenceTag } from '../ui/EvidenceTag';
 
 const Row: React.FC<{ k: string; children: React.ReactNode }> = ({ k, children }) => (
   <div className="grid grid-cols-[minmax(0,9rem)_minmax(0,1fr)] gap-3 py-2 border-b border-line last:border-0">
@@ -56,27 +59,34 @@ export const Inspector: React.FC<{
   }, [onClose]);
 
   return (
-    <aside
+    <motion.aside
       id="selection-detail"
       role="dialog"
       aria-modal="false"
       aria-labelledby="inspector-title"
-      className="drawer-in fixed inset-y-0 right-0 z-50 w-full sm:w-[440px] bg-white border-l border-line shadow-[-24px_0_60px_-30px_rgba(72,64,140,0.35)] flex flex-col"
+      variants={drawerFromRight}
+      initial="hidden"
+      animate="shown"
+      exit="exit"
+      className="fixed inset-y-0 right-0 z-50 w-full sm:w-[460px] bg-white border-l border-line shadow-[-28px_0_64px_-32px_rgba(40,34,110,0.42)] flex flex-col"
     >
-      <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-line">
-        <p className="text-xs font-semibold text-faint">{target.kind === 'transfer' ? 'Transfer' : 'Account'} inspector</p>
+      <div className="flex items-center justify-between gap-3 px-5 h-16 border-b border-line bg-[linear-gradient(180deg,#F6F4FF_0%,#FFFFFF_100%)]">
+        <p className="flex items-center gap-2 text-[13px] font-semibold text-mute">
+          <span className={`w-2 h-2 rounded-full ${target.kind === 'transfer' ? 'bg-gradient-to-r from-iris to-ice' : 'bg-ink'}`} aria-hidden="true" />
+          {target.kind === 'transfer' ? 'Transfer' : 'Account'} inspector
+        </p>
         <button type="button" className="btn-icon" onClick={onClose} aria-label="Close inspector">
           <X className="w-4 h-4" aria-hidden="true" />
         </button>
       </div>
-      <div className="flex-1 overflow-y-auto px-5 py-5 text-sm">
+      <div className="flex-1 overflow-y-auto overscroll-contain px-5 sm:px-6 py-6 text-sm">
         {target.kind === 'transfer' ? (
           <TransferDetail id={target.id} branch={branch} headingRef={heading} onNavigate={onNavigate} onFocusBranch={onFocusBranch} />
         ) : (
           <AccountDetail id={target.id} headingRef={heading} onNavigate={onNavigate} onFocusBranch={branch ? onFocusBranch : undefined} />
         )}
       </div>
-    </aside>
+    </motion.aside>
   );
 };
 
@@ -111,6 +121,7 @@ const TransferDetail: React.FC<{
         <IdText className="text-ink">{t.transaction_id}</IdText>, {channelLabel(t.channel)}, {formatDateTime(t.timestamp)}
       </p>
       <div className="mt-3 flex flex-wrap gap-1.5">
+        <EvidenceTag kind={t.evidence_type === 'observed_direct' ? 'observed' : 'interpretation'} />
         <Badge tone={t.evidence_type === 'observed_direct' ? 'fact' : 'neutral'}>
           {t.evidence_type === 'observed_direct' ? 'Direct: the investigated account is a party' : 'Linked by timing and balance'}
         </Badge>
@@ -292,7 +303,7 @@ const AccountDetail: React.FC<{
         role && <p className="mt-2 text-ink-soft leading-relaxed">{role.help}</p>
       )}
 
-      {a && !a.analyzed && <p className="mt-4 rounded-xl bg-sev-elevated-soft ring-1 ring-[#F5E3A8] px-3 py-2 text-sev-elevated">{a.not_analyzed_reason}</p>}
+      {a && !a.analyzed && <p className="mt-4 rounded-xl bg-sev-elevated-soft ring-1 ring-warn-line px-3 py-2 text-sev-elevated">{a.not_analyzed_reason}</p>}
 
       {(a?.rule_assessment || ra) && (
         <div className="mt-5 grid grid-cols-2 gap-3">
@@ -335,7 +346,7 @@ const AccountDetail: React.FC<{
           </div>
         </div>
       )}
-      {!ra && a?.disagreement_note && <p className="mt-3 rounded-xl bg-sev-elevated-soft ring-1 ring-[#F5E3A8] px-3 py-2 text-xs text-sev-elevated">{a.disagreement_note}</p>}
+      {!ra && a?.disagreement_note && <p className="mt-3 rounded-xl bg-sev-elevated-soft ring-1 ring-warn-line px-3 py-2 text-xs text-sev-elevated">{a.disagreement_note}</p>}
 
       {!ra && a && a.role_basis.length > 0 && (
         <Group title="Why this label">

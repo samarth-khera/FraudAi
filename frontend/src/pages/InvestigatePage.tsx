@@ -9,6 +9,7 @@ import { v2Api } from '../services/v2Api';
 import { ExplanationView, InvestigationRequest } from '../types/investigation';
 import { DatasetId, DynamicInvestigationRequest, DynamicReport } from '../types/dynamic';
 import { DatasetPicker } from '../components/investigation/DatasetPicker';
+import { PageHeader } from '../components/ui/PageHeader';
 
 const DATASETS: DatasetId[] = ['demo-ledger', 'forensic-scenarios'];
 function datasetFrom(p: URLSearchParams): DatasetId {
@@ -238,37 +239,37 @@ export const InvestigatePage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-5xl pb-6">
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px] items-start">
-        <div>
-          <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tight text-ink leading-[1.05]">
-            Follow an account’s money, one transfer at a time.
-          </h1>
-          <p className="mt-4 text-[17px] leading-relaxed text-mute max-w-[60ch]">
-            Open an account to see what the records already say about it. When you start the investigation, the server traces where its
-            money went and came from, and walks you through the evidence one question at a time.
-          </p>
-          <div className="mt-8 space-y-5">
-            <DatasetPicker value={dataset} onChange={chooseDataset} onPickAccount={openAccount} />
-            <AccountEntry initial={form.accountId} onOpen={openAccount} />
+    <div className="space-y-7 pb-6">
+      <PageHeader
+        title="Follow an account’s money, one transfer at a time."
+        description="Open an account to see what the records already say about it. When you start the investigation, the server traces where its money went and came from, and walks you through the evidence one question at a time."
+      />
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] items-start">
+        <div data-reveal className="panel panel-sheen p-5 sm:p-7 space-y-6">
+          <DatasetPicker value={dataset} onChange={chooseDataset} onPickAccount={openAccount} />
+          <div className="border-t border-line pt-6">
+            <AccountEntry compact initial={form.accountId} onOpen={openAccount} />
+            <p className="mt-3 text-[13px] text-mute">
+              Account IDs are searched only inside the selected synthetic dataset. FraudShield cannot look up real bank accounts.
+            </p>
           </div>
-          <p className="mt-3 text-sm text-mute">
-            Account IDs are searched only inside the selected synthetic dataset. FraudShield cannot look up real bank accounts.
-          </p>
         </div>
-        <ol className="panel p-5 space-y-4" aria-label="How an investigation is laid out">
-          {STAGES.map((s, i) => (
-            <li key={s.id} className="flex gap-3">
-              <span className="w-6 h-6 rounded-full bg-iris-soft text-iris-deep text-xs font-bold flex items-center justify-center shrink-0" aria-hidden="true">
-                {i + 1}
-              </span>
-              <span>
-                <span className="block text-sm font-semibold text-ink">{s.label}</span>
-                <span className="block text-xs text-mute">{s.question}</span>
-              </span>
-            </li>
-          ))}
-        </ol>
+        <section data-reveal className="panel p-5 sm:p-6" aria-labelledby="layout-h">
+          <h2 id="layout-h" className="card-title">How the results are laid out</h2>
+          <ol className="mt-4 relative space-y-4 before:absolute before:left-[11px] before:top-3 before:bottom-3 before:w-px before:bg-line" aria-label="How an investigation is laid out">
+            {STAGES.map((s, i) => (
+              <li key={s.id} className="relative flex gap-3">
+                <span className="relative w-6 h-6 rounded-full bg-white ring-1 ring-iris-line text-iris-deep text-[11px] font-bold flex items-center justify-center shrink-0" aria-hidden="true">
+                  {i + 1}
+                </span>
+                <span>
+                  <span className="block text-sm font-semibold text-ink">{s.label}</span>
+                  <span className="block text-[13px] text-mute leading-snug">{s.question}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </section>
       </div>
     </div>
   );

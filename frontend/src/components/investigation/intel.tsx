@@ -5,6 +5,7 @@ import { formatDateTime, formatMoney } from '../../lib/format';
 import { AccountModelResult, EvidenceItem, Restriction, RestrictionState, RoleCandidate, TransactionAssessment } from '../../types/dynamic';
 import { ROLE_TONE_V3, Tone } from './caseModel';
 import { Badge, IdText, Ref } from './ui';
+import { EvidenceTag } from '../ui/EvidenceTag';
 
 
 
@@ -46,18 +47,13 @@ export const AccountModelFactors: React.FC<{ m: AccountModelResult }> = ({ m }) 
   </ul>
 );
 
-const KIND_LABEL: Record<EvidenceItem['kind'], string> = { observed: 'Recorded fact', model: 'Model output', rule: 'Fixed rule' };
-const KIND_TONE: Record<EvidenceItem['kind'], Tone> = { observed: 'fact', model: 'iris', rule: 'neutral' };
-
 /** Evidence with its source kept visible, so a model output is never read as a recorded fact. */
 export const EvidenceList: React.FC<{ items: EvidenceItem[]; empty?: string }> = ({ items, empty = 'Nothing recorded.' }) =>
   items.length ? (
     <ul className="space-y-2">
       {items.map((e) => (
         <li key={e.text} className="flex items-start gap-2 text-sm text-ink-soft">
-          <Badge tone={KIND_TONE[e.kind]} className="mt-0.5 shrink-0">
-            {KIND_LABEL[e.kind]}
-          </Badge>
+          <EvidenceTag kind={e.kind} className="mt-0.5 shrink-0" />
           <span>{e.text}</span>
         </li>
       ))}
@@ -65,7 +61,6 @@ export const EvidenceList: React.FC<{ items: EvidenceItem[]; empty?: string }> =
   ) : (
     <p className="text-sm text-mute">{empty}</p>
   );
-
 
 const RESTRICTION_ICON: Record<RestrictionState, React.FC<{ className?: string }>> = {
   no_restriction_recommendation: ShieldCheck,
@@ -75,17 +70,20 @@ const RESTRICTION_ICON: Record<RestrictionState, React.FC<{ className?: string }
   insufficient_evidence_to_recommend: ShieldQuestion,
 };
 const RESTRICTION_TONE: Record<RestrictionState, string> = {
-  no_restriction_recommendation: 'ring-[#DCE1EB] bg-white',
-  additional_verification_recommended: 'ring-[#F5E3A8] bg-[#FFFCF1]',
-  urgent_manual_review_recommended: 'ring-[#FCD9C2] bg-[#FFF7F1]',
-  consider_temporary_restriction_review: 'ring-[#FBCFD8] bg-[#FFF5F7]',
+  no_restriction_recommendation: 'ring-sev-low-line bg-white',
+  additional_verification_recommended: 'ring-warn-line bg-warn-soft',
+  urgent_manual_review_recommended: 'ring-sev-high-line bg-sev-high-soft',
+  consider_temporary_restriction_review: 'ring-danger-line bg-danger-soft',
   insufficient_evidence_to_recommend: 'ring-line bg-white',
 };
 
-const ListBlock: React.FC<{ title: string; items: string[]; testId: string }> = ({ title, items, testId }) =>
+const ListBlock: React.FC<{ title: string; items: string[]; testId: string; kind?: 'interpretation' | 'missing' }> = ({ title, items, testId, kind }) =>
   items.length > 0 ? (
     <div data-testid={testId}>
-      <h4 className="text-xs font-semibold text-ink">{title}</h4>
+      <h4 className="flex flex-wrap items-center gap-2 text-xs font-semibold text-ink">
+        {title}
+        {kind && <EvidenceTag kind={kind} />}
+      </h4>
       <ul className="mt-1.5 space-y-1 list-disc pl-4 text-ink-soft">
         {items.map((s) => <li key={s}>{s}</li>)}
       </ul>
@@ -105,14 +103,14 @@ export const RestrictionPanel: React.FC<{ r: Restriction; compact?: boolean }> =
           <p className="text-xs text-mute">Restriction recommendation for <IdText>{r.account_id}</IdText></p>
           <p className="mt-0.5 font-semibold text-ink leading-snug">{r.label}</p>
           <p className="mt-1.5 text-sm text-ink-soft leading-relaxed">{r.rationale}</p>
-          {r.victim_note && <p className="mt-2 text-sm font-medium text-[#1D4ED8]">{r.victim_note}</p>}
+          {r.victim_note && <p className="mt-2 text-sm font-medium text-ice-deep">{r.victim_note}</p>}
         </div>
       </div>
       <div className={`mt-4 grid gap-4 text-sm ${compact ? '' : 'sm:grid-cols-2'}`}>
         {!compact && <ListBlock title="What supports it" items={r.supporting_evidence} testId="restriction-support" />}
-        <ListBlock title="Innocent explanations to rule out" items={r.innocent_explanations} testId="restriction-innocent" />
+        <ListBlock title="Innocent explanations to rule out" items={r.innocent_explanations} testId="restriction-innocent" kind="interpretation" />
         <ListBlock title="Verification needed first" items={r.verification_needed} testId="restriction-verification" />
-        <ListBlock title="Missing information" items={r.missing_information} testId="restriction-missing" />
+        <ListBlock title="Missing information" items={r.missing_information} testId="restriction-missing" kind="missing" />
         {!compact && r.relevant_transaction_ids.length > 0 && (
             <div className="sm:col-span-2">
               <h4 className="text-xs font-semibold text-ink">Relevant transfers</h4>

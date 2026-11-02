@@ -1,32 +1,53 @@
 import React, { useState } from 'react';
-import {
-  Sparkles,
-  GitFork,
-  Layers,
-  Copy,
-  Check,
-  Eye,
-  EyeOff,
-  RefreshCw,
-  Shield,
-  ArrowUpRight,
-  ArrowDownLeft,
-  Activity,
-  Users,
-  Wallet,
-} from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Activity, ArrowDownLeft, ArrowUpRight, Check, Copy, Eye, EyeOff, GitFork, Layers, RefreshCw, Sparkles, Users, Wallet } from 'lucide-react';
 import { V2AccountLiveAnalysisResponse, V2AccountProfileResponse } from '../../types/v2';
+import { springSnappy } from '../../lib/motion';
+
+type Tab = 'assessment' | 'trace' | 'transactions' | 'review';
 
 interface V2BankingHeroHeaderProps {
   profile: V2AccountProfileResponse | null;
   liveAnalysis: V2AccountLiveAnalysisResponse | null;
   isAnalyzing: boolean;
   onRunLiveAnalysis: () => void;
-  onNavigateTab: (tab: 'assessment' | 'trace' | 'transactions' | 'review') => void;
-  activeTab: 'assessment' | 'trace' | 'transactions' | 'review';
+  onNavigateTab: (tab: Tab) => void;
+  activeTab: Tab;
   transactionCount: number;
 }
 
+const TABS: { id: Tab; label: string }[] = [
+  { id: 'assessment', label: 'Overview and analysis' },
+  { id: 'trace', label: 'Follow the money' },
+  { id: 'transactions', label: 'Transactions' },
+  { id: 'review', label: 'Review' },
+];
+
+const money = (v: number) => `₹${v.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+const words = (s: string | null | undefined) => (s ? s.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase()) : null);
+
+const Figure: React.FC<{ icon: typeof Wallet; iconClass: string; label: string; value: React.ReactNode; note: React.ReactNode; aside?: React.ReactNode }> = ({
+  icon: Icon,
+  iconClass,
+  label,
+  value,
+  note,
+  aside,
+}) => (
+  <div className="min-w-0 px-0 lg:px-5 lg:first:pl-0 lg:border-l lg:first:border-l-0 border-line">
+    <dt className="flex items-center justify-between gap-2 text-[13px] font-medium text-mute">
+      <span className="flex items-center gap-1.5">
+        <Icon className={`w-3.5 h-3.5 ${iconClass}`} aria-hidden="true" />
+        {label}
+      </span>
+      {aside}
+    </dt>
+    <dd className="mt-1.5 font-display text-[22px] font-bold tracking-tight text-ink truncate">{value}</dd>
+    <dd className="text-xs text-faint truncate">{note}</dd>
+  </div>
+);
+
+/** The top of an account's page: who it is, what can be done with it, its ledger figures and its sections. */
 export const V2BankingHeroHeader: React.FC<V2BankingHeroHeaderProps> = ({
   profile,
   liveAnalysis,
@@ -41,287 +62,157 @@ export const V2BankingHeroHeader: React.FC<V2BankingHeroHeaderProps> = ({
 
   const handleCopyId = () => {
     if (!profile?.account_id) return;
-    navigator.clipboard.writeText(profile.account_id);
+    navigator.clipboard?.writeText(profile.account_id);
     setCopiedId(true);
     setTimeout(() => setCopiedId(false), 2000);
   };
 
-  const currentBalance = profile?.current_balance ?? 0;
-  const initialBalance = profile?.initial_balance ?? 0;
-  const totalReceived = profile?.metrics.total_incoming_amount ?? 0;
-  const totalSent = profile?.metrics.total_outgoing_amount ?? 0;
-  const incomingTxns = profile?.metrics.total_incoming_txns ?? 0;
-  const outgoingTxns = profile?.metrics.total_outgoing_txns ?? 0;
-  const uniqueCounterparties = profile?.metrics.unique_counterparties ?? 0;
+  const initials = (profile?.customer_name ?? '')
+    .split(' ')
+    .filter(Boolean)
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join('');
 
   return (
     <div className="space-y-4">
-      {/* 1. TOP NAVIGATION & IDENTITY BAR */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/80 backdrop-blur-md rounded-2xl px-5 py-3 border border-[#E4E5F0] shadow-2xs">
-        {/* Left: Customer Avatar & Identity */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#6246EA] to-[#8B74F5] text-white flex items-center justify-center font-bold text-sm shadow-xs border-2 border-white">
-            {profile?.customer_name
-              ? profile.customer_name
-                  .split(' ')
-                  .map((n) => n[0])
-                  .slice(0, 2)
-                  .join('')
-              : 'AJ'}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-[#868AA2] font-medium">Account Dossier</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
-              <span className="text-[11px] font-mono font-semibold text-[#166534] bg-[#EAF7EE] px-2 py-0.2 rounded-full border border-[#BBF7D0]">
-                {profile?.status || 'Active'}
-              </span>
-            </div>
-            <h1 className="text-base sm:text-lg font-extrabold text-[#141526] font-display tracking-tight leading-tight">
-              {profile?.customer_name || 'Aditi Joshi'}
-            </h1>
-          </div>
-        </div>
-
-        {/* Center: Horizontal Navigation Tabs */}
-        <div
-          role="tablist"
-          aria-label="Account investigation sections"
-          className="flex items-center gap-1.5 bg-[#F6F6FC] p-1 rounded-full border border-[#E4E5F0] self-start md:self-center overflow-x-auto max-w-full scrollbar-none"
-        >
-          <button
-            role="tab"
-            aria-selected={activeTab === 'assessment'}
-            onClick={() => onNavigateTab('assessment')}
-            className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'assessment'
-                ? 'bg-[#6246EA] text-white shadow-xs'
-                : 'text-[#5C6079] hover:text-[#141526] hover:bg-white/80'
-            }`}
-          >
-            Overview & Analytics
-          </button>
-          <button
-            role="tab"
-            aria-selected={activeTab === 'trace'}
-            onClick={() => onNavigateTab('trace')}
-            className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'trace'
-                ? 'bg-[#6246EA] text-white shadow-xs'
-                : 'text-[#5C6079] hover:text-[#141526] hover:bg-white/80'
-            }`}
-          >
-            Follow the Money
-          </button>
-          <button
-            role="tab"
-            aria-selected={activeTab === 'transactions'}
-            onClick={() => onNavigateTab('transactions')}
-            className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
-              activeTab === 'transactions'
-                ? 'bg-[#6246EA] text-white shadow-xs'
-                : 'text-[#5C6079] hover:text-[#141526] hover:bg-white/80'
-            }`}
-          >
-            <span>Transaction Ledger</span>
+      <section data-reveal aria-label="Account" className="panel panel-sheen p-5 sm:p-6">
+        <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-5">
+          <div className="flex items-start gap-4 min-w-0">
             <span
-              className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                activeTab === 'transactions' ? 'bg-white/30 text-white' : 'bg-[#E4E5F0] text-[#5C6079]'
-              }`}
+              className="w-12 h-12 rounded-2xl bg-gradient-to-br from-iris to-ice text-white flex items-center justify-center font-display font-bold text-base shrink-0 shadow-[0_8px_18px_-10px_rgba(101,88,232,0.8)]"
+              aria-hidden="true"
             >
-              {transactionCount}
+              {initials || '·'}
             </span>
-          </button>
-          <button
-            role="tab"
-            aria-selected={activeTab === 'review'}
-            onClick={() => onNavigateTab('review')}
-            className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'review'
-                ? 'bg-[#6246EA] text-white shadow-xs'
-                : 'text-[#5C6079] hover:text-[#141526] hover:bg-white/80'
-            }`}
-          >
-            Compliance & Audit
-          </button>
-        </div>
-
-        {/* Right: Account ID & Fast Copy */}
-        <div className="flex items-center gap-2 self-end md:self-center">
-          <button
-            onClick={handleCopyId}
-            className="flex items-center gap-1.5 text-xs font-mono text-[#5C6079] hover:text-[#141526] bg-[#F6F6FC] hover:bg-[#EEEFF7] px-2.5 py-1 rounded-xl border border-[#E4E5F0] transition-colors cursor-pointer"
-            title="Click to copy account ID"
-          >
-            <span className="text-[#868AA2]">ID:</span>
-            <strong className="text-[#141526]">{profile?.account_id}</strong>
-            {copiedId ? (
-              <Check className="w-3.5 h-3.5 text-[#10B981]" />
-            ) : (
-              <Copy className="w-3.5 h-3.5 text-[#868AA2]" />
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* 2. ROW A: ACCOUNT OVERVIEW & PRIMARY ACTIONS */}
-      <div className="bg-white rounded-3xl border border-[#E4E5F0] p-6 sm:p-7 shadow-xs space-y-6">
-        {/* Top Action and Category Bar */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#F6F6FC] pb-5">
-          {/* Identity & Verification Badges */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#F6F6FC] text-[#141526] border border-[#E4E5F0]">
-              <span>🇮🇳</span>
-              <span>INR</span>
-            </span>
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#F6F6FC] text-[#5C6079] border border-[#E4E5F0] uppercase tracking-wide">
-              {profile?.customer_type ? profile.customer_type.toUpperCase() : 'RETAIL'}
-            </span>
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#EAF7EE] text-[#166534] border border-[#BBF7D0] uppercase tracking-wide">
-              {profile?.kyc_tier ? profile.kyc_tier.replace(/_/g, ' ').toUpperCase() : 'TIER 2 VERIFIED'}
-            </span>
-            <div className="hidden sm:flex items-center gap-1.5 text-xs font-mono text-[#868AA2] bg-[#F6F6FC] px-3 py-1 rounded-full border border-[#E4E5F0]">
-              <span>Account:</span>
-              <strong className="text-[#141526]">{profile?.account_id}</strong>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <h1 className="page-title !text-[26px] sm:!text-[30px]">{profile?.customer_name ?? 'Account'}</h1>
+                {profile?.status && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-ok-soft text-ok ring-1 ring-ok-line px-2.5 py-0.5 text-xs font-semibold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-ok-fill" aria-hidden="true" />
+                    Account {profile.status}
+                  </span>
+                )}
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                <button
+                  type="button"
+                  onClick={handleCopyId}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-white ring-1 ring-line px-2 py-1 font-mono text-[12.5px] font-semibold text-ink hover:ring-iris-line transition-colors cursor-pointer"
+                  title="Copy the account ID"
+                >
+                  {profile?.account_id}
+                  {copiedId ? <Check className="w-3.5 h-3.5 text-ok" aria-hidden="true" /> : <Copy className="w-3.5 h-3.5 text-faint" aria-hidden="true" />}
+                  <span className="sr-only">{copiedId ? 'Copied' : 'Copy the account ID'}</span>
+                </button>
+                <span className="rounded-full bg-well ring-1 ring-line px-2.5 py-1 font-semibold text-mute">INR</span>
+                {words(profile?.customer_type) && <span className="rounded-full bg-well ring-1 ring-line px-2.5 py-1 font-semibold text-mute">{words(profile?.customer_type)} customer</span>}
+                {words(profile?.kyc_tier) && <span className="rounded-full bg-well ring-1 ring-line px-2.5 py-1 font-semibold text-mute">KYC {words(profile?.kyc_tier)?.toLowerCase()}</span>}
+              </div>
             </div>
           </div>
 
-          {/* Primary & Secondary Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* Primary Action: Run Live Analysis */}
-            <button
-              id="btn-run-live-analysis"
-              onClick={onRunLiveAnalysis}
-              disabled={isAnalyzing}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#6246EA] hover:bg-[#4F33D6] disabled:bg-[#6246EA]/60 text-white font-bold text-xs sm:text-sm transition-all shadow-xs hover:shadow hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
-            >
+          <div className="flex flex-wrap items-center gap-2">
+            <button id="btn-run-live-analysis" type="button" onClick={onRunLiveAnalysis} disabled={isAnalyzing} className="btn-primary">
               {isAnalyzing ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Analyzing Ledger & Model...</span>
+                  <RefreshCw className="w-4 h-4 animate-spin" aria-hidden="true" />
+                  Analysing the ledger and model…
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4 fill-current" />
-                  <span>{liveAnalysis ? 'Re-run Live Analysis' : 'Run Live Analysis'}</span>
+                  <Sparkles className="w-4 h-4" aria-hidden="true" />
+                  {liveAnalysis ? 'Re-run live analysis' : 'Run live analysis'}
                 </>
               )}
             </button>
-
-            {/* Secondary Action: Follow the Money */}
-            <button
-              onClick={() => onNavigateTab('trace')}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-[#F6F6FC] hover:bg-[#EEEFF7] border border-[#E4E5F0] text-[#141526] font-semibold text-xs sm:text-sm transition-all cursor-pointer"
-            >
-              <GitFork className="w-4 h-4 text-[#6246EA]" />
-              <span>Follow the Money</span>
+            <button type="button" onClick={() => onNavigateTab('trace')} className="btn-secondary">
+              <GitFork className="w-4 h-4 text-iris" aria-hidden="true" />
+              Follow the money
             </button>
-
-            {/* Secondary Action: View Transactions */}
-            <button
-              onClick={() => onNavigateTab('transactions')}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-[#F6F6FC] hover:bg-[#EEEFF7] border border-[#E4E5F0] text-[#141526] font-semibold text-xs sm:text-sm transition-all cursor-pointer"
-            >
-              <Layers className="w-4 h-4 text-[#5C6079]" />
-              <span>View Transactions ({transactionCount})</span>
+            <button type="button" onClick={() => onNavigateTab('transactions')} className="btn-secondary">
+              <Layers className="w-4 h-4 text-mute" aria-hidden="true" />
+              View transactions ({transactionCount})
             </button>
           </div>
         </div>
 
-        {/* Horizontal Metrics Summary Strip: 5 Balanced Metric Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
-          {/* 1. Active Balance */}
-          <div className="bg-[#F6F6FC] rounded-2xl p-4 border border-[#E4E5F0] space-y-1.5 transition-all hover:border-[#D5D7E6]">
-            <div className="flex items-center justify-between text-xs text-[#5C6079]">
-              <span className="font-medium flex items-center gap-1.5">
-                <Wallet className="w-3.5 h-3.5 text-[#6246EA]" />
-                Current Balance
-              </span>
+        <dl className="mt-6 pt-5 border-t border-line grid grid-cols-2 lg:grid-cols-5 gap-x-4 gap-y-5">
+          <Figure
+            icon={Wallet}
+            iconClass="text-iris"
+            label="Current balance"
+            value={balanceVisible ? money(profile?.current_balance ?? 0) : '₹ ••••••'}
+            note={`Opening balance ${money(profile?.initial_balance ?? 0)}`}
+            aside={
               <button
+                type="button"
                 onClick={() => setBalanceVisible(!balanceVisible)}
-                className="text-[#868AA2] hover:text-[#141526] transition-colors p-0.5 rounded cursor-pointer"
-                title={balanceVisible ? 'Hide Balance' : 'Show Balance'}
+                className="text-faint hover:text-ink transition-colors p-0.5 rounded cursor-pointer"
+                aria-label={balanceVisible ? 'Hide balance' : 'Show balance'}
+                title={balanceVisible ? 'Hide balance' : 'Show balance'}
               >
-                {balanceVisible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                {balanceVisible ? <Eye className="w-3.5 h-3.5" aria-hidden="true" /> : <EyeOff className="w-3.5 h-3.5" aria-hidden="true" />}
               </button>
-            </div>
-            <div className="text-xl sm:text-2xl font-bold text-[#141526] font-display tracking-tight">
-              {balanceVisible
-                ? `₹${currentBalance.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
-                : '₹ ••••••••'}
-            </div>
-            <span className="text-[11px] text-[#868AA2] font-mono block truncate">
-              Initial: ₹{initialBalance.toLocaleString('en-IN')}
-            </span>
-          </div>
+            }
+          />
+          <Figure
+            icon={ArrowDownLeft}
+            iconClass="text-ice-deep"
+            label="Money received"
+            value={`+${money(profile?.metrics.total_incoming_amount ?? 0)}`}
+            note={`${profile?.metrics.total_incoming_txns ?? 0} incoming transfers`}
+          />
+          <Figure
+            icon={ArrowUpRight}
+            iconClass="text-iris"
+            label="Money sent"
+            value={`−${money(profile?.metrics.total_outgoing_amount ?? 0)}`}
+            note={`${profile?.metrics.total_outgoing_txns ?? 0} outgoing transfers`}
+          />
+          <Figure icon={Activity} iconClass="text-mute" label="Ledger activity" value={transactionCount} note="Recorded movements" />
+          <Figure icon={Users} iconClass="text-mute" label="Counterparties" value={profile?.metrics.unique_counterparties ?? 0} note="Distinct accounts paid or paid by" />
+        </dl>
+      </section>
 
-          {/* 2. Money Received */}
-          <div className="bg-[#F6F6FC] rounded-2xl p-4 border border-[#E4E5F0] space-y-1.5 transition-all hover:border-[#D5D7E6]">
-            <div className="flex items-center justify-between text-xs text-[#5C6079]">
-              <span className="font-medium flex items-center gap-1.5">
-                <ArrowDownLeft className="w-3.5 h-3.5 text-[#10B981]" />
-                Money Received
-              </span>
-              <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-            </div>
-            <div className="text-xl sm:text-2xl font-bold text-[#141526] font-display tracking-tight">
-              +₹{totalReceived.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-            </div>
-            <span className="text-[11px] text-[#5C6079] block truncate">
-              {incomingTxns} inbound credits
-            </span>
-          </div>
-
-          {/* 3. Money Sent */}
-          <div className="bg-[#F6F6FC] rounded-2xl p-4 border border-[#E4E5F0] space-y-1.5 transition-all hover:border-[#D5D7E6]">
-            <div className="flex items-center justify-between text-xs text-[#5C6079]">
-              <span className="font-medium flex items-center gap-1.5">
-                <ArrowUpRight className="w-3.5 h-3.5 text-[#6246EA]" />
-                Money Sent
-              </span>
-              <span className="w-2 h-2 rounded-full bg-[#6246EA]" />
-            </div>
-            <div className="text-xl sm:text-2xl font-bold text-[#141526] font-display tracking-tight">
-              -₹{totalSent.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-            </div>
-            <span className="text-[11px] text-[#5C6079] block truncate">
-              {outgoingTxns} outbound debits
-            </span>
-          </div>
-
-          {/* 4. Transaction Count */}
-          <div className="bg-[#F6F6FC] rounded-2xl p-4 border border-[#E4E5F0] space-y-1.5 transition-all hover:border-[#D5D7E6]">
-            <div className="flex items-center justify-between text-xs text-[#5C6079]">
-              <span className="font-medium flex items-center gap-1.5">
-                <Activity className="w-3.5 h-3.5 text-[#5C6079]" />
-                Ledger Activity
-              </span>
-            </div>
-            <div className="text-xl sm:text-2xl font-bold text-[#141526] font-display tracking-tight">
-              {transactionCount}
-            </div>
-            <span className="text-[11px] text-[#5C6079] block truncate">
-              Recorded movements
-            </span>
-          </div>
-
-          {/* 5. Counterparties */}
-          <div className="bg-[#F6F6FC] rounded-2xl p-4 border border-[#E4E5F0] space-y-1.5 transition-all hover:border-[#D5D7E6]">
-            <div className="flex items-center justify-between text-xs text-[#5C6079]">
-              <span className="font-medium flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-[#5C6079]" />
-                Counterparties
-              </span>
-            </div>
-            <div className="text-xl sm:text-2xl font-bold text-[#141526] font-display tracking-tight">
-              {uniqueCounterparties}
-            </div>
-            <span className="text-[11px] text-[#5C6079] block truncate">
-              Connected endpoints
-            </span>
-          </div>
-        </div>
+      <div
+        data-reveal
+        role="tablist"
+        aria-label="Account investigation sections"
+        className="flex gap-1 overflow-x-auto no-scrollbar rounded-2xl bg-[rgba(255,255,255,0.78)] backdrop-blur-xl ring-1 ring-line p-1.5 shadow-[var(--shadow-xs)]"
+      >
+        {TABS.map((t) => {
+          const on = activeTab === t.id;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={on}
+              onClick={() => onNavigateTab(t.id)}
+              className={`relative isolate flex-1 min-w-max inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold transition-colors duration-150 cursor-pointer ${
+                on ? 'text-ink' : 'text-mute hover:text-ink hover:bg-white/80'
+              }`}
+            >
+              {on && (
+                <motion.span
+                  layoutId="account-tab"
+                  transition={springSnappy}
+                  className="absolute inset-0 -z-10 rounded-xl bg-white ring-1 ring-line shadow-[var(--shadow-float)]"
+                  aria-hidden="true"
+                />
+              )}
+              {t.label}
+              {t.id === 'transactions' && (
+                <span className={`rounded-full px-1.5 text-[11px] font-mono ${on ? 'bg-iris-soft text-iris-deep' : 'bg-well text-mute'}`}>{transactionCount}</span>
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 };
+
+export default V2BankingHeroHeader;

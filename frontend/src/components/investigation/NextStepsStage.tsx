@@ -95,7 +95,7 @@ export const NextStepsStage: React.FC<{ onInspect: (t: Target) => void; onRerun:
     <div className="space-y-8">
       <StageHeading title="What to do next" lead="Investigation steps suggested by the evidence, most direct first. Each says why it is suggested and what it rests on." />
 
-      <div className="rounded-2xl bg-ice-soft ring-1 ring-[#C9DBFF] px-4 py-3 text-sm text-[#1E3A8A] flex gap-2.5">
+      <div className="rounded-2xl bg-ice-soft ring-1 ring-ice-line px-4 py-3 text-sm text-info flex gap-2.5">
         <ShieldCheck className="w-5 h-5 shrink-0" aria-hidden="true" />
         <p>Advisory only. Nothing has been frozen, blocked or flagged. Any restriction needs an authorised institution process with documented grounds.</p>
       </div>

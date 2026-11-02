@@ -12,6 +12,7 @@ import {
 } from '../lib/format';
 import { describeError } from '../lib/errors';
 import { EmptyState, ErrorState, LoadingState, Pill, SyntheticDataNote, caseStatusTone } from '../components/ui/StateViews';
+import { PageHeader } from '../components/ui/PageHeader';
 
 const STATUS_FILTERS = [
   { value: 'all', label: 'All statuses' },
@@ -72,24 +73,23 @@ export const InvestigationsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-4xl font-bold tracking-tight">Cases</h1>
-        <p className="mt-1.5 text-sm text-[#5C6079]">
-          Each case starts from one reported transfer. Open a case to trace the money and record review decisions.
-        </p>
-        <SyntheticDataNote className="mt-2" />
-      </div>
+      <PageHeader
+        title="Cases"
+        description="Each case starts from one reported transfer. Open a case to trace the money and record review decisions."
+      >
+        <SyntheticDataNote />
+      </PageHeader>
 
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div data-reveal className="flex flex-col sm:flex-row gap-3">
         <label className="relative flex-1">
           <span className="sr-only">Search cases</span>
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#868AA2]" aria-hidden="true" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-faint" aria-hidden="true" />
           <input
             type="search"
             value={query}
             onChange={(e) => setParam('q', e.target.value)}
             placeholder="Search by case ID or description"
-            className="w-full rounded-xl border border-[#E4E5F0] bg-white pl-10 pr-3 py-2.5 text-sm placeholder:text-[#868AA2] focus:border-[#6246EA]"
+            className="field !py-2.5 !pl-10"
           />
         </label>
         <label>
@@ -97,7 +97,7 @@ export const InvestigationsPage: React.FC = () => {
           <select
             value={status}
             onChange={(e) => setParam('status', e.target.value)}
-            className="w-full sm:w-auto rounded-xl border border-[#E4E5F0] bg-white px-3 py-2.5 text-sm font-medium"
+            className="field !py-2.5 sm:!w-auto font-medium"
           >
             {STATUS_FILTERS.map((f) => (
               <option key={f.value} value={f.value}>
@@ -126,7 +126,7 @@ export const InvestigationsPage: React.FC = () => {
       )}
 
       {visible.length > 0 && (
-        <ul className="space-y-3" aria-label="Cases">
+        <ul data-reveal className="space-y-3" aria-label="Cases">
           {visible.map((c) => {
             const next = nextActionFor(c);
             const lastActivity = c.review_progress?.last_decision_at ?? c.updated_at ?? null;
@@ -139,17 +139,17 @@ export const InvestigationsPage: React.FC = () => {
                   <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono font-bold text-[#141526]">{c.case_id}</span>
+                        <span className="font-mono text-[15px] font-semibold text-ink">{c.case_id}</span>
                         <Pill tone={caseStatusTone(c.investigation_status)}>
                           {CASE_STATUS_LABELS[c.investigation_status] ?? c.investigation_status}
                         </Pill>
                         <Pill>{datasetLabel(c)}</Pill>
                       </div>
-                      <p className="mt-2 text-sm text-[#141526] leading-relaxed">{firstSentence(c.description)}</p>
-                      <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-[#5C6079]">
+                      <p className="mt-2 text-sm text-ink leading-relaxed">{firstSentence(c.description)}</p>
+                      <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-mute">
                         <div>
                           <dt className="inline">Reported amount: </dt>
-                          <dd className="inline font-semibold text-[#141526]">{formatMoney(c.reported_amount, c.currency)}</dd>
+                          <dd className="inline font-semibold text-ink">{formatMoney(c.reported_amount, c.currency)}</dd>
                         </div>
                         <div>
                           <dt className="inline">Reported: </dt>
@@ -165,7 +165,7 @@ export const InvestigationsPage: React.FC = () => {
                         )}
                       </dl>
                     </div>
-                    <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#4F33D6] shrink-0">
+                    <span className="group/next inline-flex items-center gap-1.5 rounded-xl bg-iris-wash ring-1 ring-iris-line px-3.5 py-2 text-sm font-semibold text-iris-deep shrink-0">
                       {next.label}
                       <ArrowRight className="w-4 h-4" aria-hidden="true" />
                     </span>

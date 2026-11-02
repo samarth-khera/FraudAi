@@ -42,14 +42,14 @@ export const V2RiskComparisonMeters: React.FC<V2RiskComparisonMetersProps> = ({
   const getRiskColor = (level: string) => {
     switch (level.toLowerCase()) {
       case 'critical':
-        return { text: 'text-[#DC2626]', bg: 'bg-[#FEF2F2]', border: 'border-[#FCA5A5]', bar: 'bg-[#DC2626]' };
+        return { text: 'text-danger-fill', bg: 'bg-danger-soft', border: 'border-danger-line', bar: 'bg-danger-fill' };
       case 'high':
-        return { text: 'text-[#EA580C]', bg: 'bg-[#FFF7ED]', border: 'border-[#FDBA74]', bar: 'bg-[#EA580C]' };
+        return { text: 'text-sev-high', bg: 'bg-warn-soft', border: 'border-sev-high-line', bar: 'bg-sev-high' };
       case 'elevated':
-        return { text: 'text-[#D97706]', bg: 'bg-[#FFFBEB]', border: 'border-[#FCD34D]', bar: 'bg-[#D97706]' };
+        return { text: 'text-warn-fill', bg: 'bg-warn-soft', border: 'border-warn-line', bar: 'bg-warn-fill' };
       case 'low':
       default:
-        return { text: 'text-[#059669]', bg: 'bg-[#ECFDF5]', border: 'border-[#6EE7B7]', bar: 'bg-[#059669]' };
+        return { text: 'text-ok', bg: 'bg-ok-soft', border: 'border-ok-line', bar: 'bg-ok' };
     }
   };
 
@@ -64,37 +64,37 @@ export const V2RiskComparisonMeters: React.FC<V2RiskComparisonMetersProps> = ({
         <div
           onClick={() => setActiveScoreDetail(activeScoreDetail === 'ml' ? null : 'ml')}
           className={`bg-white rounded-2xl border p-5 cursor-pointer transition-all hover:shadow-md ${
-            activeScoreDetail === 'ml' ? 'border-[#6246EA] ring-2 ring-[#6246EA]/20' : 'border-[#E4E5F0]'
+            activeScoreDetail === 'ml' ? 'border-iris ring-2 ring-iris/20' : 'border-line'
           }`}
         >
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-[#EFECFF] flex items-center justify-center text-[#6246EA]">
+              <div className="w-8 h-8 rounded-xl bg-iris-soft flex items-center justify-center text-iris">
                 <Cpu className="w-4 h-4" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-[#141526]">{MODEL_SCORE_LABEL} (machine learning)</h4>
-                <p className="text-[11px] text-[#5C6079]">Model {mlAssessment.model_version}</p>
+                <h4 className="text-sm font-bold text-ink">{MODEL_SCORE_LABEL} (machine learning)</h4>
+                <p className="text-[11px] text-mute">Model {mlAssessment.model_version}</p>
               </div>
             </div>
-            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border uppercase tracking-wider ${mlColor.bg} ${mlColor.text} ${mlColor.border}`}>
+            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${mlColor.bg} ${mlColor.text} ${mlColor.border}`}>
               {mlAssessment.risk_level} Risk
             </span>
           </div>
 
           <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-3xl font-extrabold text-[#141526] font-mono">
+            <span className="text-3xl font-bold text-ink font-mono">
               {formatModelScore(mlAssessment.risk_score)}
             </span>
           </div>
-          <p className="text-xs font-medium text-[#141526] mb-2">
+          <p className="text-xs font-medium text-ink mb-2">
             {modelSuggests
               ? `At or above the ${thresholdLabel ?? 'review'} review threshold: suggested for review, not confirmed fraud.`
               : `Below the ${thresholdLabel ?? 'review'} review threshold. This does not clear the account.`}
           </p>
 
           {/* Meter Bar */}
-          <div className="w-full bg-[#F6F6FC] rounded-full h-2.5 overflow-hidden border border-[#E4E5F0] mb-2">
+          <div className="w-full bg-well rounded-full h-2.5 overflow-hidden border border-line mb-2">
             <div
               className={`h-full rounded-full transition-all duration-500 ${mlColor.bar}`}
               style={{ width: `${Math.min(Math.max(mlAssessment.risk_score, 0), 100)}%` }}
@@ -102,19 +102,19 @@ export const V2RiskComparisonMeters: React.FC<V2RiskComparisonMetersProps> = ({
           </div>
 
           {bands && (
-            <div className="flex flex-wrap items-center justify-between gap-x-2 text-[11px] text-[#868AA2]">
+            <div className="flex flex-wrap items-center justify-between gap-x-2 text-[11px] text-faint">
               {bands.map((b) => (
                 <span key={b}>{b}</span>
               ))}
             </div>
           )}
 
-          <div className="mt-3 pt-3 border-t border-[#F6F6FC] flex items-center justify-between text-xs text-[#5C6079]">
+          <div className="mt-3 pt-3 border-t border-well flex items-center justify-between text-xs text-mute">
             <span className="flex items-center gap-1">
-              <HelpCircle className="w-3.5 h-3.5 text-[#6246EA]" />
+              <HelpCircle className="w-3.5 h-3.5 text-iris" />
               <span>Learned from synthetic examples</span>
             </span>
-            <span className="text-[#6246EA] font-medium flex items-center gap-0.5">
+            <span className="text-iris font-medium flex items-center gap-0.5">
               {activeScoreDetail === 'ml' ? 'Hide details' : 'Inspect inputs'}
               {activeScoreDetail === 'ml' ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </span>
@@ -125,52 +125,52 @@ export const V2RiskComparisonMeters: React.FC<V2RiskComparisonMetersProps> = ({
         <div
           onClick={() => setActiveScoreDetail(activeScoreDetail === 'rule' ? null : 'rule')}
           className={`bg-white rounded-2xl border p-5 cursor-pointer transition-all hover:shadow-md ${
-            activeScoreDetail === 'rule' ? 'border-[#6246EA] ring-2 ring-[#6246EA]/20' : 'border-[#E4E5F0]'
+            activeScoreDetail === 'rule' ? 'border-iris ring-2 ring-iris/20' : 'border-line'
           }`}
         >
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-[#F6F6FC] flex items-center justify-center text-[#5C6079]">
+              <div className="w-8 h-8 rounded-xl bg-well flex items-center justify-center text-mute">
                 <Scale className="w-4 h-4" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-[#141526]">{RULE_SCORE_LABEL} (fixed rules)</h4>
-                <p className="text-[11px] text-[#5C6079]">Deterministic ledger heuristics</p>
+                <h4 className="text-sm font-bold text-ink">{RULE_SCORE_LABEL} (fixed rules)</h4>
+                <p className="text-[11px] text-mute">Deterministic ledger heuristics</p>
               </div>
             </div>
-            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border uppercase tracking-wider ${ruleColor.bg} ${ruleColor.text} ${ruleColor.border}`}>
+            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${ruleColor.bg} ${ruleColor.text} ${ruleColor.border}`}>
               {ruleAssessment.risk_level} Risk
             </span>
           </div>
 
           <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-3xl font-extrabold text-[#141526] font-mono">
+            <span className="text-3xl font-bold text-ink font-mono">
               {ruleAssessment.risk_score.toFixed(1)}
             </span>
-            <span className="text-xs font-medium text-[#5C6079]">points of 100</span>
+            <span className="text-xs font-medium text-mute">points of 100</span>
           </div>
 
           {/* Meter Bar */}
-          <div className="w-full bg-[#F6F6FC] rounded-full h-2.5 overflow-hidden border border-[#E4E5F0] mb-2">
+          <div className="w-full bg-well rounded-full h-2.5 overflow-hidden border border-line mb-2">
             <div
               className={`h-full rounded-full transition-all duration-500 ${ruleColor.bar}`}
               style={{ width: `${Math.min(Math.max(ruleAssessment.risk_score, 0), 100)}%` }}
             />
           </div>
 
-          <div className="flex items-center justify-between text-[11px] text-[#868AA2]">
+          <div className="flex items-center justify-between text-[11px] text-faint">
             <span>Low (0-25)</span>
             <span>Elevated (26-55)</span>
             <span>High (56-80)</span>
             <span>Critical (81+)</span>
           </div>
 
-          <div className="mt-3 pt-3 border-t border-[#F6F6FC] flex items-center justify-between text-xs text-[#5C6079]">
+          <div className="mt-3 pt-3 border-t border-well flex items-center justify-between text-xs text-mute">
             <span className="flex items-center gap-1">
-              <HelpCircle className="w-3.5 h-3.5 text-[#5C6079]" />
+              <HelpCircle className="w-3.5 h-3.5 text-mute" />
               <span>Transparent mathematical signals</span>
             </span>
-            <span className="text-[#6246EA] font-medium flex items-center gap-0.5">
+            <span className="text-iris font-medium flex items-center gap-0.5">
               {activeScoreDetail === 'rule' ? 'Hide details' : 'Inspect signals'}
               {activeScoreDetail === 'rule' ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </span>
@@ -185,11 +185,11 @@ export const V2RiskComparisonMeters: React.FC<V2RiskComparisonMetersProps> = ({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden bg-[#F6F6FC] rounded-2xl border border-[#E4E5F0] p-4 text-xs text-[#141526]"
+            className="overflow-hidden bg-well rounded-2xl border border-line p-4 text-xs text-ink"
           >
             <div className="flex items-start justify-between gap-2 mb-2">
-              <span className="font-bold text-[#141526] flex items-center gap-1.5">
-                <Cpu className="w-4 h-4 text-[#6246EA]" />
+              <span className="font-bold text-ink flex items-center gap-1.5">
+                <Cpu className="w-4 h-4 text-iris" />
                 How the ML Risk Score was Calculated
               </span>
               <button
@@ -197,31 +197,31 @@ export const V2RiskComparisonMeters: React.FC<V2RiskComparisonMetersProps> = ({
                   e.stopPropagation();
                   setActiveScoreDetail(null);
                 }}
-                className="text-[#5C6079] hover:text-[#141526] font-medium"
+                className="text-mute hover:text-ink font-medium"
               >
                 Close
               </button>
             </div>
-            <p className="text-[#5C6079] mb-2 leading-relaxed">
+            <p className="text-mute mb-2 leading-relaxed">
               The model reads 26 features from the account’s ledger activity (amount spikes, velocity, flow-through, dormancy and
               others) and produces a score. {MODEL_SCORE_MEANING}
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-[#E4E5F0]">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-line">
               <div>
-                <span className="text-[#868AA2] block text-[10px] uppercase font-mono">Unrounded score</span>
-                <span className="font-mono font-bold text-[#141526]">{(mlAssessment.predicted_probability * 100).toFixed(2)}%</span>
+                <span className="text-faint block text-[11px] font-mono">Unrounded score</span>
+                <span className="font-mono font-bold text-ink">{(mlAssessment.predicted_probability * 100).toFixed(2)}%</span>
               </div>
               <div>
-                <span className="text-[#868AA2] block text-[10px] uppercase font-mono">Model Type</span>
-                <span className="font-mono font-bold text-[#141526]">{mlAssessment.model_type}</span>
+                <span className="text-faint block text-[11px] font-mono">Model Type</span>
+                <span className="font-mono font-bold text-ink">{mlAssessment.model_type}</span>
               </div>
               <div>
-                <span className="text-[#868AA2] block text-[10px] uppercase font-mono">Review suggestion</span>
-                <span className="font-mono font-bold text-[#141526]">{modelSuggests ? 'Suggested' : 'Below threshold'}</span>
+                <span className="text-faint block text-[11px] font-mono">Review suggestion</span>
+                <span className="font-mono font-bold text-ink">{modelSuggests ? 'Suggested' : 'Below threshold'}</span>
               </div>
               <div>
-                <span className="text-[#868AA2] block text-[10px] uppercase font-mono">TreeSHAP Drivers</span>
-                <span className="font-mono font-bold text-[#6246EA]">{mlAssessment.top_contributions?.length || 0} features</span>
+                <span className="text-faint block text-[11px] font-mono">TreeSHAP Drivers</span>
+                <span className="font-mono font-bold text-iris">{mlAssessment.top_contributions?.length || 0} features</span>
               </div>
             </div>
           </motion.div>
@@ -232,11 +232,11 @@ export const V2RiskComparisonMeters: React.FC<V2RiskComparisonMetersProps> = ({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden bg-[#F6F6FC] rounded-2xl border border-[#E4E5F0] p-4 text-xs text-[#141526]"
+            className="overflow-hidden bg-well rounded-2xl border border-line p-4 text-xs text-ink"
           >
             <div className="flex items-start justify-between gap-2 mb-2">
-              <span className="font-bold text-[#141526] flex items-center gap-1.5">
-                <Scale className="w-4 h-4 text-[#5C6079]" />
+              <span className="font-bold text-ink flex items-center gap-1.5">
+                <Scale className="w-4 h-4 text-mute" />
                 Rule-Based Heuristic Contributing Signals
               </span>
               <button
@@ -244,19 +244,19 @@ export const V2RiskComparisonMeters: React.FC<V2RiskComparisonMetersProps> = ({
                   e.stopPropagation();
                   setActiveScoreDetail(null);
                 }}
-                className="text-[#5C6079] hover:text-[#141526] font-medium"
+                className="text-mute hover:text-ink font-medium"
               >
                 Close
               </button>
             </div>
-            <p className="text-[#5C6079] mb-2 leading-relaxed">
+            <p className="text-mute mb-2 leading-relaxed">
               Fixed rules add points for observable ledger signals; each point is tied to a transaction fact. “High” (56+) or above suggests review.
             </p>
-            <div className="space-y-1.5 pt-2 border-t border-[#E4E5F0]">
+            <div className="space-y-1.5 pt-2 border-t border-line">
               {ruleAssessment.reason_codes.map((rc, idx) => (
                 <div key={idx} className="flex items-start gap-2 text-xs">
-                  <span className="text-[#6246EA] font-bold mt-0.5">•</span>
-                  <span className="text-[#141526]">{rc}</span>
+                  <span className="text-iris font-bold mt-0.5">•</span>
+                  <span className="text-ink">{rc}</span>
                 </div>
               ))}
             </div>
@@ -266,20 +266,20 @@ export const V2RiskComparisonMeters: React.FC<V2RiskComparisonMetersProps> = ({
 
       {/* Divergence Notification if Scores Disagree */}
       {(divergence.checks_disagree ?? divergence.divergence_detected) && (
-        <div className="bg-[#F5F3FF] border border-[#D7CFFF] rounded-2xl p-4 text-xs text-[#141526] flex items-start gap-3">
-          <div className="w-7 h-7 rounded-xl bg-[#6246EA]/10 flex items-center justify-center shrink-0 text-[#6246EA] mt-0.5">
+        <div className="bg-iris-wash border border-iris-line rounded-2xl p-4 text-xs text-ink flex items-start gap-3">
+          <div className="w-7 h-7 rounded-xl bg-iris/10 flex items-center justify-center shrink-0 text-iris mt-0.5">
             <AlertTriangle className="w-4 h-4" />
           </div>
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-[#4F33D6] uppercase tracking-wide text-[11px]">
+              <span className="font-bold text-iris-deep text-[11px]">
                 The two checks disagree about review
               </span>
             </div>
-            <p className="text-[#5C6079] leading-relaxed">
+            <p className="text-mute leading-relaxed">
               {divergence.interpretation}
             </p>
-            <p className="text-[#4F33D6] font-medium pt-0.5">
+            <p className="text-iris-deep font-medium pt-0.5">
               Recommended Investigator Focus: {divergence.suggested_focus}
             </p>
           </div>

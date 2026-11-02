@@ -85,7 +85,7 @@ export const OverviewStage: React.FC<{ onFollow: () => void }> = ({ onFollow }) 
                   {t.flags.map((f) =>
                     f.code === MODEL_FLAG_CODE ? (
                       // A model output, not a rule: its own style and label.
-                      <li key={f.code} className="rounded-xl bg-ice-soft/60 ring-1 ring-[#C9DBFF] px-3 py-2 text-sm" data-testid="model-flag">
+                      <li key={f.code} className="rounded-xl bg-ice-soft/60 ring-1 ring-ice-line px-3 py-2 text-sm" data-testid="model-flag">
                         <ModelFlagBadge />
                         <span className="mt-1 block text-ink-soft">{f.explanation}</span>
                       </li>

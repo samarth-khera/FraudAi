@@ -93,12 +93,13 @@ describe('AuditPage Component', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('Audit & Governance')).toBeInTheDocument();
-    expect(screen.getByText('GOVERNANCE & PROVENANCE')).toBeInTheDocument();
-    expect(screen.getByText(/Storage: Healthy \(audit_events\)/i)).toBeInTheDocument();
-    expect(screen.getByText('Append-Only Enforced')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Audit log' })).toBeInTheDocument();
 
     await waitFor(() => {
+      // Integrity properties come from the API's integrity_status, not from fixed text.
+      expect(screen.getByText(/Storage: SQLite Relational \(audit_events\)/i)).toBeInTheDocument();
+      expect(screen.getByText('Append-only enforced')).toBeInTheDocument();
+      expect(screen.getByText('Not cryptographically signed')).toBeInTheDocument();
       expect(screen.getByText('1,045')).toBeInTheDocument(); // total events
       expect(screen.getByText('2')).toBeInTheDocument(); // human reviews count
       expect(screen.getByText('1,042')).toBeInTheDocument(); // trace events count
@@ -134,10 +135,10 @@ describe('AuditPage Component', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Human Reviews' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Human reviews' })).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Human Reviews' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Human reviews' }));
 
     await waitFor(() => {
       expect(api.getGlobalAudit).toHaveBeenCalledWith(

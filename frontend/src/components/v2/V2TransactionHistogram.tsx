@@ -10,6 +10,7 @@ import {
   CartesianGrid,
   Legend,
 } from 'recharts';
+import { flowColors, chartAxis } from '../../lib/palette';
 import { BarChart3, Filter, X, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
 import { V2TransactionItem } from '../../types/v2';
 
@@ -87,9 +88,9 @@ export const V2TransactionHistogram: React.FC<V2TransactionHistogramProps> = ({
 
   if (!transactions || transactions.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-[#E4E5F0] p-8 text-center text-[#5C6079]">
-        <BarChart3 className="w-8 h-8 text-[#868AA2] mx-auto mb-2 opacity-50" />
-        <h4 className="text-sm font-bold text-[#141526]">No Transactions Recorded</h4>
+      <div className="bg-white rounded-2xl border border-line p-8 text-center text-mute">
+        <BarChart3 className="w-8 h-8 text-faint mx-auto mb-2 opacity-50" />
+        <h4 className="text-sm font-bold text-ink">No Transactions Recorded</h4>
         <p className="text-xs mt-1">Transaction amount histogram requires at least one ledger movement.</p>
       </div>
     );
@@ -100,32 +101,32 @@ export const V2TransactionHistogram: React.FC<V2TransactionHistogramProps> = ({
       const data: HistogramBin = payload[0].payload;
       const isSelected = selectedBin?.label === data.label;
       return (
-        <div className="bg-white border border-[#E4E5F0] rounded-xl p-3 shadow-lg text-xs font-sans">
-          <div className="font-bold text-[#141526] mb-1 flex items-center justify-between gap-3">
+        <div className="bg-white border border-line rounded-xl p-3 shadow-lg text-xs font-sans">
+          <div className="font-bold text-ink mb-1 flex items-center justify-between gap-3">
             <span>Range: {data.label}</span>
             {isSelected && (
-              <span className="text-[10px] text-[#6246EA] font-bold uppercase tracking-wider">Active Filter</span>
+              <span className="text-[11px] text-iris font-bold ">Active Filter</span>
             )}
           </div>
-          <div className="space-y-1 text-[#5C6079] font-mono text-[11px]">
+          <div className="space-y-1 text-mute font-mono text-[11px]">
             <div className="flex items-center justify-between gap-4">
-              <span className="flex items-center gap-1 text-[#10B981]">
+              <span className="flex items-center gap-1 text-ice-deep">
                 <ArrowDownLeft className="w-3 h-3" /> Inbound (Credits):
               </span>
-              <strong className="text-[#141526]">{data.inboundCount}</strong>
+              <strong className="text-ink">{data.inboundCount}</strong>
             </div>
             <div className="flex items-center justify-between gap-4">
-              <span className="flex items-center gap-1 text-[#6246EA]">
+              <span className="flex items-center gap-1 text-iris">
                 <ArrowUpRight className="w-3 h-3" /> Outbound (Debits):
               </span>
-              <strong className="text-[#141526]">{data.outboundCount}</strong>
+              <strong className="text-ink">{data.outboundCount}</strong>
             </div>
-            <div className="pt-1.5 border-t border-[#E4E5F0] flex items-center justify-between gap-4 text-[#141526]">
+            <div className="pt-1.5 border-t border-line flex items-center justify-between gap-4 text-ink">
               <span>Total Volume:</span>
               <strong className="font-bold">₹{data.totalAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</strong>
             </div>
           </div>
-          <div className="mt-2 text-[10px] text-[#868AA2] italic">
+          <div className="mt-2 text-[11px] text-faint italic">
             Click bar to filter transaction table
           </div>
         </div>
@@ -135,20 +136,20 @@ export const V2TransactionHistogram: React.FC<V2TransactionHistogramProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-[#E4E5F0] p-5 space-y-4">
+    <div className="bg-white rounded-2xl border border-line p-5 space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#F6F6FC] pb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-well pb-3">
         <div>
           <div className="flex items-center gap-2">
-            <h4 className="text-sm font-bold text-[#141526] font-display flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-[#6246EA]" />
+            <h4 className="text-sm font-bold text-ink font-display flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-iris" />
               Transaction Amount Histogram
             </h4>
-            <span className="text-[11px] font-mono text-[#5C6079] bg-[#F6F6FC] px-2 py-0.5 rounded-full border border-[#E4E5F0]">
+            <span className="text-[11px] font-mono text-mute bg-well px-2 py-0.5 rounded-full border border-line">
               {transactions.length} records analyzed
             </span>
           </div>
-          <p className="text-xs text-[#5C6079] mt-0.5">
+          <p className="text-xs text-mute mt-0.5">
             Frequency distribution of transaction sizes. Click any bin to filter history table below.
           </p>
         </div>
@@ -156,7 +157,7 @@ export const V2TransactionHistogram: React.FC<V2TransactionHistogramProps> = ({
         {/* Active Filter Badge */}
         {selectedBin && (
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-[#EFECFF] text-[#6246EA] border border-[#D7CFFF]">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-iris-soft text-iris border border-iris-line">
               <Filter className="w-3 h-3" />
               <span>Filtering: {selectedBin.label}</span>
               <button
@@ -164,7 +165,7 @@ export const V2TransactionHistogram: React.FC<V2TransactionHistogramProps> = ({
                   e.stopPropagation();
                   onSelectBin(null);
                 }}
-                className="hover:bg-[#6246EA]/10 rounded-full p-0.5 ml-0.5 transition-colors"
+                className="hover:bg-iris/10 rounded-full p-0.5 ml-0.5 transition-colors"
                 title="Clear filter"
               >
                 <X className="w-3 h-3" />
@@ -195,17 +196,17 @@ export const V2TransactionHistogram: React.FC<V2TransactionHistogramProps> = ({
               }
             }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#F6F6FC" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke={chartAxis.grid} vertical={false} />
             <XAxis
               dataKey="label"
-              tick={{ fontSize: 11, fill: '#5C6079' }}
-              axisLine={{ stroke: '#E4E5F0' }}
+              tick={chartAxis.tick}
+              axisLine={chartAxis.axisLine}
               tickLine={false}
             />
             <YAxis
               allowDecimals={false}
-              tick={{ fontSize: 11, fill: '#5C6079' }}
-              axisLine={{ stroke: '#E4E5F0' }}
+              tick={chartAxis.tick}
+              axisLine={chartAxis.axisLine}
               tickLine={false}
             />
             <Tooltip content={<CustomTooltip />} />
@@ -219,7 +220,7 @@ export const V2TransactionHistogram: React.FC<V2TransactionHistogramProps> = ({
               dataKey="inboundCount"
               name="Inbound (Credits)"
               stackId="a"
-              fill="#10B981"
+              fill={flowColors.incoming}
               radius={[0, 0, 0, 0]}
               cursor="pointer"
             >
@@ -228,7 +229,7 @@ export const V2TransactionHistogram: React.FC<V2TransactionHistogramProps> = ({
                 return (
                   <Cell
                     key={`in-${index}`}
-                    fill={isSelected ? '#059669' : '#10B981'}
+                    fill={isSelected ? flowColors.incomingStrong : flowColors.incoming}
                     opacity={selectedBin && !isSelected ? 0.35 : 1}
                   />
                 );
@@ -238,7 +239,7 @@ export const V2TransactionHistogram: React.FC<V2TransactionHistogramProps> = ({
               dataKey="outboundCount"
               name="Outbound (Debits)"
               stackId="a"
-              fill="#6246EA"
+              fill={flowColors.outgoing}
               radius={[4, 4, 0, 0]}
               cursor="pointer"
             >
@@ -247,7 +248,7 @@ export const V2TransactionHistogram: React.FC<V2TransactionHistogramProps> = ({
                 return (
                   <Cell
                     key={`out-${index}`}
-                    fill={isSelected ? '#4F33D6' : '#6246EA'}
+                    fill={isSelected ? flowColors.outgoingStrong : flowColors.outgoing}
                     opacity={selectedBin && !isSelected ? 0.35 : 1}
                   />
                 );
@@ -258,7 +259,7 @@ export const V2TransactionHistogram: React.FC<V2TransactionHistogramProps> = ({
       </div>
 
       {/* Footer Notes */}
-      <div className="flex items-center justify-between text-[11px] text-[#868AA2] pt-2 border-t border-[#F6F6FC]">
+      <div className="flex items-center justify-between text-[11px] text-faint pt-2 border-t border-well">
         <span>Stacked bars display credits vs debits per amount tier.</span>
         <span>Click any bar to toggle filter.</span>
       </div>

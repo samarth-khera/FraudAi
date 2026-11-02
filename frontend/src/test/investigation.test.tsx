@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { AppRoutes } from '../App';
@@ -1116,5 +1116,43 @@ describe('routing', () => {
     expect(within(brief).getByRole('heading', { level: 1 })).toHaveTextContent('ACC-000001');
     expect(screen.getAllByRole('link', { name: 'Investigate' })[0]).toHaveAttribute('aria-current', 'page');
     await waitFor(() => expect(run).not.toHaveBeenCalled());
+  });
+});
+
+describe('fund trail on a small screen', () => {
+  const original = window.matchMedia;
+  beforeEach(() => {
+    // A phone: narrower than 768px, with reduced motion so nothing animates in the test.
+    window.matchMedia = ((q: string) => ({
+      matches: q.includes('prefers-reduced-motion'),
+      media: q,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    })) as unknown as typeof window.matchMedia;
+  });
+  afterEach(() => {
+    window.matchMedia = original;
+  });
+
+  it('reads the trail as a nested list that keeps every hop, amount and reference', async () => {
+    await showReport();
+    stage(/Fund trail/);
+    const outline = screen.getByTestId('trail-outline');
+    expect(screen.queryByTestId('trail-tree')).toBeNull();
+    const hop = within(outline).getByRole('button', { name: /^₹1,30,000 to ACC-M2A, TXN-T0011/ });
+    expect(hop).toHaveTextContent('Hop 2');
+    expect(hop).toHaveTextContent('TXN-T0011');
+
+    // Folding an account hides what came after it, and says how much is hidden.
+    fireEvent.click(within(outline).getByRole('button', { name: 'Hide the transfers after ACC-M1' }));
+    expect(within(outline).queryByRole('button', { name: /^ACC-ATM/ })).toBeNull();
+    const show = within(outline).getByRole('button', { name: 'Show the transfers after ACC-M1' });
+    expect(show).toHaveTextContent('+4');
+    fireEvent.click(show);
+    expect(within(outline).getAllByRole('button', { name: /^ACC-ATM/ }).length).toBeGreaterThan(0);
+
+    // A hop opens the same inspector as the wide tree.
+    fireEvent.click(within(outline).getByRole('button', { name: /^₹1,30,000 to ACC-M2A/ }));
+    expect(await screen.findByRole('dialog', { name: '₹1,30,000' })).toHaveTextContent('TXN-T0011');
   });
 });

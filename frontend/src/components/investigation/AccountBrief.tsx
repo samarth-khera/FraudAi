@@ -1,5 +1,5 @@
 import React, { useEffect, useId, useState } from 'react';
-import { ArrowLeftRight, FlaskConical, Route, SlidersHorizontal } from 'lucide-react';
+import { ArrowLeftRight, ArrowRight, FlaskConical, Route, SlidersHorizontal } from 'lucide-react';
 import { formatDateTime, formatMoney } from '../../lib/format';
 import { v2Api } from '../../services/v2Api';
 import { DataSourceInfo } from '../../types/investigation';
@@ -117,14 +117,23 @@ export const AccountBrief: React.FC<{
 
   if (load.state === 'loading') {
     return (
-      <div className="panel p-8" role="status" aria-live="polite">
+      <div className="space-y-5" role="status" aria-live="polite">
         <div className="flex items-center gap-3 text-sm text-mute">
-          <span className="w-4 h-4 rounded-full border-2 border-iris border-t-transparent animate-spin" aria-hidden="true" />
+          <span className="relative w-4 h-4" aria-hidden="true">
+            <span className="absolute inset-0 rounded-full border-2 border-iris-soft" />
+            <span className="absolute inset-0 rounded-full border-2 border-transparent border-t-iris border-r-ice animate-spin" />
+          </span>
           Loading <IdText className="text-ink">{accountId}</IdText>…
         </div>
-        <div className="mt-6 grid gap-3 sm:grid-cols-3" aria-hidden="true">
+        <span className="skeleton block h-10 w-72" aria-hidden="true" />
+        <div className="grid gap-4 lg:grid-cols-3" aria-hidden="true">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-24 rounded-xl bg-well animate-pulse" />
+            <div key={i} className="panel p-5 space-y-3">
+              <span className="skeleton block h-4 w-40" />
+              <span className="skeleton block h-8 w-28" />
+              <span className="skeleton block h-3 w-full" />
+              <span className="skeleton block h-3 w-3/4" />
+            </div>
           ))}
         </div>
       </div>
@@ -151,11 +160,11 @@ export const AccountBrief: React.FC<{
 
   return (
     <div className="space-y-5" data-testid="account-brief">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-sm text-mute">Account under investigation in the {ds.dataset_title.toLowerCase()}</p>
-          <h1 className="mt-1 font-display text-4xl sm:text-5xl font-bold tracking-tight text-ink">{ds.account_id}</h1>
-          <p className="mt-2 text-[15px] text-mute">
+      <header data-reveal className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-[13px] text-mute">Account under investigation in the {ds.dataset_title.toLowerCase()}</p>
+          <h1 className="mt-1.5 page-title !text-[32px] sm:!text-[40px] font-mono !tracking-[-0.02em]">{ds.account_id}</h1>
+          <p className="mt-1.5 text-[15px] text-mute">
             {p ? `${p.customer_name}, ${p.customer_type} customer, ${p.kyc_tier.replace(/_/g, ' ')}, account ${p.status}` : `${ds.customer_type} account, synthetic`}
           </p>
         </div>
@@ -164,7 +173,7 @@ export const AccountBrief: React.FC<{
         </button>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div data-reveal className="grid gap-4 lg:grid-cols-3 items-start">
         {a ? (
           <section aria-labelledby="sev-h" className="panel p-5">
             <h2 id="sev-h" className="text-sm font-semibold text-ink">Assessment before tracing</h2>
@@ -257,10 +266,11 @@ export const AccountBrief: React.FC<{
         </section>
       </div>
 
-      <div className="panel p-5 sm:p-6">
+      <div data-reveal className="panel panel-sheen relative overflow-hidden p-5 sm:p-6">
+        <span className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-iris to-ice" aria-hidden="true" />
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="max-w-2xl">
-            <p className="font-semibold text-ink">Ready to investigate</p>
+            <p className="card-title !text-base">Ready to investigate</p>
             <p className="mt-0.5 text-sm text-mute">
               The server reads this account’s history now, scores each transfer, traces where the money went and came from, and assesses every
               connected account on its own records. Nothing is precomputed, stored or acted on.
@@ -276,8 +286,9 @@ export const AccountBrief: React.FC<{
             >
               <SlidersHorizontal className="w-4 h-4" aria-hidden="true" /> Trace settings
             </button>
-            <button type="button" className="btn-primary min-h-[2.75rem] px-6" onClick={start} disabled={running} aria-busy={running} aria-describedby={formError ? errId : undefined}>
+            <button type="button" className="btn-primary min-h-[2.875rem] px-6 text-[15px]" onClick={start} disabled={running} aria-busy={running} aria-describedby={formError ? errId : undefined}>
               {running ? 'Investigating…' : 'Start fund investigation'}
+              {!running && <ArrowRight className="w-4 h-4" aria-hidden="true" />}
             </button>
           </div>
         </div>
@@ -292,8 +303,11 @@ export const AccountBrief: React.FC<{
           </div>
         )}
         {running && (
-          <div role="status" aria-live="polite" className="mt-5 pt-5 border-t border-line flex items-start gap-3" data-testid="investigation-running">
-            <span className="mt-0.5 w-4 h-4 rounded-full border-2 border-iris border-t-transparent animate-spin shrink-0" aria-hidden="true" />
+          <div role="status" aria-live="polite" className="mt-5 pt-5 border-t border-line flex items-start gap-3 rise-in" data-testid="investigation-running">
+            <span className="relative mt-0.5 w-4 h-4 shrink-0" aria-hidden="true">
+              <span className="absolute inset-0 rounded-full border-2 border-iris-soft" />
+              <span className="absolute inset-0 rounded-full border-2 border-transparent border-t-iris border-r-ice animate-spin" />
+            </span>
             <div className="text-sm">
               <p className="font-semibold text-ink">
                 Investigating <IdText>{accountId}</IdText>… {elapsed > 0 && <span className="font-normal text-faint">{elapsed} s</span>}
@@ -302,8 +316,13 @@ export const AccountBrief: React.FC<{
                 The server runs these steps in one request; the time each one took appears in the report.
                 {elapsed >= 10 && ' If the free server was asleep, the first request can take about a minute.'}
               </p>
-              <ol className="mt-2 grid gap-x-6 gap-y-1 sm:grid-cols-2 text-xs text-ink-soft list-decimal pl-4" aria-label="Steps being run">
-                {RUN_STEPS.map((x) => <li key={x}>{x}</li>)}
+              <ol className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2 text-xs text-ink-soft" aria-label="Steps being run">
+                {RUN_STEPS.map((x) => (
+                  <li key={x} className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-iris-line shrink-0" aria-hidden="true" />
+                    {x}
+                  </li>
+                ))}
               </ol>
             </div>
           </div>
