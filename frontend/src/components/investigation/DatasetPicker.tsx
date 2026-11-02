@@ -1,6 +1,7 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { Check, Database } from 'lucide-react';
 import { v2Api } from '../../services/v2Api';
+import { retryRead } from '../../lib/retry';
 import { DatasetId, DatasetSummary, SampleAccounts } from '../../types/dynamic';
 
 const FALLBACK: Pick<DatasetSummary, 'dataset_id' | 'title' | 'description'>[] = [
@@ -23,14 +24,14 @@ export const DatasetPicker: React.FC<{ value: DatasetId; onChange: (d: DatasetId
 
   useEffect(() => {
     const c = new AbortController();
-    v2Api.listDatasets(c.signal).then(setDatasets).catch(() => setDatasets(null));
+    retryRead(() => v2Api.listDatasets(c.signal), c.signal).then(setDatasets).catch(() => setDatasets(null));
     return () => c.abort();
   }, []);
 
   useEffect(() => {
     if (value === 'demo-ledger') return;
     const c = new AbortController();
-    v2Api.getSampleAccounts(value, c.signal).then(setLoaded).catch(() => undefined);
+    retryRead(() => v2Api.getSampleAccounts(value, c.signal), c.signal).then(setLoaded).catch(() => undefined);
     return () => c.abort();
   }, [value]);
 

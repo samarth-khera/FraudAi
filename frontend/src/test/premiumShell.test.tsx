@@ -237,3 +237,27 @@ describe('Overview dashboard', () => {
 afterEach(() => {
   document.title = '';
 });
+
+describe('Quiet retry for dropped connections', () => {
+  it('reads again once when the connection drops, but not on an HTTP error or after an abort', async () => {
+    const { retryRead } = await import('../lib/retry');
+    const dropped = vi.fn().mockRejectedValueOnce(new TypeError('Failed to fetch')).mockResolvedValueOnce('ok');
+    await expect(retryRead(dropped, undefined, 0)).resolves.toBe('ok');
+    expect(dropped).toHaveBeenCalledTimes(2);
+
+    const httpError = Object.assign(new Error('Not found'), { status: 404, code: 'account_not_found' });
+    const answered = vi.fn().mockRejectedValue(httpError);
+    await expect(retryRead(answered, undefined, 0)).rejects.toBe(httpError);
+    expect(answered).toHaveBeenCalledTimes(1);
+
+    const down = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+    await expect(retryRead(down, undefined, 0)).rejects.toBeInstanceOf(TypeError);
+    expect(down).toHaveBeenCalledTimes(2);
+
+    const c = new AbortController();
+    c.abort();
+    const aborted = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+    await expect(retryRead(aborted, c.signal, 0)).rejects.toBeInstanceOf(TypeError);
+    expect(aborted).toHaveBeenCalledTimes(1);
+  });
+});
