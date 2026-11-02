@@ -23,13 +23,13 @@ export const Stat: React.FC<{
   }[tone];
   return (
     <div className={`min-w-0 ${className}`}>
-      <dt className="flex items-center gap-2 text-[13px] font-medium text-mute">
+      <dt className="flex items-start gap-2 text-[13px] font-medium text-mute">
         {Icon && (
           <span className={`inline-flex w-6 h-6 items-center justify-center rounded-lg ring-1 ring-inset ${chip}`} aria-hidden="true">
             <Icon className="w-3.5 h-3.5" />
           </span>
         )}
-        <span className="truncate">{label}</span>
+        <span className="leading-snug">{label}</span>
       </dt>
       <dd className="mt-2">
         {loading ? <span className="skeleton block h-8 w-28" aria-hidden="true" /> : <span className="metric block truncate">{value}</span>}

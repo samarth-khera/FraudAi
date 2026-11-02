@@ -90,7 +90,7 @@ export const CaseWorkspacePage: React.FC = () => {
 
   if (state.kind === 'loading') {
     return (
-      <div className="space-y-6">
+      <div key="loading" className="space-y-6">
         <LoadingState label={`Loading case ${caseId}…`} className="!py-4 !justify-start" />
         <SkeletonBlock className="h-10 w-56" />
         <SkeletonBlock className="h-12 w-full" />
@@ -127,7 +127,7 @@ export const CaseWorkspacePage: React.FC = () => {
   const next = SECTIONS[index + 1];
 
   return (
-    <div ref={topRef} className="space-y-6 scroll-mt-24">
+    <div key="ready" ref={topRef} className="space-y-6 scroll-mt-24">
       <header data-reveal className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="min-w-0">
           <p className="text-[13px] text-mute">Synthetic demonstration case</p>
@@ -192,7 +192,7 @@ export const CaseWorkspacePage: React.FC = () => {
         </ol>
       </nav>
 
-      <div key={section} data-reveal>
+      <div key={section} data-reveal className="min-h-[50vh]">
         {section === 'summary' && <CaseSummarySection data={data} onNavigate={navigate} />}
         {section === 'money-flow' && (
           <MoneyFlowSection data={data} selectedAccountId={selectedAccountId} onSelectAccount={selectAccount} onNavigate={navigate} />

@@ -40,7 +40,7 @@ export const AppLayout: React.FC = () => {
           ref={main}
           id="main"
           tabIndex={-1}
-          className="flex-1 w-full max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8 lg:pt-8 lg:pb-12 min-w-0 outline-none"
+          className="flex-1 w-full max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8 lg:pt-8 lg:pb-12 min-w-0 min-h-[calc(100vh-4rem)] lg:min-h-[calc(100vh-3.5rem)] outline-none"
         >
           <Outlet />
         </main>

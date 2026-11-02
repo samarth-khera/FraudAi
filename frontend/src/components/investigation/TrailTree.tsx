@@ -99,14 +99,16 @@ export const TrailTree: React.FC<{
   }, []);
 
   const fitBox = useCallback(
-    (box: { x0: number; y0: number; x1: number; y1: number }, maxScale = 1, rise = 0.5) => {
+    (box: { x0: number; y0: number; x1: number; y1: number }, maxScale = 1, rise = 0.5, minScale = MIN) => {
       const pad = 40;
       const w = box.x1 - box.x0 + pad * 2;
       const h = box.y1 - box.y0 + pad * 2;
-      const scale = clamp(Math.min(size.w / w, size.h / h, maxScale), MIN, MAX);
+      const scale = clamp(Math.min(size.w / w, size.h / h, maxScale), Math.max(MIN, minScale), MAX);
+      const wide = (box.x1 - box.x0) * scale > size.w - pad * 2;
       setView({
         scale,
-        x: (size.w - (box.x1 - box.x0) * scale) / 2 - box.x0 * scale,
+        // Too wide to show at a readable size: start from the left, where the money starts; the rest is a pan away.
+        x: wide ? pad - box.x0 * scale : (size.w - (box.x1 - box.x0) * scale) / 2 - box.x0 * scale,
         // `rise` < 0.5 places a short, wide branch in the upper part of the view, where it is read first.
         y: Math.max(pad, (size.h - (box.y1 - box.y0) * scale) * rise) - box.y0 * scale,
       });
@@ -127,7 +129,7 @@ export const TrailTree: React.FC<{
   // trail changes size, and whenever a branch is focused.
   useEffect(() => {
     const nodes = (focusKeys ?? []).map((k) => layout.byKey.get(k)).filter((n): n is PlacedNode => Boolean(n));
-    if (nodes.length) fitBox(boxOf(nodes), 1.1, 0.32);
+    if (nodes.length) fitBox(boxOf(nodes), 1.1, 0.32, 0.78);
     else fitAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [size.w, size.h, layout.width, layout.height, focusToken]);
