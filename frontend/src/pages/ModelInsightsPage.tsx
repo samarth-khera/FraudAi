@@ -419,8 +419,9 @@ export const ModelInsightsPage: React.FC = () => {
         <div className="min-w-0 max-w-3xl">
           <h1 className="page-title">Model performance</h1>
           <p className="mt-2 lede">How each model was trained and tested, what moves its scores, and where its output counts as evidence.</p>
+          {!modelStatus && <div className="mt-3 h-[26px] w-48 skeleton rounded-full" aria-hidden="true" />}
           {modelStatus && (
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+            <div className="mt-3 min-h-[26px] flex flex-wrap items-center gap-2 text-xs">
               <span
                 className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold ring-1 ${
                   modelStatus.overall_status === 'healthy' ? 'bg-ok-soft text-ok ring-ok-line' : 'bg-warn-soft text-warn ring-warn-line'
@@ -469,6 +470,8 @@ export const ModelInsightsPage: React.FC = () => {
 
       <InvestigationModelsPanel status={modelStatus} />
 
+      {modelStatus && (
+        <>
       {/* 2. Model Selector (Model Registry Tabs) */}
       <div className="p-1.5 rounded-2xl bg-white border border-line shadow-xs flex flex-wrap gap-1.5">
         <button
@@ -570,6 +573,8 @@ export const ModelInsightsPage: React.FC = () => {
           </p>
         </div>
       </div>
+        </>
+      )}
 
       {/* Loading Skeleton */}
       {loading && !modelStatus && (

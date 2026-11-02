@@ -43,7 +43,7 @@ const Figure: React.FC<{ icon: typeof Wallet; iconClass: string; label: string; 
       {aside}
     </dt>
     <dd className="mt-1.5 font-display text-[22px] font-bold tracking-tight text-ink truncate">{value}</dd>
-    <dd className="text-xs text-faint truncate">{note}</dd>
+    <dd className="text-xs leading-snug text-faint">{note}</dd>
   </div>
 );
 
@@ -113,7 +113,7 @@ export const V2BankingHeroHeader: React.FC<V2BankingHeroHeaderProps> = ({
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-center">
             <button id="btn-run-live-analysis" type="button" onClick={onRunLiveAnalysis} disabled={isAnalyzing} className="btn-primary">
               {isAnalyzing ? (
                 <>

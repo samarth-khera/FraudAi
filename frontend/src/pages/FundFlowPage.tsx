@@ -450,7 +450,8 @@ export const FundFlowPage: React.FC = () => {
         </div>
       )}
 
-      {/* 3. Summary Metrics Strip */}
+      {/* 3. Summary Metrics Strip (its place is held while the first trace loads, so the tree below does not jump) */}
+      {!flowData && loading && <div className="skeleton h-[148px] rounded-2xl" aria-hidden="true" />}
       {flowData && (
         <div className="bg-white border border-line rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 text-xs">

@@ -347,8 +347,9 @@ export const AuditPage: React.FC = () => {
         <div className="min-w-0 max-w-3xl">
           <h1 className="page-title">Audit log</h1>
           <p className="mt-2 lede">Every recorded decision, case change and system calculation. Search, filter and export the record.</p>
+          {!auditData?.integrity_status && <div className="mt-3 h-[26px] w-72 skeleton rounded-full" aria-hidden="true" />}
           {auditData?.integrity_status && (
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+            <div className="mt-3 min-h-[26px] flex flex-wrap items-center gap-2 text-xs">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white ring-1 ring-line px-2.5 py-1 font-semibold text-mute">
                 Storage: {auditData.integrity_status.storage_backend}
               </span>

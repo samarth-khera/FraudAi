@@ -117,7 +117,7 @@ export const AccountBrief: React.FC<{
 
   if (load.state === 'loading') {
     return (
-      <div className="space-y-5" role="status" aria-live="polite">
+      <div key="loading" className="space-y-5" role="status" aria-live="polite">
         <div className="flex items-center gap-3 text-sm text-mute">
           <span className="relative w-4 h-4" aria-hidden="true">
             <span className="absolute inset-0 rounded-full border-2 border-iris-soft" />
@@ -159,7 +159,7 @@ export const AccountBrief: React.FC<{
   const modelsValidated = ds.models_validated !== false;
 
   return (
-    <div className="space-y-5" data-testid="account-brief">
+    <div key="ready" className="space-y-5" data-testid="account-brief">
       <header data-reveal className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <p className="text-[13px] text-mute">Account under investigation in the {ds.dataset_title.toLowerCase()}</p>
