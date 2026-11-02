@@ -326,13 +326,27 @@ describe('input-first investigation flow', () => {
     [Object.assign(new Error('The configured ledger has 0 accounts'), { status: 503, code: 'ledger_empty' }), 'The transaction ledger is not available', '0 accounts'],
     [Object.assign(new Error('x'), { status: 500, code: 'investigation_failed' }), 'The investigation failed', 'x'],
   ])('reports investigation errors without showing a report (%#)', async (err, title, text) => {
+    // A dropped connection is retried once (the investigation is read-only), so it is reported only if it drops twice.
+    const dropped = err instanceof TypeError;
     run.mockRejectedValueOnce(err);
+    if (dropped) run.mockRejectedValueOnce(err);
     await openBrief();
     fireEvent.click(screen.getByRole('button', { name: 'Start fund investigation' }));
-    const alert = await screen.findByRole('alert');
+    const alert = await screen.findByRole('alert', {}, { timeout: 3000 });
     expect(alert).toHaveTextContent(title);
     expect(alert).toHaveTextContent(text);
     expect(screen.queryByTestId('investigation-report')).toBeNull();
+    expect(run).toHaveBeenCalledTimes(dropped ? 2 : 1);
+  });
+
+  it('retries the read-only investigation once when the connection drops before an answer', async () => {
+    run.mockRejectedValueOnce(new TypeError('Failed to fetch')).mockResolvedValueOnce(dyn(REPORT));
+    await openBrief();
+    fireEvent.click(screen.getByRole('button', { name: 'Start fund investigation' }));
+    await screen.findByTestId('investigation-report', {}, { timeout: 3000 });
+    expect(run).toHaveBeenCalledTimes(2);
+    expect(run.mock.calls[1][0]).toEqual(run.mock.calls[0][0]);
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 
   it('a new investigation starts from scratch with a completely fresh request', async () => {

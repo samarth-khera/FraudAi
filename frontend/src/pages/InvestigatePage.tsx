@@ -10,6 +10,7 @@ import { ExplanationView, InvestigationRequest } from '../types/investigation';
 import { DatasetId, DynamicInvestigationRequest, DynamicReport } from '../types/dynamic';
 import { DatasetPicker } from '../components/investigation/DatasetPicker';
 import { PageHeader } from '../components/ui/PageHeader';
+import { retryRead } from '../lib/retry';
 
 const DATASETS: DatasetId[] = ['demo-ledger', 'forensic-scenarios'];
 function datasetFrom(p: URLSearchParams): DatasetId {
@@ -136,7 +137,9 @@ export const InvestigatePage: React.FC = () => {
     // The report never waits for, or triggers, the AI analyst: an explanation is only requested when the investigator asks.
     const body = toDynamic(request, dataset);
     try {
-      const result = await v2Api.runDynamicInvestigation(body, controller.signal);
+      // Read-only on the server (nothing is stored, the result is deterministic), so a connection dropped before the
+      // answer arrived is retried once, as reads are; HTTP errors and a second drop still show the error.
+      const result = await retryRead(() => v2Api.runDynamicInvestigation(body, controller.signal), controller.signal);
       if (controller.signal.aborted) return;
       lastRunRef.current = { body, digest: result.investigation.report_digest };
       setReport(result);
