@@ -1,0 +1,1277 @@
+{
+  "started": "2026-11-02T03:45:58.233Z",
+  "chrome": "156.0.8078.74",
+  "steps": [
+    {
+      "name": "sidebar navigation reaches all 8 destinations without an error state",
+      "ok": true,
+      "detail": "Investigate:ok, Accounts:ok, Cases:ok, Fund-flow explorer:ok, Model performance:ok, Audit log:ok, Transaction model check:ok, Overview:ok"
+    },
+    {
+      "name": "overview shows the ledger and model status without contradictions",
+      "ok": true,
+      "detail": "Skip to content FraudShield Financial investigations Overview Investigate Accounts Cases Reference Fund-flow explorer Model performance Audit log Transaction model check Models ready Synthetic demo ledger. No real custom"
+    },
+    {
+      "name": "model-version labels: v3 models for investigations, v2 named only for Accounts/case review",
+      "ok": true,
+      "detail": "Model status: Models ready | Models ready Investigations use the transaction model v3-transaction-1.0.0 and the account behaviour model v3-account-1.0.0: validated on the forensic scenario ledger, reference only on the demo ledger. The Accounts tool and case review use"
+    },
+    {
+      "name": "keyboard: Tab reaches controls with a visible focus indicator (overview)",
+      "ok": true,
+      "detail": "{\"reached\":10,\"withoutVisibleRing\":[]}"
+    },
+    {
+      "name": "dataset picker: model support stated per dataset; samples need no ground truth",
+      "ok": true,
+      "detail": "Models reference only: out of distribution | Models validated on this dataset | FS-D948AB11 One transfer of ₹8,16,099.97 took 92% of the balance it already held. FS-F1017663 One transfer of ₹6,33,500 took 83% of the balance it already held."
+    },
+    {
+      "name": "sample FS-D948AB11: account brief shows history before any score",
+      "ok": true,
+      "detail": "Account under investigation in the forensic scenario ledger FS-D948AB11 retail account, synthetic Change account Available history 58 transfers on record (44 out, 14 in) Enough history for the account"
+    },
+    {
+      "name": "running state shows real steps and no fake percentage",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "sample FS-D948AB11: report completes with an assessment card",
+      "ok": true,
+      "detail": "7374 ms; Is FS-D948AB11 potentially a victim? Potential victim Account assessment Money left this account in transfers that differ from its own history. Sent 1 flagged t"
+    },
+    {
+      "name": "FS-7B7C13AB overview: potential victim, flagged transfers, model wording is a score not a probability",
+      "ok": true,
+      "detail": "13% A model score, not a probability of fraud What raised the model score Amount 52,000 Took 69% of the sender's balance just before it +34."
+    },
+    {
+      "name": "fund trail: several branches with stated endings",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "branch expand/collapse works",
+      "ok": true,
+      "detail": "4 toggles"
+    },
+    {
+      "name": "account inspector: role, records, interpretation, unknowns, innocent explanations, missing information",
+      "ok": true,
+      "detail": "Account inspector FS-EAAA344C Tanvi Kapoor, retail, tier 2 verified Direct recipient, hop 1 Potential intermediary Paid out or withdrew most of what it received within a day, in transfers the transaction model flags; the"
+    },
+    {
+      "name": "FS-7B7C13AB (script error)",
+      "ok": false,
+      "detail": "locator.click: Timeout 30000ms exceeded. / Call log: /   - waiting for locator('button').filter({ hasText: /^₹[\\d,]+$/ }).first()"
+    },
+    {
+      "name": "FS-10B80A33 abstains (insufficient evidence; no intermediary label; neutral heading)",
+      "ok": true,
+      "detail": "What the records show about FS-10B80A33 Insufficient evidence Account assessment Its flagged outgoing transfer(s) were paid out of money it had just received. That one observation does not establish a"
+    },
+    {
+      "name": "FS-7BA8A2CC: documented residual error still present (no scenario role, shown as a potential intermediary needing urgent review)",
+      "ok": null,
+      "detail": "What the records show about FS-7BA8A2CC Suspicious activity detected, victim status unconfirmed Account assessment Its flagged outgoing transfers mostly forwarded money it had just received. The account behaviour model scores its history at"
+    },
+    {
+      "name": "FS-7BA8A2CC: even so, no guilt claim, no freeze directive, human review required",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "low-history FS-36B3099E abstains",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unknown account: clear not-found error state, nothing invented",
+      "ok": true,
+      "detail": " Account not found Account 'FS-NOTREAL1' is not in the forensic scenario ledger."
+    },
+    {
+      "name": "demo ledger: out-of-distribution banner; model shown as reference only",
+      "ok": true,
+      "detail": "unsupported_distribution_shift"
+    },
+    {
+      "name": "account detail ACC-000001: profile, history and model assessment; UPI ID masked",
+      "ok": true,
+      "detail": "masked UPI: (none shown)"
+    },
+    {
+      "name": "account detail tabs/sections respond to clicks",
+      "ok": true,
+      "detail": "4 tabs clicked"
+    },
+    {
+      "name": "case FS-2001 summary: reported amount and status",
+      "ok": true,
+      "detail": " Cases FS-2001 FS-2001 Open Synthetic account ledger Reported loss ₹2,50,000 · Synthetic demonstration case 1 Summary What happened? 2 Money flow Where did the "
+    },
+    {
+      "name": "case money flow renders as a readable tree (accounts and transfers, hop by hop)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "case review is read-only in the public demo (no write possible)",
+      "ok": true,
+      "detail": " Changes are disabled on this server because it runs in production mode without an API key | enabled save-like buttons: 0"
+    },
+    {
+      "name": "fund-flow explorer traces an account into a hop-by-hop tree",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "model performance leads with the v3 investigation models and per-dataset support",
+      "ok": true,
+      "detail": "Models behind investigations (v3) Every investigation on the Investigate page uses these two models. The v2 models further down this page are older models used by the Accounts tool, the case review an"
+    },
+    {
+      "name": "model performance tabs respond",
+      "ok": false,
+      "detail": "0 tabs"
+    },
+    {
+      "name": "audit filters are labelled controls",
+      "ok": true,
+      "detail": "Time range:1, Actor:1, Sort order:1, Search audit events:1, Filter by case ID:1"
+    },
+    {
+      "name": "audit: filter by case shows its events; a search with no match shows an empty state",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "transaction model check returns a score with feature contributions (decision support only)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unknown route shows the not-found page",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "legacy /app/dashboard redirects to an existing case",
+      "ok": true,
+      "detail": "https://fraudshield-ai-psi.vercel.app/cases/FS-1042"
+    },
+    {
+      "name": "tablet 768px: no horizontal page overflow on 10 destinations",
+      "ok": true,
+      "detail": "overview:0 investigate:0 accounts:0 account-detail:0 cases:0 case:0 fund-flow:0 model:0 audit:0 transaction-model:0"
+    },
+    {
+      "name": "tablet: the menu button opens navigation and links route correctly",
+      "ok": true,
+      "detail": "https://fraudshield-ai-psi.vercel.app/tools/model"
+    },
+    {
+      "name": "tablet investigation (script error)",
+      "ok": false,
+      "detail": "page.goto: Timeout 30000ms exceeded. / Call log: /   - navigating to \"https://fraudshield-ai-psi.vercel.app/investigate?dataset=forensic-scenarios&account=FS-7B7C13AB\", waiting until \"load\""
+    },
+    {
+      "name": "mobile 390px: no horizontal page overflow on 10 destinations",
+      "ok": true,
+      "detail": "overview:0 investigate:0 accounts:0 account-detail:0 cases:0 case:0 fund-flow:0 model:0 audit:0 transaction-model:0"
+    },
+    {
+      "name": "mobile: the menu button opens navigation and links route correctly",
+      "ok": true,
+      "detail": "https://fraudshield-ai-psi.vercel.app/tools/model"
+    },
+    {
+      "name": "mobile: full investigation usable — trail and affected accounts render without page overflow",
+      "ok": true,
+      "detail": "roles=14 overflow trail=0 affected=0"
+    },
+    {
+      "name": "API errors other than the deliberate unknown-account lookups",
+      "ok": true,
+      "detail": "none"
+    },
+    {
+      "name": "explanation requests sent by the pages during the whole walkthrough",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "CSP violations reported by Chrome",
+      "ok": true,
+      "detail": "none"
+    },
+    {
+      "name": "uncaught page errors",
+      "ok": true,
+      "detail": "none"
+    },
+    {
+      "name": "browser console errors",
+      "ok": true,
+      "detail": "1 total: Failed to load resource: the server responded with a status of 404 ()"
+    },
+    {
+      "name": "failed network requests",
+      "ok": false,
+      "detail": "GET https://fraudshield-ai-psi.vercel.app/investigate?dataset=forensic-scenarios&account=FS-7B7C13AB net::ERR_ABORTED"
+    },
+    {
+      "name": "requests only to the frontend, the Render API and Google Fonts",
+      "ok": true,
+      "detail": "{\"fraudshield-ai-psi.vercel.app\":226,\"fonts.googleapis.com\":41,\"fonts.gstatic.com\":263,\"fraudshield-api-rpok.onrender.com\":139}"
+    }
+  ],
+  "console": [
+    {
+      "tag": "desktop",
+      "text": "Failed to load resource: the server responded with a status of 404 ()",
+      "url": "https://fraudshield-ai-psi.vercel.app/investigate?dataset=forensic-scenarios&account=FS-NOTREAL1"
+    }
+  ],
+  "pageErrors": [],
+  "failed": [
+    {
+      "tag": "tablet",
+      "method": "GET",
+      "url": "https://fraudshield-ai-psi.vercel.app/investigate?dataset=forensic-scenarios&account=FS-7B7C13AB",
+      "error": "net::ERR_ABORTED",
+      "page": "https://fraudshield-ai-psi.vercel.app/tools/model"
+    }
+  ],
+  "api": [
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/data-source",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/datasets",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases?skip=0&limit=100",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/trace?account_id=ACC-000001&direction=outgoing&max_depth=2&max_nodes=60",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000001/ml-assessment",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/audit?skip=0&limit=25&sort_order=desc",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/data-source",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/data-source",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/datasets",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/datasets/forensic-scenarios/sample-accounts",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/datasets/forensic-scenarios/accounts/FS-D948AB11",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "POST",
+      "p": "/api/v2/dynamic-investigations",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/datasets/forensic-scenarios/accounts/FS-7B7C13AB",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "POST",
+      "p": "/api/v2/dynamic-investigations",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/datasets/forensic-scenarios/accounts/FS-10B80A33",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "POST",
+      "p": "/api/v2/dynamic-investigations",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/datasets/forensic-scenarios/accounts/FS-7BA8A2CC",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "POST",
+      "p": "/api/v2/dynamic-investigations",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/datasets/forensic-scenarios/accounts/FS-36B3099E",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "POST",
+      "p": "/api/v2/dynamic-investigations",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 404,
+      "m": "GET",
+      "p": "/api/v2/datasets/forensic-scenarios/accounts/FS-NOTREAL1",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000001",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000001/assessment",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/datasets/demo-ledger/accounts/ACC-000001",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/data-source",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "POST",
+      "p": "/api/v2/dynamic-investigations",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000001",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000001/transactions?limit=200&order=desc",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000001/transactions?limit=200&order=desc",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000001",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/trace?account_id=ACC-000001&direction=outgoing&max_depth=3&max_nodes=50",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases?skip=0&limit=100",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-2001",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-2001/trace?max_depth=10",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-2001/accounts?max_depth=10",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-2001/graph?max_depth=10",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000003",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000003/assessment",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000003/ml-assessment",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-2001/audit-trail",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/health",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/trace?account_id=ACC-000001&direction=outgoing&max_depth=2&max_nodes=60",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/trace?account_id=ACC-000003&direction=outgoing&max_depth=2&max_nodes=60",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000001/ml-assessment",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/audit?skip=0&limit=25&sort_order=desc",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/audit?case_id=FS-2001&skip=0&limit=25&sort_order=desc",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/audit?skip=0&limit=25&sort_order=desc",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/audit?search=zzzz-no-such-event&skip=0&limit=25&sort_order=desc",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "POST",
+      "p": "/api/risk/explain",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-1042",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-1042/trace?max_depth=10",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-1042/accounts?max_depth=10",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-1042/graph?max_depth=10",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/data-source",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/datasets/forensic-scenarios/sample-accounts",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/datasets",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000001",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000001/transactions?limit=200&order=desc",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases?skip=0&limit=100",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-2001",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-2001/trace?max_depth=10",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-2001/accounts?max_depth=10",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-2001/graph?max_depth=10",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/trace?account_id=ACC-000001&direction=outgoing&max_depth=2&max_nodes=60",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000001/ml-assessment",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/audit?skip=0&limit=25&sort_order=desc",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/data-source",
+      "ms": null
+    },
+    {
+      "tag": "tablet",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases?skip=0&limit=100",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/data-source",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/datasets/forensic-scenarios/sample-accounts",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/datasets",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000001/transactions?limit=200&order=desc",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000001",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases?skip=0&limit=100",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-2001",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-2001/trace?max_depth=10",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-2001/accounts?max_depth=10",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases/FS-2001/graph?max_depth=10",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/trace?account_id=ACC-000001&direction=outgoing&max_depth=2&max_nodes=60",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000001/ml-assessment",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/audit?skip=0&limit=25&sort_order=desc",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/data-source",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/cases?skip=0&limit=100",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000001/ml-assessment",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/datasets/forensic-scenarios/accounts/FS-7B7C13AB",
+      "ms": null
+    },
+    {
+      "tag": "mobile",
+      "s": 200,
+      "m": "POST",
+      "p": "/api/v2/dynamic-investigations",
+      "ms": null
+    },
+    {
+      "tag": "desktop",
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status",
+      "ms": null
+    }
+  ],
+  "hosts": {
+    "fraudshield-ai-psi.vercel.app": 226,
+    "fonts.googleapis.com": 41,
+    "fonts.gstatic.com": 263,
+    "fraudshield-api-rpok.onrender.com": 139
+  },
+  "unexpectedHosts": [],
+  "explanationRequests": [],
+  "csp": [],
+  "overflow": {
+    "tablet:overview": 0,
+    "tablet:investigate": 0,
+    "tablet:accounts": 0,
+    "tablet:account-detail": 0,
+    "tablet:cases": 0,
+    "tablet:case": 0,
+    "tablet:fund-flow": 0,
+    "tablet:model": 0,
+    "tablet:audit": 0,
+    "tablet:transaction-model": 0,
+    "mobile:overview": 0,
+    "mobile:investigate": 0,
+    "mobile:accounts": 0,
+    "mobile:account-detail": 0,
+    "mobile:cases": 0,
+    "mobile:case": 0,
+    "mobile:fund-flow": 0,
+    "mobile:model": 0,
+    "mobile:audit": 0,
+    "mobile:transaction-model": 0
+  },
+  "focus": {
+    "overview": {
+      "reached": 10,
+      "withoutVisibleRing": []
+    }
+  },
+  "timings": {
+    "overview first load (ms)": 5545,
+    "investigation FS-D948AB11 (sample)": 6167,
+    "investigation FS-7B7C13AB": 11429,
+    "investigation FS-10B80A33": 5377,
+    "investigation FS-7BA8A2CC": 7390,
+    "investigation FS-36B3099E": 1327,
+    "investigation ACC-000001 demo": 6882,
+    "investigation FS-7B7C13AB mobile": 13456
+  },
+  "finished": "2026-11-02T03:50:30.044Z",
+  "summary": {
+    "pass": 40,
+    "fail": 4,
+    "info": 1,
+    "apiRequests": 139
+  }
+}

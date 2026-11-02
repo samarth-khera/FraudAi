@@ -1,0 +1,18 @@
+{
+  "checkedAt": "2026-11-02T04:24:07.910Z",
+  "ok": true,
+  "pages": {
+    "investigate": {
+      "reached": 15,
+      "withoutVisibleRing": []
+    },
+    "case": {
+      "reached": 15,
+      "withoutVisibleRing": []
+    },
+    "audit": {
+      "reached": 15,
+      "withoutVisibleRing": []
+    }
+  }
+}

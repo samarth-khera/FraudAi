@@ -1,0 +1,148 @@
+{
+  "started": "2026-11-02T03:51:04.510Z",
+  "steps": [
+    {
+      "name": "FS-7B7C13AB investigation completed in the browser",
+      "ok": true,
+      "detail": "11481 ms"
+    },
+    {
+      "name": "transfer details: selecting a transfer opens its inspector (ID, amount, accounts, time)",
+      "ok": true,
+      "detail": "Transfer inspector ₹52,000 TX-303-0046080, UPI, 18 Feb 2026, 08:11 pm Direct: the investigated account is a party Flagged by rules Flagged by the transaction model From FS-7B7C13AB To FS-EAAA344C Transaction model (decision-time) At or abov"
+    },
+    {
+      "name": "QA-03 FS-7305E412 (collector) is \"Role unknown\", not a potential victim, with the reason",
+      "ok": true,
+      "detail": "FS-7305E412 Role unknown Sent a transfer the transaction model flags into FS-EAAA344C, which this trace assessed as a potential intermediary candidate; on its own that does not describe a role. How it is connected Sent a flagged transfer to"
+    },
+    {
+      "name": "model flag on FS-7305E412's transfer is badged \"Model output\", not \"Recorded fact\"",
+      "ok": true,
+      "detail": "What the records show Each item says whether it is a recorded fact, a model output or a fixed rule. Model output Its own transfer TX-303-0043807 is flagged by the transaction model."
+    },
+    {
+      "name": "connected account FS-EAAA344C: records, interpretation and unknowns apart; innocent explanations, verification, missing information",
+      "ok": true,
+      "detail": "Restriction recommendation for FS-EAAA344C Urgent manual review recommended Two independent kinds of evidence support urgent review. Accounts used to move scam money are often operated by people who were deceived themselves. Innocent explan"
+    },
+    {
+      "name": "affected accounts: no guilt claim or freeze directive; review is advisory",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "risk evidence: rules and model shown as separate evidence with their limits",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "AI analyst stage: off in production, nothing sent, no request button",
+      "ok": true,
+      "detail": "AI analyst: turned off disabled The optional AI analyst is not available on this server. The evidence summary in this report was produced by fixed templates. Nothing from this investigation was sent to an AI provider. The overview, fund tra"
+    },
+    {
+      "name": "next steps: advisory, human review required, no automatic action, no freeze or guilt wording",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "no explanation request sent while every stage was opened",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "model performance: view switches show each model's evaluation",
+      "ok": true,
+      "detail": "Transaction-Level PaySim Benchmark: metrics shown | V2 Account-Level Fraud Model: metrics shown | comparison: opened"
+    },
+    {
+      "name": "tablet: page load timing (DOM ready / window load)",
+      "ok": null,
+      "detail": "DOMContentLoaded 424 ms, load 425 ms; requests slower than 5 s: none"
+    },
+    {
+      "name": "tablet: full investigation usable — trail and affected accounts render without page overflow",
+      "ok": true,
+      "detail": "15214 ms; roles=14 overflow trail=0 affected=0"
+    },
+    {
+      "name": "explanation requests during part 2",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "CSP violations (part 2)",
+      "ok": true,
+      "detail": "none"
+    },
+    {
+      "name": "page errors (part 2)",
+      "ok": true,
+      "detail": "none"
+    },
+    {
+      "name": "console errors (part 2)",
+      "ok": true,
+      "detail": "none"
+    },
+    {
+      "name": "failed requests (part 2)",
+      "ok": true,
+      "detail": "none"
+    },
+    {
+      "name": "API errors (part 2)",
+      "ok": true,
+      "detail": "none"
+    }
+  ],
+  "console": [],
+  "pageErrors": [],
+  "failed": [],
+  "csp": [],
+  "explanationRequests": [],
+  "api": [
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/datasets/forensic-scenarios/accounts/FS-7B7C13AB"
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status"
+    },
+    {
+      "s": 200,
+      "m": "POST",
+      "p": "/api/v2/dynamic-investigations"
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status"
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/models/status"
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000001/ml-assessment"
+    },
+    {
+      "s": 200,
+      "m": "GET",
+      "p": "/api/v2/accounts/ACC-000001/ml-assessment"
+    }
+  ],
+  "finished": "2026-11-02T03:51:47.493Z",
+  "summary": {
+    "pass": 17,
+    "fail": 1,
+    "info": 1
+  }
+}
