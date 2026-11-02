@@ -1,5 +1,5 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
-import { Database } from 'lucide-react';
+import { Check, Database } from 'lucide-react';
 import { v2Api } from '../../services/v2Api';
 import { DatasetId, DatasetSummary, SampleAccounts } from '../../types/dynamic';
 
@@ -53,6 +53,7 @@ export const DatasetPicker: React.FC<{ value: DatasetId; onChange: (d: DatasetId
     <div className="space-y-3">
       <fieldset>
         <legend className="text-sm font-semibold text-ink">Dataset</legend>
+        <p className="mt-0.5 text-xs text-mute">Both are synthetic ledgers. Each keeps its own accounts and its own model validation.</p>
         <div className="mt-2 grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Dataset">
           {list.map((d, i) => {
             const on = d.dataset_id === value;
@@ -70,8 +71,16 @@ export const DatasetPicker: React.FC<{ value: DatasetId; onChange: (d: DatasetId
                 disabled={!d.available}
                 onClick={() => onChange(d.dataset_id)}
                 onKeyDown={(e) => onArrow(e, i)}
-                className={`text-left rounded-2xl p-4 ring-1 transition-all ${on ? 'bg-white ring-iris shadow-[var(--shadow-float)]' : 'bg-white/60 ring-line hover:ring-iris-line'} disabled:opacity-60`}
+                className={`relative text-left rounded-2xl p-4 pr-10 transition-[box-shadow,background-color] duration-150 ${
+                  on ? 'bg-white ring-2 ring-iris shadow-[var(--shadow-float)]' : 'bg-white/70 ring-1 ring-line hover:ring-iris-line hover:bg-white'
+                } disabled:opacity-60`}
               >
+                <span
+                  className={`absolute right-3.5 top-3.5 w-5 h-5 rounded-full flex items-center justify-center transition-colors ${on ? 'bg-iris text-white' : 'ring-1 ring-line-strong bg-white'}`}
+                  aria-hidden="true"
+                >
+                  {on && <Check className="w-3 h-3" strokeWidth={3} />}
+                </span>
                 <span className="flex items-center gap-2 text-sm font-semibold text-ink">
                   <Database className={`w-4 h-4 ${on ? 'text-iris' : 'text-faint'}`} aria-hidden="true" />
                   {d.title}
@@ -85,7 +94,7 @@ export const DatasetPicker: React.FC<{ value: DatasetId; onChange: (d: DatasetId
                 {d.model_support && (
                   <span
                     className={`mt-2 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ${
-                      d.model_support === 'validated_in_distribution' ? 'bg-[#ECFDF5] text-[#065F46] ring-[#A7F3D0]' : 'bg-sev-elevated-soft text-sev-elevated ring-[#F5E3A8]'
+                      d.model_support === 'validated_in_distribution' ? 'bg-ok-soft text-ok ring-ok-line' : 'bg-sev-elevated-soft text-sev-elevated ring-warn-line'
                     }`}
                     data-testid={`model-support-${d.dataset_id}`}
                     title={d.model_note}
@@ -121,7 +130,7 @@ export const DatasetPicker: React.FC<{ value: DatasetId; onChange: (d: DatasetId
                   <button
                     type="button"
                     aria-describedby={`${idBase}-reason-${i}`}
-                    className="rounded-lg bg-white ring-1 ring-line px-2 py-1 font-mono text-xs font-semibold text-iris-deep hover:ring-iris-line"
+                    className="rounded-lg bg-white ring-1 ring-line px-2 py-1 font-mono text-xs font-semibold text-iris-deep shadow-[var(--shadow-xs)] transition-colors hover:ring-iris hover:bg-iris-wash"
                     onClick={() => onPickAccount(a.account_id)}
                   >
                     {a.account_id}

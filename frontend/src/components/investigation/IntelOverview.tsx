@@ -5,6 +5,7 @@ import { DynamicReport } from '../../types/dynamic';
 import { Badge, Disclosure, IdText } from './ui';
 import { ScoredTransfer } from './intel';
 import { suspiciousHeading } from './narrative';
+import { EvidenceTag } from '../ui/EvidenceTag';
 
 const STATUS_TONE = {
   potential_victim: 'ice',
@@ -27,22 +28,30 @@ export const IntelOverview: React.FC<{ intel: DynamicReport }> = ({ intel }) => 
   return (
     <div className="space-y-5">
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px] items-start">
-        <section aria-labelledby="assess-h" className="panel p-6" data-testid="victim-assessment" data-status={v.status}>
+        <section aria-labelledby="assess-h" className="panel panel-sheen p-6" data-testid="victim-assessment" data-status={v.status}>
           {/* QA-12: the victim question only heads a victim-side result; forwarding or abstaining results get a neutral heading. */}
           <p className="text-sm text-mute" data-testid="assessment-question">
             {v.status === 'potential_victim' || (v.status === 'suspicious_activity_victim_status_unconfirmed' && v.role_candidate === 'suspicious_activity_victim_unconfirmed')
               ? <>Is <IdText>{v.account_id}</IdText> potentially a victim?</>
               : <>What the records show about <IdText>{v.account_id}</IdText></>}
           </p>
-          <h2 id="assess-h" className="mt-1 font-display text-2xl font-bold text-ink flex flex-wrap items-center gap-3">
+          <h2 id="assess-h" className="mt-1 font-display text-2xl font-bold text-ink flex flex-wrap items-center gap-x-3 gap-y-2">
             {v.label}
-            <Badge tone={STATUS_TONE[v.status]}>Account assessment</Badge>
+            <span className="flex flex-wrap items-center gap-1.5">
+              <Badge tone={STATUS_TONE[v.status]}>Account assessment</Badge>
+              <EvidenceTag kind="interpretation" />
+            </span>
           </h2>
           <p className="mt-2 text-[16px] text-ink-soft leading-relaxed max-w-[68ch]">{v.headline}</p>
           {v.evidence.length > 0 && (
-            <ul className="mt-3 space-y-1 text-sm text-ink-soft list-disc pl-5">
-              {v.evidence.map((e) => <li key={e}>{e}</li>)}
-            </ul>
+            <div className="mt-4 rounded-xl bg-well ring-1 ring-line px-4 py-3">
+              <p className="flex items-center gap-2 text-xs font-semibold text-ink">
+                What the records show <EvidenceTag kind="observed" />
+              </p>
+              <ul className="mt-2 space-y-1 text-sm text-ink-soft list-disc pl-5 marker:text-faint">
+                {v.evidence.map((e) => <li key={e}>{e}</li>)}
+              </ul>
+            </div>
           )}
           {(v.contradictory_evidence.length > 0 || v.uncertainty_reason) && (
             <p className="mt-3 text-sm text-mute">
@@ -86,7 +95,7 @@ export const IntelOverview: React.FC<{ intel: DynamicReport }> = ({ intel }) => 
               : `None of this account's ${onAccount !== undefined ? `${onAccount} ` : ''}scored transfers was flagged${intel.transaction_scoring.model_used_as_evidence ? " by the transaction model's review threshold or" : ' by'} a fixed rule.`}
           </p>
           {!intel.model_validation.validated_for_this_dataset && (
-            <p className="mt-2 rounded-xl bg-sev-elevated-soft ring-1 ring-[#F5E3A8] px-3 py-2 text-sm text-sev-elevated" data-testid="model-not-validated"
+            <p className="mt-2 rounded-xl bg-sev-elevated-soft ring-1 ring-warn-line px-3 py-2 text-sm text-sev-elevated" data-testid="model-not-validated"
               data-support-state={intel.model_validation.support_state ?? 'unknown'}>
               {intel.model_validation.support_state === 'unsupported_distribution_shift' && (
                 <strong className="font-semibold">Models unsupported on this dataset (out of distribution). </strong>

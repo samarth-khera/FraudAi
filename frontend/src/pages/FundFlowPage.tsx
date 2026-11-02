@@ -198,27 +198,20 @@ export const FundFlowPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* 1. Page Header & Ethical Safeguard Banner */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-[#E4E5F0]">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#6246EA]">
-              FUND FLOW EXPLORER · HIERARCHICAL TREE
-            </span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#EFECFF] text-[#4F33D6] border border-[#D7CFFF]">
-              {traceMode === 'account' ? 'ACCOUNT TRACE (V2)' : 'CASE TRACE (FS-1042)'}
-            </span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#141526] font-display tracking-tight mt-1">
-            Follow the money
-          </h1>
-          <p className="text-xs sm:text-sm text-[#5C6079] mt-1 max-w-2xl leading-relaxed">
+      <header data-reveal className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="min-w-0 max-w-3xl">
+          <h1 className="page-title">Follow the money</h1>
+          <p className="mt-2 lede">
             See where money moved from an account, inspect connected recipients, and follow each transfer step by step.
+          </p>
+          <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-iris-wash ring-1 ring-iris-line px-2.5 py-1 text-xs font-semibold text-iris-deep">
+            {traceMode === 'account' ? 'Account trace on the demo ledger' : 'Case trace for FS-1042'}
           </p>
         </div>
 
         {/* View Mode & Reload Controls */}
         <div className="flex items-center gap-2 self-start md:self-end">
-          <div className="flex rounded-xl border border-[#E4E5F0] overflow-hidden bg-[#F6F6FC] p-0.5 text-xs" role="tablist" aria-label="View mode">
+          <div className="flex rounded-xl border border-line overflow-hidden bg-well p-0.5 text-xs" role="tablist" aria-label="View mode">
             <button
               type="button"
               role="tab"
@@ -229,12 +222,12 @@ export const FundFlowPage: React.FC = () => {
               }}
               className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-bold transition-all cursor-pointer ${
                 viewMode === 'graph'
-                  ? 'bg-[#6246EA] text-white shadow-2xs'
-                  : 'text-[#5C6079] hover:text-[#141526]'
+                ? 'bg-white text-ink ring-1 ring-line shadow-[var(--shadow-xs)]'
+                : 'text-mute hover:text-ink'
               }`}
             >
               <Network className="w-3.5 h-3.5" />
-              <span>Tree Graph</span>
+              <span>Tree</span>
             </button>
             <button
               type="button"
@@ -246,12 +239,12 @@ export const FundFlowPage: React.FC = () => {
               }}
               className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-bold transition-all cursor-pointer ${
                 viewMode === 'list'
-                  ? 'bg-[#6246EA] text-white shadow-2xs'
-                  : 'text-[#5C6079] hover:text-[#141526]'
+                ? 'bg-white text-ink ring-1 ring-line shadow-[var(--shadow-xs)]'
+                : 'text-mute hover:text-ink'
               }`}
             >
               <List className="w-3.5 h-3.5" />
-              <span>Transfers List</span>
+              <span>List</span>
             </button>
           </div>
 
@@ -259,59 +252,59 @@ export const FundFlowPage: React.FC = () => {
             type="button"
             onClick={() => fetchFlowData(traceMode, targetId, direction, maxDepth)}
             disabled={loading}
-            className="p-2 rounded-xl bg-white border border-[#E4E5F0] hover:bg-[#F6F6FC] text-[#141526] transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
-            title="Reload Flow"
-            aria-label="Reload Flow Data"
+            className="p-2 rounded-xl bg-white border border-line hover:bg-well text-ink transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
+            title="Reload the trace"
+            aria-label="Reload the trace"
           >
-            <RefreshCw className={`w-4 h-4 text-[#6246EA] ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 text-iris ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
-      </div>
+      </header>
 
       {/* Contextual Guidance: How to read the money flow tree */}
-      <div className="p-3.5 rounded-2xl bg-white border border-[#E4E5F0] text-xs space-y-2 shadow-2xs">
+      <div className="p-3.5 rounded-2xl bg-white border border-line text-xs space-y-2 shadow-2xs">
         <div className="flex items-center justify-between">
-          <span className="font-bold text-[#141526] flex items-center gap-1.5">
-            <Info className="w-4 h-4 text-[#6246EA]" />
+          <span className="font-bold text-ink flex items-center gap-1.5">
+            <Info className="w-4 h-4 text-iris" />
             <span>How to navigate and interpret this money flow tree:</span>
           </span>
-          <span className="font-mono text-[11px] text-[#868AA2]">Left-to-Right Hierarchy</span>
+          <span className="text-xs text-faint">Money moves left to right</span>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-[#5C6079] text-[11px] leading-relaxed">
-          <div className="p-2.5 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0]">
-            <strong className="text-[#141526] block font-semibold mb-0.5">1. Nodes = Accounts</strong>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-mute text-[11px] leading-relaxed">
+          <div className="p-2.5 rounded-xl bg-well border border-line">
+            <strong className="text-ink block font-semibold mb-0.5">1. Nodes = Accounts</strong>
             Cards represent accounts in the core ledger. Badges show where each account sits relative to the starting account.
           </div>
-          <div className="p-2.5 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0]">
-            <strong className="text-[#141526] block font-semibold mb-0.5">2. Arrows = Transfers</strong>
+          <div className="p-2.5 rounded-xl bg-well border border-line">
+            <strong className="text-ink block font-semibold mb-0.5">2. Arrows = Transfers</strong>
             Lines show direction and payment rails (UPI, IMPS, NEFT) with transferred amount and attribution share.
           </div>
-          <div className="p-2.5 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0]">
-            <strong className="text-[#141526] block font-semibold mb-0.5">3. Hop Distance</strong>
+          <div className="p-2.5 rounded-xl bg-well border border-line">
+            <strong className="text-ink block font-semibold mb-0.5">3. Hop Distance</strong>
             Hops count steps from the root. Intermediate nodes with low dwell time indicate potential layering conduits.
           </div>
-          <div className="p-2.5 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0]">
-            <strong className="text-[#141526] block font-semibold mb-0.5">4. Inspect & Open</strong>
+          <div className="p-2.5 rounded-xl bg-well border border-line">
+            <strong className="text-ink block font-semibold mb-0.5">4. Inspect & Open</strong>
             Click any account node to open the side inspector, view counterparty details, or launch full Account Intelligence.
           </div>
         </div>
       </div>
 
       {/* Ethical Safeguard Notice */}
-      <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#FAFAFE] border border-[#D7CFFF] text-xs text-[#4F33D6]">
-        <Scale className="w-4 h-4 text-[#6246EA] shrink-0" />
+      <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-well border border-iris-line text-xs text-iris-deep">
+        <Scale className="w-4 h-4 text-iris shrink-0" />
         <span className="leading-tight">
           <strong>Fairness Safeguard:</strong> An account's connection to a suspicious transfer does not prove wrongdoing. All findings require appropriate review.
         </span>
       </div>
 
       {/* 2. Interactive Trace Controls Toolbar */}
-      <div className="bg-white border border-[#E4E5F0] rounded-2xl p-4 sm:p-5 shadow-xs space-y-4">
+      <div className="bg-white border border-line rounded-2xl p-4 sm:p-5 shadow-xs space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           {/* Target Search & Mode Toggle */}
           <div className="flex flex-wrap items-center gap-2.5 flex-1 max-w-xl">
             {/* Mode Selector Pill Toggle */}
-            <div className="flex rounded-xl border border-[#E4E5F0] bg-[#F6F6FC] p-0.5 text-xs">
+            <div className="flex rounded-xl border border-line bg-well p-0.5 text-xs">
               <button
                 type="button"
                 onClick={() => {
@@ -322,8 +315,8 @@ export const FundFlowPage: React.FC = () => {
                 }}
                 className={`px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                   traceMode === 'account'
-                    ? 'bg-white text-[#6246EA] shadow-2xs font-bold border border-[#E4E5F0]'
-                    : 'text-[#5C6079] hover:text-[#141526]'
+                  ? 'bg-white text-iris shadow-2xs font-bold border border-line'
+                  : 'text-mute hover:text-ink'
                 }`}
               >
                 <Users className="w-3.5 h-3.5" />
@@ -339,8 +332,8 @@ export const FundFlowPage: React.FC = () => {
                 }}
                 className={`px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                   traceMode === 'case'
-                    ? 'bg-white text-[#6246EA] shadow-2xs font-bold border border-[#E4E5F0]'
-                    : 'text-[#5C6079] hover:text-[#141526]'
+                  ? 'bg-white text-iris shadow-2xs font-bold border border-line'
+                  : 'text-mute hover:text-ink'
                 }`}
               >
                 <FolderGit2 className="w-3.5 h-3.5" />
@@ -350,18 +343,18 @@ export const FundFlowPage: React.FC = () => {
 
             {/* Root Search Form */}
             <form onSubmit={handleSearchSubmit} className="relative flex-1 min-w-[200px]">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#868AA2]" />
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-faint" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 aria-label={traceMode === 'account' ? 'Account ID to trace' : 'Case ID to trace'}
                 placeholder={traceMode === 'account' ? 'Enter Account ID (e.g. ACC-000001)...' : 'Enter Case ID (e.g. FS-1042)...'}
-                className="w-full pl-9 pr-14 py-2 bg-[#F6F6FC] border border-[#E4E5F0] rounded-xl text-xs text-[#141526] font-mono focus:outline-none focus:border-[#6246EA] focus:ring-2 focus:ring-[#6246EA]/15"
+                className="w-full pl-9 pr-14 py-2 bg-well border border-line rounded-xl text-xs text-ink font-mono focus:outline-none focus:border-iris focus:ring-2 focus:ring-iris/15"
               />
               <button
                 type="submit"
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-[#6246EA] hover:bg-[#4F33D6] text-white text-[11px] font-bold rounded-lg transition-colors cursor-pointer"
+                className="btn-primary absolute right-1.5 top-1/2 -translate-y-1/2 min-h-0 px-2.5 py-1 text-[11px] rounded-lg"
               >
                 Trace
               </button>
@@ -371,8 +364,8 @@ export const FundFlowPage: React.FC = () => {
           {/* Flow Direction & Depth Controls */}
           <div className="flex flex-wrap items-center gap-3 text-xs">
             {/* Flow Direction Toggle */}
-            <div className="flex items-center gap-1.5 bg-[#F6F6FC] px-2 py-1 rounded-xl border border-[#E4E5F0]">
-              <span className="text-[11px] font-mono text-[#868AA2] pl-1">FLOW:</span>
+            <div className="flex items-center gap-1.5 bg-well px-2 py-1 rounded-xl border border-line">
+              <span className="text-xs font-medium text-faint pl-1">Direction</span>
               {(['outgoing', 'incoming', 'both'] as const).map((dir) => (
                 <button
                   key={dir}
@@ -383,8 +376,8 @@ export const FundFlowPage: React.FC = () => {
                   }}
                   className={`px-2 py-0.5 rounded-lg text-xs font-semibold capitalize transition-colors cursor-pointer ${
                     direction === dir
-                      ? 'bg-white text-[#6246EA] shadow-2xs border border-[#E4E5F0] font-bold'
-                      : 'text-[#5C6079] hover:text-[#141526]'
+                    ? 'bg-white text-iris shadow-2xs border border-line font-bold'
+                    : 'text-mute hover:text-ink'
                   }`}
                 >
                   {dir}
@@ -393,8 +386,8 @@ export const FundFlowPage: React.FC = () => {
             </div>
 
             {/* Depth Selector */}
-            <div className="flex items-center gap-2 bg-[#F6F6FC] px-3 py-1.5 rounded-xl border border-[#E4E5F0]">
-              <span className="text-[11px] font-mono text-[#868AA2]">HOPS:</span>
+            <div className="flex items-center gap-2 bg-well px-3 py-1.5 rounded-xl border border-line">
+              <span className="text-xs font-medium text-faint">Hops</span>
               <select
                 value={maxDepth}
                 onChange={(e) => {
@@ -402,8 +395,8 @@ export const FundFlowPage: React.FC = () => {
                   setMaxDepth(d);
                   syncUrlParams({ depth: d });
                 }}
-                className="text-xs font-mono font-bold text-[#141526] bg-transparent outline-none cursor-pointer"
-                aria-label="Max Hop Depth"
+                className="text-xs font-semibold text-ink bg-transparent outline-none cursor-pointer"
+                aria-label="Maximum hop depth"
               >
                 <option value={1}>1 Hop (Direct)</option>
                 <option value={2}>2 Hops (Default)</option>
@@ -416,9 +409,9 @@ export const FundFlowPage: React.FC = () => {
         </div>
 
         {/* Curated Demo Account Jump Ribbon */}
-        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-[#F6F6FC] text-xs">
-          <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#868AA2] mr-1">
-            Demo Presets:
+        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-well text-xs">
+          <span className="text-xs font-medium text-faint mr-1">
+            Examples:
           </span>
           {CURATED_DEMO_PRESETS.map((preset) => {
             const isActive = targetId === preset.id;
@@ -429,12 +422,12 @@ export const FundFlowPage: React.FC = () => {
                 onClick={() => handleSelectPreset(preset)}
                 className={`px-2.5 py-1 rounded-xl text-xs font-mono font-semibold border transition-all cursor-pointer inline-flex items-center gap-1.5 ${
                   isActive
-                    ? 'bg-[#EFECFF] text-[#4F33D6] border-[#6246EA] shadow-2xs font-bold ring-2 ring-[#6246EA]/15'
-                    : 'bg-[#F6F6FC] hover:bg-white text-[#5C6079] hover:text-[#141526] border-[#E4E5F0]'
+                  ? 'bg-iris-soft text-iris-deep border-iris shadow-2xs font-bold ring-2 ring-iris/15'
+                  : 'bg-well hover:bg-white text-mute hover:text-ink border-line'
                 }`}
               >
                 <span>{preset.id}</span>
-                <span className="text-[10px] font-normal opacity-80 hidden sm:inline">({preset.note})</span>
+                <span className="text-[11px] font-normal opacity-80 hidden sm:inline">({preset.note})</span>
               </button>
             );
           })}
@@ -459,65 +452,65 @@ export const FundFlowPage: React.FC = () => {
 
       {/* 3. Summary Metrics Strip */}
       {flowData && (
-        <div className="bg-white border border-[#E4E5F0] rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
+        <div className="bg-white border border-line rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 text-xs">
             <div>
-              <span className="text-[#868AA2] font-mono text-[10px] uppercase block">Origin Account</span>
-              <span className="text-sm sm:text-base font-bold font-mono text-[#141526] truncate block">
+              <span className="text-faint text-xs block">Origin account</span>
+              <span className="text-sm sm:text-base font-bold font-mono text-ink truncate block">
                 {flowData.summary.rootAccountId}
               </span>
-              <span className="text-[10px] text-[#5C6079] truncate block">
+              <span className="text-[11px] text-mute truncate block">
                 {flowData.summary.rootCustomerName}
               </span>
             </div>
 
             <div>
-              <span className="text-[#868AA2] font-mono text-[10px] uppercase block">
-                Direct Outflow (Hop 1)
+              <span className="text-faint text-xs block">
+                Direct outflow (hop 1)
               </span>
-              <span className="text-sm sm:text-base font-bold font-mono text-[#141526] tabular-nums">
+              <span className="font-display text-lg font-bold text-ink tabular-nums">
                 ₹{flowData.summary.directTransferAmount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
               </span>
-              <span className="text-[10px] text-[#5C6079] block">Initial disbursement</span>
+              <span className="text-[11px] text-mute block">Initial disbursement</span>
             </div>
 
             <div>
-              <span className="text-[#868AA2] font-mono text-[10px] uppercase flex items-center gap-1">
-                Attributed Exposure
+              <span className="text-faint text-xs flex items-center gap-1">
+                Attributed exposure
                 <span title="Initial flow originating from root. Downstream re-transfers are not added to this exposure total.">
-                  <Info className="w-3 h-3 text-[#6246EA]" />
+                  <Info className="w-3 h-3 text-iris" />
                 </span>
               </span>
-              <span className="text-sm sm:text-base font-bold font-mono text-[#6246EA] tabular-nums">
+              <span className="font-display text-lg font-bold text-iris-deep tabular-nums">
                 ₹{flowData.summary.attributedExposureUpperBound.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
               </span>
-              <span className="text-[10px] text-[#5C6079] block">Bounded scenario exposure</span>
+              <span className="text-[11px] text-mute block">Bounded scenario exposure</span>
             </div>
 
             <div>
-              <span className="text-[#868AA2] font-mono text-[10px] uppercase block">Ledger Movement</span>
-              <span className="text-sm sm:text-base font-bold font-mono text-[#141526] tabular-nums">
+              <span className="text-faint text-xs block">Ledger movement</span>
+              <span className="font-display text-lg font-bold text-ink tabular-nums">
                 ₹{flowData.summary.observedTotalTransferred.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
               </span>
-              <span className="text-[10px] text-[#5C6079] block">All visible legs summed</span>
+              <span className="text-[11px] text-mute block">All visible legs summed</span>
             </div>
 
             <div>
-              <span className="text-[#868AA2] font-mono text-[10px] uppercase block">Explored Scope</span>
-              <span className="text-sm sm:text-base font-bold font-mono text-[#141526]">
-                {flowData.summary.accountsCount} Accs · {flowData.summary.edgesCount} Legs
+              <span className="text-faint text-xs block">Explored scope</span>
+              <span className="font-display text-lg font-bold text-ink">
+                {flowData.summary.accountsCount} accounts, {flowData.summary.edgesCount} transfers
               </span>
-              <span className="text-[10px] text-[#5C6079] block">
-                Max Hop {flowData.summary.maxHopDepth} reached
+              <span className="text-[11px] text-mute block">
+                Deepest hop reached: {flowData.summary.maxHopDepth}
               </span>
             </div>
           </div>
 
           {/* Truncation Notice (if perimeter hit configured limits) */}
           {flowData.summary.isTruncated && (
-            <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-[#F5F3FF] border border-[#D7CFFF] text-[#4F33D6] text-xs">
+            <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-iris-wash border border-iris-line text-iris-deep text-xs">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-[#6246EA] shrink-0" />
+                <AlertTriangle className="w-4 h-4 text-iris shrink-0" />
                 <span>
                   <strong>Exploration Perimeter Truncated:</strong> {flowData.summary.truncationReason}
                 </span>
@@ -530,7 +523,7 @@ export const FundFlowPage: React.FC = () => {
                     setMaxDepth(newDepth);
                     syncUrlParams({ depth: newDepth });
                   }}
-                  className="px-2.5 py-1 bg-[#6246EA] text-white font-bold rounded-lg text-xs hover:bg-[#4F33D6] transition-colors shrink-0 cursor-pointer"
+                  className="btn-primary min-h-0 px-2.5 py-1 rounded-lg text-xs shrink-0"
                 >
                   Increase to {maxDepth + 1} Hops
                 </button>
@@ -565,8 +558,8 @@ export const FundFlowPage: React.FC = () => {
                 height="600px"
               />
             ) : (
-              <div className="h-[560px] rounded-2xl border border-[#E4E5F0] bg-white flex flex-col items-center justify-center text-xs font-mono text-[#868AA2] gap-2">
-                <RefreshCw className={`w-5 h-5 text-[#6246EA] ${loading ? 'animate-spin' : ''}`} />
+              <div className="h-[560px] rounded-2xl border border-line bg-white flex flex-col items-center justify-center text-xs text-faint gap-2">
+                <RefreshCw className={`w-5 h-5 text-iris ${loading ? 'animate-spin' : ''}`} />
                 <span>{loading ? 'Building hierarchical money flow tree...' : 'No flow records found.'}</span>
               </div>
             )
@@ -582,7 +575,7 @@ export const FundFlowPage: React.FC = () => {
               onSelectNodeById={handleSelectNodeById}
             />
           ) : (
-            <div className="p-8 text-center text-xs text-[#868AA2]">Loading transactions list...</div>
+            <div className="p-8 text-center text-xs text-faint">Loading transactions list...</div>
           )}
         </div>
 

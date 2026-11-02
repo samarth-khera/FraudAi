@@ -2,8 +2,10 @@ import React, { useMemo } from 'react';
 import { ArrowDown, CircleStop, Crosshair, GitFork, Repeat, Waypoints } from 'lucide-react';
 import { channelLabel, formatDateTime, formatMoney, formatDuration } from '../../lib/format';
 import { FLAG_LABEL, MODEL_FLAG_CODE, ROLE_ASSESSMENT } from './labels';
-import { Branch, EndingKind, TrailNode, layoutTrail, stepTitle } from './trail';
+import { Branch, EndingKind, layoutTrail, stepTitle } from './trail';
 import { Target, TrailTree } from './TrailTree';
+import { TrailOutline } from './TrailOutline';
+import { useMediaQuery } from '../../lib/useMediaQuery';
 import { roleDisplay, severityOf, useCase } from './caseModel';
 import { Badge, Disclosure, IdText, SeverityMeter, StageHeading } from './ui';
 import { ModelFlagBadge } from './intel';
@@ -32,6 +34,7 @@ export const FundTrailStage: React.FC<{
   focusToken: number;
 }> = ({ branch, onPickBranch, target, onSelect, collapsed, onToggle, onFocusBranch, focusKeys, focusToken }) => {
   const { report, trail, intel } = useCase();
+  const wide = useMediaQuery('(min-width: 768px)');
   const accounts = useMemo(() => new Map(report.accounts.map((a) => [a.account_id, a])), [report]);
   const layout = useMemo(() => layoutTrail(trail, collapsed), [trail, collapsed]);
   const outflows = trail.branches.filter((b) => b.direction === 'downstream');
@@ -75,6 +78,47 @@ export const FundTrailStage: React.FC<{
     );
   }
 
+  const picker = (
+    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-fade-x">
+      {[
+        ['Money out of the account', outflows, 'Out'],
+        ['Money into the account', inflows, 'In'],
+      ].map(([title, list, short]) =>
+        (list as Branch[]).length ? (
+          <div key={title as string} className="flex items-center gap-1.5 shrink-0">
+            <span className="px-1 text-xs font-semibold text-faint whitespace-nowrap" aria-hidden="true">
+              {short as string}
+            </span>
+            <div className="flex gap-1.5" role="listbox" aria-label={title as string}>
+              {(list as Branch[]).map((b) => {
+                const on = branch?.id === b.id;
+                const Icon = ENDING_ICON[b.ending.kind];
+                return (
+                  <button
+                    key={b.id}
+                    type="button"
+                    role="option"
+                    aria-selected={on}
+                    aria-label={`${b.label}: ${path(b, trail.rootId)}. ${b.transfers.length} transfer${b.transfers.length === 1 ? '' : 's'}. ${b.ending.title}`}
+                    title={`${path(b, trail.rootId)}. ${b.ending.title}`}
+                    onClick={() => onPickBranch(b.id)}
+                    className={`shrink-0 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-semibold whitespace-nowrap transition-[box-shadow,background-color,color] duration-150 ${
+                      on ? 'bg-white text-ink ring-2 ring-iris shadow-[var(--shadow-xs)]' : 'bg-white/60 text-mute ring-1 ring-line hover:text-ink hover:ring-iris-line hover:bg-white'
+                    }`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${b.direction === 'downstream' ? 'bg-iris' : 'bg-ice'}`} aria-hidden="true" />
+                    {b.label}
+                    <Icon className="w-3.5 h-3.5 text-faint" aria-hidden="true" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null,
+      )}
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <StageHeading
@@ -82,80 +126,42 @@ export const FundTrailStage: React.FC<{
         lead={`Each branch is one path the money can be followed along, transfer by transfer, up to ${report.request.max_depth} hops and within ${report.request.onward_window_hours} h of each receipt. Branches are separate paths, not one continuous chain.`}
       />
 
-      <div className="space-y-4">
-        {[
-          ['Money out of the account', outflows],
-          ['Money into the account', inflows],
-        ].map(([title, list]) =>
-          (list as Branch[]).length ? (
-            <div key={title as string}>
-              <h3 className="text-sm font-semibold text-ink">
-                {title as string} <span className="font-normal text-faint">{(list as Branch[]).length} branch{(list as Branch[]).length === 1 ? '' : 'es'}</span>
-              </h3>
-              <div className="mt-2 flex gap-2.5 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1" role="listbox" aria-label={title as string}>
-                {(list as Branch[]).map((b) => {
-                  const on = branch?.id === b.id;
-                  return (
-                    <button
-                      key={b.id}
-                      type="button"
-                      role="option"
-                      aria-selected={on}
-                      onClick={() => onPickBranch(b.id)}
-                      className={`shrink-0 w-[240px] rounded-2xl px-4 py-3 text-left transition-all ${
-                        on ? 'bg-white ring-2 ring-iris shadow-[var(--shadow-lift)]' : 'bg-white/70 ring-1 ring-line hover:ring-iris-line hover:bg-white'
-                      }`}
-                    >
-                      <span className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-semibold text-ink">{b.label}</span>
-                        <span className="text-xs text-faint">{b.transfers.length} transfer{b.transfers.length === 1 ? '' : 's'}</span>
-                      </span>
-                      <span className="mt-1.5 block font-mono text-[11px] leading-relaxed text-mute">{path(b, trail.rootId)}</span>
-                      <span className="mt-1.5 block text-xs text-ink-soft">{b.ending.title}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null,
+      <div className="space-y-2.5">
+        {wide ? (
+          <TrailTree
+            layout={layout}
+            rootId={trail.rootId}
+            rootName={report.victim.customer_name}
+            collapsed={collapsed}
+            onToggle={onToggle}
+            emphasis={emphasis}
+            selected={target}
+            onSelect={onSelect}
+            accounts={accounts}
+            intel={intel}
+            focusKeys={focusKeys}
+            focusToken={focusToken}
+            drawKey={trail}
+            toolbar={picker}
+          />
+        ) : (
+          <>
+            <div className="rounded-xl bg-white/70 ring-1 ring-line p-2">{picker}</div>
+            <TrailOutline trail={trail} collapsed={collapsed} onToggle={onToggle} selected={target} onSelect={onSelect} accounts={accounts} intel={intel} />
+          </>
         )}
+        <p className="text-xs text-faint leading-relaxed max-w-4xl">
+          Transfers next to the investigated account are recorded with it as a party. Links further out come from timing and
+          balances: the ledger records payments, not which money was passed on.
+        </p>
       </div>
 
-      {/* Wide screens: story beside the tree. Otherwise the tree gets the full width and the story sits under it. */}
-      <div className="grid gap-5 2xl:grid-cols-[minmax(0,380px)_minmax(0,1fr)] items-start">
-        {branch && (
-          <div className="order-2 2xl:order-1 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] 2xl:grid-cols-1 items-start">
-            <BranchStory branch={branch} target={target} onSelect={onSelect} onFocusBranch={onFocusBranch} />
-            <BranchSummary branch={branch} />
-          </div>
-        )}
-        <div className="order-1 2xl:order-2 min-w-0 space-y-3 2xl:sticky 2xl:top-6">
-          <div className="hidden md:block">
-            <TrailTree
-              layout={layout}
-              rootId={trail.rootId}
-              collapsed={collapsed}
-              onToggle={onToggle}
-              emphasis={emphasis}
-              selected={target}
-              onSelect={onSelect}
-              accounts={accounts}
-              intel={intel}
-              focusKeys={focusKeys}
-              focusToken={focusToken}
-            />
-          </div>
-          <div className="md:hidden">
-            <Disclosure summary="Every traced transfer, as a tree">
-              <Outline nodes={[trail.root]} onSelect={onSelect} />
-            </Disclosure>
-          </div>
-          <p className="text-xs text-faint leading-relaxed">
-            Transfers next to the investigated account are recorded with it as a party. Links further out come from timing and
-            balances: the ledger records payments, not which money was passed on.
-          </p>
+      {branch && (
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,360px)] items-start">
+          <BranchStory branch={branch} target={target} onSelect={onSelect} onFocusBranch={onFocusBranch} />
+          <BranchSummary branch={branch} />
         </div>
-      </div>
+      )}
 
       <Endings />
     </div>
@@ -195,10 +201,10 @@ const BranchStory: React.FC<{ branch: Branch; target: Target | null; onSelect: (
                 aria-pressed={accountOn}
                 className={`w-full rounded-xl px-3.5 py-3 text-left transition-all ${
                   id === trail.rootId
-                    ? 'bg-gradient-to-br from-[#2B1F7A] to-[#1E2F7A] text-white'
-                    : accountOn
-                      ? 'bg-iris-soft ring-2 ring-iris'
-                      : 'bg-well ring-1 ring-line hover:ring-iris-line'
+                  ? 'bg-gradient-to-br from-[#2B1F7A] to-[#1E2F7A] text-white'
+                  : accountOn
+                  ? 'bg-iris-soft ring-2 ring-iris'
+                  : 'bg-well ring-1 ring-line hover:ring-iris-line'
                 }`}
               >
                 <span className={`block text-[11px] font-semibold ${id === trail.rootId ? 'text-[#C9C2FF]' : 'text-faint'}`}>
@@ -273,7 +279,7 @@ const BranchSummary: React.FC<{ branch: Branch }> = ({ branch }) => {
   const minutes = Math.round((new Date(last.timestamp).getTime() - new Date(first.timestamp).getTime()) / 60000);
   const span = minutes < 120 ? `${minutes} min` : minutes < 2880 ? `${Math.round(minutes / 60)} h` : `${Math.round(minutes / 1440)} days`;
   return (
-    <section aria-label={`${branch.label} in brief`} className="panel p-5 2xl:hidden">
+    <section aria-label={`${branch.label} in brief`} className="panel p-5 xl:sticky xl:top-20">
       <h3 className="text-sm font-semibold text-ink">{branch.label} in brief</h3>
       <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-4">
         <div>
@@ -301,30 +307,6 @@ const BranchSummary: React.FC<{ branch: Branch }> = ({ branch }) => {
     </section>
   );
 };
-
-const Outline: React.FC<{ nodes: TrailNode[]; onSelect: (t: Target) => void }> = ({ nodes, onSelect }) => (
-  <ul className="space-y-1.5 text-sm">
-    {nodes.map((n) => (
-      <li key={n.key}>
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          {n.edge && (
-            <button type="button" className="text-iris-deep font-semibold" onClick={() => onSelect({ kind: 'transfer', id: n.edge!.transaction_id })}>
-              {n.direction === 'upstream' ? '←' : '→'} {formatMoney(n.edge.amount, n.edge.currency)}
-            </button>
-          )}
-          <button type="button" className="font-mono font-semibold text-ink" onClick={() => onSelect({ kind: 'account', id: n.accountId })}>
-            {n.accountId}
-          </button>
-        </div>
-        {n.children.length > 0 && (
-          <div className="ml-3 mt-1.5 border-l-2 border-iris-line pl-3">
-            <Outline nodes={n.children} onSelect={onSelect} />
-          </div>
-        )}
-      </li>
-    ))}
-  </ul>
-);
 
 function groupEndings(branches: Branch[]) {
   const groups = new Map<string, { key: string; kind: EndingKind; title: string; shared: string; branches: Branch[] }>();
@@ -370,7 +352,7 @@ const Endings: React.FC = () => {
         ))}
       </ul>
       {report.trace.truncation_notes.length > 0 && (
-        <div className="rounded-2xl bg-sev-elevated-soft ring-1 ring-[#F5E3A8] px-4 py-3 text-sm text-sev-elevated">
+        <div className="rounded-2xl bg-sev-elevated-soft ring-1 ring-warn-line px-4 py-3 text-sm text-sev-elevated">
           <p className="font-semibold">Limits that cut this trace short</p>
           <ul className="mt-1 space-y-1">
             {report.trace.truncation_notes.map((n) => (

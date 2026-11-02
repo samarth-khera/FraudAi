@@ -1,7 +1,7 @@
 /** Shared, non-visual pieces of the investigation view: tones, severity helpers and the case navigation context. */
 import { createContext, useContext } from 'react';
 import { AccountFinding, InvestigationResponse, RoleAssessment } from '../../types/investigation';
-import { DynamicReport, RoleCandidate } from '../../types/dynamic';
+import { DynamicReport, RestrictionState, RoleCandidate } from '../../types/dynamic';
 import { Trail } from './trail';
 
 export type Tone = 'neutral' | 'iris' | 'ice' | 'fact' | 'critical' | 'high' | 'elevated' | 'low';
@@ -72,3 +72,10 @@ export function useCase(): CaseNav {
   if (!nav) throw new Error('useCase outside CaseContext');
   return nav;
 }
+
+/** Restriction states that ask a person to review the account. Shown as a marker, never as a verdict. */
+export const REVIEW_MARK: Partial<Record<RestrictionState, string>> = {
+  additional_verification_recommended: 'Verification recommended',
+  urgent_manual_review_recommended: 'Urgent review recommended',
+  consider_temporary_restriction_review: 'Restriction review recommended',
+};

@@ -171,7 +171,7 @@ describe('V2SearchPage Component', () => {
 
     // Verify Model status loads
     await waitFor(() => {
-      expect(screen.getByText('ONLINE')).toBeInTheDocument();
+      expect(screen.getByText('ready')).toBeInTheDocument();
     });
   });
 });
@@ -430,16 +430,16 @@ describe('V2AccountDetailPage Component', () => {
     });
 
     // Verify evidence hierarchy bar
-    expect(screen.getByText(/Forensic Evidence Hierarchy & Separation of Concepts/i)).toBeInTheDocument();
-    expect(screen.getByText(/1. Observed Ledger Facts/i)).toBeInTheDocument();
-    expect(screen.getByText(/2. Rule-Based Signals/i)).toBeInTheDocument();
+    expect(screen.getByText(/How the evidence on this page is layered/i)).toBeInTheDocument();
+    expect(screen.getByText(/1\. Recorded facts/i)).toBeInTheDocument();
+    expect(screen.getByText(/2\. Fixed rules/i)).toBeInTheDocument();
     expect(screen.getByText(/3\. Model score \(machine learning\)/i)).toBeInTheDocument();
     expect(screen.queryByText(/Probability/)).toBeNull();
 
     // Verify Honest Initial State: pending analysis, no precomputed prediction
-    expect(screen.getByText(/Account Analysis Pending for Current Session/i)).toBeInTheDocument();
+    expect(screen.getByText(/Account analysis has not been run yet/i)).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /Run Live Analysis/i })[0]).toBeInTheDocument();
-    expect(screen.queryByText(/What Did the Analysis Find\?/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/What the analysis found/i)).not.toBeInTheDocument();
   });
 
   it('triggers live analysis on demand and renders findings, meters, and recommendations', async () => {
@@ -461,7 +461,7 @@ describe('V2AccountDetailPage Component', () => {
 
     // Verify fresh results appear
     await waitFor(() => {
-      expect(screen.getByText(/What Did the Analysis Find\?/i)).toBeInTheDocument();
+      expect(screen.getByText(/What the analysis found/i)).toBeInTheDocument();
     });
 
     expect(screen.getByText(/RUN-TEST-001/i)).toBeInTheDocument();
@@ -509,7 +509,7 @@ describe('V2AccountDetailPage Component', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/Account Not Found in Core Ledger/i)).toBeInTheDocument();
+      expect(screen.getByText(/Account not found in the ledger/i)).toBeInTheDocument();
     });
 
     expect(screen.getByText(/Those accounts are not in the synthetic ledger/i)).toBeInTheDocument();

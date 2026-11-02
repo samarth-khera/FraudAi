@@ -1,5 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams, Link } from 'react-router-dom';
+import { MotionConfig } from 'framer-motion';
 import { AppLayout } from './components/layout/AppLayout';
 import { HomePage, SAMPLE_CASE_ID } from './pages/HomePage';
 import { InvestigationsPage } from './pages/InvestigationsPage';
@@ -51,9 +52,9 @@ const Redirect: React.FC<{ to: string | ((params: Record<string, string | undefi
 };
 
 const NotFoundPage: React.FC = () => (
-  <div className="max-w-xl space-y-4 py-10">
-    <h1 className="font-display text-2xl font-extrabold">Page not found</h1>
-    <p className="text-sm text-[#5C6079]">There is no page at this address.</p>
+  <div className="max-w-xl space-y-4 py-10" data-reveal>
+    <h1 className="page-title">Page not found</h1>
+    <p className="lede">There is no page at this address. Check the link, or start from one of these.</p>
     <div className="flex gap-3">
       <Link to="/investigate" className="btn-primary">Investigate an account</Link>
       <Link to="/" className="btn-secondary">Overview</Link>
@@ -101,10 +102,13 @@ export const AppRoutes: React.FC = () => (
   </Routes>
 );
 
+/** Motion follows the system setting: with reduced motion, movement is dropped and only fades remain. */
 export const App: React.FC = () => (
-  <BrowserRouter>
-    <AppRoutes />
-  </BrowserRouter>
+  <MotionConfig reducedMotion="user">
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
+  </MotionConfig>
 );
 
 export default App;

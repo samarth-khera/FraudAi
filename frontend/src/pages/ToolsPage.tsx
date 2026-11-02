@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BarChart3, FileSearch, GitBranch, Search, Calculator } from 'lucide-react';
+import { PageHeader } from '../components/ui/PageHeader';
 
 const TOOLS = [
   {
@@ -42,29 +43,26 @@ const TOOLS = [
 
 export const ToolsPage: React.FC = () => (
   <div className="space-y-6">
-    <div>
-      <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">Tools</h1>
-      <p className="mt-1.5 text-sm text-[#5C6079] max-w-2xl">
-        Technical views for checking the models and the raw records. You do not need them to work a case; everything an
-        investigation needs is inside the case itself.
-      </p>
-    </div>
-    <ul className="grid gap-4 md:grid-cols-2">
+    <PageHeader
+      title="Reference tools"
+      description="Technical views for checking the models and the raw records. You do not need them to work a case; everything an investigation needs is inside the case itself."
+    />
+    <ul data-reveal className="grid gap-4 md:grid-cols-2">
       {TOOLS.map((t) => {
         const Icon = t.icon;
         return (
           <li key={t.to}>
             <Link to={t.to} className="card-interactive flex h-full flex-col p-5">
               <span className="flex items-center gap-3">
-                <span className="w-9 h-9 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0] text-[#5C6079] flex items-center justify-center">
-                  <Icon className="w-4.5 h-4.5" aria-hidden="true" />
+                <span className="w-10 h-10 rounded-xl bg-iris-wash ring-1 ring-iris-line text-iris flex items-center justify-center">
+                  <Icon className="w-[18px] h-[18px]" aria-hidden="true" />
                 </span>
-                <span className="font-semibold text-[#141526]">{t.title}</span>
+                <span className="font-semibold text-ink">{t.title}</span>
               </span>
-              <span className="mt-3 text-sm text-[#141526] leading-relaxed">{t.text}</span>
-              <span className="mt-2 text-xs text-[#5C6079] leading-relaxed">{t.caveat}</span>
-              <span className="mt-auto pt-4 inline-flex items-center gap-1 text-sm font-semibold text-[#4F33D6]">
-                Open <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              <span className="mt-3 text-sm text-ink leading-relaxed">{t.text}</span>
+              <span className="mt-2 text-xs text-mute leading-relaxed">{t.caveat}</span>
+              <span className="mt-auto pt-4 inline-flex items-center gap-1 text-sm font-semibold text-iris-deep">
+                Open {t.title.toLowerCase()} <ArrowRight className="w-4 h-4" aria-hidden="true" />
               </span>
             </Link>
           </li>

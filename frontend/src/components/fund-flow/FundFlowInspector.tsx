@@ -79,13 +79,13 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
   const getCustomerIcon = (customerType?: string) => {
     switch (customerType?.toLowerCase()) {
       case 'corporate':
-        return <Building className="w-4 h-4 text-[#5C6079]" />;
+        return <Building className="w-4 h-4 text-mute" />;
       case 'student':
-        return <GraduationCap className="w-4 h-4 text-[#3B82F6]" />;
+        return <GraduationCap className="w-4 h-4 text-ice" />;
       case 'sme':
-        return <CreditCard className="w-4 h-4 text-[#4F33D6]" />;
+        return <CreditCard className="w-4 h-4 text-iris-deep" />;
       default:
-        return <User className="w-4 h-4 text-[#868AA2]" />;
+        return <User className="w-4 h-4 text-faint" />;
     }
   };
 
@@ -101,37 +101,37 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
         : `/cases/${encodeURIComponent(caseId)}?section=accounts&account=${encodeURIComponent(selectedNode.id)}`;
 
     return (
-      <div className="bg-white border border-[#E4E5F0] rounded-2xl p-5 shadow-xs text-xs space-y-4">
+      <div className="bg-white border border-line rounded-2xl p-5 shadow-xs text-xs space-y-4">
         {/* Header */}
-        <div className="flex items-start justify-between gap-2 pb-3 border-b border-[#E4E5F0]">
+        <div className="flex items-start justify-between gap-2 pb-3 border-b border-line">
           <div className="flex items-start gap-2.5 min-w-0">
             <span
               className={`p-2 rounded-xl shrink-0 ${
                 selectedNode.isRoot
-                  ? 'bg-[#6246EA] text-white shadow-xs'
-                  : 'bg-[#F6F6FC] border border-[#E4E5F0]'
+                ? 'bg-white text-ink ring-1 ring-line shadow-[var(--shadow-xs)]'
+                : 'bg-well border border-line'
               }`}
             >
               {getCustomerIcon(selectedNode.customerType)}
             </span>
             <div className="min-w-0">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-[#6246EA] font-mono block">
+              <span className="text-[11px] font-bold text-iris font-mono block">
                 {selectedNode.isRoot
                   ? 'ROOT ORIGIN ACCOUNT'
                   : `HOP ${selectedNode.hop} COUNTERPARTY`}
               </span>
-              <h3 className="font-bold text-[#141526] text-base font-display truncate">
+              <h3 className="font-bold text-ink text-base font-display truncate">
                 {selectedNode.name}
               </h3>
               <div className="flex items-center gap-2 mt-1">
-                <span className="font-mono text-[#5C6079] text-xs">{selectedNode.id}</span>
+                <span className="font-mono text-mute text-xs">{selectedNode.id}</span>
                 <button
                   type="button"
                   onClick={() => onFocusNode?.(selectedNode.id)}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-[#6246EA]/40 bg-[#F5F3FF] text-[#4F33D6] hover:bg-[#EFECFF] text-[10px] font-semibold transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-iris/40 bg-iris-wash text-iris-deep hover:bg-iris-soft text-[11px] font-semibold transition-colors cursor-pointer"
                   title="Focus and center this account in tree view"
                 >
-                  <LocateFixed className="w-3 h-3 text-[#6246EA]" />
+                  <LocateFixed className="w-3 h-3 text-iris" />
                   <span>Focus in Tree</span>
                 </button>
               </div>
@@ -141,7 +141,7 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="text-[#868AA2] hover:text-[#141526] p-1 rounded-lg hover:bg-[#F6F6FC] cursor-pointer"
+            className="text-faint hover:text-ink p-1 rounded-lg hover:bg-well cursor-pointer"
             title="Close Inspector"
             aria-label="Close Inspector"
           >
@@ -151,29 +151,29 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
 
         {/* Verification & KYC Snapshot */}
         <div className="grid grid-cols-2 gap-2 font-mono text-[11px]">
-          <div className="bg-[#F6F6FC] p-2.5 rounded-xl border border-[#E4E5F0]/70">
-            <span className="text-[#868AA2] block text-[10px]">Customer Type</span>
-            <span className="capitalize text-[#141526] font-semibold">
+          <div className="bg-well p-2.5 rounded-xl border border-line/70">
+            <span className="text-faint block text-[11px]">Customer Type</span>
+            <span className="capitalize text-ink font-semibold">
               {selectedNode.customerType.replace(/_/g, ' ')}
             </span>
           </div>
 
-          <div className="bg-[#F6F6FC] p-2.5 rounded-xl border border-[#E4E5F0]/70">
-            <span className="text-[#868AA2] block text-[10px]">Verification Tier</span>
-            <span className="capitalize text-[#141526] font-semibold">
+          <div className="bg-well p-2.5 rounded-xl border border-line/70">
+            <span className="text-faint block text-[11px]">Verification Tier</span>
+            <span className="capitalize text-ink font-semibold">
               {selectedNode.kycTier.replace(/_/g, ' ')}
             </span>
           </div>
 
           {selectedNode.currentBalance !== null && (
-            <div className="col-span-2 bg-[#F6F6FC] p-2.5 rounded-xl border border-[#E4E5F0]/70 flex items-center justify-between">
+            <div className="col-span-2 bg-well p-2.5 rounded-xl border border-line/70 flex items-center justify-between">
               <div>
-                <span className="text-[#868AA2] block text-[10px]">Current Balance</span>
-                <span className="font-bold text-[#141526] text-sm tabular-nums">
+                <span className="text-faint block text-[11px]">Current Balance</span>
+                <span className="font-bold text-ink text-sm tabular-nums">
                   ₹{selectedNode.currentBalance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                 </span>
               </div>
-              <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-white border border-[#E4E5F0] text-[#5C6079]">
+              <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-white border border-line text-mute">
                 {selectedNode.statusLabel}
               </span>
             </div>
@@ -183,8 +183,8 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
         {/* Connected Transactions in Tree */}
         <div className="space-y-2 pt-1">
           <div className="flex items-center justify-between">
-            <span className="font-bold text-[#141526] text-xs">Connected Tree Transfers</span>
-            <span className="font-mono text-[11px] text-[#5C6079]">
+            <span className="font-bold text-ink text-xs">Connected Tree Transfers</span>
+            <span className="font-mono text-[11px] text-mute">
               {connectedTransfers.incoming.length} In · {connectedTransfers.outgoing.length} Out
             </span>
           </div>
@@ -194,14 +194,14 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
               <div
                 key={e.id}
                 onClick={() => onSelectEdge(e)}
-                className="p-2 rounded-xl bg-[#EAF7EE] border border-[#BBF7D0] flex items-center justify-between gap-1 text-[#166534] hover:border-[#22C55E] cursor-pointer transition-colors"
+                className="p-2 rounded-xl bg-ok-soft border border-ok-line flex items-center justify-between gap-1 text-ok hover:border-ok-fill cursor-pointer transition-colors"
                 title="Click to inspect this transfer"
               >
                 <div className="flex items-center gap-1.5 truncate">
-                  <ArrowDownLeft className="w-3.5 h-3.5 text-[#22C55E] shrink-0" />
+                  <ArrowDownLeft className="w-3.5 h-3.5 text-ok-fill shrink-0" />
                   <span className="truncate">From {e.source}</span>
                 </div>
-                <span className="font-bold text-[#166534] shrink-0">
+                <span className="font-bold text-ok shrink-0">
                   +₹{e.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                 </span>
               </div>
@@ -211,21 +211,21 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
               <div
                 key={e.id}
                 onClick={() => onSelectEdge(e)}
-                className="p-2 rounded-xl bg-[#FFF0F2] border border-[#FECDD3] flex items-center justify-between gap-1 text-[#BE123C] hover:border-[#E11D48] cursor-pointer transition-colors"
+                className="p-2 rounded-xl bg-danger-soft border border-danger-line flex items-center justify-between gap-1 text-danger hover:border-danger cursor-pointer transition-colors"
                 title="Click to inspect this transfer"
               >
                 <div className="flex items-center gap-1.5 truncate">
-                  <ArrowUpRight className="w-3.5 h-3.5 text-[#E11D48] shrink-0" />
+                  <ArrowUpRight className="w-3.5 h-3.5 text-danger shrink-0" />
                   <span className="truncate">To {e.target}</span>
                 </div>
-                <span className="font-bold text-[#BE123C] shrink-0">
+                <span className="font-bold text-danger shrink-0">
                   -₹{e.amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                 </span>
               </div>
             ))}
 
             {connectedTransfers.incoming.length === 0 && connectedTransfers.outgoing.length === 0 && (
-              <p className="text-[#868AA2] italic text-xs py-2 text-center">
+              <p className="text-faint italic text-xs py-2 text-center">
                 No direct transfers recorded for this node in the active view window.
               </p>
             )}
@@ -234,12 +234,12 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
 
         {/* Live Analysis Feedback (if executed) */}
         {analysisResult && (
-          <div className="p-3 rounded-xl bg-[#F5F3FF] border border-[#D7CFFF] text-[#4F33D6] space-y-1">
+          <div className="p-3 rounded-xl bg-iris-wash border border-iris-line text-iris-deep space-y-1">
             <div className="flex items-center gap-1.5 font-bold text-xs">
-              <Sparkles className="w-3.5 h-3.5 text-[#6246EA]" />
+              <Sparkles className="w-3.5 h-3.5 text-iris" />
               <span>Live ML Assessment Complete</span>
             </div>
-            <p className="text-[11px] leading-tight text-[#5C6079]">
+            <p className="text-[11px] leading-tight text-mute">
               Calculated risk score: <strong>{analysisResult.assessment?.risk_score ?? 'N/A'}/100</strong> ({analysisResult.assessment?.risk_level ?? 'Normal'}).
             </p>
           </div>
@@ -252,12 +252,12 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
         )}
 
         {/* Primary Action Buttons */}
-        <div className="pt-2 border-t border-[#E4E5F0] space-y-2">
+        <div className="pt-2 border-t border-line space-y-2">
           {isV2Account ? (
             <>
               <Link
                 to={accountUrl}
-                className="w-full py-2.5 px-3 rounded-xl bg-[#6246EA] hover:bg-[#4F33D6] text-white font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
+                className="btn-primary w-full"
               >
                 <span>Open Account 360° Profile</span>
                 <ArrowRight className="w-4 h-4" />
@@ -265,17 +265,17 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
 
               <Link
                 to={`${accountUrl}?tab=transactions`}
-                className="w-full py-2 px-3 rounded-xl bg-white hover:bg-[#F6F6FC] text-[#141526] border border-[#E4E5F0] font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                className="w-full py-2 px-3 rounded-xl bg-white hover:bg-well text-ink border border-line font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
                 <span>View Ledger Transactions</span>
-                <ExternalLink className="w-3.5 h-3.5 text-[#868AA2]" />
+                <ExternalLink className="w-3.5 h-3.5 text-faint" />
               </Link>
             </>
           ) : (
             <>
               <Link
                 to={`/cases/${encodeURIComponent(caseId)}?section=review&account=${encodeURIComponent(selectedNode.id)}`}
-                className="w-full py-2.5 px-3 rounded-xl bg-[#6246EA] hover:bg-[#4F33D6] text-white font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
+                className="btn-primary w-full"
               >
                 <span>Record a decision in case {caseId}</span>
                 <ArrowRight className="w-4 h-4" />
@@ -283,10 +283,10 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
 
               <Link
                 to={`/cases/${encodeURIComponent(caseId)}?section=accounts&account=${encodeURIComponent(selectedNode.id)}`}
-                className="w-full py-2 px-3 rounded-xl bg-white hover:bg-[#F6F6FC] text-[#141526] border border-[#E4E5F0] font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                className="w-full py-2 px-3 rounded-xl bg-white hover:bg-well text-ink border border-line font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
                 <span>Account details in case</span>
-                <ExternalLink className="w-3.5 h-3.5 text-[#868AA2]" />
+                <ExternalLink className="w-3.5 h-3.5 text-faint" />
               </Link>
             </>
           )}
@@ -296,7 +296,7 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
               type="button"
               disabled={runningAnalysis}
               onClick={() => handleRunLiveAnalysis(selectedNode.id)}
-              className="w-full py-2 px-3 rounded-xl bg-[#F6F6FC] hover:bg-[#EFECFF] text-[#5C6079] hover:text-[#6246EA] border border-[#E4E5F0] font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+              className="w-full py-2 px-3 rounded-xl bg-well hover:bg-iris-soft text-mute hover:text-iris border border-line font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
             >
               <Play className={`w-3.5 h-3.5 ${runningAnalysis ? 'animate-spin' : ''}`} />
               <span>{runningAnalysis ? 'Running Live Analysis...' : 'Run Live ML Analysis'}</span>
@@ -306,7 +306,7 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
           {mode === 'case' && (
             <Link
               to={`/cases/${encodeURIComponent(caseId)}`}
-              className="w-full py-2 px-3 rounded-xl bg-[#F6F6FC] hover:bg-white text-[#5C6079] hover:text-[#141526] border border-[#E4E5F0] font-semibold flex items-center justify-center gap-1.5 transition-colors text-center"
+              className="w-full py-2 px-3 rounded-xl bg-well hover:bg-white text-mute hover:text-ink border border-line font-semibold flex items-center justify-center gap-1.5 transition-colors text-center"
             >
               <span>Open case {caseId}</span>
             </Link>
@@ -321,23 +321,23 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
     const targetNode = findNode(selectedEdge.target);
 
     return (
-      <div className="bg-white border border-[#E4E5F0] rounded-2xl p-5 shadow-xs text-xs space-y-4">
+      <div className="bg-white border border-line rounded-2xl p-5 shadow-xs text-xs space-y-4">
         {/* Header */}
-        <div className="flex items-start justify-between gap-2 pb-3 border-b border-[#E4E5F0]">
+        <div className="flex items-start justify-between gap-2 pb-3 border-b border-line">
           <div>
-            <span className="text-[10px] uppercase font-bold tracking-wider text-[#6246EA] font-mono block">
+            <span className="text-[11px] font-bold text-iris font-mono block">
               {selectedEdge.isCycle ? 'CIRCULAR TRANSFER LOOP' : `HOP ${selectedEdge.hop} DIRECTED LEG`}
             </span>
-            <h3 className="font-bold text-[#141526] text-lg font-mono">
+            <h3 className="font-bold text-ink text-lg font-mono">
               ₹{selectedEdge.amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
             </h3>
-            <span className="font-mono text-[#5C6079] text-xs">{selectedEdge.id}</span>
+            <span className="font-mono text-mute text-xs">{selectedEdge.id}</span>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="text-[#868AA2] hover:text-[#141526] p-1 rounded-lg hover:bg-[#F6F6FC] cursor-pointer"
+            className="text-faint hover:text-ink p-1 rounded-lg hover:bg-well cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -345,28 +345,28 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
 
         {/* Counterparty Connections */}
         <div className="space-y-2.5 font-mono text-xs">
-          <div className="p-2.5 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0] flex items-center justify-between">
-            <span className="text-[#868AA2] text-[11px]">Origin Account:</span>
+          <div className="p-2.5 rounded-xl bg-well border border-line flex items-center justify-between">
+            <span className="text-faint text-[11px]">Origin Account:</span>
             <button
               type="button"
               onClick={() => {
                 if (sourceNode) onSelectNode(sourceNode);
               }}
-              className="font-bold text-[#6246EA] hover:underline flex items-center gap-1 cursor-pointer"
+              className="font-bold text-iris hover:underline flex items-center gap-1 cursor-pointer"
             >
               <span>{selectedEdge.source}</span>
               <ArrowUpRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <div className="p-2.5 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0] flex items-center justify-between">
-            <span className="text-[#868AA2] text-[11px]">Destination:</span>
+          <div className="p-2.5 rounded-xl bg-well border border-line flex items-center justify-between">
+            <span className="text-faint text-[11px]">Destination:</span>
             <button
               type="button"
               onClick={() => {
                 if (targetNode) onSelectNode(targetNode);
               }}
-              className="font-bold text-[#6246EA] hover:underline flex items-center gap-1 cursor-pointer"
+              className="font-bold text-iris hover:underline flex items-center gap-1 cursor-pointer"
             >
               <span>{selectedEdge.target}</span>
               <ArrowUpRight className="w-3.5 h-3.5" />
@@ -374,26 +374,26 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-[11px]">
-            <div className="p-2 bg-[#F6F6FC] rounded-xl border border-[#E4E5F0]/70">
-              <span className="text-[#868AA2] block text-[10px]">Payment Rail</span>
-              <span className="font-bold text-[#141526]">{selectedEdge.channel}</span>
+            <div className="p-2 bg-well rounded-xl border border-line/70">
+              <span className="text-faint block text-[11px]">Payment Rail</span>
+              <span className="font-bold text-ink">{selectedEdge.channel}</span>
             </div>
-            <div className="p-2 bg-[#F6F6FC] rounded-xl border border-[#E4E5F0]/70">
-              <span className="text-[#868AA2] block text-[10px]">Hop Distance</span>
-              <span className="font-bold text-[#141526]">Hop {selectedEdge.hop}</span>
+            <div className="p-2 bg-well rounded-xl border border-line/70">
+              <span className="text-faint block text-[11px]">Hop Distance</span>
+              <span className="font-bold text-ink">Hop {selectedEdge.hop}</span>
             </div>
           </div>
 
-          <div className="p-2 bg-[#F6F6FC] rounded-xl border border-[#E4E5F0]/70 text-[11px]">
-            <span className="text-[#868AA2] block text-[10px]">Timestamp</span>
-            <span className="font-semibold text-[#141526]">
+          <div className="p-2 bg-well rounded-xl border border-line/70 text-[11px]">
+            <span className="text-faint block text-[11px]">Timestamp</span>
+            <span className="font-semibold text-ink">
               {selectedEdge.timestamp ? selectedEdge.timestamp.replace('T', ' ') : 'N/A'}
             </span>
           </div>
 
           {selectedEdge.attributedAmount !== null && (
-            <div className="p-2.5 bg-[#EFECFF] rounded-xl border border-[#D7CFFF] text-[#4F33D6]">
-              <span className="text-[10px] uppercase font-bold block">Attributed Fund Exposure</span>
+            <div className="p-2.5 bg-iris-soft rounded-xl border border-iris-line text-iris-deep">
+              <span className="text-[11px] font-bold block">Attributed Fund Exposure</span>
               <span className="font-bold text-sm">₹{selectedEdge.attributedAmount.toLocaleString('en-IN')}</span>
             </div>
           )}
@@ -405,16 +405,16 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
 
   // Empty State: Helpful guidance & quick account selector
   return (
-    <div className="bg-white border border-[#E4E5F0] rounded-2xl p-5 shadow-xs text-xs space-y-4">
-      <div className="flex items-start gap-3 pb-3 border-b border-[#E4E5F0]">
-        <div className="p-2.5 rounded-xl bg-[#EFECFF] text-[#6246EA] border border-[#D7CFFF]">
+    <div className="bg-white border border-line rounded-2xl p-5 shadow-xs text-xs space-y-4">
+      <div className="flex items-start gap-3 pb-3 border-b border-line">
+        <div className="p-2.5 rounded-xl bg-iris-soft text-iris border border-iris-line">
           <GitBranch className="w-5 h-5" />
         </div>
         <div>
-          <h3 className="text-sm font-bold text-[#141526] font-display">
+          <h3 className="text-sm font-bold text-ink font-display">
             Selected Account Inspector
           </h3>
-          <p className="text-[#5C6079] text-xs leading-relaxed mt-0.5">
+          <p className="text-mute text-xs leading-relaxed mt-0.5">
             Click any account card or transfer line in the tree to inspect counterparty relationships, verify KYC status, and follow the funds step by step.
           </p>
         </div>
@@ -423,7 +423,7 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
       {/* Quick Jump Account Buttons */}
       {allNodes.length > 0 && (
         <div className="space-y-2">
-          <span className="text-[10px] font-mono font-bold text-[#868AA2] uppercase tracking-wider block">
+          <span className="text-[11px] font-mono font-bold text-faint block">
             Accounts in Tree ({allNodes.length})
           </span>
           <div className="max-h-72 overflow-y-auto space-y-1.5 pr-1">
@@ -435,15 +435,15 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
                   onSelectNode(n);
                   onFocusNode?.(n.id);
                 }}
-                className="w-full p-2.5 rounded-xl bg-[#F6F6FC] hover:bg-[#EFECFF] border border-[#E4E5F0] hover:border-[#6246EA] text-left transition-colors flex items-center justify-between gap-2 cursor-pointer"
+                className="w-full p-2.5 rounded-xl bg-well hover:bg-iris-soft border border-line hover:border-iris text-left transition-colors flex items-center justify-between gap-2 cursor-pointer"
               >
                 <div className="min-w-0">
-                  <div className="font-mono font-bold text-xs text-[#141526] truncate">
+                  <div className="font-mono font-bold text-xs text-ink truncate">
                     {n.id}
                   </div>
-                  <div className="text-[11px] text-[#5C6079] truncate">{n.name}</div>
+                  <div className="text-[11px] text-mute truncate">{n.name}</div>
                 </div>
-                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-white border border-[#E4E5F0] text-[#5C6079] shrink-0">
+                <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-md bg-white border border-line text-mute shrink-0">
                   {n.isRoot ? 'Root' : `Hop ${n.hop}`}
                 </span>
               </button>
@@ -453,8 +453,8 @@ export const FundFlowInspector: React.FC<FundFlowInspectorProps> = ({
       )}
 
       {/* Lineage Anti-Double-Counting Guardrail Box */}
-      <div className="p-3.5 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0] text-[11px] text-[#5C6079] space-y-1.5">
-        <span className="font-bold text-[#141526] block">Forensic Accounting Rule</span>
+      <div className="p-3.5 rounded-xl bg-well border border-line text-[11px] text-mute space-y-1.5">
+        <span className="font-bold text-ink block">Forensic Accounting Rule</span>
         <p className="leading-relaxed">
           Initial transfers represent the root exposure ceiling. Downstream re-transfers are ledger movements and must not be summed into an inflated loss total.
         </p>

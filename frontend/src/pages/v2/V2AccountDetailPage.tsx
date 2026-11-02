@@ -41,7 +41,7 @@ import {
   Cpu,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { gsap } from 'gsap';
+import { EvidenceTag } from '../../components/ui/EvidenceTag';
 import { v2Api, ApiError } from '../../services/v2Api';
 import {
   V2AccountAssessmentResponse,
@@ -194,26 +194,6 @@ export const V2AccountDetailPage: React.FC = () => {
       .catch(() => setLoadingTrace(false));
   }, [accountId, traceDirection, traceDepth, activeTab, errorNotFound]);
 
-  // 4. Coordinated GSAP page entrance
-  useEffect(() => {
-    const prefersReducedMotion =
-      typeof window !== 'undefined' &&
-      typeof window.matchMedia === 'function' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    if (prefersReducedMotion || !pageContainerRef.current || loadingProfile) return;
-
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        '.gsap-fade-in',
-        { opacity: 0, y: 12 },
-        { opacity: 1, y: 0, duration: 0.45, stagger: 0.06, ease: 'power2.out' }
-      );
-    }, pageContainerRef);
-
-    return () => ctx.revert();
-  }, [loadingProfile, liveAnalysis]);
-
   // 5. Trigger Fresh Live Analysis
   const handleRunLiveAnalysis = async () => {
     if (!accountId || isAnalyzing) return;
@@ -297,30 +277,30 @@ export const V2AccountDetailPage: React.FC = () => {
     return (
       <div className="flex flex-col">
         <div className="max-w-4xl w-full mx-auto px-4 py-16 flex flex-col items-center justify-center text-center space-y-6">
-          <div className="w-16 h-16 rounded-3xl bg-[#EFECFF] border border-[#D7CFFF] flex items-center justify-center text-[#6246EA] shadow-sm">
+          <div className="w-16 h-16 rounded-2xl bg-iris-soft border border-iris-line flex items-center justify-center text-iris shadow-sm">
             <AlertTriangle className="w-8 h-8" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-2xl font-black text-[#141526] font-display">
-              Account Not Found in Core Ledger
+            <h2 className="text-2xl font-bold text-ink font-display">
+              Account not found in the ledger
             </h2>
-            <p className="text-sm text-[#5C6079] max-w-md mx-auto">
-              The identifier <code className="bg-[#F6F6FC] border border-[#E4E5F0] px-2 py-0.5 rounded font-mono font-bold text-[#141526]">{accountId}</code> was not found in the V2 core banking ledger.
+            <p className="text-sm text-mute max-w-md mx-auto">
+              The identifier <code className="bg-well border border-line px-2 py-0.5 rounded font-mono font-bold text-ink">{accountId}</code> was not found in the V2 core banking ledger.
             </p>
-            <p className="text-xs text-[#868AA2] max-w-md mx-auto leading-relaxed">
+            <p className="text-xs text-faint max-w-md mx-auto leading-relaxed">
               Some cases keep their own account records (for example, A100 in case FS-1042). Those accounts are not in the synthetic ledger; open them from their case instead.
             </p>
           </div>
           <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
             <Link
               to="/cases"
-              className="px-5 py-2.5 rounded-xl bg-[#6246EA] hover:bg-[#4F33D6] text-white text-xs font-bold transition-all shadow-xs"
+              className="btn-primary"
             >
               Open investigations
             </Link>
             <Link
               to="/tools/accounts"
-              className="px-5 py-2.5 rounded-xl bg-white hover:bg-[#F6F6FC] border border-[#E4E5F0] text-[#141526] text-xs font-bold transition-all shadow-xs"
+              className="px-5 py-2.5 rounded-xl bg-white hover:bg-well border border-line text-ink text-xs font-bold transition-all shadow-xs"
             >
               Return to Search Workspace
             </Link>
@@ -335,12 +315,12 @@ export const V2AccountDetailPage: React.FC = () => {
     return (
       <div className="flex flex-col">
         <div className="flex-1 max-w-5xl w-full mx-auto px-4 py-16 flex flex-col items-center justify-center space-y-4">
-          <div className="w-12 h-12 rounded-2xl bg-[#EFECFF] border border-[#D7CFFF] flex items-center justify-center text-[#6246EA] animate-spin">
+          <div className="w-12 h-12 rounded-2xl bg-iris-soft border border-iris-line flex items-center justify-center text-iris animate-spin">
             <RefreshCw className="w-6 h-6" />
           </div>
           <div className="text-center space-y-1">
-            <h3 className="text-base font-bold text-[#141526]">Loading Account Ledger Profile</h3>
-            <p className="text-xs text-[#5C6079] font-mono">Querying account balances and transaction ledger for {accountId}...</p>
+            <h3 className="text-base font-bold text-ink">Loading the account</h3>
+            <p className="text-xs text-mute font-mono">Querying account balances and transaction ledger for {accountId}...</p>
           </div>
         </div>
       </div>
@@ -353,22 +333,6 @@ export const V2AccountDetailPage: React.FC = () => {
       {/* Main Workspace Container: 1280-1360px desktop width */}
       <div className="w-full space-y-6">
         
-        {/* Breadcrumb & Navigation Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-[#5C6079]">
-          <div className="flex items-center gap-2">
-            <Link
-              to="/tools/accounts"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#E4E5F0] text-[#5C6079] hover:text-[#141526] hover:border-[#D5D7E6] transition-all font-medium shadow-2xs"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Search</span>
-            </Link>
-            <span className="text-[#868AA2]">/</span>
-            <span className="font-mono font-medium text-[#141526]">{accountId}</span>
-          </div>
-
-        </div>
-
         {/* Reference Dashboard: Header Navigation and Hero Row A */}
         <V2BankingHeroHeader
           profile={profile}
@@ -380,30 +344,19 @@ export const V2AccountDetailPage: React.FC = () => {
           transactionCount={(profile?.metrics.total_incoming_txns || 0) + (profile?.metrics.total_outgoing_txns || 0)}
         />
 
-        {/* Evidence Hierarchy Guiding Notice */}
-        <div className="bg-white rounded-2xl border border-[#E4E5F0] p-4 text-xs text-[#5C6079] flex flex-col md:flex-row md:items-center justify-between gap-3 gsap-fade-in shadow-2xs">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#6246EA]" />
-            <strong className="text-[#141526] font-bold">Forensic Evidence Hierarchy & Separation of Concepts:</strong>
-          </div>
-          <div className="flex flex-wrap items-center gap-3 font-mono text-[11px]">
-            <span className="px-2.5 py-1 rounded-lg bg-[#F6F6FC] border border-[#E4E5F0] text-[#141526]">
-              1. Observed Ledger Facts
-            </span>
-            <span className="text-[#868AA2]">→</span>
-            <span className="px-2.5 py-1 rounded-lg bg-[#F6F6FC] border border-[#E4E5F0] text-[#141526]">
-              2. Rule-Based Signals
-            </span>
-            <span className="text-[#868AA2]">→</span>
-            <span className="px-2.5 py-1 rounded-lg bg-[#F6F6FC] border border-[#E4E5F0] text-[#141526]">
-              3. Model score (machine learning)
-            </span>
-            <span className="text-[#868AA2]">→</span>
-            <span className="px-2.5 py-1 rounded-lg bg-[#EFECFF] border border-[#D7CFFF] text-[#6246EA] font-bold">
-              4. Human review (in a case)
-            </span>
-          </div>
-        </div>
+        {/* How the evidence on this page is layered: a real sequence, from recorded facts to a person's decision. */}
+        <section data-reveal aria-labelledby="layers-h" className="rounded-2xl bg-white/75 ring-1 ring-line px-5 py-4 flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-6">
+          <h2 id="layers-h" className="text-[13px] font-semibold text-ink shrink-0">How the evidence on this page is layered</h2>
+          <ol className="flex flex-wrap items-center gap-x-2 gap-y-2 text-xs text-mute">
+            <li className="inline-flex items-center gap-1.5"><EvidenceTag kind="observed" label="1. Recorded facts" /></li>
+            <li aria-hidden="true" className="text-faint">→</li>
+            <li className="inline-flex items-center gap-1.5"><EvidenceTag kind="rule" label="2. Fixed rules" /></li>
+            <li aria-hidden="true" className="text-faint">→</li>
+            <li className="inline-flex items-center gap-1.5"><EvidenceTag kind="model" label="3. Model score (machine learning)" /></li>
+            <li aria-hidden="true" className="text-faint">→</li>
+            <li className="inline-flex items-center gap-1 rounded-md bg-iris-soft ring-1 ring-iris-line px-1.5 py-0.5 text-[11px] font-semibold text-iris-deep">4. Human review (in a case)</li>
+          </ol>
+        </section>
 
         <div ref={tabsRef} className="hidden" />
 
@@ -411,14 +364,14 @@ export const V2AccountDetailPage: React.FC = () => {
         {/* TAB 1: OVERVIEW & RISK INTELLIGENCE                                       */}
         {/* ========================================================================= */}
         {activeTab === 'assessment' && (
-          <div className="space-y-6 gsap-fade-in">
+          <div data-reveal className="space-y-6">
 
             {/* Error Banner if live analysis failed */}
             {analysisError && (
-              <div className="bg-[#FEF2F2] border border-[#FCA5A5] rounded-2xl p-4 text-xs text-[#DC2626] flex items-center gap-3">
+              <div className="bg-danger-soft border border-danger-line rounded-2xl p-4 text-xs text-danger-fill flex items-center gap-3">
                 <AlertTriangle className="w-5 h-5 shrink-0" />
                 <div>
-                  <strong className="font-bold">Live Analysis Execution Error: </strong>
+                  <strong className="font-bold">The live analysis failed: </strong>
                   <span>{analysisError}</span>
                 </div>
               </div>
@@ -430,45 +383,45 @@ export const V2AccountDetailPage: React.FC = () => {
 
             {/* Case B1: Analysis Not Yet Run */}
             {!liveAnalysis && !isAnalyzing && (
-              <div className="bg-white rounded-3xl border border-[#E4E5F0] p-8 sm:p-10 text-center shadow-xs space-y-6">
-                <div className="w-16 h-16 rounded-3xl bg-[#EFECFF] border border-[#D7CFFF] flex items-center justify-center text-[#6246EA] mx-auto shadow-sm">
+              <div className="bg-white rounded-2xl border border-line p-8 sm:p-10 text-center shadow-xs space-y-6">
+                <div className="w-16 h-16 rounded-2xl bg-iris-soft border border-iris-line flex items-center justify-center text-iris mx-auto shadow-sm">
                   <Sparkles className="w-8 h-8" />
                 </div>
 
                 <div className="max-w-2xl mx-auto space-y-2">
-                  <h3 className="text-2xl font-black text-[#141526] font-display">
-                    Account Analysis Pending for Current Session
+                  <h3 className="text-2xl font-bold text-ink font-display">
+                    Account analysis has not been run yet
                   </h3>
-                  <p className="text-sm text-[#5C6079] leading-relaxed">
-                    FraudShield evaluates genuine, real-time inferences calculated directly from ledger transactions. Click "Run Live Analysis" to compute 26 behavioral features, evaluate rule signals, and infer ML risk scores with TreeSHAP.
+                  <p className="text-sm text-mute leading-relaxed">
+                    The analysis reads this account’s ledger now: it computes 26 behavioural features, checks the fixed rules and scores the account with the account model, with TreeSHAP attributions for the score.
                   </p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                   <button
                     onClick={handleRunLiveAnalysis}
-                    className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-2xl bg-[#6246EA] hover:bg-[#4F33D6] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                    className="btn-primary px-6"
                   >
                     <Play className="w-4 h-4 fill-current" />
-                    <span>Run Live Analysis</span>
+                    <span>Run live analysis</span>
                   </button>
                 </div>
 
-                <div className="max-w-xl mx-auto pt-4 border-t border-[#F6F6FC] text-xs text-[#868AA2] leading-relaxed flex items-center justify-center gap-2">
-                  <Shield className="w-4 h-4 text-[#10B981]" />
-                  <span>Ledger status: <strong className="text-[#141526] font-mono">{allTxns.length} transactions</strong> ready for real-time evaluation.</span>
+                <div className="max-w-xl mx-auto pt-4 border-t border-well text-xs text-faint leading-relaxed flex items-center justify-center gap-2">
+                  <Shield className="w-4 h-4 text-ok" />
+                  <span>Ledger status: <strong className="text-ink font-mono">{allTxns.length} transactions</strong> ready for real-time evaluation.</span>
                 </div>
               </div>
             )}
 
             {/* Case B2: Analyzing in Progress */}
             {isAnalyzing && (
-              <div className="bg-white rounded-3xl border border-[#E4E5F0] p-12 text-center shadow-xs space-y-4">
-                <div className="w-14 h-14 rounded-2xl bg-[#EFECFF] border border-[#D7CFFF] flex items-center justify-center text-[#6246EA] mx-auto animate-spin">
+              <div className="bg-white rounded-2xl border border-line p-12 text-center shadow-xs space-y-4">
+                <div className="w-14 h-14 rounded-2xl bg-iris-soft border border-iris-line flex items-center justify-center text-iris mx-auto animate-spin">
                   <RefreshCw className="w-7 h-7" />
                 </div>
-                <h3 className="text-xl font-bold text-[#141526]">Analyzing Account Ledger in Real Time</h3>
-                <p className="text-xs text-[#5C6079] max-w-md mx-auto leading-relaxed">
+                <h3 className="text-xl font-bold text-ink">Analysing the account’s ledger</h3>
+                <p className="text-xs text-mute max-w-md mx-auto leading-relaxed">
                   Extracting 26 behavioral features from {allTxns.length} transactions, computing rule signals, evaluating XGBoost inference, and generating native TreeSHAP local attributions...
                 </p>
               </div>
@@ -476,32 +429,32 @@ export const V2AccountDetailPage: React.FC = () => {
 
             {/* Case B3: Analysis Completed - Side-by-Side ML & Rule Findings */}
             {liveAnalysis && (
-              <div className="bg-white rounded-3xl border border-[#E4E5F0] p-6 sm:p-7 shadow-xs space-y-5">
+              <div className="bg-white rounded-2xl border border-line p-6 sm:p-7 shadow-xs space-y-5">
                 {/* Header with Run Metadata */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#F6F6FC] pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-well pb-4">
                   <div>
                     <div className="flex items-center gap-2.5">
-                      <h2 className="text-xl sm:text-2xl font-black text-[#141526] font-display">
-                        What Did the Analysis Find?
+                      <h2 className="text-xl sm:text-2xl font-bold text-ink font-display">
+                        What the analysis found
                       </h2>
-                      <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-[#EAF7EE] text-[#166534] border border-[#BBF7D0] uppercase tracking-wider">
+                      <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-ok-soft text-ok border border-ok-line ">
                         Analysis Complete
                       </span>
                     </div>
-                    <p className="text-xs text-[#5C6079] mt-1">
+                    <p className="text-xs text-mute mt-1">
                       Freshly computed evaluation of {liveAnalysis.ledger_snapshot.transactions_examined} ledger records completed at {new Date(liveAnalysis.analyzed_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}.
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-[#5C6079] self-start sm:self-center">
-                    <span className="px-2.5 py-1 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0]">
-                      Run: <strong className="text-[#141526]">{liveAnalysis.analysis_id}</strong>
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-mute self-start sm:self-center">
+                    <span className="px-2.5 py-1 rounded-xl bg-well border border-line">
+                      Run: <strong className="text-ink">{liveAnalysis.analysis_id}</strong>
                     </span>
-                    <span className="px-2.5 py-1 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0]">
-                      Model: <strong className="text-[#141526]">{liveAnalysis.model_version}</strong>
+                    <span className="px-2.5 py-1 rounded-xl bg-well border border-line">
+                      Model: <strong className="text-ink">{liveAnalysis.model_version}</strong>
                     </span>
-                    <span className="px-2.5 py-1 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0]">
-                      Examined: <strong className="text-[#141526]">{liveAnalysis.ledger_snapshot.transactions_examined} txns</strong>
+                    <span className="px-2.5 py-1 rounded-xl bg-well border border-line">
+                      Examined: <strong className="text-ink">{liveAnalysis.ledger_snapshot.transactions_examined} txns</strong>
                     </span>
                   </div>
                 </div>
@@ -509,136 +462,136 @@ export const V2AccountDetailPage: React.FC = () => {
                 {/* Side-by-Side Score Cards (ML Score and Rule Score) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {/* ML Risk Score Card */}
-                  <div className="bg-[#F6F6FC] rounded-2xl p-5 border border-[#E4E5F0] space-y-3">
+                  <div className="bg-well rounded-2xl p-5 border border-line space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-xl bg-[#EFECFF] flex items-center justify-center text-[#6246EA]">
+                        <div className="w-8 h-8 rounded-xl bg-iris-soft flex items-center justify-center text-iris">
                           <Cpu className="w-4 h-4" />
                         </div>
                         <div>
-                          <span className="text-xs font-bold text-[#141526] block">{MODEL_SCORE_LABEL} (machine learning)</span>
-                          <span className="text-[10px] text-[#5C6079] font-mono">{liveAnalysis.ml_assessment.model_version} · 26 ledger features</span>
+                          <span className="text-xs font-bold text-ink block">{MODEL_SCORE_LABEL} (machine learning)</span>
+                          <span className="text-[11px] text-mute font-mono">{liveAnalysis.ml_assessment.model_version} · 26 ledger features</span>
                         </div>
                       </div>
-                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
                         liveAnalysis.ml_assessment.risk_level === 'high' || liveAnalysis.ml_assessment.risk_level === 'critical'
-                          ? 'bg-[#FEF2F2] text-[#DC2626] border border-[#FCA5A5]'
-                          : liveAnalysis.ml_assessment.risk_level === 'elevated'
-                          ? 'bg-[#FFF7ED] text-[#EA580C] border border-[#FDBA74]'
-                          : 'bg-[#ECFDF5] text-[#059669] border border-[#6EE7B7]'
+                        ? 'bg-danger-soft text-danger-fill border border-danger-line'
+                        : liveAnalysis.ml_assessment.risk_level === 'elevated'
+                        ? 'bg-warn-soft text-sev-high border border-sev-high-line'
+                        : 'bg-ok-soft text-ok border border-ok-line'
                       }`}>
                         {liveAnalysis.ml_assessment.risk_level} Risk
                       </span>
                     </div>
 
                     <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-black text-[#141526] font-mono">
+                      <span className="text-4xl font-bold text-ink font-mono">
                         {formatModelScore(liveAnalysis.ml_assessment.risk_score)}
                       </span>
                     </div>
-                    <p className="text-xs font-medium text-[#141526]">
+                    <p className="text-xs font-medium text-ink">
                       {liveAnalysis.ml_assessment.predicted_class === 'suspicious'
                         ? `At or above the ${modelThresholdLabel ?? 'review'} review threshold: suggested for review, not confirmed fraud.`
                         : `Below the ${modelThresholdLabel ?? 'review'} review threshold. This does not clear the account.`}
                     </p>
-                    <p className="text-[11px] text-[#5C6079] leading-relaxed">{MODEL_SCORE_MEANING}</p>
+                    <p className="text-[11px] text-mute leading-relaxed">{MODEL_SCORE_MEANING}</p>
 
                     {/* Calibrated Meter */}
-                    <div className="w-full bg-white rounded-full h-2.5 overflow-hidden border border-[#E4E5F0]">
+                    <div className="w-full bg-white rounded-full h-2.5 overflow-hidden border border-line">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${
                           liveAnalysis.ml_assessment.risk_level === 'high' || liveAnalysis.ml_assessment.risk_level === 'critical'
-                            ? 'bg-[#DC2626]'
-                            : liveAnalysis.ml_assessment.risk_level === 'elevated'
-                            ? 'bg-[#6246EA]'
-                            : 'bg-[#10B981]'
+                          ? 'bg-danger-fill'
+                          : liveAnalysis.ml_assessment.risk_level === 'elevated'
+                          ? 'bg-iris'
+                          : 'bg-ok'
                         }`}
                         style={{ width: `${Math.min(Math.max(liveAnalysis.ml_assessment.risk_score, 0), 100)}%` }}
                       />
                     </div>
 
                     {modelBands && (
-                      <div className="flex flex-wrap items-center justify-between gap-x-2 text-[10px] text-[#868AA2] font-mono">
+                      <div className="flex flex-wrap items-center justify-between gap-x-2 text-[11px] text-faint font-mono">
                         {modelBands.map((b) => (
                           <span key={b}>{b}</span>
                         ))}
                       </div>
                     )}
 
-                    <p className="text-xs text-[#5C6079] leading-relaxed pt-1 border-t border-[#E4E5F0]/60">
+                    <p className="text-xs text-mute leading-relaxed pt-1 border-t border-line/60">
                       Statistical pattern model evaluating multi-dimensional transfer velocity, burst volume, and balance depletion dynamics.
                     </p>
                   </div>
 
                   {/* Rule Behavioral Baseline Card */}
-                  <div className="bg-[#F6F6FC] rounded-2xl p-5 border border-[#E4E5F0] space-y-3">
+                  <div className="bg-well rounded-2xl p-5 border border-line space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-[#5C6079] border border-[#E4E5F0]">
+                        <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-mute border border-line">
                           <Scale className="w-4 h-4" />
                         </div>
                         <div>
-                          <span className="text-xs font-bold text-[#141526] block">Rule Deterministic Check</span>
-                          <span className="text-[10px] text-[#5C6079] font-mono">Observable heuristics</span>
+                          <span className="text-xs font-bold text-ink block">Rule Deterministic Check</span>
+                          <span className="text-[11px] text-mute font-mono">Observable heuristics</span>
                         </div>
                       </div>
-                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
                         liveAnalysis.rule_assessment.risk_level === 'high' || liveAnalysis.rule_assessment.risk_level === 'critical'
-                          ? 'bg-[#FEF2F2] text-[#DC2626] border border-[#FCA5A5]'
-                          : liveAnalysis.rule_assessment.risk_level === 'elevated'
-                          ? 'bg-[#FFF7ED] text-[#EA580C] border border-[#FDBA74]'
-                          : 'bg-[#ECFDF5] text-[#059669] border border-[#6EE7B7]'
+                        ? 'bg-danger-soft text-danger-fill border border-danger-line'
+                        : liveAnalysis.rule_assessment.risk_level === 'elevated'
+                        ? 'bg-warn-soft text-sev-high border border-sev-high-line'
+                        : 'bg-ok-soft text-ok border border-ok-line'
                       }`}>
                         {liveAnalysis.rule_assessment.risk_level} Risk
                       </span>
                     </div>
 
                     <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-black text-[#141526] font-mono">
+                      <span className="text-4xl font-bold text-ink font-mono">
                         {liveAnalysis.rule_assessment.risk_score.toFixed(1)}
                       </span>
-                      <span className="text-sm font-medium text-[#5C6079] font-mono">points of 100</span>
-                      <span className="ml-auto text-xs font-mono text-[#5C6079]">
-                        Uncertainty: <strong className="uppercase text-[#141526]">{liveAnalysis.rule_assessment.uncertainty_rating}</strong>
+                      <span className="text-sm font-medium text-mute font-mono">points of 100</span>
+                      <span className="ml-auto text-xs font-mono text-mute">
+                        Uncertainty: <strong className=" text-ink">{liveAnalysis.rule_assessment.uncertainty_rating}</strong>
                       </span>
                     </div>
 
                     {/* Calibrated Meter */}
-                    <div className="w-full bg-white rounded-full h-2.5 overflow-hidden border border-[#E4E5F0]">
+                    <div className="w-full bg-white rounded-full h-2.5 overflow-hidden border border-line">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${
                           liveAnalysis.rule_assessment.risk_level === 'high' || liveAnalysis.rule_assessment.risk_level === 'critical'
-                            ? 'bg-[#DC2626]'
-                            : liveAnalysis.rule_assessment.risk_level === 'elevated'
-                            ? 'bg-[#6246EA]'
-                            : 'bg-[#10B981]'
+                          ? 'bg-danger-fill'
+                          : liveAnalysis.rule_assessment.risk_level === 'elevated'
+                          ? 'bg-iris'
+                          : 'bg-ok'
                         }`}
                         style={{ width: `${Math.min(Math.max(liveAnalysis.rule_assessment.risk_score, 0), 100)}%` }}
                       />
                     </div>
 
-                    <div className="flex items-center justify-between text-[10px] text-[#868AA2] font-mono">
+                    <div className="flex items-center justify-between text-[11px] text-faint font-mono">
                       <span>Low (0-25)</span>
                       <span>Elevated (26-55)</span>
                       <span>High (56-80)</span>
                       <span>Critical (81+)</span>
                     </div>
 
-                    <p className="text-xs text-[#5C6079] leading-relaxed pt-1 border-t border-[#E4E5F0]/60">
+                    <p className="text-xs text-mute leading-relaxed pt-1 border-t border-line/60">
                       Deterministic compliance rules evaluating observable transaction thresholds, burst velocity, and flow-through ratios.
                     </p>
                   </div>
                 </div>
 
                 {/* Plain-English Summary of Finding */}
-                <div className="bg-[#F6F6FC] rounded-2xl p-4 sm:p-5 border border-[#E4E5F0] space-y-2">
+                <div className="bg-well rounded-2xl p-4 sm:p-5 border border-line space-y-2">
                   <div className="flex items-center gap-2">
-                    <Info className="w-4 h-4 text-[#6246EA]" />
-                    <h4 className="text-xs font-bold text-[#141526] uppercase tracking-wide">
-                      Plain-English Finding Summary
+                    <Info className="w-4 h-4 text-iris" />
+                    <h4 className="text-xs font-bold text-ink ">
+                      The finding in plain words
                     </h4>
                   </div>
-                  <p className="text-sm text-[#33364B] leading-relaxed">
+                  <p className="text-sm text-ink-soft leading-relaxed">
                     {liveAnalysis.divergence?.interpretation ||
                       `The model score is ${formatModelScore(liveAnalysis.ml_assessment.risk_score)} (${liveAnalysis.ml_assessment.risk_level}); the fixed rules gave ${liveAnalysis.rule_assessment.risk_score.toFixed(0)} points of 100 (${liveAnalysis.rule_assessment.risk_level}). The two use different scales. Assessment evaluated ${liveAnalysis.ledger_snapshot.transactions_examined} ledger movements. Neither score constitutes proof of fraud; follow recommended investigative steps before taking any action.`}
                   </p>
@@ -665,11 +618,11 @@ export const V2AccountDetailPage: React.FC = () => {
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-[#141526] font-display flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-[#6246EA]" />
+                  <h3 className="text-base sm:text-lg font-bold text-ink font-display flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-iris" />
                     Risk & Activity Analytics
                   </h3>
-                  <p className="text-xs text-[#5C6079]">
+                  <p className="text-xs text-mute">
                     Balanced forensic visualizations. Clicking any histogram bin or timeline date filters transactions immediately.
                   </p>
                 </div>
@@ -679,7 +632,7 @@ export const V2AccountDetailPage: React.FC = () => {
                       setSelectedHistogramBin(null);
                       setSelectedTimelineDate(null);
                     }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-[#F6F6FC] border border-[#E4E5F0] text-xs font-bold text-[#6246EA] transition-colors shadow-2xs self-start sm:self-center cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-well border border-line text-xs font-bold text-iris transition-colors shadow-2xs self-start sm:self-center cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                     <span>Clear Chart Filter</span>
@@ -697,29 +650,29 @@ export const V2AccountDetailPage: React.FC = () => {
                     divergence={liveAnalysis.divergence}
                   />
                 ) : (
-                  <div className="bg-white rounded-2xl border border-[#E4E5F0] p-6 flex flex-col justify-between space-y-4 shadow-2xs">
+                  <div className="bg-white rounded-2xl border border-line p-6 flex flex-col justify-between space-y-4 shadow-2xs">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-[#EFECFF] flex items-center justify-center text-[#6246EA]">
+                      <div className="w-8 h-8 rounded-xl bg-iris-soft flex items-center justify-center text-iris">
                         <Scale className="w-4 h-4" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-bold text-[#141526]">Risk Score Comparison</h4>
-                        <p className="text-xs text-[#5C6079]">ML Statistical Model vs Rule Baseline</p>
+                        <h4 className="text-sm font-bold text-ink">Model score and rule score</h4>
+                        <p className="text-xs text-mute">Two independent checks, read side by side</p>
                       </div>
                     </div>
                     <div className="py-8 text-center space-y-3">
-                      <p className="text-xs text-[#5C6079] max-w-sm mx-auto leading-relaxed">
+                      <p className="text-xs text-mute max-w-sm mx-auto leading-relaxed">
                         Run Live Analysis to compute and compare the 26-feature ML statistical risk score against deterministic rule thresholds.
                       </p>
                       <button
                         onClick={handleRunLiveAnalysis}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#6246EA] hover:bg-[#4F33D6] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                        className="btn-primary text-xs"
                       >
                         <Play className="w-3.5 h-3.5 fill-current" />
-                        <span>Run Live Analysis</span>
+                        <span>Run live analysis</span>
                       </button>
                     </div>
-                    <div className="pt-3 border-t border-[#F6F6FC] flex items-center justify-between text-[11px] text-[#868AA2] font-mono">
+                    <div className="pt-3 border-t border-well flex items-center justify-between text-[11px] text-faint font-mono">
                       <span>Low: 0–29</span>
                       <span>Elevated: 30–69</span>
                       <span>High: 70+</span>
@@ -761,17 +714,17 @@ export const V2AccountDetailPage: React.FC = () => {
 
               {/* Interactive Chart Filter Preview Drawer (shown when histogram or timeline filter is active) */}
               {(selectedHistogramBin || selectedTimelineDate) && (
-                <div className="bg-white rounded-2xl border-2 border-[#6246EA]/30 p-5 shadow-xs space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#F6F6FC] pb-3">
+                <div className="bg-white rounded-2xl border-2 border-iris/30 p-5 shadow-xs space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-well pb-3">
                     <div className="flex items-center gap-2">
-                      <Filter className="w-4 h-4 text-[#6246EA]" />
-                      <span className="text-xs font-bold text-[#141526]">
+                      <Filter className="w-4 h-4 text-iris" />
+                      <span className="text-xs font-bold text-ink">
                         Filtered Transactions Preview:
                       </span>
-                      <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-[#EFECFF] text-[#6246EA] border border-[#D7CFFF]">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-iris-soft text-iris border border-iris-line">
                         {selectedHistogramBin ? `Amount: ${selectedHistogramBin.label}` : `Date: ${selectedTimelineDate}`}
                       </span>
-                      <span className="text-xs text-[#5C6079] font-mono">
+                      <span className="text-xs text-mute font-mono">
                         ({filteredTransactions.length} of {allTxns.length} records)
                       </span>
                     </div>
@@ -779,7 +732,7 @@ export const V2AccountDetailPage: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setActiveTab('transactions')}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-[#6246EA] hover:text-[#4F33D6] transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1 text-xs font-bold text-iris hover:text-iris-deep transition-colors cursor-pointer"
                       >
                         <span>View in Full Ledger Tab</span>
                         <ArrowRight className="w-3.5 h-3.5" />
@@ -789,7 +742,7 @@ export const V2AccountDetailPage: React.FC = () => {
                           setSelectedHistogramBin(null);
                           setSelectedTimelineDate(null);
                         }}
-                        className="p-1 rounded-lg text-[#868AA2] hover:text-[#141526] hover:bg-[#F6F6FC] transition-colors cursor-pointer"
+                        className="p-1 rounded-lg text-faint hover:text-ink hover:bg-well transition-colors cursor-pointer"
                         title="Clear filter"
                       >
                         <X className="w-4 h-4" />
@@ -801,7 +754,7 @@ export const V2AccountDetailPage: React.FC = () => {
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs font-mono">
                       <thead>
-                        <tr className="border-b border-[#E4E5F0] text-[#868AA2]">
+                        <tr className="border-b border-line text-faint">
                           <th className="py-2 px-3">Transaction ID</th>
                           <th className="py-2 px-3">Date & Time</th>
                           <th className="py-2 px-3">Flow</th>
@@ -810,24 +763,24 @@ export const V2AccountDetailPage: React.FC = () => {
                           <th className="py-2 px-3 text-right">Amount</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#F6F6FC]">
+                      <tbody className="divide-y divide-well">
                         {filteredTransactions.slice(0, 5).map((txn) => (
-                          <tr key={txn.transaction_id} className="hover:bg-[#F6F6FC] transition-colors">
-                            <td className="py-2 px-3 font-bold text-[#141526]">{txn.transaction_id}</td>
-                            <td className="py-2 px-3 text-[#5C6079] font-sans">
+                          <tr key={txn.transaction_id} className="hover:bg-well transition-colors">
+                            <td className="py-2 px-3 font-bold text-ink">{txn.transaction_id}</td>
+                            <td className="py-2 px-3 text-mute font-sans">
                               {new Date(txn.timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                             </td>
                             <td className="py-2 px-3">
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                                txn.direction === 'inbound' ? 'bg-[#EAF7EE] text-[#166534]' : 'bg-[#EFECFF] text-[#6246EA]'
+                              <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                                txn.direction === 'inbound' ? 'bg-ok-soft text-ok' : 'bg-iris-soft text-iris'
                               }`}>
                                 {txn.direction}
                               </span>
                             </td>
-                            <td className="py-2 px-3 text-[#141526]">{txn.counterparty_account_id}</td>
-                            <td className="py-2 px-3 text-[#5C6079] uppercase text-[10px]">{txn.channel}</td>
+                            <td className="py-2 px-3 text-ink">{txn.counterparty_account_id}</td>
+                            <td className="py-2 px-3 text-mute text-[11px]">{txn.channel}</td>
                             <td className={`py-2 px-3 text-right font-bold ${
-                              txn.direction === 'inbound' ? 'text-[#10B981]' : 'text-[#6246EA]'
+                              txn.direction === 'inbound' ? 'text-ok' : 'text-iris'
                             }`}>
                               {txn.direction === 'inbound' ? '+' : '-'}₹{Number(txn.amount).toLocaleString('en-IN')}
                             </td>
@@ -850,7 +803,7 @@ export const V2AccountDetailPage: React.FC = () => {
                   contributions={liveAnalysis.ml_assessment.top_contributions || []}
                 />
 
-                {/* Right: What should the investigator check next? */}
+                {/* Right: What to examine next */}
                 <V2NextStepsRecommendation
                   recommendedActions={liveAnalysis.recommended_actions}
                   humanReviewRecommended={liveAnalysis.human_review_recommended}
@@ -865,43 +818,43 @@ export const V2AccountDetailPage: React.FC = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white rounded-3xl border border-[#E4E5F0] p-6 space-y-3 shadow-xs">
+                <div className="bg-white rounded-2xl border border-line p-6 space-y-3 shadow-xs">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-[#6246EA]" />
-                    <h4 className="text-base font-bold text-[#141526] font-display">
-                      Why the AI gave this score (TreeSHAP Attributions)
+                    <Sparkles className="w-5 h-5 text-iris" />
+                    <h4 className="text-base font-bold text-ink font-display">
+                      Why the model gave this score (TreeSHAP attributions)
                     </h4>
                   </div>
-                  <p className="text-xs text-[#5C6079] leading-relaxed">
+                  <p className="text-xs text-mute leading-relaxed">
                     Interactive TreeSHAP local contribution charts will display mathematical feature weights once live analysis evaluates this account's 26 behavioral features.
                   </p>
                   <div className="pt-2">
                     <button
                       onClick={handleRunLiveAnalysis}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#F6F6FC] hover:bg-[#EEEFF7] border border-[#E4E5F0] text-xs font-bold text-[#141526] transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-well hover:bg-well-strong border border-line text-xs font-bold text-ink transition-colors cursor-pointer"
                     >
-                      <Sparkles className="w-3.5 h-3.5 text-[#6246EA]" />
+                      <Sparkles className="w-3.5 h-3.5 text-iris" />
                       <span>Run Live Analysis to compute TreeSHAP</span>
                     </button>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-3xl border border-[#E4E5F0] p-6 space-y-3 shadow-xs">
+                <div className="bg-white rounded-2xl border border-line p-6 space-y-3 shadow-xs">
                   <div className="flex items-center gap-2">
-                    <ShieldAlert className="w-5 h-5 text-[#6246EA]" />
-                    <h4 className="text-base font-bold text-[#141526] font-display">
-                      What should the investigator check next?
+                    <ShieldAlert className="w-5 h-5 text-iris" />
+                    <h4 className="text-base font-bold text-ink font-display">
+                      What to examine next
                     </h4>
                   </div>
-                  <p className="text-xs text-[#5C6079] leading-relaxed">
+                  <p className="text-xs text-mute leading-relaxed">
                     Evidence-based advisory actions, supporting signals, and recommended regulatory safeguards will be populated upon completing live analysis.
                   </p>
                   <div className="pt-2">
                     <button
                       onClick={() => setActiveTab('trace')}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#F6F6FC] hover:bg-[#EEEFF7] border border-[#E4E5F0] text-xs font-bold text-[#141526] transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-well hover:bg-well-strong border border-line text-xs font-bold text-ink transition-colors cursor-pointer"
                     >
-                      <GitFork className="w-3.5 h-3.5 text-[#6246EA]" />
+                      <GitFork className="w-3.5 h-3.5 text-iris" />
                       <span>Explore Fund Flow Trace</span>
                     </button>
                   </div>
@@ -916,39 +869,39 @@ export const V2AccountDetailPage: React.FC = () => {
         {/* TAB 2: FOLLOW THE MONEY (GRAPH TRACE)                                     */}
         {/* ========================================================================= */}
         {activeTab === 'trace' && (
-          <div className="space-y-6 gsap-fade-in">
-            <div className="bg-white rounded-3xl border border-[#E4E5F0] p-6 shadow-xs space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#F6F6FC] pb-4">
+          <div data-reveal className="space-y-6">
+            <div className="bg-white rounded-2xl border border-line p-6 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-well pb-4">
                 <div>
-                  <h3 className="text-base font-bold text-[#141526] font-display flex items-center gap-2">
-                    <GitFork className="w-5 h-5 text-[#6246EA]" />
+                  <h3 className="text-base font-bold text-ink font-display flex items-center gap-2">
+                    <GitFork className="w-5 h-5 text-iris" />
                     Multi-Hop Forensic Fund Tracer
                   </h3>
-                  <p className="text-xs text-[#5C6079] mt-0.5">
+                  <p className="text-xs text-mute mt-0.5">
                     Traverse connected accounts and follow money flows across multi-hop counterparty edges.
                   </p>
                 </div>
 
                 {/* Depth & Direction Controls */}
                 <div className="flex flex-wrap items-center gap-3">
-                  <div className="flex items-center gap-1.5 text-xs text-[#5C6079]">
+                  <div className="flex items-center gap-1.5 text-xs text-mute">
                     <span>Flow:</span>
                     <select
                       value={traceDirection}
                       onChange={(e) => setTraceDirection(e.target.value as any)}
-                      className="px-2.5 py-1 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0] text-xs font-bold text-[#141526]"
+                      className="px-2.5 py-1 rounded-xl bg-well border border-line text-xs font-bold text-ink"
                     >
                       <option value="outgoing">Outbound (Follow Dispersal)</option>
                       <option value="incoming">Inbound (Follow Origin)</option>
                     </select>
                   </div>
 
-                  <div className="flex items-center gap-1.5 text-xs text-[#5C6079]">
+                  <div className="flex items-center gap-1.5 text-xs text-mute">
                     <span>Hops:</span>
                     <select
                       value={traceDepth}
                       onChange={(e) => setTraceDepth(Number(e.target.value))}
-                      className="px-2.5 py-1 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0] text-xs font-bold text-[#141526]"
+                      className="px-2.5 py-1 rounded-xl bg-well border border-line text-xs font-bold text-ink"
                     >
                       <option value={1}>1 Hop</option>
                       <option value={2}>2 Hops</option>
@@ -961,9 +914,9 @@ export const V2AccountDetailPage: React.FC = () => {
 
               {/* Cytoscape Graph Container */}
               {loadingTrace ? (
-                <div className="h-96 rounded-2xl bg-[#F6F6FC] border border-[#E4E5F0] flex flex-col items-center justify-center space-y-2">
-                  <RefreshCw className="w-6 h-6 text-[#6246EA] animate-spin" />
-                  <span className="text-xs text-[#5C6079]">Traversing multi-hop transaction graph...</span>
+                <div className="h-96 rounded-2xl bg-well border border-line flex flex-col items-center justify-center space-y-2">
+                  <RefreshCw className="w-6 h-6 text-iris animate-spin" />
+                  <span className="text-xs text-mute">Traversing multi-hop transaction graph...</span>
                 </div>
               ) : traceData ? (
                 <V2CytoscapeGraph
@@ -975,7 +928,7 @@ export const V2AccountDetailPage: React.FC = () => {
                   }}
                 />
               ) : (
-                <div className="h-64 rounded-2xl bg-[#F6F6FC] border border-[#E4E5F0] flex items-center justify-center text-xs text-[#5C6079]">
+                <div className="h-64 rounded-2xl bg-well border border-line flex items-center justify-center text-xs text-mute">
                   No connected counterparty graph available for this account.
                 </div>
               )}
@@ -987,27 +940,27 @@ export const V2AccountDetailPage: React.FC = () => {
         {/* TAB 3: TRANSACTION LEDGER WITH LINKED FILTERING                           */}
         {/* ========================================================================= */}
         {activeTab === 'transactions' && (
-          <div className="space-y-6 gsap-fade-in">
-            <div className="bg-white rounded-3xl border border-[#E4E5F0] p-6 shadow-xs space-y-4">
+          <div data-reveal className="space-y-6">
+            <div className="bg-white rounded-2xl border border-line p-6 shadow-xs space-y-4">
               {/* Header and Filter Controls */}
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#F6F6FC] pb-4">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-well pb-4">
                 <div>
-                  <h3 className="text-base font-bold text-[#141526] font-display flex items-center gap-2">
-                    <Layers className="w-5 h-5 text-[#6246EA]" />
+                  <h3 className="text-base font-bold text-ink font-display flex items-center gap-2">
+                    <Layers className="w-5 h-5 text-iris" />
                     Account Transaction Ledger
                   </h3>
-                  <p className="text-xs text-[#5C6079] mt-0.5">
+                  <p className="text-xs text-mute mt-0.5">
                     Showing {filteredTransactions.length} of {allTxns.length} recorded movements. Synchronized with active chart selections.
                   </p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2.5">
                   {/* Direction Tabs */}
-                  <div className="inline-flex rounded-xl bg-[#F6F6FC] border border-[#E4E5F0] p-0.5 text-xs font-medium">
+                  <div className="inline-flex rounded-xl bg-well border border-line p-0.5 text-xs font-medium">
                     <button
                       onClick={() => setTxnDirection('all')}
                       className={`px-3 py-1 rounded-lg transition-all ${
-                        txnDirection === 'all' ? 'bg-white font-bold text-[#141526] shadow-2xs' : 'text-[#5C6079]'
+                        txnDirection === 'all' ? 'bg-white font-bold text-ink shadow-2xs' : 'text-mute'
                       }`}
                     >
                       All ({allTxns.length})
@@ -1015,7 +968,7 @@ export const V2AccountDetailPage: React.FC = () => {
                     <button
                       onClick={() => setTxnDirection('inbound')}
                       className={`px-3 py-1 rounded-lg transition-all ${
-                        txnDirection === 'inbound' ? 'bg-white font-bold text-[#10B981] shadow-2xs' : 'text-[#5C6079]'
+                        txnDirection === 'inbound' ? 'bg-white font-bold text-ok shadow-2xs' : 'text-mute'
                       }`}
                     >
                       Credits
@@ -1023,7 +976,7 @@ export const V2AccountDetailPage: React.FC = () => {
                     <button
                       onClick={() => setTxnDirection('outbound')}
                       className={`px-3 py-1 rounded-lg transition-all ${
-                        txnDirection === 'outbound' ? 'bg-white font-bold text-[#6246EA] shadow-2xs' : 'text-[#5C6079]'
+                        txnDirection === 'outbound' ? 'bg-white font-bold text-iris shadow-2xs' : 'text-mute'
                       }`}
                     >
                       Debits
@@ -1032,7 +985,7 @@ export const V2AccountDetailPage: React.FC = () => {
 
                   {/* Search Input */}
                   <div className="relative">
-                    <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[#868AA2]" />
+                    <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-faint" />
                     <input
                       type="text"
                       placeholder="Search txn ID, counterparty..."
@@ -1041,7 +994,7 @@ export const V2AccountDetailPage: React.FC = () => {
                         setTxnSearch(e.target.value);
                         setTxnPage(0);
                       }}
-                      className="pl-8 pr-3 py-1.5 rounded-xl bg-[#F6F6FC] border border-[#E4E5F0] text-xs text-[#141526] placeholder-[#868AA2] focus:outline-none focus:border-[#6246EA] w-52"
+                      className="pl-8 pr-3 py-1.5 rounded-xl bg-well border border-line text-xs text-ink placeholder-faint focus:outline-none focus:border-iris w-52"
                     />
                   </div>
                 </div>
@@ -1049,34 +1002,34 @@ export const V2AccountDetailPage: React.FC = () => {
 
               {/* Active Linked Filters Bar */}
               {hasActiveFilters && (
-                <div className="bg-[#F6F6FC] rounded-xl p-3 border border-[#E4E5F0] flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="bg-well rounded-xl p-3 border border-line flex flex-wrap items-center justify-between gap-2 text-xs">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[#5C6079] font-medium flex items-center gap-1">
-                      <Filter className="w-3.5 h-3.5 text-[#6246EA]" /> Active Filters:
+                    <span className="text-mute font-medium flex items-center gap-1">
+                      <Filter className="w-3.5 h-3.5 text-iris" /> Active Filters:
                     </span>
 
                     {selectedHistogramBin && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white border border-[#D7CFFF] text-[#6246EA] font-mono text-[11px]">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white border border-iris-line text-iris font-mono text-[11px]">
                         <span>Amount: {selectedHistogramBin.label}</span>
-                        <button onClick={() => setSelectedHistogramBin(null)} className="hover:text-[#141526]">
+                        <button onClick={() => setSelectedHistogramBin(null)} className="hover:text-ink">
                           <X className="w-3 h-3" />
                         </button>
                       </span>
                     )}
 
                     {selectedTimelineDate && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white border border-[#BFDBFE] text-[#2563EB] font-mono text-[11px]">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white border border-ice-line text-ice-deep font-mono text-[11px]">
                         <span>Date: {selectedTimelineDate}</span>
-                        <button onClick={() => setSelectedTimelineDate(null)} className="hover:text-[#141526]">
+                        <button onClick={() => setSelectedTimelineDate(null)} className="hover:text-ink">
                           <X className="w-3 h-3" />
                         </button>
                       </span>
                     )}
 
                     {txnDirection !== 'all' && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white border border-[#E4E5F0] text-[#141526] font-mono text-[11px]">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white border border-line text-ink font-mono text-[11px]">
                         <span>Direction: {txnDirection}</span>
-                        <button onClick={() => setTxnDirection('all')} className="hover:text-[#141526]">
+                        <button onClick={() => setTxnDirection('all')} className="hover:text-ink">
                           <X className="w-3 h-3" />
                         </button>
                       </span>
@@ -1085,7 +1038,7 @@ export const V2AccountDetailPage: React.FC = () => {
 
                   <button
                     onClick={clearAllFilters}
-                    className="text-xs text-[#6246EA] hover:text-[#4F33D6] font-bold flex items-center gap-1 cursor-pointer"
+                    className="text-xs text-iris hover:text-iris-deep font-bold flex items-center gap-1 cursor-pointer"
                   >
                     <RotateCcw className="w-3 h-3" />
                     <span>Reset All Filters</span>
@@ -1094,9 +1047,9 @@ export const V2AccountDetailPage: React.FC = () => {
               )}
 
               {/* Transactions Table */}
-              <div className="overflow-x-auto rounded-2xl border border-[#E4E5F0]">
+              <div className="overflow-x-auto rounded-2xl border border-line">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#F6F6FC] text-[#5C6079] font-medium border-b border-[#E4E5F0]">
+                  <thead className="bg-well text-mute font-medium border-b border-line">
                     <tr>
                       <th className="py-3 px-4">Transaction ID</th>
                       <th className="py-3 px-4">Timestamp</th>
@@ -1108,7 +1061,7 @@ export const V2AccountDetailPage: React.FC = () => {
                       <th className="py-3 px-4 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#E4E5F0]">
+                  <tbody className="divide-y divide-line">
                     {paginatedTransactions.length > 0 ? (
                       paginatedTransactions.map((t) => {
                         const isInbound = t.direction === 'inbound';
@@ -1116,12 +1069,12 @@ export const V2AccountDetailPage: React.FC = () => {
                         return (
                           <tr
                             key={t.transaction_id}
-                            className={`transition-colors hover:bg-[#F6F6FC]/60 ${isSelected ? 'bg-[#F5F3FF]' : ''}`}
+                            className={`transition-colors hover:bg-well/60 ${isSelected ? 'bg-iris-wash' : ''}`}
                           >
-                            <td className="py-3 px-4 font-mono font-bold text-[#141526]">
+                            <td className="py-3 px-4 font-mono font-bold text-ink">
                               {t.transaction_id}
                             </td>
-                            <td className="py-3 px-4 font-mono text-[#5C6079]">
+                            <td className="py-3 px-4 font-mono text-mute">
                               {new Date(t.timestamp).toLocaleString('en-IN', {
                                 day: '2-digit',
                                 month: 'short',
@@ -1131,10 +1084,10 @@ export const V2AccountDetailPage: React.FC = () => {
                             </td>
                             <td className="py-3 px-4">
                               <span
-                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border uppercase tracking-wider ${
+                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
                                   isInbound
-                                    ? 'bg-[#EAF7EE] text-[#10B981] border-[#BBF7D0]'
-                                    : 'bg-[#EFECFF] text-[#6246EA] border-[#D7CFFF]'
+                                  ? 'bg-ok-soft text-ok border-ok-line'
+                                  : 'bg-iris-soft text-iris border-iris-line'
                                 }`}
                               >
                                 {isInbound ? <ArrowDownLeft className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
@@ -1144,26 +1097,26 @@ export const V2AccountDetailPage: React.FC = () => {
                             <td className="py-3 px-4">
                               <Link
                                 to={`/tools/accounts/${encodeURIComponent(t.counterparty_account_id)}`}
-                                className="font-mono text-[#6246EA] hover:underline font-medium"
+                                className="font-mono text-iris hover:underline font-medium"
                               >
                                 {t.counterparty_account_id}
                               </Link>
                             </td>
                             <td className="py-3 px-4 font-mono font-bold">
-                              <span className={isInbound ? 'text-[#10B981]' : 'text-[#141526]'}>
+                              <span className={isInbound ? 'text-ok' : 'text-ink'}>
                                 {isInbound ? '+' : '-'}₹{t.amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                               </span>
                             </td>
-                            <td className="py-3 px-4 font-mono text-[#5C6079]">
+                            <td className="py-3 px-4 font-mono text-mute">
                               {t.channel}
                             </td>
-                            <td className="py-3 px-4 font-mono text-[#5C6079]">
+                            <td className="py-3 px-4 font-mono text-mute">
                               ₹{(isInbound ? t.dest_balance_after : t.origin_balance_after).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                             </td>
                             <td className="py-3 px-4 text-right">
                               <button
                                 onClick={() => setSelectedTxnForDetail(isSelected ? null : t)}
-                                className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-[#F6F6FC] text-[#5C6079] hover:text-[#141526] border border-[#E4E5F0]"
+                                className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-well text-mute hover:text-ink border border-line"
                               >
                                 {isSelected ? 'Hide' : 'Details'}
                               </button>
@@ -1173,7 +1126,7 @@ export const V2AccountDetailPage: React.FC = () => {
                       })
                     ) : (
                       <tr>
-                        <td colSpan={8} className="py-8 text-center text-xs text-[#5C6079] italic">
+                        <td colSpan={8} className="py-8 text-center text-xs text-mute italic">
                           No transactions match the selected filters.
                         </td>
                       </tr>
@@ -1184,7 +1137,7 @@ export const V2AccountDetailPage: React.FC = () => {
 
               {/* Pagination Controls */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between text-xs text-[#5C6079] pt-2">
+                <div className="flex items-center justify-between text-xs text-mute pt-2">
                   <span>
                     Page {txnPage + 1} of {totalPages} ({filteredTransactions.length} items)
                   </span>
@@ -1192,14 +1145,14 @@ export const V2AccountDetailPage: React.FC = () => {
                     <button
                       onClick={() => setTxnPage((p) => Math.max(0, p - 1))}
                       disabled={txnPage === 0}
-                      className="px-3 py-1.5 rounded-xl border border-[#E4E5F0] bg-white text-[#141526] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F6F6FC]"
+                      className="px-3 py-1.5 rounded-xl border border-line bg-white text-ink disabled:opacity-40 disabled:cursor-not-allowed hover:bg-well"
                     >
                       Previous
                     </button>
                     <button
                       onClick={() => setTxnPage((p) => Math.min(totalPages - 1, p + 1))}
                       disabled={txnPage >= totalPages - 1}
-                      className="px-3 py-1.5 rounded-xl border border-[#E4E5F0] bg-white text-[#141526] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F6F6FC]"
+                      className="px-3 py-1.5 rounded-xl border border-line bg-white text-ink disabled:opacity-40 disabled:cursor-not-allowed hover:bg-well"
                     >
                       Next
                     </button>
@@ -1209,38 +1162,38 @@ export const V2AccountDetailPage: React.FC = () => {
 
               {/* Transaction Detail Panel if selected */}
               {selectedTxnForDetail && (
-                <div className="bg-[#F6F6FC] rounded-2xl border border-[#E4E5F0] p-4 text-xs space-y-3">
+                <div className="bg-well rounded-2xl border border-line p-4 text-xs space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-[#141526]">Transaction Details: {selectedTxnForDetail.transaction_id}</span>
-                      <span className="font-mono text-[#5C6079]">({selectedTxnForDetail.status})</span>
+                      <span className="font-bold text-ink">Transaction Details: {selectedTxnForDetail.transaction_id}</span>
+                      <span className="font-mono text-mute">({selectedTxnForDetail.status})</span>
                     </div>
-                    <button onClick={() => setSelectedTxnForDetail(null)} className="text-[#5C6079] hover:text-[#141526]">
+                    <button onClick={() => setSelectedTxnForDetail(null)} className="text-mute hover:text-ink">
                       <X className="w-4 h-4" />
                     </button>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-[11px]">
                     <div>
-                      <span className="text-[#868AA2] block uppercase text-[10px]">Origin Account</span>
-                      <Link to={`/tools/accounts/${selectedTxnForDetail.origin_account_id}`} className="text-[#6246EA] hover:underline font-bold">
+                      <span className="text-faint block text-[11px]">Origin Account</span>
+                      <Link to={`/tools/accounts/${selectedTxnForDetail.origin_account_id}`} className="text-iris hover:underline font-bold">
                         {selectedTxnForDetail.origin_account_id}
                       </Link>
                     </div>
                     <div>
-                      <span className="text-[#868AA2] block uppercase text-[10px]">Destination Account</span>
-                      <Link to={`/tools/accounts/${selectedTxnForDetail.destination_account_id}`} className="text-[#6246EA] hover:underline font-bold">
+                      <span className="text-faint block text-[11px]">Destination Account</span>
+                      <Link to={`/tools/accounts/${selectedTxnForDetail.destination_account_id}`} className="text-iris hover:underline font-bold">
                         {selectedTxnForDetail.destination_account_id}
                       </Link>
                     </div>
                     <div>
-                      <span className="text-[#868AA2] block uppercase text-[10px]">Origin Balance Delta</span>
-                      <span className="text-[#141526]">
+                      <span className="text-faint block text-[11px]">Origin Balance Delta</span>
+                      <span className="text-ink">
                         ₹{selectedTxnForDetail.origin_balance_before.toLocaleString()} → ₹{selectedTxnForDetail.origin_balance_after.toLocaleString()}
                       </span>
                     </div>
                     <div>
-                      <span className="text-[#868AA2] block uppercase text-[10px]">Destination Balance Delta</span>
-                      <span className="text-[#141526]">
+                      <span className="text-faint block text-[11px]">Destination Balance Delta</span>
+                      <span className="text-ink">
                         ₹{selectedTxnForDetail.dest_balance_before.toLocaleString()} → ₹{selectedTxnForDetail.dest_balance_after.toLocaleString()}
                       </span>
                     </div>
@@ -1256,14 +1209,14 @@ export const V2AccountDetailPage: React.FC = () => {
         {/* ========================================================================= */}
         {activeTab === 'review' && (
           <div ref={adjudicationRef} className="space-y-6">
-            <div className="bg-white rounded-3xl border border-[#E4E5F0] p-6 sm:p-8 shadow-xs space-y-4 max-w-3xl">
-              <h3 className="text-lg font-bold text-[#141526]">Review decisions are recorded inside a case</h3>
-              <p className="text-sm text-[#5C6079] leading-relaxed">
+            <div className="bg-white rounded-2xl border border-line p-6 sm:p-8 shadow-xs space-y-4 max-w-3xl">
+              <h3 className="text-lg font-bold text-ink">Review decisions are recorded inside a case</h3>
+              <p className="text-sm text-mute leading-relaxed">
                 This page looks up an account on its own, outside any investigation. A decision about an account only makes
                 sense in the context of a specific complaint, so FraudShield records decisions in a case’s Review &amp; history
                 section, where they are saved on the server with the reviewer’s reasoning.
               </p>
-              <p className="text-sm text-[#5C6079] leading-relaxed">
+              <p className="text-sm text-mute leading-relaxed">
                 Accounts ACC-000001, ACC-000002, ACC-000003, ACC-000005, ACC-000009 and ACC-000012 appear in sample case FS-2001.
               </p>
               <div className="flex flex-wrap gap-3">

@@ -163,18 +163,17 @@ describe('ModelInsightsPage Component', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('Model Insights')).toBeInTheDocument();
-    expect(screen.getByText('MODEL INTELLIGENCE')).toBeInTheDocument();
-    expect(screen.getByText(/Understand model performance, prediction drivers/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Model performance' })).toBeInTheDocument();
+    expect(screen.getByText(/How each model was trained and tested, what moves its scores/i)).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByText('Status: Healthy')).toBeInTheDocument();
-      expect(screen.getByText('Inference Ready')).toBeInTheDocument();
+      expect(screen.getByText('Inference ready')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('V2 Account-Level Fraud Model')).toBeInTheDocument();
-    expect(screen.getByText('Transaction-Level PaySim Benchmark')).toBeInTheDocument();
-    expect(screen.getByText('Model Comparison & Scope')).toBeInTheDocument();
+    expect(screen.getByText('V2 account-level fraud model')).toBeInTheDocument();
+    expect(screen.getByText('Transaction-level PaySim benchmark')).toBeInTheDocument();
+    expect(screen.getByText('Model comparison and scope')).toBeInTheDocument();
   });
 
   it('names the v3 models that investigations use, with held-out results and per-dataset support (QA-07)', async () => {
@@ -206,7 +205,7 @@ describe('ModelInsightsPage Component', () => {
     expect(panel).toHaveTextContent('Held-out precision50.0%');
     expect(screen.getByTestId('v3-support-demo-ledger')).toHaveTextContent('Reference only: out of distribution');
     expect(screen.getByTestId('v3-support-forensic-scenarios')).toHaveTextContent('Validated');
-    expect(screen.getByText('01 / Accounts tool & case review')).toBeInTheDocument();
+    expect(screen.getByText('Used by the Accounts tool and case review')).toBeInTheDocument();
   });
 
   it('renders V2 Account Model performance metrics and confusion matrix', async () => {
@@ -264,11 +263,11 @@ describe('ModelInsightsPage Component', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('V2 Account-Level Fraud Model')).toBeInTheDocument();
+      expect(screen.getByText('V2 account-level fraud model')).toBeInTheDocument();
     });
 
     // Switch to PaySim tab
-    const paySimTab = screen.getByText('Transaction-Level PaySim Benchmark');
+    const paySimTab = screen.getByText('Transaction-level PaySim benchmark');
     fireEvent.click(paySimTab);
 
     await waitFor(() => {
@@ -291,14 +290,14 @@ describe('ModelInsightsPage Component', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Model Comparison & Scope')).toBeInTheDocument();
+      expect(screen.getByText('Model comparison and scope')).toBeInTheDocument();
     });
 
-    const compTab = screen.getByText('Model Comparison & Scope');
+    const compTab = screen.getByText('Model comparison and scope');
     fireEvent.click(compTab);
 
     await waitFor(() => {
-      expect(screen.getByText('Architecture & Scope Comparison Matrix')).toBeInTheDocument();
+      expect(screen.getByText('Architecture and scope, side by side')).toBeInTheDocument();
       expect(screen.getByText('Evaluation Dimension')).toBeInTheDocument();
       expect(screen.getByText('Group-Aware Scenario Separation (Zero scenario overlap)')).toBeInTheDocument();
       expect(screen.getByText('Chronological Time-Split (Steps 1..500 train, 621..743 test)')).toBeInTheDocument();
@@ -338,10 +337,10 @@ describe('ModelInsightsPage Component', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Refresh Models')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Refresh' })).toBeInTheDocument();
     });
 
-    const refreshBtn = screen.getByText('Refresh Models');
+    const refreshBtn = screen.getByRole('button', { name: 'Refresh' });
     fireEvent.click(refreshBtn);
 
     expect(v2Api.getModelsStatus).toHaveBeenCalledTimes(2);
@@ -357,7 +356,7 @@ describe('ModelInsightsPage Component', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Model Registry Communication Issue')).toBeInTheDocument();
+      expect(screen.getByText('The model status could not be loaded')).toBeInTheDocument();
       expect(screen.getByText('Network connection timeout')).toBeInTheDocument();
     });
   });
@@ -391,7 +390,7 @@ describe('ModelInsightsPage Component', () => {
     expect(screen.getByTestId('evaluation-scope-note')).toHaveTextContent('interval (0.29–0.47)');
     expect(screen.getByTestId('evaluation-scope-note')).toHaveTextContent('not guarantees');
 
-    fireEvent.click(screen.getByText('Transaction-Level PaySim Benchmark'));
+    fireEvent.click(screen.getByText('Transaction-level PaySim benchmark'));
     await waitFor(() => expect(screen.getByTestId('served-threshold')).toHaveTextContent('0.65'));
     expect(screen.getByTestId('evaluation-scope-note')).toHaveTextContent(
       'they say nothing about the account model or about investigations'

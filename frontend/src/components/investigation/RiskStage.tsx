@@ -55,7 +55,7 @@ export const RiskStage: React.FC<{ onInspect: (t: Target) => void }> = ({ onInsp
       </div>
 
       {!modelAvailable && (
-        <div role="alert" className="rounded-2xl bg-sev-critical-soft ring-1 ring-[#FBCFD8] px-4 py-3 text-sm text-[#881337] flex gap-3">
+        <div role="alert" className="rounded-2xl bg-sev-critical-soft ring-1 ring-danger-line px-4 py-3 text-sm text-danger flex gap-3">
           <AlertTriangle className="w-5 h-5 shrink-0 text-sev-critical" aria-hidden="true" />
           <p>
             <strong>The account model did not run.</strong> {modelUnavailableReason} Rule results and the money trace are still computed from the

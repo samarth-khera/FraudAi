@@ -10,6 +10,7 @@ import {
   ReferenceLine,
   CartesianGrid,
 } from 'recharts';
+import { palette, chartAxis } from '../../lib/palette';
 import { TrendingUp, TrendingDown, HelpCircle, Info, ChevronRight, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { V2FeatureContribution } from '../../types/v2';
@@ -152,7 +153,7 @@ export const V2TreeShapBreakdown: React.FC<V2TreeShapBreakdownProps> = ({ contri
 
   if (!contributions || contributions.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-[#E4E5F0] p-6 text-center text-xs text-[#5C6079] italic">
+      <div className="bg-white rounded-2xl border border-line p-6 text-center text-xs text-mute italic">
         No TreeSHAP feature contributions available for this model inference run.
       </div>
     );
@@ -188,21 +189,21 @@ export const V2TreeShapBreakdown: React.FC<V2TreeShapBreakdownProps> = ({ contri
       const data = payload[0].payload;
       const isPositive = data.score > 0;
       return (
-        <div className="bg-white border border-[#E4E5F0] rounded-xl p-3 shadow-lg text-xs font-sans">
-          <div className="font-bold text-[#141526] mb-1">
+        <div className="bg-white border border-line rounded-xl p-3 shadow-lg text-xs font-sans">
+          <div className="font-bold text-ink mb-1">
             {data.displayName}
           </div>
-          <div className="text-[11px] text-[#5C6079] font-mono space-y-1">
+          <div className="text-[11px] text-mute font-mono space-y-1">
             <div>
-              Observed Value: <strong className="text-[#141526]">{data.formattedVal}</strong>
+              Observed Value: <strong className="text-ink">{data.formattedVal}</strong>
             </div>
             <div>
               SHAP Attribution:{' '}
-              <strong className={isPositive ? 'text-[#6246EA]' : 'text-[#10B981]'}>
+              <strong className={isPositive ? 'text-iris' : 'text-ice-deep'}>
                 {isPositive ? `+${data.score.toFixed(4)}` : data.score.toFixed(4)}
               </strong>
             </div>
-            <div className="text-[10px] text-[#868AA2] pt-1 border-t border-[#F6F6FC]">
+            <div className="text-[11px] text-faint pt-1 border-t border-well">
               {isPositive ? 'Pushed risk estimate higher' : 'Reduced risk estimate'}
             </div>
           </div>
@@ -213,27 +214,27 @@ export const V2TreeShapBreakdown: React.FC<V2TreeShapBreakdownProps> = ({ contri
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-[#E4E5F0] p-5 space-y-4">
+    <div className="bg-white rounded-2xl border border-line p-5 space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#F6F6FC] pb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-well pb-3">
         <div>
-          <h4 className="text-sm font-bold text-[#141526] font-display flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#6246EA]" />
-            TreeSHAP Feature Attribution (Why the Model Gave This Score)
+          <h4 className="text-sm font-bold text-ink font-display flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-iris" />
+            TreeSHAP feature attribution (why the model gave this score)
           </h4>
-          <p className="text-xs text-[#5C6079] mt-0.5">
+          <p className="text-xs text-mute mt-0.5">
             Local SHAP contributions explain which observable features pushed the risk estimate higher or lower.
           </p>
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-3 text-[11px] font-medium text-[#5C6079] shrink-0">
+        <div className="flex items-center gap-3 text-[11px] font-medium text-mute shrink-0">
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#6246EA]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-iris" />
             <span>Increases Risk (+)</span>
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-ice" />
             <span>Decreases Risk (-)</span>
           </span>
         </div>
@@ -252,24 +253,24 @@ export const V2TreeShapBreakdown: React.FC<V2TreeShapBreakdownProps> = ({ contri
               }
             }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#F6F6FC" horizontal={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke={chartAxis.grid} horizontal={false} />
             <XAxis
               type="number"
               domain={['auto', 'auto']}
-              tick={{ fontSize: 11, fill: '#5C6079' }}
-              axisLine={{ stroke: '#E4E5F0' }}
+              tick={chartAxis.tick}
+              axisLine={chartAxis.axisLine}
               tickLine={false}
             />
             <YAxis
               type="category"
               dataKey="displayName"
-              tick={{ fontSize: 11, fill: '#141526', fontWeight: 500 }}
-              axisLine={{ stroke: '#E4E5F0' }}
+              tick={{ fontSize: 11, fill: palette.ink, fontWeight: 500 }}
+              axisLine={chartAxis.axisLine}
               tickLine={false}
               width={135}
             />
             <Tooltip content={<CustomShapTooltip />} />
-            <ReferenceLine x={0} stroke="#868AA2" strokeWidth={1.5} />
+            <ReferenceLine x={0} stroke={palette.faint} strokeWidth={1.5} />
             <Bar dataKey="score" radius={[4, 4, 4, 4]} cursor="pointer">
               {chartData.map((entry, index) => {
                 const isSelected = selectedFeature === entry.rawName;
@@ -277,8 +278,8 @@ export const V2TreeShapBreakdown: React.FC<V2TreeShapBreakdownProps> = ({ contri
                 return (
                   <Cell
                     key={`shap-${index}`}
-                    fill={isPositive ? (isSelected ? '#4F33D6' : '#6246EA') : (isSelected ? '#059669' : '#10B981')}
-                    stroke={isSelected ? '#141526' : 'transparent'}
+                    fill={isPositive ? (isSelected ? palette.irisDeep : palette.iris) : (isSelected ? palette.iceDeep : palette.ice)}
+                    stroke={isSelected ? palette.ink : 'transparent'}
                     strokeWidth={isSelected ? 1.5 : 0}
                   />
                 );
@@ -290,37 +291,37 @@ export const V2TreeShapBreakdown: React.FC<V2TreeShapBreakdownProps> = ({ contri
 
       {/* Selected Feature Explanation Card */}
       {activeFeatureObj && (
-        <div className="bg-[#F6F6FC] rounded-xl p-4 border border-[#E4E5F0] text-xs">
+        <div className="bg-well rounded-xl p-4 border border-line text-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2">
-              <span className={`w-2.5 h-2.5 rounded-full ${activeFeatureObj.contribution_score > 0 ? 'bg-[#6246EA]' : 'bg-[#10B981]'}`} />
-              <strong className="text-sm font-bold text-[#141526]">{activeMeta.title}</strong>
-              <span className="font-mono text-[11px] text-[#868AA2]">({activeMeta.subtitle})</span>
+              <span className={`w-2.5 h-2.5 rounded-full ${activeFeatureObj.contribution_score > 0 ? 'bg-iris' : 'bg-ice'}`} />
+              <strong className="text-sm font-bold text-ink">{activeMeta.title}</strong>
+              <span className="font-mono text-[11px] text-faint">({activeMeta.subtitle})</span>
             </div>
             <div className="flex items-center gap-3 font-mono">
-              <span className="text-[#5C6079]">
-                Observed: <strong className="text-[#141526] font-semibold">{formatFeatureValue(activeFeatureObj.feature_name, activeFeatureObj.feature_value)}</strong>
+              <span className="text-mute">
+                Observed: <strong className="text-ink font-semibold">{formatFeatureValue(activeFeatureObj.feature_name, activeFeatureObj.feature_value)}</strong>
               </span>
               <span
                 className={`px-2.5 py-0.5 rounded-full font-bold text-xs border ${
                   activeFeatureObj.contribution_score > 0
-                    ? 'bg-[#EFECFF] text-[#6246EA] border-[#D7CFFF]'
-                    : 'bg-[#EAF7EE] text-[#10B981] border-[#BBF7D0]'
+                  ? 'bg-iris-soft text-iris border-iris-line'
+                  : 'bg-ice-soft text-ice-deep border-ice-line'
                 }`}
               >
                 SHAP: {activeFeatureObj.contribution_score > 0 ? `+${activeFeatureObj.contribution_score.toFixed(4)}` : activeFeatureObj.contribution_score.toFixed(4)}
               </span>
             </div>
           </div>
-          <p className="text-[#5C6079] leading-relaxed">
+          <p className="text-mute leading-relaxed">
             {activeMeta.explanation}
           </p>
         </div>
       )}
 
       {/* Interactive Feature Selectors */}
-      <div className="flex flex-wrap gap-1.5 pt-2 border-t border-[#F6F6FC]">
-        <span className="text-[11px] text-[#868AA2] self-center mr-1">Select feature:</span>
+      <div className="flex flex-wrap gap-1.5 pt-2 border-t border-well">
+        <span className="text-[11px] text-faint self-center mr-1">Select feature:</span>
         {contributions.map((c) => {
           const isSelected = selectedFeature === c.feature_name;
           const meta = FEATURE_LABEL_MAP[c.feature_name] || { title: c.feature_name };
@@ -330,8 +331,8 @@ export const V2TreeShapBreakdown: React.FC<V2TreeShapBreakdownProps> = ({ contri
               onClick={() => setSelectedFeature(c.feature_name)}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${
                 isSelected
-                  ? 'bg-[#6246EA] text-white shadow-xs'
-                  : 'bg-[#F6F6FC] text-[#5C6079] hover:bg-[#E4E5F0] hover:text-[#141526]'
+                ? 'bg-white text-ink ring-1 ring-line shadow-[var(--shadow-xs)]'
+                : 'bg-well text-mute hover:bg-line hover:text-ink'
               }`}
             >
               {meta.title}
