@@ -1,0 +1,194 @@
+{
+  "base": "https://fraudshield-ai-psi.vercel.app",
+  "started": "2026-11-02T07:33:33.350Z",
+  "steps": [
+    {
+      "name": "visible Google Chrome launched",
+      "ok": true,
+      "detail": "Chrome 156.0.8078.74, headless: false"
+    },
+    {
+      "name": "desktop 1440x900: 13 routes, no horizontal overflow, one h1 each",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "desktop: no section left hidden after scrolling (reveal system)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "laptop 1280x800: 13 routes, no horizontal overflow, one h1 each",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "laptop: no section left hidden after scrolling (reveal system)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tablet 768x1024: 13 routes, no horizontal overflow, one h1 each",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tablet: no section left hidden after scrolling (reveal system)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile 390x844: 13 routes, no horizontal overflow, one h1 each",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile: no section left hidden after scrolling (reveal system)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "cumulative layout shift under 0.1 on key pages",
+      "ok": true,
+      "detail": "{\"/\":0.004,\"/investigate?account=ACC-000001\":0,\"/cases/FS-2001\":0,\"/tools/model\":0}"
+    },
+    {
+      "name": "all 8 sidebar links navigate, mark the active item and set the page title",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "browser back and forward restore the right pages with content shown",
+      "ok": true,
+      "detail": "/cases/FS-2001 → /cases → / → /cases"
+    },
+    {
+      "name": "case workspace: every section opens and is marked current",
+      "ok": true,
+      "detail": "2 Money flow | 3 Accounts & risk | 4 Review & history | 1 Summary"
+    },
+    {
+      "name": "model status popover opens with the server’s explanation and closes with Escape",
+      "ok": true,
+      "detail": "Models ready\n\nInvestigations use the transaction model v3-transaction-1.0.0 and the account behaviour model v3-account-1"
+    },
+    {
+      "name": "sidebar folds to icons, stays folded after reload, and unfolds",
+      "ok": true,
+      "detail": "76 → reload 76 → 264"
+    },
+    {
+      "name": "keyboard: the first 14 Tab stops all show a visible focus ring",
+      "ok": true,
+      "detail": " | Open account | Investigate an account | Open sample case | Open investigations | FS-2001Start: read the summa | FS-1042Start: read the summa | Audit log | Model performance | Skip to content | FraudShield AI home | Overview | Investigate"
+    },
+    {
+      "name": "first Tab stop is “Skip to content”",
+      "ok": true,
+      "detail": "Skip to content"
+    },
+    {
+      "name": "dataset picker switches to the forensic ledger and lists starting points",
+      "ok": true,
+      "detail": "6 suggested accounts"
+    },
+    {
+      "name": "investigation runs against the API and the report appears",
+      "ok": true,
+      "detail": "8905 ms"
+    },
+    {
+      "name": "stage tabs move with the arrow keys",
+      "ok": true,
+      "detail": "2 Fund trail"
+    },
+    {
+      "name": "fund trail finished drawing: every account visible, inferred links dashed",
+      "ok": true,
+      "detail": "13 accounts, 9 inferred links, 0 still hidden"
+    },
+    {
+      "name": "branch picker switches the story to Outflow 2",
+      "ok": true,
+      "detail": "Outflow 2 Focus in trail Step 1: Investigated account ACC-00"
+    },
+    {
+      "name": "tree account opens the inspector with evidence labels; Escape closes it",
+      "ok": true,
+      "detail": "Account ACC-000003, Potential intermediary, verification recommended"
+    },
+    {
+      "name": "a branch folds (+N shown) and unfolds back into view",
+      "ok": true,
+      "detail": "Collapse the transfers after ACC-007388 → +2"
+    },
+    {
+      "name": "zoom and fit controls change the view",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "every investigation stage renders content",
+      "ok": true,
+      "detail": "Affected accounts:ok Risk evidence:ok AI analyst:ok Next steps:ok Overview:ok"
+    },
+    {
+      "name": "no AI explanation request was sent",
+      "ok": true,
+      "detail": "0 requests"
+    },
+    {
+      "name": "account details: live analysis runs, every section tab opens",
+      "ok": true,
+      "detail": "Follow the money:true Transactions:true Review:true Overview and analysis:true"
+    },
+    {
+      "name": "model tabs, audit filters, fund-flow list view and the transaction check all work",
+      "ok": true,
+      "detail": "audit rows 2, list true"
+    },
+    {
+      "name": "mobile drawer: focus starts inside, Tab stays inside, Escape closes and returns focus, a link navigates",
+      "ok": true,
+      "detail": "Close menu / inside true / back Open menu / /cases"
+    },
+    {
+      "name": "reduced motion: no section is hidden for an entrance and the fund trail appears at once",
+      "ok": true,
+      "detail": " tree hidden 0"
+    },
+    {
+      "name": "no page errors",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "name": "no console errors",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "name": "no failed requests (other than cancelled ones)",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "name": "no Content-Security-Policy violations",
+      "ok": true,
+      "detail": "[]"
+    }
+  ],
+  "console": [],
+  "pageErrors": [],
+  "failed": [],
+  "csp": [],
+  "cls": {
+    "/": 0.004,
+    "/investigate?account=ACC-000001": 0,
+    "/cases/FS-2001": 0,
+    "/tools/model": 0
+  },
+  "explanation": [],
+  "chrome": "156.0.8078.74",
+  "finished": "2026-11-02T07:38:44.477Z"
+}
