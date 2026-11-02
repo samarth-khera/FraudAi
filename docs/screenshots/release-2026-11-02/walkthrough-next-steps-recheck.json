@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-11-02T03:52:50.779Z",
+  "ok": true,
+  "affirmativeGuiltOrFreezeHits": [],
+  "required": {
+    "advisory": true,
+    "authorisedProcess": true,
+    "humanDecides": true,
+    "noAction": true,
+    "notPenalty": true,
+    "innocent": true,
+    "missing": true
+  },
+  "explanationRequests": 0
+}
