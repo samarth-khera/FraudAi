@@ -185,7 +185,7 @@ export const TransactionCheckPage: React.FC = () => {
       {/* Benchmark example selector */}
       <div className="forensic-panel p-4 space-y-3.5">
         <div className="pb-2.5 border-b border-line space-y-1.5">
-          <span className="font-mono text-[11px] font-bold text-ink ">
+          <span className="text-sm font-semibold text-ink">
             1. Load an example transaction
           </span>
           <p className="text-xs text-sev-low leading-relaxed">

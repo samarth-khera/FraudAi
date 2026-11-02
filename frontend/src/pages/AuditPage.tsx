@@ -440,10 +440,10 @@ export const AuditPage: React.FC = () => {
       >
         {/* Total Events */}
         <div className="p-5 rounded-2xl bg-white border border-line shadow-xs space-y-1">
-          <span className="text-[11px] font-mono font-bold text-faint block">
+          <span className="text-xs font-semibold text-faint block">
             Total audit records
           </span>
-          <div className="text-2xl sm:text-3xl font-bold font-mono text-ink">
+          <div className="font-display text-2xl sm:text-3xl font-bold text-ink">
             {auditData ? auditData.summary.total_events.toLocaleString() : '—'}
           </div>
           <span className="text-[11px] text-mute block">
@@ -456,12 +456,12 @@ export const AuditPage: React.FC = () => {
         {/* Human reviews */}
         <div className="p-5 rounded-2xl bg-white border border-line shadow-xs space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-mono font-bold text-iris block">
+            <span className="text-xs font-semibold text-iris-deep block">
               Human reviews
             </span>
             <UserCheck className="w-4 h-4 text-iris" />
           </div>
-          <div className="text-2xl sm:text-3xl font-bold font-mono text-iris">
+          <div className="font-display text-2xl sm:text-3xl font-bold text-iris-deep">
             {auditData ? auditData.summary.review_decisions_count.toLocaleString() : '—'}
           </div>
           <span className="text-[11px] text-mute block">Adjudications &amp; mule verdicts</span>
@@ -470,12 +470,12 @@ export const AuditPage: React.FC = () => {
         {/* Case Changes */}
         <div className="p-5 rounded-2xl bg-white border border-line shadow-xs space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-mono font-bold text-info block">
+            <span className="text-xs font-semibold text-info block">
               Case status changes
             </span>
             <FolderGit2 className="w-4 h-4 text-info" />
           </div>
-          <div className="text-2xl sm:text-3xl font-bold font-mono text-ink">
+          <div className="font-display text-2xl sm:text-3xl font-bold text-ink">
             {auditData ? auditData.summary.case_status_changes_count.toLocaleString() : '—'}
           </div>
           <span className="text-[11px] text-mute block">Lifecycle transitions &amp; updates</span>
@@ -484,12 +484,12 @@ export const AuditPage: React.FC = () => {
         {/* Trace Provenance */}
         <div className="p-5 rounded-2xl bg-white border border-line shadow-xs space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-mono font-bold text-ok block">
+            <span className="text-xs font-semibold text-ok block">
               Trace lineage events
             </span>
             <GitFork className="w-4 h-4 text-ok" />
           </div>
-          <div className="text-2xl sm:text-3xl font-bold font-mono text-ink">
+          <div className="font-display text-2xl sm:text-3xl font-bold text-ink">
             {auditData ? auditData.summary.trace_events_count.toLocaleString() : '—'}
           </div>
           <span className="text-[11px] text-mute block">Engine paths persisted</span>
@@ -498,12 +498,12 @@ export const AuditPage: React.FC = () => {
         {/* Most recent event */}
         <div className="p-5 rounded-2xl bg-white border border-line shadow-xs space-y-1 col-span-2 lg:col-span-1">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-mono font-bold text-faint block">
+            <span className="text-xs font-semibold text-faint block">
               Most recent event
             </span>
             <Clock className="w-4 h-4 text-faint" />
           </div>
-          <div className="text-base sm:text-lg font-bold font-mono text-ink truncate">
+          <div className="font-display text-base sm:text-lg font-bold text-ink truncate">
             {auditData?.summary.most_recent_timestamp
               ? formatRelativeTime(auditData.summary.most_recent_timestamp)
               : 'None'}
@@ -712,7 +712,7 @@ export const AuditPage: React.FC = () => {
         {loading && !auditData && (
           <div className="py-16 text-center space-y-3">
             <div className="w-8 h-8 rounded-full border-3 border-iris border-t-transparent animate-spin mx-auto" />
-            <p className="text-xs font-mono text-mute">Querying append-only audit trail...</p>
+            <p className="text-xs text-mute">Loading the audit trail…</p>
           </div>
         )}
 
@@ -740,7 +740,7 @@ export const AuditPage: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-line bg-well font-mono text-[11px] text-mute">
+                <tr className="border-b border-line bg-well text-xs font-semibold text-mute">
                   <th className="py-3 px-3.5">ID</th>
                   <th className="py-3 px-3.5">Category &amp; Action</th>
                   <th className="py-3 px-3.5">Timestamp (UTC)</th>
