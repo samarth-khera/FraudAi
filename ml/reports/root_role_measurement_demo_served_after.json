@@ -1,0 +1,5781 @@
+{
+  "ledger": "demo",
+  "tag": "served_after",
+  "roots": 417,
+  "errors": 0,
+  "runtime_seconds": 37.2,
+  "root_role_by_truth": {
+    "attacker_controlled": {
+      "potential_intermediary": 18,
+      "unknown_role": 7,
+      "potential_victim": 4,
+      "no_suspicious_activity_observed": 3,
+      "suspicious_activity_victim_unconfirmed": 2
+    },
+    "innocent_counterparty": {
+      "no_suspicious_activity_observed": 27,
+      "unknown_role": 2,
+      "potential_victim": 1
+    },
+    "intermediary": {
+      "potential_intermediary": 73,
+      "unknown_role": 25,
+      "potential_victim": 9,
+      "no_suspicious_activity_observed": 5,
+      "potentially_suspicious_account": 4,
+      "suspicious_activity_victim_unconfirmed": 2
+    },
+    "lookalike_legitimate": {
+      "unknown_role": 7,
+      "potential_victim": 3
+    },
+    "low_history_sample": {
+      "unknown_role": 10
+    },
+    "ordinary_sample": {
+      "no_suspicious_activity_observed": 132,
+      "unknown_role": 13,
+      "potential_victim": 5
+    },
+    "secondary_victim": {
+      "potential_victim": 3,
+      "no_suspicious_activity_observed": 1
+    },
+    "victim": {
+      "potential_victim": 57,
+      "no_suspicious_activity_observed": 4
+    }
+  },
+  "root_restriction_by_truth": {
+    "attacker_controlled": {
+      "urgent_manual_review_recommended": 22,
+      "insufficient_evidence_to_recommend": 7,
+      "no_restriction_recommendation": 3,
+      "additional_verification_recommended": 2
+    },
+    "innocent_counterparty": {
+      "no_restriction_recommendation": 27,
+      "insufficient_evidence_to_recommend": 2,
+      "urgent_manual_review_recommended": 1
+    },
+    "intermediary": {
+      "urgent_manual_review_recommended": 74,
+      "insufficient_evidence_to_recommend": 25,
+      "consider_temporary_restriction_review": 12,
+      "no_restriction_recommendation": 5,
+      "additional_verification_recommended": 2
+    },
+    "lookalike_legitimate": {
+      "insufficient_evidence_to_recommend": 7,
+      "urgent_manual_review_recommended": 3
+    },
+    "low_history_sample": {
+      "insufficient_evidence_to_recommend": 10
+    },
+    "ordinary_sample": {
+      "no_restriction_recommendation": 132,
+      "insufficient_evidence_to_recommend": 13,
+      "urgent_manual_review_recommended": 5
+    },
+    "secondary_victim": {
+      "urgent_manual_review_recommended": 3,
+      "no_restriction_recommendation": 1
+    },
+    "victim": {
+      "urgent_manual_review_recommended": 57,
+      "no_restriction_recommendation": 4
+    }
+  },
+  "connected_role_by_truth": {
+    "attacker_controlled": {
+      "unknown_role": 58,
+      "potential_intermediary": 25,
+      "potentially_suspicious_account": 24,
+      "no_suspicious_linkage_observed": 18
+    },
+    "cash_network": {
+      "cash_withdrawal_point": 425
+    },
+    "innocent_counterparty": {
+      "no_suspicious_linkage_observed": 51,
+      "unknown_role": 10
+    },
+    "intermediary": {
+      "unknown_role": 279,
+      "potential_intermediary": 120,
+      "potentially_suspicious_account": 19,
+      "no_suspicious_linkage_observed": 19,
+      "potential_victim": 4,
+      "potential_secondary_victim": 2
+    },
+    "no_scenario_role": {
+      "no_suspicious_linkage_observed": 2148,
+      "unknown_role": 270,
+      "potential_victim": 13,
+      "potential_intermediary": 1
+    },
+    "role_in_other_scenario": {
+      "no_suspicious_linkage_observed": 132,
+      "unknown_role": 60,
+      "potential_victim": 5
+    },
+    "secondary_victim": {
+      "potential_victim": 4,
+      "no_suspicious_linkage_observed": 4,
+      "unknown_role": 4,
+      "suspicious_activity_victim_unconfirmed": 2
+    },
+    "victim": {
+      "potential_victim": 155,
+      "unknown_role": 24,
+      "no_suspicious_linkage_observed": 8
+    }
+  },
+  "connected_restriction_by_truth": {
+    "attacker_controlled": {
+      "insufficient_evidence_to_recommend": 58,
+      "consider_temporary_restriction_review": 24,
+      "no_restriction_recommendation": 18,
+      "urgent_manual_review_recommended": 17,
+      "additional_verification_recommended": 8
+    },
+    "cash_network": {
+      "no_restriction_recommendation": 425
+    },
+    "innocent_counterparty": {
+      "no_restriction_recommendation": 51,
+      "insufficient_evidence_to_recommend": 10
+    },
+    "intermediary": {
+      "insufficient_evidence_to_recommend": 279,
+      "urgent_manual_review_recommended": 65,
+      "consider_temporary_restriction_review": 56,
+      "additional_verification_recommended": 24,
+      "no_restriction_recommendation": 19
+    },
+    "no_scenario_role": {
+      "no_restriction_recommendation": 2148,
+      "insufficient_evidence_to_recommend": 270,
+      "urgent_manual_review_recommended": 13,
+      "consider_temporary_restriction_review": 1
+    },
+    "role_in_other_scenario": {
+      "no_restriction_recommendation": 132,
+      "insufficient_evidence_to_recommend": 60,
+      "urgent_manual_review_recommended": 5
+    },
+    "secondary_victim": {
+      "urgent_manual_review_recommended": 6,
+      "no_restriction_recommendation": 4,
+      "insufficient_evidence_to_recommend": 4
+    },
+    "victim": {
+      "urgent_manual_review_recommended": 155,
+      "insufficient_evidence_to_recommend": 24,
+      "no_restriction_recommendation": 8
+    }
+  },
+  "key_rates": {
+    "victim_roots_victim_class": {
+      "n": 61,
+      "count": 57,
+      "rate": 0.9344
+    },
+    "victim_roots_suspicion_class": {
+      "n": 61,
+      "count": 0,
+      "rate": 0.0
+    },
+    "intermediary_roots_victim_class": {
+      "n": 118,
+      "count": 11,
+      "rate": 0.0932
+    },
+    "intermediary_roots_suspicion_class": {
+      "n": 118,
+      "count": 77,
+      "rate": 0.6525
+    },
+    "attacker_roots_victim_class": {
+      "n": 34,
+      "count": 6,
+      "rate": 0.1765
+    },
+    "attacker_roots_suspicion_class": {
+      "n": 34,
+      "count": 18,
+      "rate": 0.5294
+    },
+    "secondary_victim_roots_suspicion_class": {
+      "n": 4,
+      "count": 0,
+      "rate": 0.0
+    },
+    "lookalike_roots_suspicion_class": {
+      "n": 10,
+      "count": 0,
+      "rate": 0.0
+    },
+    "innocent_roots_suspicion_class": {
+      "n": 30,
+      "count": 0,
+      "rate": 0.0
+    },
+    "ordinary_roots_suspicion_class": {
+      "n": 150,
+      "count": 0,
+      "rate": 0.0
+    },
+    "low_history_roots_abstain": {
+      "n": 10,
+      "count": 10,
+      "rate": 1.0
+    }
+  },
+  "safety": {
+    "restriction_review_for_victim_roots": 0,
+    "restriction_review_for_innocent_lookalike_ordinary_roots": 0,
+    "innocent_counterparties_connected_suspicion_class": 0,
+    "innocent_counterparties_connected_seen": 61,
+    "no_scenario_role_connected_suspicion_class": 1,
+    "no_scenario_role_connected_seen": 2432,
+    "victims_connected_suspicion_class": 0,
+    "restriction_review_for_connected_victims_or_innocent": 1
+  },
+  "root_vs_connected_consistency": {
+    "intermediary: root suspicion_class / connected abstain": 50,
+    "victim: root victim_class / connected victim_class": 48,
+    "intermediary: root suspicion_class / connected suspicion_class": 26,
+    "innocent_counterparty: root no_linkage / connected no_linkage": 24,
+    "attacker_controlled: root suspicion_class / connected suspicion_class": 14,
+    "intermediary: root abstain / connected abstain": 12,
+    "intermediary: root victim_class / connected abstain": 10,
+    "intermediary: root abstain / connected suspicion_class": 8,
+    "victim: root victim_class / connected abstain": 6,
+    "intermediary: root no_linkage / connected no_linkage": 5,
+    "attacker_controlled: root suspicion_class / connected abstain": 4,
+    "attacker_controlled: root abstain / connected abstain": 4,
+    "attacker_controlled: root victim_class / connected suspicion_class": 3,
+    "attacker_controlled: root no_linkage / connected no_linkage": 3,
+    "innocent_counterparty: root no_linkage / connected abstain": 3,
+    "attacker_controlled: root abstain / connected suspicion_class": 3,
+    "victim: root no_linkage / connected no_linkage": 3,
+    "attacker_controlled: root victim_class / connected abstain": 3,
+    "secondary_victim: root victim_class / connected victim_class": 2,
+    "innocent_counterparty: root abstain / connected abstain": 1,
+    "innocent_counterparty: root abstain / connected no_linkage": 1,
+    "intermediary: root victim_class / connected suspicion_class": 1,
+    "secondary_victim: root no_linkage / connected no_linkage": 1,
+    "intermediary: root abstain / connected no_linkage": 1,
+    "victim: root no_linkage / connected abstain": 1,
+    "victim: root victim_class / connected no_linkage": 1,
+    "secondary_victim: root victim_class / connected abstain": 1,
+    "innocent_counterparty: root victim_class / connected abstain": 1
+  },
+  "victim_vs_suspicion_disagreements": 4,
+  "disagreement_examples": [
+    {
+      "account_id": "FS-6636A124",
+      "truth": "attacker_controlled",
+      "root_role": "potential_victim",
+      "connected_roles": {
+        "unknown_role": 6,
+        "potentially_suspicious_account": 10
+      }
+    },
+    {
+      "account_id": "FS-A2728D2B",
+      "truth": "intermediary",
+      "root_role": "potential_victim",
+      "connected_roles": {
+        "potential_intermediary": 2
+      }
+    },
+    {
+      "account_id": "FS-144E6931",
+      "truth": "attacker_controlled",
+      "root_role": "potential_victim",
+      "connected_roles": {
+        "potential_intermediary": 4,
+        "unknown_role": 2
+      }
+    },
+    {
+      "account_id": "FS-E559653C",
+      "truth": "attacker_controlled",
+      "root_role": "suspicious_activity_victim_unconfirmed",
+      "connected_roles": {
+        "potential_intermediary": 3,
+        "unknown_role": 2
+      }
+    }
+  ],
+  "errors_detail": [],
+  "per_root": [
+    {
+      "account_id": "FS-003A893F",
+      "seconds": 0.849,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-00C12D37",
+      "seconds": 0.715,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-023F45AF",
+      "seconds": 0.428,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-028968EE",
+      "seconds": 0.523,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-0366517C",
+      "seconds": 0.577,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-03A79C23",
+      "seconds": 0.761,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-03BDFF00",
+      "seconds": 0.344,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-077410C4",
+      "seconds": 0.321,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-07826696",
+      "seconds": 0.737,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-07F4EF55",
+      "seconds": 0.633,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-0840088A",
+      "seconds": 0.6,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-0A01328A",
+      "seconds": 0.507,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-0AED4337",
+      "seconds": 0.469,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-0DE07A01",
+      "seconds": 0.68,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-126B6A5D",
+      "seconds": 0.685,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "lookalike_legitimate"
+    },
+    {
+      "account_id": "FS-144E6931",
+      "seconds": 0.562,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-1512B57C",
+      "seconds": 0.436,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-16C50FC1",
+      "seconds": 0.647,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-17DAE26D",
+      "seconds": 0.594,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-1869AA22",
+      "seconds": 0.436,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-19DFAD43",
+      "seconds": 0.714,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-1D35F30B",
+      "seconds": 0.561,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-1E9B75FA",
+      "seconds": 0.446,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-1F4443C4",
+      "seconds": 0.493,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-200E2733",
+      "seconds": 0.248,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-209FCAFB",
+      "seconds": 0.208,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-24380524",
+      "seconds": 0.513,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-256FC488",
+      "seconds": 0.534,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-25B51D0B",
+      "seconds": 0.496,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-29869761",
+      "seconds": 0.427,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "secondary_victim"
+    },
+    {
+      "account_id": "FS-29A7B594",
+      "seconds": 0.455,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-2A7FBD27",
+      "seconds": 0.782,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-2BB8B618",
+      "seconds": 0.42,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-2C956545",
+      "seconds": 0.379,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-2CBE8DF7",
+      "seconds": 0.65,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-2CE4BD29",
+      "seconds": 0.486,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [],
+      "kinds": [],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-2D45BC60",
+      "seconds": 0.762,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-2DAAF571",
+      "seconds": 0.274,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-2DDA1955",
+      "seconds": 0.563,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-301AF95C",
+      "seconds": 1.045,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-3352698E",
+      "seconds": 0.448,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-33F54945",
+      "seconds": 0.4,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "lookalike_legitimate"
+    },
+    {
+      "account_id": "FS-34B6E692",
+      "seconds": 0.256,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-34BA49E0",
+      "seconds": 0.739,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-3602D7A2",
+      "seconds": 0.253,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-376140E3",
+      "seconds": 0.541,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-392DE72C",
+      "seconds": 0.653,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-3B48152E",
+      "seconds": 0.694,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-3CC02B08",
+      "seconds": 0.409,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-3DAFB4AB",
+      "seconds": 0.594,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [],
+      "kinds": [],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-3F6BE7CF",
+      "seconds": 0.772,
+      "role": "potentially_suspicious_account",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "NETWORK",
+        "FLAGGED_IN_MOVED"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT",
+        "NETWORK"
+      ],
+      "restriction": "consider_temporary_restriction_review",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-41F51DC4",
+      "seconds": 0.549,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-450EDD8C",
+      "seconds": 0.921,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "NETWORK",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT",
+        "NETWORK"
+      ],
+      "restriction": "consider_temporary_restriction_review",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-4526DF45",
+      "seconds": 0.451,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "MOVED_OUT"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-45C6C03E",
+      "seconds": 0.536,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-46A9E6CF",
+      "seconds": 0.54,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-46E55A5E",
+      "seconds": 1.104,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-470E78D8",
+      "seconds": 0.315,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-47EE2F54",
+      "seconds": 0.598,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-48387924",
+      "seconds": 0.239,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-49561099",
+      "seconds": 0.78,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-49FC3B37",
+      "seconds": 0.348,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-4A92F022",
+      "seconds": 0.737,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-4B745C33",
+      "seconds": 0.558,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-4E09B3E8",
+      "seconds": 0.867,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-4ED5C70C",
+      "seconds": 0.761,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-4EE27BDE",
+      "seconds": 0.352,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-50D2D7B4",
+      "seconds": 0.305,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-53B368CB",
+      "seconds": 0.52,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "lookalike_legitimate"
+    },
+    {
+      "account_id": "FS-540DB59B",
+      "seconds": 0.362,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-54F95A3F",
+      "seconds": 0.326,
+      "role": "suspicious_activity_victim_unconfirmed",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "additional_verification_recommended",
+      "may_be_victim": true,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-55B251FD",
+      "seconds": 0.564,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-55BDDED8",
+      "seconds": 0.416,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-55E6B26C",
+      "seconds": 0.398,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-5635F5AF",
+      "seconds": 0.503,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-581B33A4",
+      "seconds": 0.511,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-581DD1F7",
+      "seconds": 0.522,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-592F72DB",
+      "seconds": 0.4,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-59BCEA8B",
+      "seconds": 0.474,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "MOVED_OUT"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-5A064ACB",
+      "seconds": 0.885,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "MOVED_OUT"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-5A7DA2AA",
+      "seconds": 0.495,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "MOVED_OUT"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-5C0ACA12",
+      "seconds": 0.456,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "MOVED_OUT"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-5C1BE8E4",
+      "seconds": 0.313,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-5CBDFEC6",
+      "seconds": 0.284,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "NETWORK",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT",
+        "NETWORK"
+      ],
+      "restriction": "consider_temporary_restriction_review",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-5CC88F9F",
+      "seconds": 0.231,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-5FA128F5",
+      "seconds": 0.351,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-60A418DD",
+      "seconds": 0.224,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [],
+      "kinds": [],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-60EACA0F",
+      "seconds": 0.366,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "lookalike_legitimate"
+    },
+    {
+      "account_id": "FS-61C6DC36",
+      "seconds": 0.327,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "NETWORK",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT",
+        "NETWORK"
+      ],
+      "restriction": "consider_temporary_restriction_review",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-6287C317",
+      "seconds": 0.419,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "MOVED_OUT"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-62947961",
+      "seconds": 0.248,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-633FD559",
+      "seconds": 0.546,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-6369AD83",
+      "seconds": 0.588,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-6390C685",
+      "seconds": 0.285,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "MOVED_OUT"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-639536ED",
+      "seconds": 0.354,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "MOVED_OUT"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-65E2F2D2",
+      "seconds": 0.377,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-6636A124",
+      "seconds": 0.467,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-685A6FD4",
+      "seconds": 0.886,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-69022FD4",
+      "seconds": 0.59,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-690E6A5D",
+      "seconds": 0.893,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-694A84C1",
+      "seconds": 0.589,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-6B320D07",
+      "seconds": 0.344,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-6D5033D8",
+      "seconds": 0.587,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-6DCF2CC4",
+      "seconds": 1.028,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "MOVED_OUT"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-6EBB0AD1",
+      "seconds": 0.425,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-6F978B80",
+      "seconds": 0.502,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-6FD017A3",
+      "seconds": 1.159,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-7031B74C",
+      "seconds": 0.641,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-706A527F",
+      "seconds": 0.725,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-7106DC59",
+      "seconds": 0.639,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "NETWORK"
+      ],
+      "kinds": [
+        "NETWORK"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-7119BBC9",
+      "seconds": 0.77,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [],
+      "kinds": [],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-711F194B",
+      "seconds": 0.744,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-72EA0F4B",
+      "seconds": 0.864,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "secondary_victim"
+    },
+    {
+      "account_id": "FS-7305E412",
+      "seconds": 1.334,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-73140B7C",
+      "seconds": 0.537,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-7423FF24",
+      "seconds": 0.668,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-7427E5F1",
+      "seconds": 0.868,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-742FAD5E",
+      "seconds": 0.953,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-748E87EF",
+      "seconds": 0.476,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "MOVED_OUT"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-757188B3",
+      "seconds": 0.125,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [],
+      "kinds": [],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-78226F94",
+      "seconds": 0.533,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-7B1D1A83",
+      "seconds": 0.572,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "MOVED_OUT"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-7B7C13AB",
+      "seconds": 0.627,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-7DDC06E9",
+      "seconds": 0.258,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "MOVED_OUT"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-7E61E504",
+      "seconds": 0.456,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-8050644D",
+      "seconds": 0.418,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-8054B4DA",
+      "seconds": 0.626,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-839E101F",
+      "seconds": 0.332,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-8425D99B",
+      "seconds": 0.501,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-84BB2FD9",
+      "seconds": 0.373,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-8546F997",
+      "seconds": 0.573,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-85B6CEC8",
+      "seconds": 0.485,
+      "role": "potentially_suspicious_account",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "NETWORK",
+        "FLAGGED_IN_MOVED"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT",
+        "NETWORK"
+      ],
+      "restriction": "consider_temporary_restriction_review",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-86191772",
+      "seconds": 0.206,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-871D0C65",
+      "seconds": 0.21,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "NETWORK"
+      ],
+      "kinds": [
+        "NETWORK"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-87C71030",
+      "seconds": 0.532,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-8ADAF8EA",
+      "seconds": 0.443,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-8AEE629E",
+      "seconds": 0.554,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-8B509BB0",
+      "seconds": 0.563,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "MOVED_OUT"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-8CEB4241",
+      "seconds": 0.452,
+      "role": "suspicious_activity_victim_unconfirmed",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "additional_verification_recommended",
+      "may_be_victim": true,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-8D1CE435",
+      "seconds": 0.294,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-90334FA9",
+      "seconds": 0.294,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-90FF914C",
+      "seconds": 0.223,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-9237AA55",
+      "seconds": 0.403,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "MOVED_OUT"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-949E8968",
+      "seconds": 0.146,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "NETWORK"
+      ],
+      "kinds": [
+        "NETWORK"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-95944F35",
+      "seconds": 0.334,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-961682EC",
+      "seconds": 0.539,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-97C2502E",
+      "seconds": 0.498,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-9945E4AC",
+      "seconds": 0.494,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-99EDC99B",
+      "seconds": 0.628,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-9A6121FD",
+      "seconds": 0.558,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-9ADBD0FD",
+      "seconds": 0.519,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-9BAECBF3",
+      "seconds": 0.593,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-9D414D78",
+      "seconds": 0.382,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-9F44BD6A",
+      "seconds": 0.399,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "MOVED_OUT"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-A1B1A17B",
+      "seconds": 0.114,
+      "role": "suspicious_activity_victim_unconfirmed",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "additional_verification_recommended",
+      "may_be_victim": true,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-A1B85948",
+      "seconds": 0.57,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-A1C03696",
+      "seconds": 0.163,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-A2728D2B",
+      "seconds": 0.668,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-A2D0CAB8",
+      "seconds": 0.606,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-A36BD91F",
+      "seconds": 0.169,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "NETWORK",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT",
+        "NETWORK"
+      ],
+      "restriction": "consider_temporary_restriction_review",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-A6FA51C3",
+      "seconds": 0.562,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-A8701D5E",
+      "seconds": 0.385,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-A890A5DD",
+      "seconds": 0.656,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-A96D2CCB",
+      "seconds": 0.44,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "lookalike_legitimate"
+    },
+    {
+      "account_id": "FS-A98863CB",
+      "seconds": 0.542,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-AABC5699",
+      "seconds": 0.633,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-ABAB3742",
+      "seconds": 0.369,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "MOVED_OUT"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-ABD8FFA5",
+      "seconds": 0.284,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-ACA06AC6",
+      "seconds": 0.31,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-B0791844",
+      "seconds": 0.321,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-B19B3066",
+      "seconds": 0.443,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-B22605FF",
+      "seconds": 0.352,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-B3302D7E",
+      "seconds": 0.269,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-B4B8AA01",
+      "seconds": 0.292,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-B56CC4C4",
+      "seconds": 0.233,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-B645F58E",
+      "seconds": 0.394,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-B7D588FD",
+      "seconds": 0.547,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-B841C5DC",
+      "seconds": 0.503,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-BA108144",
+      "seconds": 0.216,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-BA28555F",
+      "seconds": 0.494,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-BAB90207",
+      "seconds": 0.385,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "lookalike_legitimate"
+    },
+    {
+      "account_id": "FS-BB4AC72E",
+      "seconds": 0.599,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-BBCD8F9B",
+      "seconds": 0.461,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-BE0CB56B",
+      "seconds": 0.246,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "NETWORK",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT",
+        "NETWORK"
+      ],
+      "restriction": "consider_temporary_restriction_review",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-BEE60E54",
+      "seconds": 0.434,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-C3DAECD6",
+      "seconds": 0.272,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-C6B7A9F0",
+      "seconds": 0.427,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-C6DBF927",
+      "seconds": 0.739,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-C8A19E67",
+      "seconds": 0.471,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-C91E8F32",
+      "seconds": 0.285,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-C9501D6A",
+      "seconds": 0.666,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-C9C0F669",
+      "seconds": 0.672,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [],
+      "kinds": [],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-CA088F35",
+      "seconds": 0.405,
+      "role": "potentially_suspicious_account",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "NETWORK",
+        "FLAGGED_IN_MOVED"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT",
+        "NETWORK"
+      ],
+      "restriction": "consider_temporary_restriction_review",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-CA62D223",
+      "seconds": 0.319,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-CAFF511D",
+      "seconds": 0.733,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-CB2BC2CE",
+      "seconds": 0.401,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-CB65A548",
+      "seconds": 0.522,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-CC07F6AD",
+      "seconds": 0.498,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-CD4035FD",
+      "seconds": 0.661,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-CDECB0D8",
+      "seconds": 0.451,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-CE13E4F4",
+      "seconds": 0.339,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-CEFA76DB",
+      "seconds": 0.638,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-D0339189",
+      "seconds": 0.51,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-D0746A75",
+      "seconds": 0.383,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "NETWORK",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT",
+        "NETWORK"
+      ],
+      "restriction": "consider_temporary_restriction_review",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-D0D054F1",
+      "seconds": 0.589,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "lookalike_legitimate"
+    },
+    {
+      "account_id": "FS-D0D3AD70",
+      "seconds": 0.34,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-D0EB4ACF",
+      "seconds": 0.597,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-D29E5E3A",
+      "seconds": 0.578,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-D4141AE0",
+      "seconds": 0.742,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-D466702E",
+      "seconds": 0.424,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-D563F487",
+      "seconds": 0.503,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-D5E3999D",
+      "seconds": 0.647,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-D7ABCDBB",
+      "seconds": 0.666,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-D93C246C",
+      "seconds": 0.355,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-D948AB11",
+      "seconds": 0.407,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-DA20D03B",
+      "seconds": 0.56,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "MOVED_OUT"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-DAAA68A5",
+      "seconds": 0.254,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-DE4FF46D",
+      "seconds": 0.52,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-DE585546",
+      "seconds": 0.65,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "MOVED_OUT"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-DF9EC5AE",
+      "seconds": 0.346,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-DFFBEA16",
+      "seconds": 0.555,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-E0719F0D",
+      "seconds": 0.557,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-E1884568",
+      "seconds": 0.157,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [],
+      "kinds": [],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-E4DA98FE",
+      "seconds": 0.55,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-E559653C",
+      "seconds": 0.532,
+      "role": "suspicious_activity_victim_unconfirmed",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "additional_verification_recommended",
+      "may_be_victim": true,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-E71CDB63",
+      "seconds": 0.342,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-E749FC66",
+      "seconds": 0.482,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-EAAA344C",
+      "seconds": 0.636,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-EACF19F9",
+      "seconds": 0.653,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-ED3A6116",
+      "seconds": 0.658,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-EE035E35",
+      "seconds": 0.377,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "attacker_controlled"
+    },
+    {
+      "account_id": "FS-EE12B742",
+      "seconds": 0.594,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-EFC5C8A6",
+      "seconds": 0.526,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-F1017663",
+      "seconds": 0.495,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "secondary_victim"
+    },
+    {
+      "account_id": "FS-F108E472",
+      "seconds": 0.754,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-F11146E1",
+      "seconds": 0.698,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-F1A91E8B",
+      "seconds": 0.593,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-F2B06CCD",
+      "seconds": 0.311,
+      "role": "potentially_suspicious_account",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "NETWORK",
+        "FLAGGED_IN_MOVED"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT",
+        "NETWORK"
+      ],
+      "restriction": "consider_temporary_restriction_review",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-F3147E95",
+      "seconds": 0.349,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-F3544284",
+      "seconds": 0.422,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "lookalike_legitimate"
+    },
+    {
+      "account_id": "FS-F43EC832",
+      "seconds": 0.413,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-F5617992",
+      "seconds": 0.287,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-F57C76B3",
+      "seconds": 0.259,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-F66D7CBD",
+      "seconds": 0.752,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "MOVED_OUT"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-F6A1807A",
+      "seconds": 0.661,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-F836172C",
+      "seconds": 0.49,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "lookalike_legitimate"
+    },
+    {
+      "account_id": "FS-F8896159",
+      "seconds": 0.576,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-F9F23ED5",
+      "seconds": 0.267,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-F9F48F0C",
+      "seconds": 0.345,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "lookalike_legitimate"
+    },
+    {
+      "account_id": "FS-FAB3CEE8",
+      "seconds": 0.569,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-FAE93C57",
+      "seconds": 0.55,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "NETWORK",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT",
+        "NETWORK"
+      ],
+      "restriction": "consider_temporary_restriction_review",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-FBF1D4CE",
+      "seconds": 0.424,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-FC7EC1FC",
+      "seconds": 0.532,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "secondary_victim"
+    },
+    {
+      "account_id": "FS-FD90B781",
+      "seconds": 0.619,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "innocent_counterparty"
+    },
+    {
+      "account_id": "FS-FE28FEAC",
+      "seconds": 0.333,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "victim"
+    },
+    {
+      "account_id": "FS-FE39D120",
+      "seconds": 0.597,
+      "role": "potential_intermediary",
+      "victim_status": "suspicious_activity_victim_status_unconfirmed",
+      "categories": [
+        "ACCOUNT_MODEL",
+        "NETWORK",
+        "FUNDED_FORWARD"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL",
+        "MOVED_OUT",
+        "NETWORK"
+      ],
+      "restriction": "consider_temporary_restriction_review",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-FFB2556C",
+      "seconds": 0.594,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "intermediary"
+    },
+    {
+      "account_id": "FS-BC616F9C",
+      "seconds": 0.432,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-360492C7",
+      "seconds": 0.334,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-80FBF6DD",
+      "seconds": 0.67,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-D9E2E889",
+      "seconds": 0.39,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-3BBF9795",
+      "seconds": 0.319,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-85A73A4E",
+      "seconds": 0.487,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-1E6D6558",
+      "seconds": 0.524,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-60B0184E",
+      "seconds": 0.586,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-799954D6",
+      "seconds": 0.496,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-7B5B3BBF",
+      "seconds": 0.496,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-7C16D470",
+      "seconds": 0.5,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-FCB30183",
+      "seconds": 0.45,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-73A1B664",
+      "seconds": 0.323,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-C78111AF",
+      "seconds": 0.554,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-B58302E0",
+      "seconds": 0.271,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-39E87EF8",
+      "seconds": 0.399,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-8D8865EE",
+      "seconds": 0.554,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-859C5616",
+      "seconds": 0.463,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-C7650DE8",
+      "seconds": 0.68,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-57CE08C1",
+      "seconds": 0.678,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-A3435C09",
+      "seconds": 0.4,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-FABDE34D",
+      "seconds": 0.54,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-4013BE84",
+      "seconds": 0.356,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-B73A7FBC",
+      "seconds": 0.345,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-C215762B",
+      "seconds": 0.428,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-F6F28C0D",
+      "seconds": 0.671,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-1DA8BD17",
+      "seconds": 0.35,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-429823C4",
+      "seconds": 0.41,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-A7B6042A",
+      "seconds": 0.489,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-C30326C2",
+      "seconds": 0.642,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-AECD9794",
+      "seconds": 0.251,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-81B60018",
+      "seconds": 0.489,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-3A775000",
+      "seconds": 0.78,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-43DAACF8",
+      "seconds": 0.472,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-7CD1E19A",
+      "seconds": 0.919,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-E778F927",
+      "seconds": 0.685,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-C7999BF6",
+      "seconds": 0.44,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-CFBB23AA",
+      "seconds": 0.283,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-7670710C",
+      "seconds": 0.863,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-7BE189B2",
+      "seconds": 0.611,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-D5280E08",
+      "seconds": 0.801,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-A5E085E3",
+      "seconds": 0.909,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-1917901D",
+      "seconds": 0.564,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-E061D474",
+      "seconds": 0.511,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-724AC32B",
+      "seconds": 0.917,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-C5FB0D93",
+      "seconds": 0.826,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-BB9337CC",
+      "seconds": 0.296,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-21087BE7",
+      "seconds": 0.444,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-2084B0D4",
+      "seconds": 0.768,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-FAB738CF",
+      "seconds": 0.783,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-44D74BDD",
+      "seconds": 0.414,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-CD1A9714",
+      "seconds": 0.679,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-4F82AFCE",
+      "seconds": 0.587,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-D1464A1D",
+      "seconds": 0.553,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-7F5B1787",
+      "seconds": 0.622,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-C8BDAB33",
+      "seconds": 0.493,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-102ABED0",
+      "seconds": 0.441,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-5F87B9D7",
+      "seconds": 0.401,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-C353DB0E",
+      "seconds": 0.349,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-F0CC5BEB",
+      "seconds": 0.883,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-E9B2429B",
+      "seconds": 0.39,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-E991AE08",
+      "seconds": 0.622,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-125DD98F",
+      "seconds": 0.584,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-28B64A30",
+      "seconds": 0.54,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-A97A4984",
+      "seconds": 0.468,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-A32FD2A3",
+      "seconds": 0.35,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-7A1C4309",
+      "seconds": 0.612,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-37CE5D34",
+      "seconds": 0.311,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-D965FF4E",
+      "seconds": 0.779,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-6A8C1AF4",
+      "seconds": 0.544,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-248E6EC5",
+      "seconds": 0.402,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-6DCC18EC",
+      "seconds": 0.691,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-F5F60B87",
+      "seconds": 0.674,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-6A9F2A23",
+      "seconds": 0.393,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-763B2018",
+      "seconds": 0.654,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-F6574349",
+      "seconds": 0.399,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-7BE28B98",
+      "seconds": 0.386,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-0E5C3DD8",
+      "seconds": 0.574,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-90DECEF3",
+      "seconds": 0.819,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-60E1E1DA",
+      "seconds": 0.694,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-2D409B50",
+      "seconds": 0.471,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-E85593EF",
+      "seconds": 0.458,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-4A786036",
+      "seconds": 0.725,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-E38976BC",
+      "seconds": 0.749,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-97A384CC",
+      "seconds": 0.623,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-C50E702E",
+      "seconds": 0.375,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-2A7A0A0E",
+      "seconds": 0.745,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-284A5637",
+      "seconds": 0.497,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-916C305B",
+      "seconds": 0.436,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-B28E206F",
+      "seconds": 0.686,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-60D17F57",
+      "seconds": 0.92,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-3FC89D28",
+      "seconds": 0.557,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-1633DDAA",
+      "seconds": 0.825,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-8F9A0677",
+      "seconds": 0.443,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-B9EDAFB8",
+      "seconds": 0.432,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-3AA44AE1",
+      "seconds": 0.605,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-F9AE6918",
+      "seconds": 0.831,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-FB2EC8A3",
+      "seconds": 0.598,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-E061FC7A",
+      "seconds": 0.47,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-EDD6BBFE",
+      "seconds": 0.375,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-54A373A5",
+      "seconds": 0.767,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-00814D16",
+      "seconds": 0.545,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-DE98A61C",
+      "seconds": 0.403,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-6F4CED8B",
+      "seconds": 0.8,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-8DF38E19",
+      "seconds": 0.36,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-7A60A94C",
+      "seconds": 0.714,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-CE0184F8",
+      "seconds": 0.472,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-B37A8F48",
+      "seconds": 0.605,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-BA9D5283",
+      "seconds": 0.53,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-6AE6A119",
+      "seconds": 0.396,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-B9705ECE",
+      "seconds": 0.456,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-3025F9D6",
+      "seconds": 0.452,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-F9144A51",
+      "seconds": 0.581,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-4E7062F2",
+      "seconds": 0.3,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-37F2DC0F",
+      "seconds": 0.267,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-1DCEF651",
+      "seconds": 0.223,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-191A3946",
+      "seconds": 0.298,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [
+        "ACCOUNT_MODEL"
+      ],
+      "kinds": [
+        "ACCOUNT_MODEL"
+      ],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-C234625E",
+      "seconds": 0.631,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-0E4764B4",
+      "seconds": 0.491,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-69DB1FFC",
+      "seconds": 0.405,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-82C62E9F",
+      "seconds": 0.568,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-1F70ABCB",
+      "seconds": 0.358,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-AEE12608",
+      "seconds": 0.327,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-6650B4A8",
+      "seconds": 0.258,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-43A849F2",
+      "seconds": 0.284,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-1A155FB2",
+      "seconds": 0.435,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-3FC44B27",
+      "seconds": 0.333,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-B706060B",
+      "seconds": 0.371,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-19D29818",
+      "seconds": 0.326,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-B7F83529",
+      "seconds": 0.461,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-AE605611",
+      "seconds": 0.816,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-F021622F",
+      "seconds": 0.48,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-9FFC5D2B",
+      "seconds": 0.392,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-29D9222C",
+      "seconds": 0.573,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-B3FF2590",
+      "seconds": 0.425,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-4BEA9BF4",
+      "seconds": 0.701,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-CDDE1670",
+      "seconds": 0.32,
+      "role": "potential_victim",
+      "victim_status": "potential_victim",
+      "categories": [],
+      "kinds": [],
+      "restriction": "urgent_manual_review_recommended",
+      "may_be_victim": true,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-F41048C6",
+      "seconds": 0.609,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-96240735",
+      "seconds": 0.298,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-1CE067A0",
+      "seconds": 0.434,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-963F9880",
+      "seconds": 0.421,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-849107BC",
+      "seconds": 0.38,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-0FC83CA9",
+      "seconds": 0.522,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-A10CEEBC",
+      "seconds": 0.493,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-9E8135F4",
+      "seconds": 0.443,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-D9EC2317",
+      "seconds": 0.355,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-0425FEB0",
+      "seconds": 0.447,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-E10F4A6D",
+      "seconds": 0.732,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-BA811071",
+      "seconds": 0.289,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-449ABF8E",
+      "seconds": 0.393,
+      "role": "no_suspicious_activity_observed",
+      "victim_status": "no_suspicious_activity_observed",
+      "categories": [],
+      "kinds": [],
+      "restriction": "no_restriction_recommendation",
+      "may_be_victim": false,
+      "truth": "ordinary_sample"
+    },
+    {
+      "account_id": "FS-F809586E",
+      "seconds": 0.151,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [],
+      "kinds": [],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "low_history_sample"
+    },
+    {
+      "account_id": "FS-792BEB4A",
+      "seconds": 0.352,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [],
+      "kinds": [],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "low_history_sample"
+    },
+    {
+      "account_id": "FS-36B3099E",
+      "seconds": 0.125,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [],
+      "kinds": [],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "low_history_sample"
+    },
+    {
+      "account_id": "FS-4A098055",
+      "seconds": 0.135,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [],
+      "kinds": [],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "low_history_sample"
+    },
+    {
+      "account_id": "FS-6E43F0C3",
+      "seconds": 0.188,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [],
+      "kinds": [],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "low_history_sample"
+    },
+    {
+      "account_id": "FS-B17AAAE9",
+      "seconds": 0.107,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [],
+      "kinds": [],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "low_history_sample"
+    },
+    {
+      "account_id": "FS-0F7107BF",
+      "seconds": 0.211,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [],
+      "kinds": [],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "low_history_sample"
+    },
+    {
+      "account_id": "FS-7B5B95E2",
+      "seconds": 0.134,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [],
+      "kinds": [],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "low_history_sample"
+    },
+    {
+      "account_id": "FS-9D3B558D",
+      "seconds": 0.145,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [],
+      "kinds": [],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "low_history_sample"
+    },
+    {
+      "account_id": "FS-36FECBE6",
+      "seconds": 0.091,
+      "role": "unknown_role",
+      "victim_status": "insufficient_evidence",
+      "categories": [],
+      "kinds": [],
+      "restriction": "insufficient_evidence_to_recommend",
+      "may_be_victim": false,
+      "truth": "low_history_sample"
+    }
+  ]
+}

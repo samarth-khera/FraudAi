@@ -1,0 +1,503 @@
+{
+  "base": "https://fraudshield-ai-psi.vercel.app",
+  "passed": 63,
+  "total": 63,
+  "results": [
+    {
+      "journey": "A",
+      "name": "overview names it a potential victim",
+      "ok": true,
+      "detail": "Is FS-7B7C13AB potentially a victim? |  | Potential victim"
+    },
+    {
+      "journey": "A",
+      "name": "asks the victim question",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "A",
+      "name": "its own evidence is visible (own money, unlike its history)",
+      "ok": true,
+      "detail": "Evidence for this assessment |  | Recorded fact | Sent 1 flagged transfer(s) that were not funded by money it had just received. | Recorded fact | Largest flagged transfer (52,000) is more than twice its largest earlier "
+    },
+    {
+      "journey": "A",
+      "name": "no model output is shown as victim support",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "A",
+      "name": "report notice is exact",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "A",
+      "name": "leaning: more consistent with a victim",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "A",
+      "name": "review priority is protective (level 3)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "A",
+      "name": "FS-EAAA344C seen from the victim: potential intermediary, level 3",
+      "ok": true,
+      "detail": "FS-EAAA344C\tPotential intermediary |  | In this flow: Received 52,000 in traced transfers, 1 hop(s) after FS-7B7C13AB; its own traced outgoing transfers total 48,621. Balance-based attribution: betwee"
+    },
+    {
+      "journey": "A",
+      "name": "victim recommendation: protective verification decided with the holder",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "B",
+      "name": "account brief shows its whole recorded history (45 transfers)",
+      "ok": true,
+      "detail": "Account under investigation in the forensic scenario ledger |  | FS-EAAA344C |  | retail account, synthetic |  | Change account | Available history |  | 45 |  | transfers on record (38 out, 7 in) |  |"
+    },
+    {
+      "journey": "B",
+      "name": "overview names it a potential intermediary",
+      "ok": true,
+      "detail": "What the records show about FS-EAAA344C |  | Potential intermediary"
+    },
+    {
+      "journey": "B",
+      "name": "not presented as a victim",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "B",
+      "name": "behavioural evidence tagged by source",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "B",
+      "name": "recipient tree shows both first recipients",
+      "ok": true,
+      "detail": "nodes found: 2"
+    },
+    {
+      "journey": "B",
+      "name": "risk evidence stage renders",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "B",
+      "name": "chronology: 52,000 received then 41,621 and 3,500 sent",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "B",
+      "name": "chronology says why each was listed",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "B",
+      "name": "outgoing funds: hop 1 carries 45,121 to two recipients",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "B",
+      "name": "account model and rule findings shown apart",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "B",
+      "name": "executive summary: potential intermediary, level 3",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "B",
+      "name": "victim-side evidence is empty, suspicion-side is not",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "C",
+      "name": "FS-7305E412: inspector agrees with the report (Potential victim)",
+      "ok": true,
+      "detail": "Account inspector |  | FS-7305E412"
+    },
+    {
+      "journey": "C",
+      "name": "FS-7B7C13AB: inspector agrees with the report (Potential victim)",
+      "ok": true,
+      "detail": "Account inspector |  | FS-7B7C13AB"
+    },
+    {
+      "journey": "C",
+      "name": "FS-5635F5AF: inspector agrees with the report (Role unknown)",
+      "ok": true,
+      "detail": "Account inspector |  | FS-5635F5AF"
+    },
+    {
+      "journey": "C",
+      "name": "FS-CE13E4F4: inspector agrees with the report (Role unknown)",
+      "ok": true,
+      "detail": "Account inspector |  | FS-CE13E4F4"
+    },
+    {
+      "journey": "C",
+      "name": "FS-B841C5DC: inspector agrees with the report (Role unknown)",
+      "ok": true,
+      "detail": "Account inspector |  | FS-B841C5DC"
+    },
+    {
+      "journey": "C",
+      "name": "FS-18CC0DD7: inspector agrees with the report (No suspicious linkage observed)",
+      "ok": true,
+      "detail": "Account inspector |  | FS-18CC0DD7"
+    },
+    {
+      "journey": "C",
+      "name": "FS-334DCFB3: inspector agrees with the report (No suspicious linkage observed)",
+      "ok": true,
+      "detail": "Account inspector |  | FS-334DCFB3"
+    },
+    {
+      "journey": "C",
+      "name": "FS-41D22DB4: inspector agrees with the report (No suspicious linkage observed)",
+      "ok": true,
+      "detail": "Account inspector |  | FS-41D22DB4"
+    },
+    {
+      "journey": "C",
+      "name": "FS-575AC446: inspector agrees with the report (No suspicious linkage observed)",
+      "ok": true,
+      "detail": "Account inspector |  | FS-575AC446"
+    },
+    {
+      "journey": "C",
+      "name": "FS-E3CEC4B5: inspector agrees with the report (Role unknown)",
+      "ok": true,
+      "detail": "Account inspector |  | FS-E3CEC4B5"
+    },
+    {
+      "journey": "C",
+      "name": "FS-3F98CF40: inspector agrees with the report (No suspicious linkage observed)",
+      "ok": true,
+      "detail": "Account inspector |  | FS-3F98CF40"
+    },
+    {
+      "journey": "C",
+      "name": "FS-62FEC4B2: inspector agrees with the report (No suspicious linkage observed)",
+      "ok": true,
+      "detail": "Account inspector |  | FS-62FEC4B2"
+    },
+    {
+      "journey": "C",
+      "name": "FS-961682EC: inspector agrees with the report (Role unknown)",
+      "ok": true,
+      "detail": "Account inspector |  | FS-961682EC"
+    },
+    {
+      "journey": "C",
+      "name": "FS-E5A7AD33: inspector agrees with the report (Role unknown)",
+      "ok": true,
+      "detail": "Account inspector |  | FS-E5A7AD33"
+    },
+    {
+      "journey": "C",
+      "name": "FS-23037AF1: inspector agrees with the report (No suspicious linkage observed)",
+      "ok": true,
+      "detail": "Account inspector |  | FS-23037AF1"
+    },
+    {
+      "journey": "C",
+      "name": "every non-cash connected account opened",
+      "ok": true,
+      "detail": "15 of 15"
+    },
+    {
+      "journey": "C",
+      "name": "recipients get independent levels (not one verdict for all)",
+      "ok": true,
+      "detail": "3,2,1"
+    },
+    {
+      "journey": "C",
+      "name": "FS-CE13E4F4 investigated directly gets its own assessment",
+      "ok": true,
+      "detail": "What the records show about FS-CE13E4F4 | "
+    },
+    {
+      "journey": "D",
+      "name": "section present: Executive summary",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "D",
+      "name": "section present: Account risk assessment",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "D",
+      "name": "section present: Transaction chronology",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "D",
+      "name": "section present: Fund flow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "D",
+      "name": "section present: Connected accounts",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "D",
+      "name": "section present: Review and restriction recommendations",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "D",
+      "name": "section present: Findings and next steps",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "D",
+      "name": "every recommendation names who decides and that nothing was executed",
+      "ok": true,
+      "detail": "6 cards"
+    },
+    {
+      "journey": "D",
+      "name": "no control that could act on an account",
+      "ok": true,
+      "detail": "Print report, TX-303-0043807, TX-303-0046080, TX-303-0046124, TX-303-0046133, TX-303-0046124"
+    },
+    {
+      "journey": "D",
+      "name": "never claims a hold was executed",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "D",
+      "name": "says it was not written by a language model",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "D",
+      "name": "print button calls the browser print",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "D",
+      "name": "print class is set while printing",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "D",
+      "name": "print view hides the sidebar and stage tabs",
+      "ok": true,
+      "detail": "[true,true]"
+    },
+    {
+      "journey": "D",
+      "name": "keyboard: arrow keys move between stages",
+      "ok": true,
+      "detail": "6Next steps"
+    },
+    {
+      "journey": "D",
+      "name": "back and forward keep the app working",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "D",
+      "name": "desktop has no horizontal overflow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "M",
+      "name": "390 px: overview without horizontal overflow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "M",
+      "name": "390 px: report without page-level horizontal overflow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "M",
+      "name": "390 px: notice visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "M",
+      "name": "390 px: fund trail shows the outline view",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "NET",
+      "name": "real dynamic-investigation API calls answered 200",
+      "ok": true,
+      "detail": "5 calls"
+    },
+    {
+      "journey": "NET",
+      "name": "no failed requests",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "journey": "NET",
+      "name": "no console errors",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "api": [
+    {
+      "tag": "desktop",
+      "method": "GET",
+      "path": "/api/v2/models/status",
+      "status": 200
+    },
+    {
+      "tag": "desktop",
+      "method": "GET",
+      "path": "/api/v2/datasets/forensic-scenarios/accounts/FS-7B7C13AB",
+      "status": 200
+    },
+    {
+      "tag": "desktop",
+      "method": "POST",
+      "path": "/api/v2/dynamic-investigations",
+      "status": 200
+    },
+    {
+      "tag": "desktop",
+      "method": "GET",
+      "path": "/api/v2/models/status",
+      "status": 200
+    },
+    {
+      "tag": "desktop",
+      "method": "GET",
+      "path": "/api/v2/datasets/forensic-scenarios/accounts/FS-EAAA344C",
+      "status": 200
+    },
+    {
+      "tag": "desktop",
+      "method": "POST",
+      "path": "/api/v2/dynamic-investigations",
+      "status": 200
+    },
+    {
+      "tag": "desktop",
+      "method": "GET",
+      "path": "/api/v2/models/status",
+      "status": 200
+    },
+    {
+      "tag": "desktop",
+      "method": "GET",
+      "path": "/api/v2/datasets/forensic-scenarios/accounts/FS-CE13E4F4",
+      "status": 200
+    },
+    {
+      "tag": "desktop",
+      "method": "POST",
+      "path": "/api/v2/dynamic-investigations",
+      "status": 200
+    },
+    {
+      "tag": "desktop",
+      "method": "GET",
+      "path": "/api/v2/models/status",
+      "status": 200
+    },
+    {
+      "tag": "desktop",
+      "method": "GET",
+      "path": "/api/v2/datasets/forensic-scenarios/accounts/FS-EAAA344C",
+      "status": 200
+    },
+    {
+      "tag": "desktop",
+      "method": "POST",
+      "path": "/api/v2/dynamic-investigations",
+      "status": 200
+    },
+    {
+      "tag": "desktop",
+      "method": "GET",
+      "path": "/api/v2/models/status",
+      "status": 200
+    },
+    {
+      "tag": "desktop",
+      "method": "GET",
+      "path": "/api/v2/datasets/forensic-scenarios/accounts/FS-CE13E4F4",
+      "status": 200
+    },
+    {
+      "tag": "desktop",
+      "method": "GET",
+      "path": "/api/v2/models/status",
+      "status": 200
+    },
+    {
+      "tag": "desktop",
+      "method": "GET",
+      "path": "/api/v2/datasets/forensic-scenarios/accounts/FS-EAAA344C",
+      "status": 200
+    },
+    {
+      "tag": "mobile",
+      "method": "GET",
+      "path": "/api/v2/models/status",
+      "status": 200
+    },
+    {
+      "tag": "mobile",
+      "method": "GET",
+      "path": "/api/v2/datasets/forensic-scenarios/accounts/FS-EAAA344C",
+      "status": 200
+    },
+    {
+      "tag": "mobile",
+      "method": "POST",
+      "path": "/api/v2/dynamic-investigations",
+      "status": 200
+    }
+  ],
+  "consoleErrors": [],
+  "failed": []
+}
