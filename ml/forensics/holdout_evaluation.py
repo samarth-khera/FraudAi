@@ -51,6 +51,7 @@ FROZEN_GLOBS = [
     "ml/artifacts/v3/account_model/*",
     "ml/forensics/generator.py",
     "ml/forensics/evaluate_investigations.py",
+    "ml/forensics/root_role_measurement.py",
 ]
 VICTIM_CLASS = {"potential_victim", "potential_secondary_victim", "suspicious_activity_victim_unconfirmed"}
 SUSPICION = {"potential_intermediary", "potentially_suspicious_account"}
@@ -104,6 +105,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--ordinary", type=int, default=60)
     ap.add_argument("--ledger", default=LEDGER, help="an untouched ledger in generator.LEDGERS (default: seed 404)")
+    ap.add_argument("--roots", action="store_true", help="also use every scenario role as an investigation root")
+    ap.add_argument("--workers", type=int, default=6)
     a = ap.parse_args()
     db_path, report_path = paths_for(a.ledger)
     m = manifest()
@@ -130,6 +133,12 @@ def main() -> int:
     report = ev.main(a.ledger, sample_ordinary=a.ordinary)
     registry = DatasetRegistry(f"sqlite:///{db_path}")
     sv = secondary_victim_check(registry, ev.run, a.ledger)
+    roots = None
+    if a.roots:
+        # Every scenario account as the investigation root (the investigated-account rules), compared with how the same
+        # accounts are assessed when reached from another root. Added for the 2026-11-02 account-role correction.
+        from ml.forensics import root_role_measurement as rr
+        roots = rr.main(a.ledger, "holdout", ordinary=150, low=10, workers=a.workers)
     status = report["investigated_account_status"]
     summary = {
         "ledger": f"forensic generator seed {LEDGERS[a.ledger].seed} ({a.ledger}); never used for any design, tuning or threshold choice",
@@ -145,6 +154,10 @@ def main() -> int:
         "safety": report["safety"],
         "secondary_victims": {k: v for k, v in sv.items() if k != "accounts"},
     }
+    if roots is not None:
+        summary["every_scenario_role_as_root"] = {k: roots[k] for k in ("roots", "errors", "key_rates", "safety",
+                                                                         "victim_vs_suspicion_disagreements", "root_role_by_truth",
+                                                                         "root_restriction_by_truth")}
     out = {
         "protocol": __doc__.strip().splitlines()[0],
         "evaluated_at": datetime.now(timezone.utc).isoformat(),
