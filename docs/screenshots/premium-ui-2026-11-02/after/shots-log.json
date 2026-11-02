@@ -1,0 +1,179 @@
+{
+  "base": "http://localhost:5173",
+  "started": "2026-11-02T06:44:38.398Z",
+  "shots": [
+    "01-overview-desktop.jpg",
+    "01-overview-desktop-full.jpg",
+    "02-investigate-desktop.jpg",
+    "03-investigate-forensic-desktop.jpg",
+    "04-account-brief-desktop.jpg",
+    "08-cases-desktop.jpg",
+    "09-case-workspace-desktop.jpg",
+    "09-case-workspace-desktop-full.jpg",
+    "10-accounts-desktop.jpg",
+    "11-account-detail-desktop.jpg",
+    "11-account-detail-desktop-full.jpg",
+    "12-fund-flow-desktop.jpg",
+    "13-model-desktop.jpg",
+    "13-model-desktop-full.jpg",
+    "14-audit-desktop.jpg",
+    "15-transaction-model-desktop.jpg",
+    "16-tools-desktop.jpg",
+    "05-investigation-overview-desktop.jpg",
+    "05-investigation-overview-desktop-full.jpg",
+    "06-fund-trail-desktop.jpg",
+    "06-fund-trail-desktop-full.jpg",
+    "07-inspector-desktop.jpg",
+    "01-overview-mobile.jpg",
+    "02-investigate-mobile.jpg",
+    "03-investigate-forensic-mobile.jpg",
+    "04-account-brief-mobile.jpg",
+    "08-cases-mobile.jpg",
+    "09-case-workspace-mobile.jpg",
+    "10-accounts-mobile.jpg",
+    "11-account-detail-mobile.jpg",
+    "12-fund-flow-mobile.jpg",
+    "13-model-mobile.jpg",
+    "14-audit-mobile.jpg",
+    "15-transaction-model-mobile.jpg",
+    "16-tools-mobile.jpg",
+    "05-investigation-overview-mobile.jpg",
+    "06-fund-trail-mobile.jpg",
+    "07-inspector-mobile.jpg"
+  ],
+  "errors": [],
+  "console": [],
+  "failed": [
+    {
+      "vp": "desktop",
+      "url": "http://localhost:5173/api/v2/data-source",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "desktop",
+      "url": "http://localhost:5173/api/v2/datasets",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "desktop",
+      "url": "http://localhost:5173/api/v2/datasets",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "desktop",
+      "url": "http://localhost:5173/api/v2/datasets",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "desktop",
+      "url": "http://localhost:5173/api/v2/datasets/forensic-scenarios/sample-accounts",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "desktop",
+      "url": "http://localhost:5173/api/v2/datasets/demo-ledger/accounts/ACC-000001",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "desktop",
+      "url": "http://localhost:5173/api/v2/accounts/ACC-000001",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "desktop",
+      "url": "http://localhost:5173/api/v2/accounts/ACC-000001/assessment",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "desktop",
+      "url": "http://localhost:5173/api/v2/data-source",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "desktop",
+      "url": "http://localhost:5173/api/v2/datasets/demo-ledger/accounts/ACC-000001",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "desktop",
+      "url": "http://localhost:5173/api/v2/accounts/ACC-000001",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "desktop",
+      "url": "http://localhost:5173/api/v2/accounts/ACC-000001/assessment",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "desktop",
+      "url": "http://localhost:5173/api/v2/data-source",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "mobile",
+      "url": "http://localhost:5173/api/v2/data-source",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "mobile",
+      "url": "http://localhost:5173/api/v2/datasets",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "mobile",
+      "url": "http://localhost:5173/api/v2/datasets",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "mobile",
+      "url": "http://localhost:5173/api/v2/datasets",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "mobile",
+      "url": "http://localhost:5173/api/v2/datasets/forensic-scenarios/sample-accounts",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "mobile",
+      "url": "http://localhost:5173/api/v2/datasets/demo-ledger/accounts/ACC-000001",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "mobile",
+      "url": "http://localhost:5173/api/v2/accounts/ACC-000001",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "mobile",
+      "url": "http://localhost:5173/api/v2/accounts/ACC-000001/assessment",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "mobile",
+      "url": "http://localhost:5173/api/v2/data-source",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "mobile",
+      "url": "http://localhost:5173/api/v2/datasets/demo-ledger/accounts/ACC-000001",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "mobile",
+      "url": "http://localhost:5173/api/v2/accounts/ACC-000001",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "mobile",
+      "url": "http://localhost:5173/api/v2/accounts/ACC-000001/assessment",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "vp": "mobile",
+      "url": "http://localhost:5173/api/v2/data-source",
+      "error": "net::ERR_ABORTED"
+    }
+  ],
+  "finished": "2026-11-02T06:45:52.350Z"
+}
