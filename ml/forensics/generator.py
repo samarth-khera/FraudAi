@@ -717,6 +717,17 @@ LEDGERS["holdout_2026_11"] = ForensicLedgerConfig(
                "circular": 4, "multi_victim": 8, "takeover": 8, "lookalike": 10})
 
 
+# Third untouched evaluation ledger (seed 606), added on 2026-11-02 for the account-role correction (the investigated
+# account's own-money test, engine._unfunded). Seeds 404 and 505 were evaluated under earlier code. The change was
+# designed on the train ledger only (seed 101) and frozen before this ledger was generated; it is evaluated once by
+# ml/forensics/holdout_evaluation.py --ledger holdout_2026_11_roles, which also uses every scenario role as an
+# investigation root (ml/forensics/root_role_measurement.py). Same size and mix as 404 and 505.
+LEDGERS["holdout_2026_11_roles"] = ForensicLedgerConfig(
+    seed=606, num_people=2400, num_merchants=180, num_employers=20, days=90, include_held_out=True,
+    instances={"direct": 8, "chain": 12, "multi_hop": 10, "split": 7, "consolidation": 6,
+               "circular": 4, "multi_victim": 8, "takeover": 8, "lookalike": 10})
+
+
 def generate_ledger(name: str) -> ForensicLedger:
     return ForensicScenarioGenerator(LEDGERS[name]).generate()
 

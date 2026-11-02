@@ -133,6 +133,8 @@ export interface EvidenceItem {
   category: string;
   kind: 'observed' | 'model' | 'rule';
   text: string;
+  /** Which way it points (absent on older servers): its own money left, passing on or collecting money, or context only. */
+  side?: 'victim' | 'suspicion' | 'context' | null;
 }
 
 export interface RoleAssessmentV3 {
@@ -306,5 +308,198 @@ export interface DynamicReport {
   processing_steps: { step: string; label: string; duration_ms: number; detail: string }[];
   synthetic_data_notice: string;
   automatic_actions_taken: string[];
+  /** Absent on servers older than the investigator report. Assembled by fixed code; recommendations only. */
+  investigator_report?: InvestigatorReport | null;
   investigation: InvestigationResponse;
+}
+
+// ---------------------------------------------------------------- investigator report (backend app/intelligence/report.py)
+export type ReviewTrack = 'protective' | 'suspicion' | 'routine';
+export interface ReportEvidence {
+  kind: 'observed' | 'model' | 'rule';
+  text: string;
+}
+export interface ChronologyRow {
+  transaction_id: string;
+  timestamp: string;
+  direction: 'outgoing' | 'incoming';
+  counterparty: string;
+  amount: number;
+  channel: string | null;
+  balance_before: number | null;
+  balance_after: number | null;
+  model_flag: boolean;
+  calibrated_probability: number | null;
+  evidence_use: 'evidence' | 'reference_only' | null;
+  rule_flags: string[];
+  flagged: boolean;
+  traced: boolean;
+  branch_ids: string[];
+  selected_because: string[];
+}
+export interface FlowTransfer {
+  account_id: string;
+  transaction_id: string;
+  amount: number;
+  timestamp: string;
+  channel: string | null;
+}
+export interface ReportBranch {
+  branch_id: string;
+  direction: 'downstream' | 'upstream';
+  accounts: string[];
+  amounts: number[];
+  transaction_ids: string[];
+  ending_reason: EndingReason;
+  ending_detail: string;
+}
+export interface ConnectedAccountRow {
+  account_id: string;
+  role_candidate: RoleCandidate;
+  role_label: string;
+  assessment_status: string;
+  position: string;
+  hop: number | null;
+  flow_role: string;
+  behaviour: string;
+  evidence: ReportEvidence[];
+  evidence_strength: string;
+  level: 1 | 2 | 3 | 4;
+  level_label: string;
+  track: ReviewTrack;
+  recommended_action: string;
+  next_check: string;
+  may_be_victim: boolean;
+}
+export interface AccountRecommendation {
+  account_id: string;
+  role_candidate: RoleCandidate;
+  role_label: string;
+  level: 1 | 2 | 3 | 4;
+  level_label: string;
+  track: ReviewTrack;
+  model_only: boolean;
+  action: string;
+  reason: string;
+  supporting_evidence: ReportEvidence[];
+  contradictory_evidence: string[];
+  innocent_explanations: string[];
+  verify_before_action: string[];
+  authorised_by: string;
+  victim_note: string | null;
+  restriction_state: RestrictionState;
+  restriction_label: string;
+  action_executed: false;
+}
+export interface InvestigatorReport {
+  report_version: string;
+  generator: { kind: 'deterministic'; language_model_used: false; description: string };
+  notice: string;
+  executive_summary: {
+    account_id: string;
+    dataset_id: string;
+    dataset_title: string;
+    data_as_of: string | null;
+    synthetic: boolean;
+    candidate_role: RoleCandidate;
+    candidate_role_label: string;
+    assessment_status: string;
+    headline: string;
+    review_level: 1 | 2 | 3 | 4;
+    review_level_label: string;
+    review_track: ReviewTrack;
+    leaning: 'victim' | 'intermediary' | 'suspicious_account' | 'none' | 'undetermined';
+    leaning_text: string;
+    main_reasons: ReportEvidence[];
+    evidence_strength: string;
+    uncertainty: string[];
+  };
+  risk_assessment: {
+    transaction_model: {
+      available: boolean;
+      version: string | null;
+      threshold: number | null;
+      used_as_evidence: boolean;
+      scored_on_account: number | null;
+      flagged_on_account: number | null;
+      flagged_transfers: {
+        transaction_id: string;
+        timestamp: string;
+        direction: 'outgoing' | 'incoming';
+        counterparty: string;
+        amount: number;
+        calibrated_probability: number | null;
+        factors: string[];
+      }[];
+    };
+    account_model: {
+      available: boolean;
+      version: string | null;
+      status: string | null;
+      calibrated_probability: number | null;
+      threshold: number | null;
+      above_threshold: boolean | null;
+      factors: { label: string; contribution: number }[];
+      positive_target: string;
+    };
+    rules: { flags_on_account: { transaction_id: string; code: string; explanation: string }[]; uncorroborated: string[]; role_rule: string };
+    model_support: { state: string; validated_for_this_dataset: boolean; note: string };
+    evidence_strength: string;
+    victim_side_evidence: ReportEvidence[];
+    suspicion_side_evidence: ReportEvidence[];
+    context: ReportEvidence[];
+    contradictory_evidence: string[];
+    innocent_explanations: string[];
+    missing_information: string[];
+    score_note: string;
+  };
+  chronology: {
+    rows: ChronologyRow[];
+    window_note: string;
+    omitted: number;
+    model_threshold: number | null;
+    model_evidence_use: 'evidence' | 'reference_only';
+  };
+  fund_flow: {
+    investigated_account: string;
+    flagged_outgoing_total: number | null;
+    traced_outgoing_total: number | null;
+    sources: FlowTransfer[];
+    earliest_sources: { account_id: string; branch_id: string; hops_before: number }[];
+    first_recipients: FlowTransfer[];
+    hops: { direction: 'downstream' | 'upstream'; hop: number; transfers: number; total: number; accounts: string[] }[];
+    recipients: string[];
+    attribution: {
+      account_id: string;
+      hop: number | null;
+      role_label: string | null;
+      received_traced: number | null;
+      forwarded_at_least: number | null;
+      forwarded_at_most: number | null;
+      kept_at_least: number | null;
+      cash_withdrawn: number;
+    }[];
+    branches: ReportBranch[];
+    cycles: ReportBranch[];
+    convergence: { transaction_id: string; from_account: string; to_account: string; amount: number }[];
+    reached_by_several_paths: string[];
+    cash_endings: { account_id: string; cash_point: string; transaction_id: string; amount: number; timestamp: string }[];
+    untraced: { branch_id: string; account_id: string; last_amount: number | null; reason: EndingReason; detail: string }[];
+    truncation_notes: string[];
+    method: string | null;
+    amount_note: string;
+  };
+  connected_accounts: ConnectedAccountRow[];
+  recommendations: AccountRecommendation[];
+  findings: {
+    recorded_evidence: string[];
+    model_output_only: string[];
+    unknown: string[];
+    urgent_review: string[];
+    enhanced_verification: string[];
+    protective_verification: string[];
+    no_action: string[];
+    records_to_obtain: string[];
+  };
+  safeguards: string[];
 }

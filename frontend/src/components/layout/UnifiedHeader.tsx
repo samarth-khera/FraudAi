@@ -266,6 +266,7 @@ export const UnifiedHeader: React.FC = () => {
   return (
     <>
       <aside
+        data-print-hide
         id="app-sidebar"
         aria-label="Sidebar"
         style={{ width: collapsed ? SIDEBAR_WIDTH.collapsed : SIDEBAR_WIDTH.expanded }}
@@ -309,7 +310,7 @@ export const UnifiedHeader: React.FC = () => {
         </div>
       </aside>
 
-      <header className="lg:hidden sticky top-0 z-40 border-b border-line/80 bg-[rgba(245,246,255,0.86)] backdrop-blur-xl">
+      <header data-print-hide className="lg:hidden sticky top-0 z-40 border-b border-line/80 bg-[rgba(245,246,255,0.86)] backdrop-blur-xl">
         <div className="px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
           <Brand />
           <div className="flex items-center gap-2">
