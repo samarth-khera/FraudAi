@@ -19,6 +19,8 @@ Exit status: 0 when every step answered, 1 otherwise.
 from __future__ import annotations
 
 import argparse
+import gzip
+import http.client
 import json
 import sys
 import time
@@ -26,23 +28,37 @@ import urllib.error
 import urllib.request
 
 FORBIDDEN = ("/explanation",)  # the preflight must never reach the AI analyst
+ATTEMPTS = 2  # every request here is a read, so a transfer cut off in transit is simply asked for once more
+
+
+def _body(raw: bytes, headers) -> bytes:
+    return gzip.decompress(raw) if raw and (headers.get("Content-Encoding") or "").lower() == "gzip" else raw
 
 
 def call(base: str, path: str, method: str = "GET", body: dict | None = None, timeout: float = 120.0) -> tuple[int, float, object]:
     if any(f in path for f in FORBIDDEN):
         raise ValueError("the preflight never calls an AI explanation endpoint")
     data = json.dumps(body).encode() if body is not None else None
+    # gzip makes a large investigation about 11x smaller on the wire. Long uncompressed HTTP/1.1 responses from the
+    # free host were occasionally cut off in transit (the server had answered 200), which used to end the preflight
+    # with a traceback.
     req = urllib.request.Request(base + path, data=data, method=method,
-                                 headers={"Content-Type": "application/json", "Accept": "application/json"})
+                                 headers={"Content-Type": "application/json", "Accept": "application/json", "Accept-Encoding": "gzip"})
     t0 = time.perf_counter()
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            raw = r.read()
-            status = r.status
-    except urllib.error.HTTPError as e:
-        raw, status = e.read(), e.code
-    except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
-        return 0, time.perf_counter() - t0, str(getattr(e, "reason", e))
+    for attempt in range(1, ATTEMPTS + 1):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                raw, status = _body(r.read(), r.headers), r.status
+            break
+        except urllib.error.HTTPError as e:
+            raw, status = _body(e.read(), e.headers), e.code
+            break
+        except http.client.HTTPException as e:  # e.g. IncompleteRead: the connection closed part-way through the body
+            if attempt == ATTEMPTS:
+                return 0, time.perf_counter() - t0, f"response cut off in transit {ATTEMPTS} times ({type(e).__name__}); run the preflight again"
+            print(f"     ({path}: response cut off in transit; asking once more)", flush=True)
+        except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+            return 0, time.perf_counter() - t0, str(getattr(e, "reason", e))
     try:
         payload = json.loads(raw) if raw else None
     except json.JSONDecodeError:
