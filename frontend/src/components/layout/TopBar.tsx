@@ -33,7 +33,7 @@ const Crumbs: React.FC<{ crumbs: Crumb[] }> = ({ crumbs }) => (
  */
 export const TopBar: React.FC<{ meta: RouteMeta }> = ({ meta }) => (
   <>
-    <div className="hidden lg:block sticky top-0 z-30 border-b border-line/70 bg-[rgba(245,246,255,0.78)] backdrop-blur-xl">
+    <div data-print-hide className="hidden lg:block sticky top-0 z-30 border-b border-line/70 bg-[rgba(245,246,255,0.78)] backdrop-blur-xl">
       <div className="mx-auto w-full max-w-[1360px] px-10 h-14 flex items-center justify-between gap-6">
         <Crumbs crumbs={meta.crumbs} />
         <p className="flex items-center gap-1.5 shrink-0 rounded-full border border-line bg-white/80 px-3 py-1 text-xs font-medium text-mute" title="Every account and transaction here is synthetic.">
@@ -43,7 +43,7 @@ export const TopBar: React.FC<{ meta: RouteMeta }> = ({ meta }) => (
       </div>
     </div>
     {meta.crumbs.some((c) => c.to) && (
-      <div className="lg:hidden px-4 sm:px-6 pt-4 -mb-2">
+      <div data-print-hide className="lg:hidden px-4 sm:px-6 pt-4 -mb-2">
         <Crumbs crumbs={meta.crumbs} />
       </div>
     )}

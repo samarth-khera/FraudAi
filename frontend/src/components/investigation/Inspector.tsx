@@ -285,7 +285,7 @@ const AccountDetail: React.FC<{
             The role is an interpretation ({STRENGTH_LABEL[ra.evidence_strength].toLowerCase()}) for human review, not a finding.
           </p>
           <Group title="What the records show">
-            <EvidenceList items={ra.evidence_items} empty="No supporting evidence found in the available data." />
+            <EvidenceList items={ra.evidence_items} sides empty="No supporting evidence found in the available data." />
           </Group>
           {ra.contradictory_evidence.length > 0 && (
             <Group title="Against the interpretation">

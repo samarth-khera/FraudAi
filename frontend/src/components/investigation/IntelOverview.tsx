@@ -3,9 +3,11 @@ import { Database } from 'lucide-react';
 import { formatDateTime, formatMoney } from '../../lib/format';
 import { DynamicReport } from '../../types/dynamic';
 import { Badge, Disclosure, IdText } from './ui';
-import { ScoredTransfer } from './intel';
+import { EvidenceList, ScoredTransfer } from './intel';
 import { suspiciousHeading } from './narrative';
 import { EvidenceTag } from '../ui/EvidenceTag';
+
+const SUSPICION_ROLES: string[] = ['potential_intermediary', 'potentially_suspicious_account'];
 
 const STATUS_TONE = {
   potential_victim: 'ice',
@@ -18,6 +20,16 @@ const STATUS_TONE = {
  * flagged and by what, and how much data and which models were behind it. */
 export const IntelOverview: React.FC<{ intel: DynamicReport }> = ({ intel }) => {
   const v = intel.victim_assessment;
+  const root = intel.role_assessments.find((a) => a.account_id === v.account_id);
+  const victimSide =
+    v.status === 'potential_victim' || (v.status === 'suspicious_activity_victim_status_unconfirmed' && v.role_candidate === 'suspicious_activity_victim_unconfirmed');
+  const suspicionSide = Boolean(root && SUSPICION_ROLES.includes(root.role_candidate));
+  // An intermediary or suspicious-account candidate is named by its role, not by a victim-status phrase.
+  const title = suspicionSide && root ? root.role_label : v.label;
+  // Each item keeps its source (recorded fact or model output); on servers that say which way an item points, only the
+  // items for this role are listed here and the rest appear under "Keep in mind".
+  const side = victimSide ? 'victim' : suspicionSide ? 'suspicion' : null;
+  const items = (root?.evidence_items ?? []).filter((i) => (i.side == null ? true : side ? i.side === side : i.side !== 'context'));
   const shown = intel.suspicious_transactions.slice(0, 3);
   const more = intel.suspicious_transactions.slice(3);
   const tm = intel.model_metadata.transaction_model;
@@ -31,19 +43,26 @@ export const IntelOverview: React.FC<{ intel: DynamicReport }> = ({ intel }) => 
         <section aria-labelledby="assess-h" className="panel panel-sheen p-6" data-testid="victim-assessment" data-status={v.status}>
           {/* QA-12: the victim question only heads a victim-side result; forwarding or abstaining results get a neutral heading. */}
           <p className="text-sm text-mute" data-testid="assessment-question">
-            {v.status === 'potential_victim' || (v.status === 'suspicious_activity_victim_status_unconfirmed' && v.role_candidate === 'suspicious_activity_victim_unconfirmed')
+            {victimSide
               ? <>Is <IdText>{v.account_id}</IdText> potentially a victim?</>
               : <>What the records show about <IdText>{v.account_id}</IdText></>}
           </p>
-          <h2 id="assess-h" className="mt-1 font-display text-2xl font-bold text-ink flex flex-wrap items-center gap-x-3 gap-y-2">
-            {v.label}
+          <h2 id="assess-h" className="mt-1 font-display text-2xl font-bold text-ink flex flex-wrap items-center gap-x-3 gap-y-2" data-role={root?.role_candidate}>
+            {title}
             <span className="flex flex-wrap items-center gap-1.5">
-              <Badge tone={STATUS_TONE[v.status]}>Account assessment</Badge>
+              <Badge tone={suspicionSide ? 'high' : STATUS_TONE[v.status]}>Account assessment</Badge>
               <EvidenceTag kind="interpretation" />
             </span>
           </h2>
           <p className="mt-2 text-[16px] text-ink-soft leading-relaxed max-w-[68ch]">{v.headline}</p>
-          {v.evidence.length > 0 && (
+          {items.length > 0 ? (
+            <div className="mt-4 rounded-xl bg-well ring-1 ring-line px-4 py-3" data-testid="assessment-evidence">
+              <p className="text-xs font-semibold text-ink">Evidence for this assessment</p>
+              <div className="mt-2">
+                <EvidenceList items={items} />
+              </div>
+            </div>
+          ) : v.evidence.length > 0 && (
             <div className="mt-4 rounded-xl bg-well ring-1 ring-line px-4 py-3">
               <p className="flex items-center gap-2 text-xs font-semibold text-ink">
                 What the records show <EvidenceTag kind="observed" />

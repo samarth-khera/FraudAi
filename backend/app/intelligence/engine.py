@@ -32,7 +32,7 @@ from sqlalchemy.orm import Session
 try:
     from app.api.v2.investigation_schemas import InvestigationRequest
     from app.db.v2.models import AccountModel, TransactionModel
-    from app.intelligence import explain, ledger, roles
+    from app.intelligence import explain, ledger, report, roles
     from app.intelligence import models as mdl
     from app.intelligence.datasets import DATASETS, DatasetRegistry
     from app.intelligence.features import MIN_ACCOUNT_TRANSACTIONS, account_features, graph_features, transaction_features
@@ -41,7 +41,7 @@ try:
 except ModuleNotFoundError:
     from backend.app.api.v2.investigation_schemas import InvestigationRequest
     from backend.app.db.v2.models import AccountModel, TransactionModel
-    from backend.app.intelligence import explain, ledger, roles
+    from backend.app.intelligence import explain, ledger, report, roles
     from backend.app.intelligence import models as mdl
     from backend.app.intelligence.datasets import DATASETS, DatasetRegistry
     from backend.app.intelligence.features import MIN_ACCOUNT_TRANSACTIONS, account_features, graph_features, transaction_features
@@ -368,6 +368,12 @@ class DynamicInvestigation:
             "synthetic_data_notice": source["disclosure"],
             "automatic_actions_taken": [],
         }
+        # Investigator report: assembled by fixed code from the sections above (no language model, no new role).
+        rows = L1[(L1.sender_account_id == root_id) | (L1.receiver_account_id == root_id)]
+        root_e = ev[root_id]
+        out["investigator_report"] = report.build(
+            out, base, [cls._row(r) for r in rows.itertuples(index=False)], {d["transaction_id"]: d for d in mine_},
+            {"flagged": root_e.flagged_out_ids, "unfunded": root_e.flagged_out_unfunded_ids, "matched": root_e.flagged_out_matched_ids})
         out["investigation_digest"] = cls.digest(out, base)
         out["completed_at"] = datetime.now(timezone.utc).isoformat()
         out["duration_ms"] = int((time.perf_counter() - t_start) * 1000)
@@ -394,6 +400,16 @@ class DynamicInvestigation:
                                                              if k not in cls.DIGEST_EXCLUDED_SOURCE}}
         keep["base_report_digest"] = base["report_digest"]
         return hashlib.sha256(json.dumps(keep, sort_keys=True, default=str).encode()).hexdigest()[:24]
+
+    @staticmethod
+    def _row(r) -> dict:
+        """One recorded transfer for the investigator report's chronology (its own balances included)."""
+        def money(x):
+            return None if x is None or pd.isna(x) else round(float(x), 2)
+        return {"transaction_id": r.transaction_id, "timestamp": _iso(r.timestamp), "sender_account_id": r.sender_account_id,
+                "receiver_account_id": r.receiver_account_id, "amount": round(float(r.amount), 2),
+                "channel": r.channel if isinstance(r.channel, str) else None,
+                "sender_balance_before": money(r.sender_balance_before), "receiver_balance_before": money(r.receiver_balance_before)}
 
     @staticmethod
     def _scored(r: pd.Series, s: pd.Series, factors: list[dict], use: bool = True) -> dict:
@@ -452,7 +468,8 @@ class DynamicInvestigation:
             rule_flagged = {e.txn.transaction_id for e in outs if any(f["code"] != "MODEL_TRANSACTION_RISK" for f in edge_flags.get(e.txn.transaction_id, []))}
             flagged_out = sorted({d["transaction_id"] for d in mine} if use else rule_flagged)
             uncorroborated = sorted(rule_flagged - set(flagged_out)) if use else []
-            unfunded, deviation = cls._unfunded(a, flagged_out, L1, scored)
+            matched: list[str] = []
+            unfunded, deviation = cls._unfunded(a, flagged_out, L1, scored, matched)
             flagged_in_rows = [d for d in scored.values() if use and d["receiver_account_id"] == a and d["model_flag"]]
             flagged_in = {d["sender_account_id"] for d in flagged_in_rows}
             # Investigated account: did the flagged money it received leave again? (balance-based, as for traced accounts)
@@ -479,7 +496,8 @@ class DynamicInvestigation:
                 balance_before_receipt=cls._balance_before(L1, first_receipt.txn.transaction_id) if first_receipt else None,
                 lowest_balance_in_window=x.get("lowest_balance_in_window"), latest_balance=last_bal.get(a),
                 cash_out_traced=round(sum(e.txn.amount for e in onward if e.txn.channel == "ATM_CASH_OUT"), 2),
-                flagged_out_ids=flagged_out, flagged_out_unfunded_ids=unfunded, flagged_in_senders=len(flagged_in),
+                flagged_out_ids=flagged_out, flagged_out_unfunded_ids=unfunded, flagged_out_matched_ids=sorted(matched),
+                flagged_in_senders=len(flagged_in),
                 flagged_in_amount=round(in_amount, 2), flagged_in_moved_min=in_moved, flagged_in_cash=round(in_cash, 2),
                 deviation=deviation, uncorroborated_rule_flag_ids=uncorroborated,
                 model_flagged_onward_ids=[e.txn.transaction_id for e in onward if use and scored.get(e.txn.transaction_id, {}).get("model_flag")],
@@ -565,32 +583,70 @@ class DynamicInvestigation:
         return received, round(max(0.0, received - traced), 2), cash
 
     @staticmethod
-    def _unfunded(a: str, flagged: list[str], L1: pd.DataFrame, scored: dict) -> tuple[list[str], list[str]]:
-        """Flagged outgoing transfers NOT shown to be funded by money just received, and how the flagged transfers differ
-        from the account's own earlier outgoing transfers. A flagged transfer counts as funded forwarding only when
-        inflows in the 24 h before it cover >= 70% of it, those inflows come from payers that had not already paid the
-        account at least RECURRING_PAYER_DAYS earlier (a salary or regular transfer is income, not money to pass on),
-        and the balance before those inflows could NOT have covered 70% of it (otherwise the account's own money may
-        have paid it). An unknown balance is not evidence of funding."""
+    def _unfunded(a: str, flagged: list[str], L1: pd.DataFrame, scored: dict,
+                  matched: Optional[list[str]] = None) -> tuple[list[str], list[str]]:
+        """Flagged outgoing transfers that the account's OWN money paid for (victim-side evidence), and how they differ
+        from the account's own earlier outgoing transfers.
+
+        "Fresh" money is what arrived in the 24 h before a flagged transfer from payers that had not already paid the
+        account at least RECURRING_PAYER_DAYS earlier (a salary or regular transfer is income, not money to pass on).
+        A flagged transfer is NOT counted as its own money leaving when fresh money covers >= 70% of it and either
+          * the balance before that fresh money could NOT have covered 70% of it (funded forwarding), or
+          * it passed that money on, which needs all three of:
+              - fresh money not already used by its earlier flagged transfers still covered >= 70% of it;
+              - its own earlier money was not drawn on: its balance just after the transfer was less than OWN_FUNDS_MIN
+                (2,000, the engine's existing measure of a material own-funds loss) below its balance just before the
+                fresh money arrived;
+              - most of the fresh money left again: within 24 h of the first fresh inflow, its outgoing transfers (any,
+                capped at the fresh amount) came to >= 70% of it (INTERMEDIARY_SHARE, as for ONWARD), or its cash
+                withdrawals to >= 50% (CASH_SHARE, as for CASH).
+            Its ``transaction_id`` is then added to ``matched``. Spending a small part of a payment received the same
+            day is not passing it on, so such a transfer keeps the earlier reading.
+        The second case (added 2026-11-02, designed on the train ledger only) closes a gap: an account holding savings of
+        its own that receives money from a new payer and passes it on within the hour was treated as if its savings had
+        paid, and so as a possible victim, although its balance never fell. Losing one's own money is victim evidence
+        only when the records show it. An unknown balance is never evidence of funding."""
         rows = L1[(L1.sender_account_id == a) | (L1.receiver_account_id == a)]
         unfunded, dev = [], []
         outs = rows[rows.sender_account_id == a]
         incoming = rows[rows.receiver_account_id == a].sort_values(["timestamp", "transaction_id"], kind="mergesort")
-        for tid in flagged:
+        flagged_rows = rows[rows.transaction_id.isin(flagged)].sort_values(["timestamp", "transaction_id"], kind="mergesort")
+        used_fresh: dict[str, float] = defaultdict(float)  # fresh inflow -> amount already allocated to earlier flagged transfers
+        day = pd.Timedelta(hours=roles.ONWARD_HOURS)
+        for tid in flagged_rows.transaction_id:
             t = rows[rows.transaction_id == tid]
-            if t.empty:
-                continue
             ts, amt = t.timestamp.iloc[0], float(t.amount.iloc[0])
-            recent = incoming[(incoming.timestamp < ts) & (incoming.timestamp >= ts - pd.Timedelta(hours=roles.ONWARD_HOURS))]
+            recent = incoming[(incoming.timestamp < ts) & (incoming.timestamp >= ts - day)]
             established = set(incoming[incoming.timestamp < recent.timestamp.min() - pd.Timedelta(days=RECURRING_PAYER_DAYS)]
                               .sender_account_id) if len(recent) else set()
             fresh = recent[~recent.sender_account_id.isin(established)]
             funded = False
             if len(fresh) and fresh.amount.sum() >= roles.INTERMEDIARY_SHARE * amt:
                 before = fresh.receiver_balance_before.iloc[0]  # rows are in time order: balance before the first such inflow
-                funded = not pd.isna(before) and float(before) < roles.INTERMEDIARY_SHARE * amt
+                if not pd.isna(before) and float(before) < roles.INTERMEDIARY_SHARE * amt:
+                    funded = True
+                elif not pd.isna(before) and not pd.isna(t.sender_balance_before.iloc[0]):
+                    available = sum(max(0.0, float(r.amount) - used_fresh[r.transaction_id]) for r in fresh.itertuples())
+                    after = float(t.sender_balance_before.iloc[0]) - amt
+                    own_drawn = max(0.0, float(before) - after)
+                    got, t0 = float(fresh.amount.sum()), fresh.timestamp.min()
+                    left = outs[(outs.timestamp >= t0) & (outs.timestamp <= t0 + day)]
+                    cash = float(left.amount[left.channel == "ATM_CASH_OUT"].sum()) if "channel" in left.columns else 0.0
+                    passed_on = (min(float(left.amount.sum()), got) >= roles.INTERMEDIARY_SHARE * got
+                                 or cash >= roles.CASH_SHARE * got)
+                    if available >= roles.INTERMEDIARY_SHARE * amt and own_drawn < roles.OWN_FUNDS_MIN and passed_on:
+                        funded = True
+                        if matched is not None:
+                            matched.append(tid)
+                if funded:  # allocate the fresh money, earliest first, so two transfers never claim the same rupees
+                    need = amt
+                    for r in fresh.itertuples():
+                        take = min(need, max(0.0, float(r.amount) - used_fresh[r.transaction_id]))
+                        used_fresh[r.transaction_id] += take
+                        need -= take
             if not funded:
                 unfunded.append(tid)
+        unfunded.sort(key=flagged.index)  # callers read them in their own order
         if unfunded:
             first = rows[rows.transaction_id.isin(unfunded)].timestamp.min()
             prior = outs[outs.timestamp < first]
@@ -717,6 +773,8 @@ class DynamicInvestigation:
         items += [{"category": "MODEL_OUTPUT" if MODEL_SENTENCE.search(t) else "OBSERVED",
                    "kind": "model" if MODEL_SENTENCE.search(t) else "observed", "text": t}
                   for t in r.supporting if t not in shown]
+        for it in items:
+            it["side"] = cls._side(it, r)
         return {
             "account_id": e.account_id, "role_candidate": r.role_candidate, "role_label": roles.ROLE_LABELS[r.role_candidate],
             "assessment_status": r.assessment_status, "headline": r.headline, "supporting_evidence": r.supporting,
@@ -729,6 +787,20 @@ class DynamicInvestigation:
             "restriction": roles.restriction(e, r, rel_ids),
             "other_sender_transaction": other["transaction"] if other else None,
         }
+
+    @staticmethod
+    def _side(item: dict, r: roles.RoleResult) -> str:
+        """Which way an evidence item points (display only): 'suspicion' for passing money on or collecting it, 'victim'
+        for the account's own money leaving, 'context' for what it received or how new its records are. A role rule's own
+        sentence points the way of its role; sentences about money received are context, whatever the role."""
+        c = item["category"]
+        if c in roles.SUSPICION_SIDE:
+            return "suspicion"
+        if c in roles.CONTEXT_ONLY or "receiving money is not" in item["text"]:
+            return "context"
+        if r.role_candidate in roles.VICTIM_ROLES or r.may_be_victim:
+            return "victim"
+        return "suspicion" if r.role_candidate in roles.INTERMEDIARY_ROLES else "context"
 
     @staticmethod
     def _questions(e: roles.AccountEvidence, r: roles.RoleResult, other) -> list[dict]:

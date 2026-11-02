@@ -82,7 +82,7 @@ const AccountCard: React.FC<{ a: RoleAssessmentV3; onInspect: (t: Target) => voi
             <h4 className="text-sm font-semibold text-ink">What the records show</h4>
             <p className="text-xs text-mute">Each item says whether it is a recorded fact, a model output or a fixed rule.</p>
             <div className="mt-2">
-              <EvidenceList items={a.evidence_items} empty="No supporting evidence found in the available data." />
+              <EvidenceList items={a.evidence_items} sides empty="No supporting evidence found in the available data." />
             </div>
           </div>
           <div data-testid="block-interpretation">

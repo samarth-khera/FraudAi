@@ -629,7 +629,7 @@ can make onward movement count as evidence.
 |---|---|---|
 | ONWARD | Observed | A material traced receipt (≥ 2,000); non-cash transfers within 24 h of at least 70% of it, capped at what was received; AND the balance-based (lowest-intermediate-balance) attribution shows at least 70% of the traced money itself left |
 | CASH | Observed | A material traced receipt of which ≥ 50% was withdrawn as cash (capped at what was received), and balance-based attribution shows ≥ 50% of the traced money left |
-| FUNDED_FORWARD | Observed | Investigated account only: most of its flagged outgoing transfers were paid out of money just received from new payers, which its own earlier balance could not have covered |
+| FUNDED_FORWARD | Observed | Investigated account only: most of its flagged outgoing transfers were paid out of money just received from new payers, either because its own earlier balance could not have covered them, or because it passed that money on while its own earlier balance was not drawn on (added 2026-11-02, see below) |
 | FLAGGED_IN_MOVED | Observed | Investigated account only: it received ≥ 2,000 in flagged transfers and balance-based attribution shows ≥ 70% of that money left within 24 h |
 | ACCOUNT_MODEL | Model | Model B (the served champion) is at or above its threshold, on validated datasets only |
 | TXN_MODEL | Model | Model A flags one of the account's own traced outgoing transfers, on validated datasets only |
@@ -668,12 +668,40 @@ Investigated account (checked in this order):
 | Role | When it applies |
 |---|---|
 | `unknown_role` (insufficient) | Fewer than 5 transfers |
-| `potential_victim` | At least half of its flagged outgoing transfers were not funded by fresh inflows, it is established, and they deviate from its own history (over twice its largest earlier transfer, a new recipient, at least half the balance, or 00:00–05:00 when it rarely transacted then). Victim checks come first, whatever else arrived in the account |
+| `potential_victim` | At least half of its flagged outgoing transfers were paid with its own money (not funded by fresh inflows), it is established, and they deviate from its own history (over twice its largest earlier transfer, a new recipient, at least half the balance, or 00:00–05:00 when it rarely transacted then). Victim checks come first. Since 2026-11-02 a transfer that passed on money just received, with the account's own earlier balance never drawn on, is **not** its own money (see "Passing on money just received" below) |
 | `suspicious_activity_victim_unconfirmed` | The same flagged, unfunded transfers, but too little history or no deviation |
 | `potentially_suspicious_account` | Flagged transfers from ≥ 2 senders, FLAGGED_IN_MOVED, an outgoing-side signal (a flagged outgoing transfer or cash ≥ 50% of the flagged inflows), and ACCOUNT_MODEL |
-| `potential_intermediary` | Its flagged outgoing transfers were mostly funded forwarding (FUNDED_FORWARD) **and at least one other independent kind of evidence supports it** (QA-03, 2026-11-02). A transfer counts as funded only when inflows in the previous 24 h cover ≥ 70% of it, come from payers that had not paid it at least 7 days earlier, and the balance before them could not have covered 70% of it |
+| `potential_intermediary` | Its flagged outgoing transfers were mostly funded forwarding (FUNDED_FORWARD) **and at least one other independent kind of evidence supports it** (QA-03, 2026-11-02). A transfer counts as funded when inflows in the previous 24 h cover ≥ 70% of it and come from payers that had not paid it at least 7 days earlier, and either the balance before them could not have covered 70% of it, or the account passed that money on (below) |
 | `unknown_role` | Only the account model suggests review; or FUNDED_FORWARD is the only kind of evidence (QA-03: the observation stays listed, the label abstains, and the investigated-account status is "Insufficient evidence") |
 | `no_suspicious_activity_observed` | No flagged transfer, or only uncorroborated rule flags |
+
+**Passing on money just received (account-role correction, 2026-11-02; `engine._unfunded`).** Investigating
+FS-EAAA344C directly called it a potential victim, while the same account reached from the victim's investigation was a
+potential intermediary. It held 50,336 of its own, received 52,000 from a payer that had never paid it, and sent 41,621
+and 3,500 to two new accounts within 43 minutes; its balance never fell below 50,336. The old test called a flagged
+transfer "funded" only if the account's own earlier balance could **not** have paid it, so any account with savings was
+read as paying out of its own money, which the investigated-account rules treat as victim evidence before anything
+else. A flagged transfer is now also funded (not its own money) when all of these hold:
+
+- fresh money (from payers that had not paid it at least 7 days earlier, in the 24 h before), not already used by its
+  earlier flagged transfers, covered ≥ 70% of it (`INTERMEDIARY_SHARE`);
+- its own earlier money was not drawn on: its balance just after the transfer was less than `OWN_FUNDS_MIN` (2,000, the
+  engine's existing measure of a material own-funds loss) below its balance just before the fresh money arrived;
+- most of the fresh money left again: within 24 h of the first fresh inflow, its outgoing transfers (capped at the fresh
+  amount) came to ≥ 70% of it, or its cash withdrawals to ≥ 50% (`CASH_SHARE`), the same shares as ONWARD and CASH.
+
+No new threshold: every number is an existing constant. A first draft allowed the own balance to fall by up to 30% of the transfer; an existing regression test (a victim whose own savings fell by 13,478 after a same-day inflow from a new payer) showed that this let a real own-funds loss count as passing money on, so the tolerance is `OWN_FUNDS_MIN`. The last condition was added after a first
+version, measured on the train ledger, labelled three look-alikes and one innocent counterparty as intermediaries because
+a small payment (1,000–10,000) happened to follow a family-pool payment the same day; spending part of a payment is not
+passing it on. Victim-side evidence is unchanged in kind: a transfer with no fresh money behind it, or one that drew the
+account's own savings down, is still its own money. Measurement and hold-out: ml/reports/root_role_measurement_*.json,
+ml/reports/holdout_evaluation_holdout_2026_11_roles.json and docs/ACCOUNT_ROLE_AND_INVESTIGATOR_REPORT.md.
+
+**Evidence pointing the other way is shown, never dropped.** Each evidence item now says which way it points (`side`:
+`victim`, `suspicion` or `context`). For a victim-class role, suspicion-side signals (for example the account model at
+or above its threshold) are listed with the contradictory evidence as "Points the other way (model output): …"; for an
+intermediary or suspicious-account candidate, victim-side observations (its own money paid flagged transfers, its own
+savings fell) are listed the same way. Display only: no role, strength or restriction state reads them.
 
 Connected accounts:
 
@@ -1030,7 +1058,7 @@ untouched hold-out ledger, 4 of 6 (against 2 of 6 under the original criterion).
 **UI** (`/investigate`):
 - **Dataset picker and account summary:** coverage and models, no prediction.
 - **One request,** with the engine's real steps listed (no fake progress).
-- **Six stages:**
+- **Seven stages:**
   - **Overview:** is the account a potential victim, the suspicious transfers with model factors, the closest unflagged
     transfers, and data coverage.
   - **Fund trail:** the left-to-right tree and the step-by-step story.
@@ -1038,6 +1066,27 @@ untouched hold-out ledger, 4 of 6 (against 2 of 6 under the original criterion).
   - **Risk evidence.**
   - **AI analyst.**
   - **Next steps:** the restriction discussion with human-approval wording.
+  - **Investigator report** (added 2026-11-02, shown when the server sends `investigator_report`): see below.
+
+**Investigator report** (`backend/app/intelligence/report.py`, response field `investigator_report`, optional and
+absent from older servers). Fixed code assembles it from the investigation's own sections; no language model is
+involved and it says so (`generator.language_model_used: false`). It assigns no role and changes no assessment. Sections:
+executive summary (candidate role, review level, which reading the evidence favours, main reasons, uncertainty); account
+risk assessment (transaction model, account model and fixed rules kept apart, model support for the dataset,
+victim-side and suspicion-side evidence, contradictory evidence, innocent explanations, missing information); the
+investigated account's chronology (flagged and traced transfers plus 24 h of context, each with why it is listed);
+fund flow (sources, first recipients, every hop's transfers and amount, branches and endings, loops, convergence,
+cash withdrawals, open ends, balance-based attribution per recipient; hop amounts are never added together); a
+connected-account table (role in this flow kept apart from the account's own behaviour); one recommendation per account;
+findings (recorded evidence, model output only, unknowns, records to obtain); and fixed safeguards.
+
+Review levels map the engine's restriction state: 1 routine review, 2 enhanced verification, 3 urgent manual
+investigation, 4 consider temporary restriction under institutional policy. Two safeguards: a level above 2 needs at least
+one recorded fact (a model output alone is kept at 2, `model_only: true`), and an account that may itself be a victim gets
+protective verification only (track `protective`, level 2 or 3, never 4). Every recommendation carries
+`action_executed: false` and the notice "Recommendation only. No account restriction, freeze or hold has been executed.
+Authorized institutional approval and applicable procedures are required." The report holds no wall-clock values, so
+`investigation_digest` covers it. The page prints it with the app chrome hidden.
 
 **AI analyst** (`backend/app/services/v2/ai_analyst.py`; configuration and privacy in [AI_ANALYST.md](AI_ANALYST.md)):
 - **It explains the dynamic assessment.** For a dynamic investigation the extract sent to Gemini takes its accounts from

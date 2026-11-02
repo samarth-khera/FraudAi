@@ -47,14 +47,26 @@ export const AccountModelFactors: React.FC<{ m: AccountModelResult }> = ({ m }) 
   </ul>
 );
 
-/** Evidence with its source kept visible, so a model output is never read as a recorded fact. */
-export const EvidenceList: React.FC<{ items: EvidenceItem[]; empty?: string }> = ({ items, empty = 'Nothing recorded.' }) =>
+const SIDE_TEXT = { victim: 'points to a victim', suspicion: 'points to passing money on', context: 'context only' } as const;
+
+/**
+ * Evidence with its source kept visible, so a model output is never read as a recorded fact. With `sides`, each item
+ * also says which way it points (servers older than 2026-11-02 do not send this, and nothing is shown then).
+ */
+export const EvidenceList: React.FC<{ items: EvidenceItem[]; empty?: string; sides?: boolean }> = ({ items, empty = 'Nothing recorded.', sides = false }) =>
   items.length ? (
     <ul className="space-y-2">
       {items.map((e) => (
         <li key={e.text} className="flex items-start gap-2 text-sm text-ink-soft">
           <EvidenceTag kind={e.kind} className="mt-0.5 shrink-0" />
-          <span>{e.text}</span>
+          <span>
+            {e.text}
+            {sides && e.side && (
+              <span className="ml-1.5 text-xs text-mute whitespace-nowrap" data-side={e.side}>
+                ({SIDE_TEXT[e.side]})
+              </span>
+            )}
+          </span>
         </li>
       ))}
     </ul>

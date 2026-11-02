@@ -61,6 +61,15 @@ MOVED_OUT = frozenset({"ONWARD", "CASH", "FUNDED_FORWARD", "FLAGGED_IN_MOVED"})
 # Shown with their sentence, never counted as a kind of evidence (strength, roles' support counts, restriction review).
 CONTEXT_ONLY = frozenset({"NEW_RECORDS", "RECEIPT_PATTERN"})
 INTERMEDIARY_ROLES = ("potential_intermediary", "potentially_suspicious_account")
+VICTIM_ROLES = ("potential_victim", "potential_secondary_victim", "suspicious_activity_victim_unconfirmed")
+# Which way each evidence category points: towards passing money on or collecting it (suspicion side). Victim-side
+# evidence is the victim rules' own sentences (its own money left in transfers unlike its history, its savings fell).
+SUSPICION_SIDE = frozenset({"ONWARD", "CASH", "NETWORK", "FUNDED_FORWARD", "FLAGGED_IN_MOVED", "ACCOUNT_MODEL", "TXN_MODEL"})
+MODEL_CATEGORIES = frozenset({"ACCOUNT_MODEL", "TXN_MODEL"})
+COUNTER_PREFIX = "Points the other way"
+# An established history counts against a pass-through reading (new accounts are typical collection points), not against
+# a victim reading: the victim rules require it, because only an established history makes a deviation meaningful.
+ESTABLISHED_PREFIX = "Established records"
 
 ROLE_LABELS = {
     "potential_victim": "Potential victim",
@@ -116,7 +125,9 @@ class AccountEvidence:
     latest_balance: Optional[float] = None
     cash_out_traced: float = 0.0
     flagged_out_ids: list[str] = field(default_factory=list)          # its own outgoing transfers flagged (model or rule)
-    flagged_out_unfunded_ids: list[str] = field(default_factory=list)  # ...not funded by a fresh inflow
+    flagged_out_unfunded_ids: list[str] = field(default_factory=list)  # ...paid by its own money (not funded by a fresh inflow)
+    # ...funded by a fresh inflow although its own earlier balance could have paid them: that balance was not drawn on
+    flagged_out_matched_ids: list[str] = field(default_factory=list)
     flagged_in_senders: int = 0                                       # distinct senders of its flagged incoming transfers
     flagged_in_amount: float = 0.0                                    # total of those flagged incoming transfers
     flagged_in_moved_min: Optional[float] = None  # balance-based lower bound on how much of them left within 24 h
@@ -312,7 +323,35 @@ def assess(e: AccountEvidence) -> RoleResult:
     base = dict(zip(cats, sup))
     # The sentence behind each category the result counts (rule-specific categories bring their own).
     r.category_text = {c: r.category_text.get(c) or base[c] for c in r.categories if c in r.category_text or c in base}
+    add_counter_evidence(e, r, base)
     return r
+
+
+def victim_side_observations(e: AccountEvidence) -> list[str]:
+    """Recorded facts that point towards the account being a victim, whatever role it was given."""
+    out = []
+    if e.flagged_out_unfunded_ids and e.position != "other_sender":
+        out.append(f"{len(e.flagged_out_unfunded_ids)} of its flagged outgoing transfer(s) were paid with its own money: no "
+                   "money it had just received from a new payer covered them.")
+    own = _own_funds(e)
+    if own is not None and own >= OWN_FUNDS_MIN and e.balance_before_receipt and not e.business_account:
+        out.append(f"Its own balance before the traced receipt ({_m(e.balance_before_receipt)}) fell by at least {_m(own)} "
+                   "within the window.")
+    return out
+
+
+def add_counter_evidence(e: AccountEvidence, r: RoleResult, base: dict[str, str]) -> None:
+    """Evidence pointing away from the assigned role is listed with the contradictory evidence, never dropped: the
+    suspicion-side signals of a possible victim, and the victim-side observations of an intermediary or
+    suspicious-account candidate. Display only: no role, strength or restriction state reads it."""
+    if r.role_candidate in VICTIM_ROLES:
+        r.contradictory[:] = [c for c in r.contradictory if not c.startswith(ESTABLISHED_PREFIX)]
+        for c in r.categories:
+            if c in SUSPICION_SIDE and c in base:
+                kind = "model output" if c in MODEL_CATEGORIES else "recorded fact"
+                r.contradictory.append(f"{COUNTER_PREFIX} ({kind}): {base[c]}")
+    elif r.role_candidate in INTERMEDIARY_ROLES:
+        r.contradictory.extend(f"{COUNTER_PREFIX} (recorded fact): {s}" for s in victim_side_observations(e))
 
 
 def _flagged_in_moved(e: AccountEvidence) -> Optional[str]:
@@ -328,7 +367,7 @@ def _assess(e: AccountEvidence, cats: list[str], sup: list[str]) -> RoleResult:
     con: list[str] = []
     established = _established(e)
     if established:
-        con.append(f"Established records: {e.n_transactions} transfers over {e.history_days:.0f} days before it was reached.")
+        con.append(f"{ESTABLISHED_PREFIX}: {e.n_transactions} transfers over {e.history_days:.0f} days before it was reached.")
     if e.business_account:
         con.append("It is a business account; businesses routinely receive and pay out funds.")
     if e.account_model.get("status") == "scored" and not e.account_model.get("above_threshold"):
@@ -388,9 +427,19 @@ def _assess(e: AccountEvidence, cats: list[str], sup: list[str]) -> RoleResult:
         if e.flagged_out_ids:
             unf = set(e.flagged_out_unfunded_ids)
             funded = [t for t in e.flagged_out_ids if t not in unf]
-            ff = (f"{len(funded)} of its {len(e.flagged_out_ids)} flagged outgoing transfer(s) ({', '.join(funded[:3])}) were paid "
-                  "out of money received in the previous 24 h from payers that had not paid it before, which its own earlier "
-                  "balance could not have covered.")
+            matched = [t for t in funded if t in set(e.flagged_out_matched_ids)]
+            strict = [t for t in funded if t not in set(matched)]
+            if not matched:
+                ff = (f"{len(funded)} of its {len(e.flagged_out_ids)} flagged outgoing transfer(s) ({', '.join(funded[:3])}) were paid "
+                      "out of money received in the previous 24 h from payers that had not paid it before, which its own earlier "
+                      "balance could not have covered.")
+            else:
+                parts = [f"{len(strict)} ({', '.join(strict[:3])}) were paid out of money received in the previous 24 h from payers "
+                         "that had not paid it before, which its own earlier balance could not have covered"] if strict else []
+                parts.append(f"{len(matched)} ({', '.join(matched[:3])}) were covered by money received in the previous 24 h from "
+                             "payers that had not paid it before, and its own earlier balance was not drawn down to pay them: the "
+                             "money that left was the money that had just arrived")
+                ff = f"Of its {len(e.flagged_out_ids)} flagged outgoing transfer(s), " + "; ".join(parts) + "."
             c2 = cats + ["FUNDED_FORWARD"]
             if len(independent_kinds(c2)) < 2:
                 # QA-03: forwarding money it had just received is the only kind of evidence. On the train ledger 3 of the

@@ -624,4 +624,30 @@ details[open] > .disclosure-body {
     opacity: 1 !important;
     transform: none !important;
   }
+  /* App chrome (sidebar, top bar, footer, case header and stage tabs) never prints; the page content does. */
+  [data-print-hide] {
+    display: none !important;
+  }
+  html.print-report body {
+    background: #fff;
+  }
+  html.print-report #main {
+    max-width: none;
+    padding: 0;
+    min-height: 0;
+  }
+  html.print-report #investigator-report .panel {
+    box-shadow: none;
+    break-inside: auto;
+  }
+  html.print-report #investigator-report .overflow-x-auto {
+    overflow: visible;
+  }
+  html.print-report #investigator-report table {
+    min-width: 0 !important;
+  }
+  html.print-report #investigator-report article,
+  html.print-report #investigator-report tr {
+    break-inside: avoid;
+  }
 }

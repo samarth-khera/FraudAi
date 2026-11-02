@@ -11,12 +11,13 @@ import { FundTrailStage } from './FundTrailStage';
 import { Inspector } from './Inspector';
 import { NextStepsStage } from './NextStepsStage';
 import { OverviewStage } from './OverviewStage';
+import { ReportStage } from './ReportStage';
 import { RiskStage } from './RiskStage';
 import { branchFor, buildTrail } from './trail';
 import type { Target } from './TrailTree';
 import { CaseContext, CaseNav } from './caseModel';
 
-export type Stage = 'overview' | 'trail' | 'accounts' | 'risk' | 'ai' | 'next';
+export type Stage = 'overview' | 'trail' | 'accounts' | 'risk' | 'ai' | 'next' | 'report';
 
 export const STAGES: { id: Stage; label: string; question: string }[] = [
   { id: 'overview', label: 'Overview', question: 'What happened, and where the trace starts' },
@@ -25,6 +26,7 @@ export const STAGES: { id: Stage; label: string; question: string }[] = [
   { id: 'risk', label: 'Risk evidence', question: 'What the rules and the model found, and why' },
   { id: 'ai', label: 'AI analyst', question: 'A plain-language reading, kept separate' },
   { id: 'next', label: 'Next steps', question: 'What to examine next' },
+  { id: 'report', label: 'Investigator report', question: 'The complete report: evidence, fund flow and per-account recommendations' },
 ];
 
 export const CaseView: React.FC<{
@@ -39,8 +41,12 @@ export const CaseView: React.FC<{
   // Branch endings come from the dynamic investigation of the same account when it is present (matched by transfers).
   const serverBranches = intel && intel.account_summary?.account_id === report.victim.account_id ? intel.fund_trace?.branches : null;
   const trail = useMemo(() => buildTrail(report, serverBranches), [report, serverBranches]);
-  // The affected-accounts stage needs the model-driven sections; a trace-only report has five stages.
-  const stages = useMemo(() => STAGES.filter((s) => s.id !== 'accounts' || intel), [intel]);
+  // The affected-accounts stage needs the model-driven sections, and the investigator report needs a server that
+  // builds it; a trace-only report has five stages.
+  const stages = useMemo(
+    () => STAGES.filter((s) => (s.id !== 'accounts' || intel) && (s.id !== 'report' || intel?.investigator_report)),
+    [intel],
+  );
   const [stage, setStage] = useState<Stage>('overview');
   const [branchId, setBranchId] = useState<string | null>(trail.branches[0]?.id ?? null);
   const [target, setTarget] = useState<Target | null>(null);
@@ -133,7 +139,7 @@ export const CaseView: React.FC<{
   return (
     <CaseContext.Provider value={nav}>
       <div className="space-y-6" data-testid="investigation-report">
-        <header data-reveal className="space-y-4">
+        <header data-reveal data-print-hide className="space-y-4">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
             <div className="min-w-0">
               <p className="text-[13px] text-mute">
@@ -170,6 +176,7 @@ export const CaseView: React.FC<{
         <div
           data-reveal
           role="tablist"
+          data-print-hide
           aria-label="Investigation stages"
           className="sticky top-16 lg:top-[3.75rem] z-30 flex gap-1 overflow-x-auto no-scrollbar rounded-2xl bg-[rgba(255,255,255,0.78)] backdrop-blur-xl ring-1 ring-line p-1.5 shadow-[var(--shadow-xs)]"
         >
@@ -244,10 +251,11 @@ export const CaseView: React.FC<{
           {stage === 'risk' && <RiskStage onInspect={showInTrail} />}
           {stage === 'ai' && <AIStage ai={report.ai_analysis} explanation={explanation} onRequest={onRequestExplanation} />}
           {stage === 'next' && <NextStepsStage onInspect={showInTrail} onRerun={onRerun} />}
+          {stage === 'report' && <ReportStage />}
         </div>
 
         {nextStage && (
-          <div className="flex justify-end border-t border-line pt-5">
+          <div className="flex justify-end border-t border-line pt-5" data-print-hide>
             <button type="button" className="btn-secondary" onClick={() => go(nextStage.id)}>
               Continue: {nextStage.label}
               <ArrowRight className="w-4 h-4" aria-hidden="true" />

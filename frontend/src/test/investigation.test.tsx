@@ -13,6 +13,7 @@ import { V2AccountProfileResponse } from '../types/v2';
 import { DatasetAccount, DynamicReport } from '../types/dynamic';
 import fixture from './fixtures/investigation.json';
 import dynamicFixture from './fixtures/dynamic.json';
+import intermediaryFixture from './fixtures/dynamic_intermediary.json';
 
 vi.mock('../services/v2Api', () => ({
   v2Api: {
@@ -39,6 +40,8 @@ vi.mock('../services/v2Api', () => ({
 
 const REPORT = fixture as unknown as InvestigationResponse;
 const DYN = dynamicFixture as unknown as DynamicReport;
+// FS-EAAA344C investigated directly (served forensic ledger), from a server that builds the investigator report.
+const MID = intermediaryFixture as unknown as DynamicReport;
 const run = vi.mocked(v2Api.runDynamicInvestigation);
 const explain = vi.mocked(v2Api.explainDynamicInvestigation);
 const getDatasetAccount = vi.mocked(v2Api.getDatasetAccount);
@@ -1156,5 +1159,109 @@ describe('fund trail on a small screen', () => {
     // A hop opens the same inspector as the wide tree.
     fireEvent.click(within(outline).getByRole('button', { name: /^₹1,30,000 to ACC-M2A/ }));
     expect(await screen.findByRole('dialog', { name: '₹1,30,000' })).toHaveTextContent('TXN-T0011');
+  });
+});
+
+// ---------------------------------------------------------------- account role correction and the investigator report
+describe('investigator report', () => {
+  const mule = MID.account_summary.account_id;
+  const rep = MID.investigator_report!;
+
+  async function showMule(data: DynamicReport = MID) {
+    explain.mockReturnValue(new Promise(() => {}));
+    run.mockResolvedValueOnce(data);
+    renderPage(`/investigate?account=${mule}&dataset=forensic-scenarios`);
+    await screen.findByTestId('account-brief');
+    fireEvent.click(screen.getByRole('button', { name: 'Start fund investigation' }));
+    return screen.findByTestId('investigation-report');
+  }
+
+  it('names an account that passed money on by its role, never by a victim phrase, with each item tagged by source', async () => {
+    await showMule();
+    const root = MID.role_assessments.find((a) => a.account_id === mule)!;
+    expect(root.role_candidate).toBe('potential_intermediary');
+    expect(screen.getByTestId('victim-assessment')).toHaveTextContent('Potential intermediary');
+    expect(screen.getByTestId('assessment-question')).not.toHaveTextContent('victim');
+    const ev = screen.getByTestId('assessment-evidence');
+    expect(within(ev).getAllByText('Model output').length).toBeGreaterThan(0);
+    expect(within(ev).getAllByText('Recorded fact').length).toBeGreaterThan(0);
+    expect(ev).toHaveTextContent('its own earlier balance was not drawn down');
+  });
+
+  it('adds the investigator report as the final stage, every section taken from the same response', async () => {
+    await showMule();
+    const tabs = screen.getAllByRole('tab');
+    expect(tabs[tabs.length - 1]).toHaveTextContent('Investigator report');
+    stage(/Investigator report/);
+    expect(screen.getByTestId('report-notice')).toHaveTextContent(
+      'Recommendation only. No account restriction, freeze or hold has been executed. Authorized institutional approval and applicable procedures are required.');
+    expect(screen.getByText(rep.generator.description)).toBeInTheDocument();
+    expect(rep.generator.language_model_used).toBe(false);
+    expect(screen.getByTestId('report-leaning')).toHaveTextContent(rep.executive_summary.leaning_text);
+    for (const h of ['Executive summary', 'Account risk assessment', 'Transaction chronology', 'Fund flow', 'Connected accounts',
+      'Review and restriction recommendations', 'Findings and next steps']) {
+      expect(screen.getByRole('heading', { name: new RegExp(h) })).toBeInTheDocument();
+    }
+    expect(within(screen.getByTestId('report-chronology')).getAllByRole('row')).toHaveLength(rep.chronology.rows.length + 1);
+    const table = screen.getByTestId('report-connected');
+    expect(table.querySelectorAll('tbody tr')).toHaveLength(rep.connected_accounts.length);
+    for (const c of rep.connected_accounts) {
+      const row = table.querySelector(`[data-account="${c.account_id}"]`)!;
+      expect(row).toHaveTextContent(c.role_label);
+      expect(row.querySelector(`[data-level="${c.level}"]`)).not.toBeNull();
+    }
+    expect(within(screen.getByTestId('report-hops')).getAllByRole('row')).toHaveLength(rep.fund_flow.hops.length + 1);
+  });
+
+  it('gives each connected account its own recommendation and keeps a possible victim on protective verification', async () => {
+    await showMule();
+    stage(/Investigator report/);
+    const cards = screen.getAllByTestId('report-recommendation');
+    const byAccount = new Map(cards.map((c) => [c.getAttribute('data-account'), c]));
+    for (const r of rep.recommendations.filter((x) => x.level >= 2 || x.account_id === mule)) {
+      const card = byAccount.get(r.account_id)!;
+      expect(card).toHaveAttribute('data-level', String(r.level));
+      expect(card).toHaveTextContent('Who decides');
+      expect(card).toHaveTextContent('Nothing has been executed');
+    }
+    const victim = rep.recommendations.find((r) => r.role_candidate === 'potential_victim')!;
+    expect(victim.track).toBe('protective');
+    expect(byAccount.get(victim.account_id)).toHaveTextContent('Urgent protective verification');
+    expect(new Set(rep.recommendations.map((r) => r.level)).size).toBeGreaterThan(1);
+  });
+
+  it('keeps evidence for a victim apart from evidence of passing money on', async () => {
+    await showMule();
+    stage(/Investigator report/);
+    const sus = screen.getByTestId('suspicion-side-evidence');
+    for (const e of rep.risk_assessment.suspicion_side_evidence) expect(sus).toHaveTextContent(e.text.slice(0, 40));
+    expect(screen.getByTestId('victim-side-evidence')).toHaveTextContent('Nothing in the records shows its own money leaving');
+  });
+
+  it('offers recommendations only: no control can act on an account', async () => {
+    await showMule();
+    stage(/Investigator report/);
+    const report = screen.getByTestId('investigator-report');
+    const buttons = within(report).queryAllByRole('button').map((b) => b.textContent ?? '');
+    expect(buttons.filter((t) => /freeze|hold|block|restrict|suspend/i.test(t))).toEqual([]);
+    expect(within(report).getByRole('button', { name: 'Print report' })).toBeInTheDocument();
+    expect(report).not.toHaveTextContent(/has been (frozen|restricted|blocked)|hold (was|has been) placed/i);
+  });
+
+  it('prints the report on request and restores the page afterwards', async () => {
+    const print = vi.spyOn(window, 'print').mockImplementation(() => {});
+    await showMule();
+    stage(/Investigator report/);
+    fireEvent.click(screen.getByRole('button', { name: 'Print report' }));
+    expect(print).toHaveBeenCalledTimes(1);
+    expect(document.documentElement).toHaveClass('print-report');
+    window.dispatchEvent(new Event('afterprint'));
+    expect(document.documentElement).not.toHaveClass('print-report');
+    print.mockRestore();
+  });
+
+  it('shows no report stage when the server does not provide one', async () => {
+    await showMule({ ...MID, investigator_report: undefined });
+    expect(screen.queryByRole('tab', { name: /Investigator report/ })).toBeNull();
   });
 });
